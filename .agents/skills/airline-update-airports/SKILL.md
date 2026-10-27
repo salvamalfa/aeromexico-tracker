@@ -199,6 +199,38 @@ se afirma haberlos leído. El corte real de readiness debe ser exactamente
 `2026-08-20T18:20:00-06:00` en México. No reutilizar ese expediente como disponibilidad de octubre o
 como tráfico de septiembre; no fabricar un `run_id` ni renovar fechas.
 
+### GAP septiembre obtenido manualmente
+
+El original revisado `f6k_100626.htm` procede de descarga manual nativa y
+materialización Library verificadas: 77.223 bytes/SHA `4f351f91…`. La referencia
+de materialización conserva sus IDs/versión reportada sin publicarlos. No se
+reconstruye HTML desde texto web ni se usa otro cliente para sustituir SEC manual.
+Conservar íntegros los 121 bytes de script de entrega; el listado declara
+77.102, sin identidad binaria acreditada. Solo el script revisado, dentro del
+archivo exacto, se omite del DOM de extracción, sin ejecutar código ni modificar Bronze.
+
+Importar por `collect` con `mode=manual` y rol `html` de `gap_traffic`;
+retener/certificar/reproducir con `airport_group_candidate` como antes. El
+formato compacto añade títulos dentro de tablas y siete columnas. Son 192
+cifras/72 conciliaciones de conteos, no de porcentajes; nueve salidas completas.
+El formato anterior y la separación México/Jamaica/CBX permanecen soportados.
+
+`availability` usa `source_scope=gap_official_manual_target_v1`, `workspace`,
+`run_id`, `artifact_item` y `manual_original=imports/f6k_100626.htm`. Esa colección
+separada conserva además `imports/library-original-verification.json`, generado
+desde la materialización real: identidad/versión, bytes, SHA, URL y límites de
+la captura. No fabricar ese comprobante ni sus identidades. El vínculo se
+refiere al documento objetivo observado manualmente el **27/oct/2026**, con
+precisión diaria. El `downloaded_at` del importador es importación: no acredita
+HTTP200 ni hora de captura SEC, primera publicación o censo de revisiones.
+No reutilizar esa observación como actualidad de otro día o mes. El recibo
+global sigue bloqueado por otros requeridos y no activa datos ni calendario.
+
+ASUR septiembre fue identificado, pero el lector revisado sigue siendo el de
+julio. La adquisición CPC cambia el ámbito y el bloque acumulado; hacen falta
+original y revisión de esa edición. No aplicar el 5 % a ámbitos distintos ni
+rellenar guiones con cero.
+
 ### Entrada operativa AIFA
 
 La receta AIFA resuelve `constant:src.source_updates.availability:AIFA_INDEX`:

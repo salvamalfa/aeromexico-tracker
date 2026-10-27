@@ -36,9 +36,12 @@ y 84 salidas; las 80 anteriores idénticas y cuatro nuevas Volaris IR** en el
 diagnóstico conjunto. La aprobación del documento se recibió después del
 cierre OMA; reemplaza el estado de autorización pendiente de aquel corte.
 
-Quedan **siete tareas obligatorias y dos controles bursátiles** sin verificar.
+GAP septiembre añade un cierre manual real: **diecisiete tareas y 93 salidas**,
+con las 84 anteriores idénticas y nueve nuevas. El código `05a0e75b` y su
+continuidad técnica local pasaron las comprobaciones. Quedan **seis tareas
+obligatorias y dos controles bursátiles** sin verificar.
 La [matriz operativa](#cierre-operativo-de-la-ronda) conserva los once pendientes
-del snapshot PR169: AM mensual, AIFA, OMA y Volaris mensual están cerradas
+del snapshot PR169: AM mensual, AIFA, OMA, Volaris mensual y GAP están cerradas
 localmente con originales reales. Se distingue código, material y decisiones. Aerocivil/GDELT siguen
 requeridos; las tres advertencias macro no son calendarios exhaustivos
 certificados. No se declara lista la ronda ni se activan datos o disparadores.
@@ -3681,8 +3684,8 @@ y base protegida. No se relanza CI de PR171 mientras su base siga inválida.
 ### Cierre operativo de la ronda
 
 Este es el desglose de las **once tareas obligatorias pendientes del snapshot
-PR169**. Cuatro ya se cerraron con originales reales: AM mensual, AIFA, OMA y
-Volaris mensual. Las otras siete siguen abiertas. «Implementación» significa trabajo técnico por completar; «evidencia»
+PR169**. Cinco ya se cerraron con originales reales: AM mensual, AIFA, OMA,
+Volaris mensual y GAP. Las otras seis siguen abiertas. «Implementación» significa trabajo técnico por completar; «evidencia»
 significa originales oficiales o acceso aún no acreditados. Pueden coexistir.
 No son once servicios caídos ni once parsers ausentes.
 
@@ -3692,7 +3695,7 @@ No son once servicios caídos ni once parsers ausentes.
 | Mensual AIFA | **Cerrada localmente:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; entrega/CI propia pendientes |
 | Mensual AM tráfico | **Cerrada:** índice y 6-K IR capturados juntos el 27/oct; 24 filas mensuales/comparativas y siete salidas reproducidas | No queda implementación para esta edición comprobada. No acredita otros meses ni publicación |
 | Mensual ASUR | Lector julio existente; comunicado septiembre identificado en SEC | **Implementación y material:** obtener original manual y adaptar la edición que incorpora Brasil y otros países. No se ha acreditado cobertura enero–septiembre comparable para el bloque nuevo; el 5 % no resuelve diferencias de ámbito. Véase insumo exacto abajo |
-| Mensual GAP | Vínculo histórico julio comprobado; comunicado septiembre identificado en SEC | **Implementación y material:** obtener original manual y comprobar esa edición/vínculo. No falta detectar el reporte; el snapshot de agosto no acredita septiembre. Véase insumo exacto abajo |
+| Mensual GAP | **Cerrada localmente:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. Falta integración/CI del lote, no el original ni el lector |
 | Mensual GDELT | Adaptador existente; último intento acotado HTTP503, sin septiembre válido | **Disponibilidad externa:** respuesta válida del periodo. Sin nuevas consultas en esta pasada; RSS no lo sustituye. Cambiar proveedor o requisito sería otra decisión, no se ha aplicado |
 | Mensual OMA | **Cerrada localmente:** artículo y PDF oficiales septiembre HTTP200, 168 observaciones y cuatro salidas reproducidas | Vínculo newsroom `472a0528` revisado; entrega/CI propias pendientes. Se conservan los fallos IR404/es202 sin repetirlos. Disponibilidad del reporte objetivo, no censo de revisiones |
 | Mensual Volaris | **Cerrada localmente:** admisión autorizada y exacta, dos GET200, 48 cifras/24 variaciones, cuatro salidas y replay actuales comprobados | Global y continuidad comprobados; falta entrega/CI remota. Emisor IR separado de SEC financiero; sin descubrimiento dinámico desde el HTML. No falta otra autorización de ese documento ni el lector |
@@ -3700,30 +3703,67 @@ No son once servicios caídos ni once parsers ausentes.
 | Trimestral Viva | Certificador completo Q2; Q3 no verificado | **Material y adaptación:** reporte financiero oficial Q3 y cadena de esa edición. No inventar fecha; tráfico o ZIP XBRL no equivalen al release |
 | Trimestral Volaris | Reporte Q3 primario existe y ya fue avisado; certificador retenido solo Q2 | **Implementación y material:** retener dossier Q3 admitido, adaptar y probar. No falta detectar el reporte; CASM Q2 no es el bloqueo Q3. No requiere otra autorización genérica para programar |
 
-**Insumos GAP/ASUR identificados el 27/oct, no capturados por el runner.** El
-[6-K GAP](https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm)
-contiene tráfico septiembre y declara 6/oct. El
-[anexo ASUR](https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm)
-declara 7/oct e incorpora la adquisición CPC: el bloque nuevo agrupa Brasil,
-Costa Rica, Curazao y Ecuador. Sus columnas acumuladas nuevas coinciden con
-septiembre; se conservarán así, sin llamarlas nueve meses comparables ni
-repartir el agregado. También cambia la exclusión de pasajeros. El lector de
-julio exige explícitamente el ámbito anterior y debe adaptarse; los guiones
-del detalle nuevo no autorizan rellenar ceros.
+**GAP septiembre: cadena manual real cerrada, sin publicación.** El
+[6-K oficial](https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm)
+declara 6/oct. El hilo principal obtuvo el original con descarga manual nativa;
+este entorno lo materializó desde Library y verificó sus **77.223 bytes**, SHA
+`4f351f91…` e identidad. No hubo solicitudes SEC desde este ejecutor ni cambios
+al flujo de importación manual. Se conservan todos los bytes recibidos: el
+índice declara 77.102 y la respuesta contiene un script de entrega de 121.
+**No se afirma identidad binaria con el archivo listado en EDGAR.**
 
-La consulta web permite leer ambos documentos; no entrega aquí sus bytes HTML
-originales ni un recibo de captura. El inventario del respaldo privado actual
-y las búsquedas acotadas en Library no localizaron estos originales. El
-[procedimiento común](../.agents/skills/source-updates-common.md#fallos-y-permisos)
-exige «SEC se importa manualmente aquí». Para continuar falta importar los
-HTML originales con URL y SHA reales por ese flujo, más los soportes de
-atribución que finalmente use el vínculo. No se reconstruirá HTML desde texto
-web ni se atribuirá HTTP200 o una fecha de captura a la importación. Los
-índices SEC no accesibles por la herramienta web no tienen un nuevo código
-HTTP acreditado. No se ha intentado sustituir el colector con otro cliente,
-instalar un navegador ni leer/configurar identidad. Si se desea otra forma de
-obtención, hace falta decidir ese método concreto; no otra aprobación del
-calendario. Los conteos siguen en **16 tareas, 84 salidas y siete pendientes**.
+El lector admite títulos dentro de las tablas y siete columnas, conservando
+el formato anterior. Solo el archivo y script revisados permiten omitir ese
+script del DOM de extracción, sin ejecutarlo, seguirlo ni modificar el original.
+Produce **180 cifras reportadas y doce sumas México**, tres mercados y
+mensual/acumulado actual/comparativo separados. Las 72 conciliaciones son de
+conteos; los porcentajes impresos solo se comprueban estructuralmente. No se
+recalcula una tasa oficial desde cifras redondeadas para sustituirla.
+
+La retención, Bronze, Silver/Gold, linaje y replay real pasaron. Son nueve
+salidas: 192 observaciones nativas, 26 filas Silver aeroportuarias, 24 Gold de
+aeropuertos mexicanos y dos Gold del grupo México; dimensiones y 434 vínculos
+completan el conjunto. Los doce aeropuertos México excluyen Jamaica; CBX sigue
+incluido en Tijuana internacional. El grupo México de septiembre es 3.711,2
+miles frente a 4.081,9 mundiales; no se intercambian. La revisión independiente
+`d681e708…` cotejó las tres tablas y sus 12/36 padres de linaje.
+
+`gap_official_manual_target_v1` liga el archivo Library íntegro, referencia de
+identidad, colección manual y candidato. **Observado el 27/oct, precisión de
+día**; `downloaded_at` del importador es importación, no hora de captura SEC.
+HTTP observado/captura UTC/primera publicación/rezago siguen nulos. Tampoco se
+acreditan índice completo, última revisión universal ni disponibilidad de otro
+día. Una tupla alterada, archivo enlazado, bytes cambiados u otro periodo
+bloquean. No se crea otra aprobación ni se requiere otra del calendario.
+
+Código `05a0e75b`: **252 pruebas afectadas aprobadas en 102,95 s**, sin omisiones.
+Se corrigió una prueba heredada que aún esperaba tráfico mensual en
+`volaris_sec`: ahora exige explícitamente IR mensual y SEC financiero trimestral.
+No cambió esa política aprobada. Otros 79 casos financieros pasaron en 4,30 s.
+Continuidad auténtica `d153a3ec…`, runtime `3bb20c57…`: se conservaron
+188/177/811/803 archivos y 53 salidas históricas. El binding local cambia solo
+productor/runtime/dictamen. Una CLI real única en `8b356124` terminó en
+**78,753 s**, válida y `publication_authorized=false`; evidencia `da7bd100…`.
+
+Tras ese binding y CLI se escribió y reprodujo el recibo global
+`global-17-final-8b356124-result.json`, SHA `d1ce7cfd…`; compatibilidad
+`5c26252b…`: **17 tareas y 93 salidas**, 84 anteriores idénticas y nueve GAP.
+Once productores dependientes se retuvieron y regeneraron realmente desde
+originales previos. Los otros cinco conservaron exactamente sus huellas y
+pasaron el replay normal. Estado `blocked_global_policy`: seis tareas ausentes,
+dos controles bursátiles y tres advertencias macro; fecha trimestral nula,
+cero activaciones. No se presenta ese bloqueo como una suite fallida ni como
+permiso para programar. Falta integración remota ordenada y su CI/revisión.
+
+**ASUR sigue pendiente de original manual y adaptación.** El
+[anexo septiembre](https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm)
+declara 7/oct e incorpora CPC. El nuevo bloque agrupa Brasil, Costa Rica,
+Curazao y Ecuador; sus columnas acumuladas coinciden con septiembre. No se
+acredita cobertura enero–septiembre comparable para ese bloque ni se reparten
+agregados. Cambia también la exclusión de pasajeros; los guiones no autorizan
+ceros. La lectura web identifica el documento, pero no es un original HTML
+importable. El flujo manual sigue vigente; no hay una denegación nueva ni se
+requiere otra autorización genérica para implementar el lector.
 
 Los **dos controles bursátiles** son de sesiones de septiembre y 3T26. Las
 cinco series están capturadas y sus cálculos/números se reproducen. El auditor
@@ -3748,8 +3788,9 @@ sin tabla; su endpoint público de contenido devolvió HTTP403 sin cuerpo. Esa
 vía se detuvo. No se ha probado equivalencia con NYSE ni con OTC Bulletin Board.
 Faltan contenido oficial interpretable y el lector de esa edición OTC: el
 auditor devuelve pendiente para OTC, incluso si se le ofrece una tabla NYSE.
-Después falta acoplar la prueba completa al flujo de certificación/readiness,
-con sus revisiones y continuidad técnica. Los dos bloqueos globales permanecen;
+La continuidad local del cierre GAP ya incluye este auditor de cuatro
+instrumentos. Después falta añadir el lector OTC y acoplar la prueba completa
+al flujo de certificación/readiness con sus revisiones. Los dos bloqueos globales permanecen;
 este auditor separado no los elimina ni recertifica los recibos congelados.
 [NYSE](https://www.nyse.com/markets/hours-calendars),
 [Nasdaq](https://www.nasdaq.com/market-activity/stock-market-holiday-schedule),
@@ -3797,6 +3838,11 @@ La reducción se explica por separado, sin sumar controles distintos:
   las 80 anteriores siguen iguales. La identidad IR se separa de financieros
   SEC, con el mismo requisito mensual. El original pasa sin tolerancia del5%.
 
+- SRC `05a0e75b`: diecisiete verificadas, seis ausentes y dos controles.
+  **GAP septiembre realmente importado, extraído y vinculado** añade nueve
+  salidas; las 84 anteriores siguen iguales. No se reduce ningún requisito ni
+  se inventan fechas/HTTP de la captura manual.
+
 La admisión Volaris ya fue autorizada y aplicada localmente solo al documento
 verificado. El contacto Aerocivil también fue autorizado y el hilo principal
 confirmó el envío; ahora depende de respuesta oficial. Los otros puntos exigen código o
@@ -3805,7 +3851,7 @@ avisado no implica datos integrados ni tesis autorizada.
 
 ## Pendientes
 
-- Cerrar las siete tareas actuales y los dos controles de sesiones descritos.
+- Cerrar las seis tareas actuales y los dos controles de sesiones descritos.
   Aerocivil/GDELT siguen requeridos; un fallo no es cero ni se sustituye.
 - Conservar la admisión Volaris limitada al documento aprobado, sin inventar
   futuras URLs o abrir subdominios. Esperar respuesta Aerocivil; no repetir
