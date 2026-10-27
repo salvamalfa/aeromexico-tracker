@@ -2752,6 +2752,19 @@ rechazo global por las tareas requeridas no incluidas y los reportes centrales
 sin evidencia vinculada. No afirma que todas las fuentes omitidas estén caídas.
 Aerocivil/GDELT permanecen requeridos; ningún resultado activa disparadores.
 
+Validación estable del lote: 1.791 pruebas de fuentes, pipeline, lifecycle y
+presupuesto de archivos aprobadas en 628,21 s, cero omisiones, 44 advertencias;
+142 pruebas financieras de contrato aprobadas en 5,72 s. No sumar a las
+ejecuciones focales o independientes solapadas ni atribuirle la agregada
+anterior de 5.129. El perfil financiero de contrato usa fixtures; por separado,
+la revisión independiente ejecutó el productor y verificador originales en
+46,26 s y conservó 811 archivos del sitio, 803 preservados, 177 fuentes y
+aprobaciones y 188 del expediente. El procedimiento local real devuelve
+`valid=true`, `publication_authorized=false`; el gate ordinario conserva el
+rechazo del runtime distinto. El binding local se renovó únicamente con esa
+revisión real `50b6bbc3…`, para el runtime `2cea125b…`; ancla, autorización y
+revisión de contenido originales no cambiaron.
+
 Lifecycle: conservar los módulos y pruebas como consumidores ejecutables;
 actualizar esta guía, las dos skills y Roadmap como documentación vigente.
 Conservar aparte índices, PDF, recibos, planes y dictámenes ignorados por Git

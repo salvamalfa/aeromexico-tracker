@@ -24,11 +24,13 @@ Propuesta — el dueño decide prioridades.
   1.680 casos de fuentes y 99 financieros (una omisión histórica). Aerocivil,
   GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
   ronda completa. No están activados calendario ni nuevas ingestas/noticias.
-  Continuación local `013a20d6`: AICM y Viva septiembre tienen colección real,
+  Continuación técnica `013a20d6`: AICM y Viva septiembre tienen colección real,
   certificación completa y vínculo físico a los índices del día local 27/oct;
   OMA septiembre conserva HTTP404 del PDF y HTTP202 del índice alternativo.
-  Faltan la entrega revisada de este lote y contratos físicos de las otras
-  familias descritos en la guía; no se declara lista la ronda por estas ventanas.
+  Validación: 1.791 casos de fuentes/pipeline/documentación, 142 financieros
+  y revisión independiente favorable; continuidad financiera solo local, con
+  publicación y autoridad originales exactas. Faltan los contratos físicos
+  de las otras familias descritos en la guía; no se declara lista la ronda.
 
 - Aeroméxico 3T26: lectura e indicadores publicados con evidencia y aprobación
   vinculadas, mediante PR149/160. Conservar publicación y autoridad originales
