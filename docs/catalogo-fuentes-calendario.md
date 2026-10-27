@@ -2501,8 +2501,8 @@ declara que no valida la publicación. El modo predeterminado sigue comprobando
 el snapshot real y falla sin su pin externo. No se sustituyen las 56 pruebas
 reales por fixtures. Las seis pruebas del nuevo límite y su revisión adversarial
 pasan. Los pins financieros y de noticias no se calcularon desde los archivos
-ni se recuperaron por las rutas previamente denegadas; su entrega por un canal
-autorizado sigue siendo necesaria para cerrar esas comprobaciones reales.
+ni se recuperaron por las rutas previamente denegadas. Su uso sigue el
+procedimiento local documentado y la comprobación exacta descritos a continuación.
 
 La reparación de Silver cambió la huella del código. La revisión independiente
 real del commit `95e54979`, runtime `83f58bcf…`, volvió a ejecutar el productor
