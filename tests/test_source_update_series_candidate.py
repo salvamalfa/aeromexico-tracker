@@ -3,6 +3,7 @@
 import hashlib
 import json
 import shutil
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -18,9 +19,8 @@ from tests.test_source_update_series_independent import equities_inputs, fuel_by
 CUTOFF = "2026-10-22T12:00:00-06:00"
 
 
-@pytest.fixture(params=["banxico", "fuel", "equities"])
-def candidate(request, tmp_path):
-    product = request.param
+@contextmanager
+def _candidate(product, tmp_path):
     workspace = ROOT / "tmp/source-updates" / ("test-series-" + uuid4().hex)
     source = tmp_path / "bronze"
     inputs = equities_inputs() if product == "equities" else macro_inputs(product)
@@ -46,10 +46,40 @@ def candidate(request, tmp_path):
         shutil.rmtree(workspace.parent / (workspace.name + "-round"), ignore_errors=True)
 
 
+@pytest.fixture(params=["banxico", "fuel", "equities"])
+def candidate(request, tmp_path):
+    with _candidate(request.param, tmp_path) as value:
+        yield value
+
+
 def stored(candidate):
     workspace, source, product, selected = candidate
     receipt = retained.retain(workspace, source, product, selected, execute=True)
     return workspace, product, receipt["run_id"]
+
+
+@pytest.fixture(scope="module", params=["banxico", "fuel", "equities"])
+def certified_template(request, tmp_path_factory):
+    # Generate each genuine accepted baseline once. Copied candidates retain
+    # the exact relative paths, receipt IDs and hashes without rebinding them.
+    with _candidate(request.param, tmp_path_factory.mktemp("series-seed")) as value:
+        workspace, product, receipt = stored(value)
+        series_candidate.run(workspace, product, "2026M09", CUTOFF, receipt, execute=True)
+        before = readiness.inventory(workspace)
+        yield (workspace, product, receipt), before
+        assert readiness.inventory(workspace) == before
+
+
+@pytest.fixture
+def certified_copy(certified_template):
+    (seed, product, receipt), expected = certified_template
+    workspace = ROOT / "tmp/source-updates" / ("test-series-" + uuid4().hex)
+    shutil.copytree(seed, workspace)
+    try:
+        assert workspace != seed and readiness.inventory(workspace) == expected
+        yield workspace, product, receipt
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
 
 
 @pytest.mark.parametrize("period", ["2026M09", "2026Q3"])
@@ -93,10 +123,10 @@ def test_complete_product_replay_and_global_binding(candidate, period):
 
 
 @pytest.mark.parametrize("kind", ["output", "receipt", "source", "sidecar", "code", "cutoff", "run_id"])
-def test_exact_replay_rejects_changed_evidence(candidate, monkeypatch, kind):
-    workspace, product, receipt = stored(candidate)
+def test_exact_replay_rejects_changed_evidence(certified_copy, monkeypatch, kind):
+    workspace, product, receipt = certified_copy
     args = [workspace, product, "2026M09", CUTOFF, receipt]
-    result = series_candidate.run(*args, execute=True)
+    result = json.loads((workspace / "receipts" / f"series-{product}-2026M09.json").read_text())
     if kind == "output":
         name = next(n for n in result["output_sha256"] if n.startswith("silver/"))
         path = workspace / "data" / (name + ".parquet")

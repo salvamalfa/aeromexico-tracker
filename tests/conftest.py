@@ -147,18 +147,28 @@ def executive_payload() -> dict[str, Any]:
     return build_executive_payload()
 
 
+@pytest.fixture(scope="session")
+def mock_live_holdout_snapshot_identity() -> tuple[str, str]:
+    """Read a fixed holdout identity once; each live run still verifies its site."""
+    from src.conversational_analytics.data.snapshot import Snapshot
+
+    snapshot = Snapshot(PATHS.root / "site")
+    return snapshot.version, snapshot.semantic_version
+
+
 @pytest.fixture
-def mock_live_holdout_current_versions(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+def mock_live_holdout_current_versions(
+    monkeypatch: pytest.MonkeyPatch, mock_live_holdout_snapshot_identity: tuple[str, str]
+) -> dict[str, Any]:
     """Re-version only an in-memory holdout copy for mocked live-run tests."""
     from src.conversational_analytics import evaluation_live
-    from src.conversational_analytics.data.snapshot import Snapshot
     from src.conversational_analytics.evaluation import load_fixture
 
     fixture = deepcopy(load_fixture())
-    snapshot = Snapshot(PATHS.root / "site")
+    data_version, semantic_version = mock_live_holdout_snapshot_identity
     fixture["expected_versions"] = {
-        "data_version": snapshot.version,
-        "semantic_version": snapshot.semantic_version,
+        "data_version": data_version,
+        "semantic_version": semantic_version,
     }
     monkeypatch.setattr(evaluation_live, "load_fixture", lambda: deepcopy(fixture))
     return fixture
