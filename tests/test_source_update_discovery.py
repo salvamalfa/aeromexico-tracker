@@ -21,12 +21,19 @@ def test_unsupported_catalogue_product_requires_its_actual_procedure(tmp_path):
 
 
 def test_viva_recipe_routes_only_actual_permitted_links(tmp_path):
+    from src.source_updates.viva_traffic import select
+
     path = tmp_path / "catalog.html"
     url = "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/SalaPrensa/2021-12-07-Trafico-noviembre-2021.pdf"
     path.write_text(f'<a href="{url}">November report</a>')
-    assert select_documents("viva_traffic", path, "2021M11")["items"][0]["url"] == url
+    # The historic InvestorCloud page has its own explicit origin; the current
+    # recipe's BMV issuer page must not accept this unrelated one-link fixture.
+    origin = "https://www.investorcloud.net/VivaAerobus/InformacionFinanciera/"
+    assert select(path, "2021M11", catalog_url=origin)["items"][0]["url"] == url
     with pytest.raises(ValueError, match="absent"):
-        select_documents("viva_traffic", path, "2026M09")
+        select(path, "2026M09", catalog_url=origin)
+    with pytest.raises(ValueError, match="issuer identity"):
+        select_documents("viva_traffic", path, "2021M11")
 
 
 def test_viva_explicit_bmv_selection_cli_does_not_read_or_download(capsys):
@@ -62,7 +69,7 @@ def test_aifa_cumulative_label_selects_end_month_and_keeps_host_guard(tmp_path):
     path = tmp_path / "catalog.html"
     path.write_text(
         '<a href="https://aifa-repositorio.s3.us-east-1.amazonaws.com/actual.xlsx">'
-        'Numeralia Aeroportuaria de Enero a Julio 2026 - Formato XLSX</a>'
+        "Numeralia Aeroportuaria de Enero a Julio 2026 - Formato XLSX</a>"
     )
     assert select_documents("aifa_traffic", path, "latest")["items"][0]["period"] == "2026M07"
     with pytest.raises(ValueError, match="absent"):
