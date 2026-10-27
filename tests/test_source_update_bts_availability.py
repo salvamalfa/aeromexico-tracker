@@ -110,6 +110,35 @@ def test_bts_response_equivalence_preserves_exact_dataset_and_query(variant):
     assert bts.response_is_form(url) is (variant == "plus")
 
 
+def test_cli_bts_catalog_discovery_and_paired_selection_are_offline_and_bounded(tmp_path, capsys):
+    from src.source_updates.__main__ import main
+    from src.source_updates.collection import collect
+    from src.source_updates.recipes import describe
+
+    args = ["recipe", "--product", "bts_segments", "--output", "selection"]
+    assert main(args) == 0
+    catalog = json.loads(capsys.readouterr().out)
+    assert catalog["items"][0]["url"] == bts.HISTORY
+    assert catalog["items"][0]["purpose"] == "catalog"
+    assert describe("bts_segments")["entry_url"] == FORM_URL
+    index = tmp_path / "release.html"
+    index.write_text(history())
+    assert main([*args, "--catalog-file", str(index), "--period", "latest"]) == 0
+    selected = json.loads(capsys.readouterr().out)
+    assert selected["discovery"]["linked_period"] == "2026M07"
+    assert selected["discovery"]["selected_years"] == [2026, 2023]
+    assert selected["items"][0] == catalog["items"][0]
+    assert [i["year"] for i in selected["items"][1:]] == [2026, 2023]
+    workspace = ROOT / "tmp/source-updates" / ("test-bts-plan-" + uuid4().hex)
+    plan = collect(selected, workspace)
+    assert plan["base_requests"] == 5 and plan["maximum_http_requests"] == 25
+    assert plan["paid_requests"] == 0 and not workspace.exists()
+    assert main([*args, "--catalog-file", str(index), "--period", "2026M06"]) == 1
+    assert "latest month" in capsys.readouterr().out
+    assert main([*args, "--source-url", FORM_URL, "--period", "2026M07"]) == 1
+    assert "Explicit source URL requires Viva" in capsys.readouterr().out
+
+
 @pytest.fixture
 def physical():
     root = ROOT / "tmp/source-updates" / ("test-bts-availability-" + uuid4().hex)

@@ -1,5 +1,6 @@
 """FJE release history bound to actual GET/POST ZIPs, never an operator census."""
 
+import hashlib
 import json
 import re
 from datetime import datetime
@@ -88,6 +89,43 @@ def response_is_form(value):
         and not actual.fragment
         and parse_qs(actual.query, keep_blank_values=True) == parse_qs(expected.query)
     )
+
+
+def select(index, requested="latest"):
+    """Build a bounded, offline collection plan from the actual FJE release row."""
+    from src.source_updates.recipes import catalog_selection
+
+    release = latest(index)
+    if requested not in {"latest", release["latest_available_period"]}:
+        raise ValueError("BTS discovery selects the latest month; historical review uses retained originals")
+    years = sorted({int(e["period"][:4]) for e in release["events"]}, reverse=True)
+    if any(not 1990 <= year <= 2100 for year in years):
+        raise ValueError("BTS announced years fall outside the reviewed acquisition range")
+    selection = catalog_selection("bts_segments")
+    selection["discovery"] = {
+        "catalog_sha256": hashlib.sha256(index.read_bytes()).hexdigest(),
+        "linked_period": release["latest_available_period"],
+        "reported_release_date": release["reported_release_date"],
+        "selected_years": years,
+        "basis": "actual FJE latest-month and revision events; original contents still require certification",
+    }
+    selection["items"] += [
+        dict(
+            id=f"bts-mexico-{year}",
+            product="bts_segments",
+            source_system="bts_t100",
+            entity=f"T_100I_SEGMENT_ALL_CARRIER_{year}",
+            period=str(year),
+            purpose="data",
+            url=FORM_URL,
+            extension="zip",
+            mode="bts_year",
+            year=year,
+            relative_dir=f"bts/t100/{year}",
+        )
+        for year in years
+    ]
+    return selection
 
 
 def verify(item, result, cutoff):

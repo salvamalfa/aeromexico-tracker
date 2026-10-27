@@ -70,6 +70,10 @@ def airport_selection(product: str, catalog_file: Path, period: str) -> dict:
 
 
 def select_documents(product: str, catalog_file: Path, period: str, tickers=None) -> dict:
+    if product == "bts_segments":
+        from src.source_updates.availability_bts import select
+
+        return select(catalog_file, period)
     if product == "viva_traffic":
         from src.source_updates.recipes import describe
         from src.source_updates.viva_traffic import select

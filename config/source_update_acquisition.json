@@ -178,9 +178,10 @@
     },
     "bts_segments": {
       "entry_ref": "constant:src.ingest.bts.t100:FORM_URL",
+      "discovery_ref": "constant:src.source_updates.availability_bts:HISTORY",
       "state": "conditional",
       "format": "formulario GET + POST → ZIP CSV",
-      "procedure": "Seleccionar años explícitos, incluidos los revisados en el historial BTS. mode=bts_year usa Mexico, todos los meses y FIELDS del módulo. No llamar ingest_t100 con historia completa. Confirmar meses reales y direcciones MX↔US tras parse.bts; coordinar PR134 antes de otra captura."
+      "procedure": "recipe --output selection primero emite el índice oficial de releases. Con --catalog-file <historial-real.html> --period latest selecciona la fila FJE International Segment All Carriers, el año corriente y los años revisados explícitamente, y revalida el índice en la misma colección. mode=bts_year hace GET del formulario y POST Mexico/todos los meses/FIELDS; el plan cuenta las llamadas antes de ejecutar. No llamar ingest_t100 con historia completa. Certificar los originales retenidos mediante bts_candidate y comparar revisiones contra un baseline nativo explícito; una captura histórica no es una comparación ni aprobación. Conservar 094 en JSON crudo y configuración física3 según los lookups FJE revisados, sin interpretar clases de servicio como regularidad o inferir nombres de aeronave. La disponibilidad exige el mes máximo real, el ZIP y la fila oficial; cobertura de operadores, completitud observacional y primera publicación siguen sin acreditarse. PR134 ya está integrado; no cambiar Vuelos ni el warehouse publicado."
     },
     "oma_traffic": {
       "entry_ref": "constant:src.ingest.airports.groups:OMA_IR_URL",

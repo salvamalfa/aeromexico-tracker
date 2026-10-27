@@ -54,6 +54,11 @@ def describe(product_id: str) -> dict:
         **product,
         **instructions,
         "entry_url": resolve_entry(instructions["entry_ref"]),
+        **(
+            {"discovery_url": resolve_entry(instructions["discovery_ref"])}
+            if instructions.get("discovery_ref")
+            else {}
+        ),
         "canonical_config": "config/source_update_acquisition.json",
         "institution_catalogue": "config/source_catalog.yaml",
         "bronze_source_systems": list(bronze_aliases(product_id)),
@@ -102,13 +107,14 @@ def catalog_selection(product_id: str) -> dict:
         }
     if (
         recipe["state"] in {"manual", "internal", "disabled"}
-        or not recipe["entry_url"]
-        or not recipe["format"].startswith("HTML")
+        or not recipe.get("discovery_url", recipe["entry_url"])
+        or not (recipe["format"].startswith("HTML") or recipe.get("discovery_url"))
     ):
         raise ValueError(
             "No generic catalog capture for this product; follow its explicit acquisition procedure"
         )
-    validate_url(recipe["entry_url"], source["allowed_hosts"])
+    url = recipe.get("discovery_url", recipe["entry_url"])
+    validate_url(url, source["allowed_hosts"])
     return {
         "version": 1,
         "items": [
@@ -119,7 +125,7 @@ def catalog_selection(product_id: str) -> dict:
                 "entity": product_id + "_catalog",
                 "period": "current",
                 "purpose": "catalog",
-                "url": recipe["entry_url"],
+                "url": url,
                 "extension": "html",
                 "mode": "get",
             }
