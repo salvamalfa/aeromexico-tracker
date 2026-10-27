@@ -2504,6 +2504,21 @@ pasan. Los pins financieros y de noticias no se calcularon desde los archivos
 ni se recuperaron por las rutas previamente denegadas; su entrega por un canal
 autorizado sigue siendo necesaria para cerrar esas comprobaciones reales.
 
+La reparación de Silver cambió la huella del código. La revisión independiente
+real del commit `95e54979`, runtime `83f58bcf…`, volvió a ejecutar el productor
+original con red bloqueada y verificó los mismos 811 archivos del sitio,
+803 preservados, 177 insumos y 188 archivos restaurados. El vínculo técnico
+local se renovó con ese informe real; la autoridad original, sus anclas y sus
+revisiones permanecen intactas. Las nueve ventanas se recertificaron sin red
+en destinos nuevos y sus 53 salidas siguen idénticas; Volaris conserva su
+rechazo documental. Eso no acredita un calendario completo.
+
+El control general de linaje ahora identifica un material adicional ausente:
+el ZIP BTS del 17/oct, SHA `bda94a69b9d8430163a96b33521300cf8f76ac6f0aa0761d67ce3250a184d568`,
+259.152 bytes. El original retenido del 19/oct tiene otro hash y no se renombra
+ni se usa como sustituto. La búsqueda acotada en copias locales, el respaldo
+privado actualizado y Library no recuperó ese original. El gate sigue cerrado.
+
 Las nueve ventanas de fuentes se comprobaron otra vez en modo de replay: sus
 53 salidas conservan los mismos hashes. Siguen siendo ventanas separadas y no
 acreditan una ronda completa ni un calendario preparado para activación.
