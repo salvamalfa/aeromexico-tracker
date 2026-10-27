@@ -183,6 +183,42 @@ def test_documentary_scope_dates_columns_units_and_amounts_are_not_guessed():
         financials.parse({"html": (report() + b"changed", original(report()))}, "2026Q3")
 
 
+def test_local_monetary_table_exceptions_override_intro_without_relabeling_physical_units():
+    raw = report().decode()
+    targets = (
+        "<table><tr><td>Consolidated Statements",
+        '<table><tr><td colspan="3"></td><td colspan="9">Three Months',
+    )
+    for target in targets:
+        assert target in raw
+        for unit in (
+            "Amounts in millions of Mexican pesos",
+            "Cifras en millones de pesos mexicanos",
+            "Amounts in thousands of U.S. dollars",
+            "USD thousands",
+            "Importes expresados en miles de dólares estadounidenses",
+            "Mexican pesos (millions)",
+            "Statement amounts denominated in Mexican pesos",
+            "Statement amounts denominated in thousands of U.S. dollars",
+        ):
+            inserted = f'<tr><td colspan="21">{unit}</td></tr>'
+            changed = raw.replace(target, "<table>" + inserted + target.removeprefix("<table>"))
+            with pytest.raises(ValueError, match="local monetary table heading"):
+                parsed(changed.encode())
+        # Monetary default remains USD millions; separately labelled quantities/ratios are unchanged.
+        unit = (
+            "Amounts in millions of U.S. dollars; passengers in thousands; "
+            "fuel in thousand liters; CASM in USD cents per ASM"
+        )
+        changed = raw.replace(
+            target, '<table><tr><td colspan="21">' + unit + "</td></tr>" + target.removeprefix("<table>")
+        )
+        frame, _ = parsed(changed.encode())
+        assert frame.set_index("metric_key").loc["passengers", "unit"] == "thousand passengers"
+        assert frame.set_index("metric_key").loc["fuel_liters", "unit"] == "thousand liters"
+        assert frame.set_index("metric_key").loc["casm_ex_fuel", "unit"] == "USD cents per ASM-mile"
+
+
 @pytest.fixture
 def physical():
     root = ROOT / "tmp/source-updates" / ("am-financial-html-test-" + uuid4().hex)
@@ -320,3 +356,24 @@ def test_index_latest_quarter_and_physical_receipt_cannot_be_asserted(physical, 
     raw.write_bytes(raw.read_bytes() + b"changed")
     with pytest.raises(ValueError, match="successful direct official capture"):
         availability.verify(item, result, cutoff)
+
+
+def test_updated_releases_and_malformed_future_quarters_cannot_disappear_from_discovery(tmp_path):
+    path = tmp_path / "index.html"
+    for suffix in (
+        '<a href="/system/files-encrypted/updated.pdf">Quarterly Earnings Release (Updated)</a>',
+        '<h3>Q4 amended</h3><a href="/system/files-encrypted/4Q26.pdf">Quarterly Earnings Release</a>',
+        (
+            '<h2>2027 amended</h2><h3>Q1</h3><a href="/system/files-encrypted/1Q27.pdf">'
+            "Quarterly Earnings Release</a>"
+        ),
+    ):
+        path.write_bytes(INDEX + suffix.encode())
+        with pytest.raises(ValueError, match="pertinent quarterly earnings release"):
+            discovery.latest_quarter(path)
+    # Other documents do not announce another quarterly earnings release.
+    path.write_bytes(
+        INDEX + b'<h3>Q4 planned</h3><a href="/presentation.pdf">Investor Presentation</a>'
+        b'<a href="/annual.pdf">Annual Earnings Release</a>'
+    )
+    assert discovery.latest_quarter(path)[0] == "2026Q3"

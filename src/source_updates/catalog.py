@@ -40,7 +40,7 @@ PRODUCTS = (
         "am_financials",
         "aeromexico_ir",
         "quarterly",
-        "reviewed_retained_2026Q2_source_units_no_new_Q3_or_generic_build",
+        "reviewed_retained_Q2_PDF_Q3_IR_HTML_twenty_source_metrics_no_generic_build",
         "parse.aeromexico_ir_financial",
     ),
     (
@@ -55,7 +55,7 @@ PRODUCTS = (
         "volaris_sec",
         "sec_edgar",
         "both",
-        "retained_Q2_dossier_certifier_source_ratio_blocked_no_monthly_proof",
+        "reviewed_retained_Q2_dossier_comparable_CASM_warning_no_monthly_or_Q3_proof",
         "parse.peers",
     ),
     ("delta_sec", "sec_edgar", "quarterly", "refresh_catalog_preserve_us_gaap", "parse.peers"),

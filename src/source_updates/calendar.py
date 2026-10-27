@@ -80,7 +80,12 @@ def verify_report_evidence(release: dict, as_of: str) -> dict:
     Exact passages establish their physical location. Their entity/period/day
     interpretation remains the explicit confirmed review, never machine approval.
     """
-    from src.source_updates.primary_review import original, verify_evidence
+    from io import BytesIO
+
+    from lxml import html
+    from pypdf import PdfReader
+
+    from src.source_updates.primary_review import original, verify_evidence, within
 
     evidence = release["documentary_evidence"]
     if not isinstance(evidence, dict) or set(evidence) != {"bronze_root", "source", "passages"}:
@@ -105,10 +110,17 @@ def verify_report_evidence(release: dict, as_of: str) -> dict:
         raise ValueError("Documentary release date/capture is after its evidence cutoff")
     root = Path(evidence["bronze_root"])
     path = original(root, source)
-    if json.loads(Path(str(path) + ".meta.json").read_text()).get("http_status") != 200:
+    body = path.read_bytes()
+    if hashlib.sha256(body).hexdigest() != source["sha256"] or len(body) != source["bytes"]:
+        raise ValueError("Documentary source body changed before review")
+    sidecar = within(root, source["source_file"] + ".meta.json")
+    manifest = within(root, "_manifest.jsonl")
+    snapshot = {path: body, sidecar: sidecar.read_bytes(), manifest: manifest.read_bytes()}
+    if json.loads(snapshot[sidecar]).get("http_status") != 200:
         raise ValueError("Documentary evidence requires a successful original capture")
     if not isinstance(passages, dict) or set(passages) != {"entity", "period", "published_on"}:
         raise ValueError("Located entity, quarter and report day are all required")
+    cache = {}
     for key, passage in passages.items():
         if (
             not isinstance(passage, dict)
@@ -116,7 +128,21 @@ def verify_report_evidence(release: dict, as_of: str) -> dict:
             or passage["value"] != release[key]
         ):
             raise ValueError("Documentary reviewed metadata differs from release")
-        verify_evidence(passage, path, {})
+        locator = passage["locator"]
+        kind = "json" if "json_pointer" in locator else "pdf" if "pdf_page_1based" in locator else "html"
+        if (path, kind) not in cache:
+            cache[path, kind] = (
+                json.loads(body)
+                if kind == "json"
+                else PdfReader(BytesIO(body))
+                if kind == "pdf"
+                else html.fromstring(body)
+            )
+        verify_evidence(passage, path, cache)
+    # Recheck physical identities and exact metadata bytes after located review.
+    original(root, source)
+    if any(p.read_bytes() != content for p, content in snapshot.items()):
+        raise ValueError("Documentary source or acquisition metadata changed during review")
     return {
         "release_sha256": hashlib.sha256(
             json.dumps(release, sort_keys=True, allow_nan=False).encode()

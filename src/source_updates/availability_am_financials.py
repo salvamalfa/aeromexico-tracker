@@ -32,7 +32,13 @@ def latest_quarter(path):
             quarter = None
         elif node.name == "h3":
             quarter = label if year and re.fullmatch(r"Q[1-4]", label) else None
-        elif year and quarter and label == "Quarterly Earnings Release":
+        elif re.search(r"\b(?:earnings\s+release|quarterly\s+release)\b", label, re.I) and (
+            "annual" not in label.casefold() or "quarterly" in label.casefold()
+        ):
+            # Classify relevant releases before filtering their label/context;
+            # otherwise an updated or malformed newer report could disappear.
+            if label != "Quarterly Earnings Release" or not year or not quarter:
+                raise ValueError("AM pertinent quarterly earnings release label/context is unreviewed")
             url = urljoin(INDEX, node.get("href", ""))
             physical.validate_url(url, ["ir.aeromexico.com"])
             if not re.fullmatch(

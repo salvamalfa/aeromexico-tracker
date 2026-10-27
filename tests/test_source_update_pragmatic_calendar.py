@@ -306,3 +306,107 @@ def test_documentary_date_is_not_limited_by_unfinished_candidate_cutoff(tmp_path
     assert (
         calendar.verify_report_evidence(value["releases"][0], value["as_of"])["published_on"] == "2026-10-30"
     )
+
+
+def test_body_changed_after_initial_identity_check_is_rejected(tmp_path, monkeypatch):
+    from src.source_updates import primary_review
+
+    row = physical_release(tmp_path)
+    real_original = primary_review.original
+
+    def swapped(root, source):
+        path = real_original(root, source)
+        path.write_bytes(path.read_bytes().replace(b"2026Q3", b"2026Q2"))
+        return path
+
+    monkeypatch.setattr(primary_review, "original", swapped)
+    with pytest.raises(ValueError, match="body changed before review"):
+        calendar.verify_report_evidence(row, "2026-10-31T08:00:00-06:00")
+
+
+def pdf_document(quarter):
+    from io import BytesIO
+
+    from pypdf import PdfWriter
+    from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=612, height=792)
+    font = DictionaryObject(
+        {
+            NameObject("/Type"): NameObject("/Font"),
+            NameObject("/Subtype"): NameObject("/Type1"),
+            NameObject("/BaseFont"): NameObject("/Helvetica"),
+        }
+    )
+    page[NameObject("/Resources")] = DictionaryObject(
+        {NameObject("/Font"): DictionaryObject({NameObject("/F1"): font})}
+    )
+    stream = DecodedStreamObject()
+    stream.set_data(f"BT /F1 12 Tf 50 700 Td (AEROMEXICO {quarter} 2026-10-30) Tj ET".encode())
+    page[NameObject("/Contents")] = writer._add_object(stream)
+    target = BytesIO()
+    writer.write(target)
+    return target.getvalue()
+
+
+@pytest.mark.parametrize("kind", ["html", "pdf", "json"])
+def test_swap_then_restore_cannot_supply_forged_passage(tmp_path, monkeypatch, kind):
+    from src.source_updates import primary_review
+
+    row = physical_release(tmp_path)
+    root = tmp_path / "AEROMEXICO"
+    source = row["documentary_evidence"]["source"]
+    if kind == "pdf":
+        body, forged = pdf_document("2026Q3"), pdf_document("2026Q2")
+    elif kind == "json":
+        content = dict(entity="AEROMEXICO", period="2026Q3", published_on="2026-10-30")
+        body = json.dumps(content).encode()
+        forged = json.dumps({**content, "period": "2026Q2"}).encode()
+    else:
+        body = (root / "report.html").read_bytes()
+        forged = body.replace(b"2026Q3", b"2026Q2")
+    source.update(sha256=hashlib.sha256(body).hexdigest(), bytes=len(body))
+    row.update(source_sha256=source["sha256"], period="2026Q2")
+    (root / "report.html").write_bytes(body)
+    (root / "report.html.meta.json").write_text(json.dumps(source))
+    (root / "_manifest.jsonl").write_text(json.dumps(source) + "\n")
+    for key, passage in row["documentary_evidence"]["passages"].items():
+        passage.update(value=row[key], excerpt=row[key])
+        if kind == "pdf":
+            passage["locator"] = dict(pdf_page_1based=1)
+        elif kind == "json":
+            passage["locator"] = dict(json_pointer="/" + key)
+    real_verify = primary_review.verify_evidence
+
+    def temporary_swap(passage, path, cache):
+        if passage["value"] != "2026Q2":
+            return real_verify(passage, path, cache)
+        path.write_bytes(forged)
+        try:
+            return real_verify(passage, path, cache)
+        finally:
+            path.write_bytes(body)
+
+    monkeypatch.setattr(primary_review, "verify_evidence", temporary_swap)
+    with pytest.raises(ValueError, match="evidence .*mismatch"):
+        calendar.verify_report_evidence(row, "2026-10-31T08:00:00-06:00")
+    assert (root / "report.html").read_bytes() == body
+
+
+@pytest.mark.parametrize("name", ["report.html.meta.json", "_manifest.jsonl"])
+def test_acquisition_bytes_cannot_change_during_review(tmp_path, monkeypatch, name):
+    from src.source_updates import primary_review
+
+    row = physical_release(tmp_path)
+    real_verify = primary_review.verify_evidence
+    target = tmp_path / "AEROMEXICO" / name
+
+    def changed_metadata(passage, path, cache):
+        real_verify(passage, path, cache)
+        if passage["value"] == "2026-10-30":
+            target.write_bytes(target.read_bytes().replace(b": ", b":  "))
+
+    monkeypatch.setattr(primary_review, "verify_evidence", changed_metadata)
+    with pytest.raises(ValueError, match="metadata changed during review"):
+        calendar.verify_report_evidence(row, "2026-10-31T08:00:00-06:00")

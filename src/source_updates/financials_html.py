@@ -1,6 +1,7 @@
 """AM Q3 official IR 6-K, financial Exhibit99.1 only; same twenty source metrics."""
 
 import hashlib
+import re
 
 import pandas as pd
 from bs4 import BeautifulSoup, Tag
@@ -150,6 +151,42 @@ def headers(table, statement):
             raise ValueError("AM current/prior year headers or section column spans changed")
 
 
+def monetary_headings(table):
+    """Local table declarations override the introductory USD-millions default.
+
+    Inspect unit headings, not every occurrence of 'thousand' or 'cents': native
+    passenger/fuel quantities and CASM ratio labels keep their reported units.
+    """
+    declaration = re.compile(
+        r"^\(?\s*(?:(?:amounts?|figures?|cifras|montos|importes|valores)\s+"
+        r"(?:(?:are|son|se)\s+)?(?:(?:expressed|presented|expresad[oa]s?|presentad[oa]s?)\s+)?"
+        r"(?:in|en)\b|(?:in|en)\s+(?:thousands?|millions?|miles|millones)\b|"
+        r"(?:usd|mxn|eur|u\.s\.\s*dollars?|d[oó]lares|pesos)\b)",
+        re.I,
+    )
+    usd = r"(?:usd|u\.s\.\s*dollars?|us\s+dollars?|d[oó]lares\s+estadounidenses)"
+    monetary_thousands = re.compile(
+        rf"(?:\b(?:thousands?\s+(?:of\s+)?|miles\s+de\s+){usd}\b|"
+        rf"\b{usd}\s*\(?\s*(?:in\s+)?(?:thousands?|miles|'?000)\b)",
+        re.I,
+    )
+    for row in table.find_all("tr"):
+        columns = cells(row)
+        if not columns or text(columns[0]) in LABELS.values():
+            continue
+        heading = " ".join(text(c) for c in columns).strip()
+        if (
+            re.search(r"\b(?:mxn|pesos?|eur|euros?)\b", heading, re.I)
+            or monetary_thousands.search(heading)
+            or declaration.match(heading)
+            and (
+                not re.search(rf"\b{usd}\b", heading, re.I)
+                or not re.search(r"\b(?:millions?|millones)\b", heading, re.I)
+            )
+        ):
+            raise ValueError("AM local monetary table heading contradicts reported USD millions")
+
+
 def parse(inputs, period):
     if set(inputs) != {"html"} or period != PERIOD:
         raise ValueError("AM official HTML edition supports only the reviewed 2026Q3 financial quarter")
@@ -164,6 +201,8 @@ def parse(inputs, period):
     ]
     if len(statements) != 1 or len(summaries) != 1:
         raise ValueError("AM financial statement/indicator table missing or duplicated inside99.1")
+    monetary_headings(statements[0][1])
+    monetary_headings(summaries[0][1])
     headers(statements[0][1], True)
     headers(summaries[0][1], False)
     statement_keys = set(STATEMENT) - {"rent_depreciation_amortization_combined"}
