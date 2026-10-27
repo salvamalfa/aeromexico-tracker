@@ -10,8 +10,9 @@ coordinador. Muestra primero el plan y después puede capturar y certificar un
 lote candidato separado. El calendario y la política de productos ya están
 aprobados; no hace falta volver a aprobar esas reglas.
 
-La reconciliación de los cuatro certificadores está reunida en PR156. El head
-remoto `a10c2e69` tiene web aprobada y Python en ejecución. La agregada local
+Los cuatro certificadores quedaron integrados con PR156 en `70fb03ec`. Su head
+`a10c2e69` pasó CI y Codex sin hallazgos; PR152/154/155 conservaron sus commits y
+quedaron integrados por el mismo merge. La CI posterior está en curso. La agregada local
 anterior aprobó 5.129 casos; la optimización redujo su duración observada de
 39:47 a 36:33 (8,1 %). No se atribuye ese ahorro a CI remota ni a un head que
 no haya repetido aquella agregada. Publicación, fuentes y aprobaciones
@@ -2635,8 +2636,8 @@ pendientes; no se crea otro informe paralelo.
 ### Verificación local del 27 de octubre
 
 El commit local `ce086002` añade AIFA septiembre y su vínculo físico de
-actualidad; no forma parte del head remoto `a10c2e69` mientras se cierra su
-validación. En `tmp/source-updates/monday-reconciliation-20261026/calendar-source-evidence-20261027/`:
+actualidad; es un lote posterior al merge `70fb03ec`, sin cambiar lo que ese
+merge entregó. La reconciliación de su historia no cambia esos bytes de código. En `tmp/source-updates/monday-reconciliation-20261026/calendar-source-evidence-20261027/`:
 
 - `aifa-v3-result.json`: extracción real, siete tablas candidatas, replay del
   candidato y del recibo de revisión; disponibilidad individual verificada.
@@ -2650,6 +2651,15 @@ validación. En `tmp/source-updates/monday-reconciliation-20261026/calendar-sour
   ataques reales; SHA256 `3f0646f850b9bcd09d09993ba0dabf64d3c4cb0adc2a9b1c4ffd7ceb69b16cc0`.
 - `independent-availability-component-review.json`: 20 contratos y siete
   sondas con copias físicas; SHA256 `c08a704b54677e2853eefd9ed867456bd90a7c93ca0fcf026b7a2324a03492f6`.
+- `final-source-family.xml`: 1.680 casos de 63 módulos de familias/regresión
+  aprobados, cero fallos/errores/omisiones, 602,96 s. Las 99 pruebas financieras
+  del mismo runtime pasaron en 188,66 s, con una omisión histórica. Hay
+  solapamiento con las pruebas focales anteriores; no sumar sus conteos. La
+  agregada previa de 5.129 corresponde a su head, no se afirma repetida aquí.
+- `independent-financial-continuity-evidence-ce086002.json`: replay real del
+  productor/verificador originales y 107 pruebas independientes. Conserva
+  811/803 archivos publicados, 177 fuentes/aprobaciones y 188 del expediente.
+  Revisión local exacta `05157e87…`; no cambia la autoridad financiera original.
 - `nine-window-ce086002/official-reproduction.json`: nueve productos retenidos
   recertificados con el código actual; las 53 salidas conservan sus hashes.
   Son ventanas distintas. Volaris Q2 permanece bloqueado antes de Silver/Gold.
@@ -2680,10 +2690,12 @@ No se afirma una revisión interactiva remota completada por ese intento.
   exige productos obligatorios compatibles y evidencia verificada.
 - PR156 reúne la reconciliación técnica de PR152/154/155/156 contra `dad0a39b`.
   Es descendiente de sus cuatro heads. Solo su rama se avanzó normalmente y
-  volvió a borrador; las otras tres permanecen intactas. La CI de `7489e2a0`
-  aprobó web y falló Python. La corrección del perfil público retrospectivo fue
-  revisada y subida en `a10c2e69`; CI `40448593713` está en ejecución. Falta
-  resultado final y revisión vigente antes de integrar.
+  volvió a borrador para revalidar. La CI inicial de `7489e2a0` aprobó web y
+  falló Python; la corrección `a10c2e69` pasó CI `40448593713`, revisión
+  independiente y Codex, sin hallazgos ni hilos. Se marcó listo una sola vez y
+  se integró normalmente en `70fb03ec`. GitHub confirmó PR152/154/155 integrados
+  con sus heads originales por ese mismo merge. Falta finalizar la CI posterior
+  `40450942960`; no hay Pages ni despliegue del chat por este diff.
   Las revisiones adicionales antiguas sin resultado terminal no se consideran
   aprobación ni ejecución activa comprobada y no se relanzan a ciegas.
 - El procedimiento financiero local está implementado y probado con el
@@ -2703,7 +2715,9 @@ No se afirma una revisión interactiva remota completada por ese intento.
   el periodo. No se corrigió julio ni se publicó el candidato. La vinculación
   física a disponibilidad pasó en el candidato v3 del commit `ce086002`;
   rechaza reutilizar esa captura como actualidad de noviembre. Falta entrega
-  remota del lote local y cierre de continuidad técnica del mismo runtime.
+  remota del lote local. El mismo runtime pasó replay financiero original
+  independiente y 99 pruebas financieras, con una omisión histórica; su vínculo
+  de continuidad es solo local y no aprueba publicación.
 - El vínculo físico de descubrimiento/captura reciente está implementado
   localmente para AIFA: índice oficial, manifiesto, HTTP, URL y hashes del XLSX
   realmente usado. Rechaza otra fecha de ronda, otro mes o capturas fallidas;
