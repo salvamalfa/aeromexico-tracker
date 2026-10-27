@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
 Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
-contratos AIFA/AICM/Viva/AFAC integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
+contratos AIFA/AICM/Viva/AFAC/BTS y tráfico IR Aeroméxico integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
@@ -22,8 +22,8 @@ originales siguen intactas.
 AIFA septiembre quedó integrado en [PR161](https://github.com/salvamalfa/aeromexico-tracker/pull/161),
 merge `6d78cf8f`, con CI y Codex del head exacto favorables y
 [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40455383797).
-Tiene extracción oficial local y revisión independiente:
-180 observaciones, 80 reconciliaciones y reproducción offline. Su disponibilidad
+Tiene extracción oficial local y revisión independiente para el corte del 26/oct
+en México, con 180 observaciones, 80 reconciliaciones y reproducción offline. Su disponibilidad
 se vincula al índice y a la captura realmente usados; no se infiere de Gold ni
 de una fecha escrita a mano. El intento GDELT del 27/oct devolvió HTTP503,
 conservado como fallo; no acredita un mes vacío y no se repite en esta pasada.
@@ -33,7 +33,7 @@ AICM y Viva septiembre añadieron sus vínculos físicos mediante
 mediante [PR163](https://github.com/salvamalfa/aeromexico-tracker/pull/163), ambos
 integrados con CI del head, Codex y CI posterior aprobadas. BTS tiene extracción
 real y comparación histórica integradas en PR164 (`e049eb00`), tras CI y
-Codex del head `36862fb0` favorables; su CI posterior sigue en curso.
+Codex del head `36862fb0` y CI posterior `40484738784` favorables.
 Tráfico IR Aeroméxico tiene
 contrato probado y siete salidas reales idénticas; su disponibilidad actual
 requiere todavía el PDF de la misma fecha local que el índice. Los detalles
@@ -2914,8 +2914,7 @@ inmutable; no se reutiliza una aceptación con fingerprints viejos.
 
 PR164 se integró normalmente el 27/oct a las 09:57 UTC, merge `e049eb00`.
 CI del head `36862fb0` (`40480306782`) y Codex terminaron favorables, sin hilos
-pendientes. La CI posterior `40484738784` está en curso; no se atribuye su
-resultado antes de terminar. No hubo datos ni sitio modificados.
+pendientes. La CI posterior `40484738784` terminó aprobada para el merge exacto. No hubo datos ni sitio modificados.
 
 ### Aeroméxico: contrato físico de tráfico mensual (27/oct)
 
@@ -2963,6 +2962,11 @@ No se declara lista esta fuente ni se sustituye el original por otro medio.
 Conservar evidencia técnica bajo `tmp/source-updates/availability-followup-20261027/`,
 módulos/pruebas y autoridad originales. Actualizar guía, skills y Roadmap;
 sin informes paralelos, retiros ni cambios del dashboard o Monthly.
+
+PR165 quedó integrado normalmente en `ffe7cfa1` el 27/oct 10:32 UTC,
+con CI `40484959407` y Codex del head `baaa8bfc` favorables, sin hilos.
+La CI posterior `40489330870` sigue en curso. Es infraestructura; no publica
+el candidato mensual ni altera los cortes ya aprobados.
 
 ### RSS: disponibilidad de consultas actuales con cobertura parcial (27/oct)
 
@@ -3028,6 +3032,83 @@ Conservar módulos, pruebas, originales, dictámenes y recibos; actualizar guía
 skills y Roadmap, sin documentos paralelos, retiros o contenido candidato en
 Git público. Sin cambios de autoridad, permisos, gastos o disparadores.
 
+### Consultas macro y mercado: disponibilidad física y calendarios separados
+
+La colección del 27/oct obtuvo nueve respuestas HTTP200: tres CSV públicos
+Banxico por POST (`0a870c92…`), un XLS EIA (`cdc0e5a6…`) y cinco JSON Yahoo
+(`e207a72d…`), cero pagados. El certificador `series` reconstruyó septiembre y
+3T26 en seis dossiers aislados, con contratos, unidades, dimensiones, linaje y
+replay idéntico. Mercado conserva su original SEC de identidad: una copia
+literal retenida, con su captura anterior y sin nueva solicitud SEC.
+
+| Producto | Septiembre | 3T26 |
+|---|---|---|
+| EIA | 21 observaciones; 2 hechos Gold | 64 observaciones; 8 hechos mensuales/trimestrales |
+| Banxico | 52 observaciones macro, 21 FIX; 6 hechos Gold | 159 observaciones macro, 65 FIX; 24 hechos Gold |
+| Cotizaciones | 12.037 filas históricas retenidas; 105 hechos del mes | Mismo historial; 320 hechos del trimestre |
+
+El contrato `availability_series` exige todos los roles y sus IDs reales,
+URLs, ventana y formulario exacto de Banxico. Verifica recibos, manifiesto
+único, sidecars, fecha local, hashes y aporte de cada respuesta a la tabla
+nativa. Es disponibilidad de consultas para la ventana solicitada; **no prueba
+calendario completo de observaciones, primera publicación ni último periodo
+publicado**. Esos campos siguen falsos o nulos, con bloqueo global. El mismo
+calendario no puede imponerse a FIX, inflación, tasa, EIA y cada mercado.
+La [nota oficial de FIX](https://www.banxico.org.mx/tipcamb/tipCamMIAction.do?idioma=sp)
+distingue determinación en días bancarios y publicación posterior en el DOF;
+no define por ello las demás series.
+
+Hay un faltante concreto: SF61745 tiene 91 fechas en los 92 días naturales
+de 3T26. El 12/jul no está en el CSV original; el parser no lo descartó.
+No se rellena aunque los días vecinos tengan igual valor. La cadencia esperada
+requiere evidencia propia y no se declara completa desde ese recuento.
+El diagnóstico conserva el hash y los originales en `banxico-policy-rate-observed-gap.json`.
+
+La consulta diagnóstica Yahoo de AERO devolvió `tradingPeriods`: 21 sesiones
+regulares declaradas para septiembre y un día de contexto de agosto. Es un
+insumo candidato de calendario, no evidencia aún de exhaustividad o de los
+otros cuatro tickers/mercados. El dictamen independiente `33d7f5d3…` conserva
+los criterios pendientes. No se ingieren precios horarios ni se cambia
+`calendar_completeness_certified` para forzar aceptación.
+
+El índice AIFA actual añade otra distinción temporal. El GET del 27/oct
+10:42 UTC respondió HTTP200, SHA `b36c5288…`, pero anuncia julio. El índice
+anterior SHA `6e393ba9…`, de 02:55 UTC (26/oct en México), anunciaba septiembre.
+Se admite la variante literal del título sin el sufijo redundante `(PDF)`,
+conservando comprobaciones de mes, año, formato y URL. El selector actual
+resuelve julio; no se descargó de nuevo ese libro ya rechazado ni se promueve
+septiembre como disponibilidad actual. No se infiere causa, retractación o
+falsedad de una de las capturas. El dossier septiembre permanece válido para
+su corte histórico y conserva las notas y la fecha de Carga desconocida.
+
+La implementación macro `d936aa15` pasó 560 pruebas afectadas y nueve
+independientes, separadas de las fuentes reales. El único delta final
+`fd9e067e` admite el sufijo AIFA observado: 21 pruebas focales y nueve sondas
+diferenciales pasaron; los demás binders son idénticos. No se atribuye la
+unión de 560 a un runtime distinto sin repetirla. El runtime final `4f3bbe19…`
+tiene dictamen financiero auténtico `5d620379…`: replay original (62,49 s),
+79 ataques aprobados y conservación exacta de 811/803 archivos publicados,
+177 fuentes/autoridad y 188 del expediente. No se aplica el dictamen previo
+`f19aec7a…` como si revisara este runtime.
+
+Los replays finales por fingerprints nuevos producen 32 salidas macro, cuatro
+RSS, 22 de AICM/Viva/AFAC/BTS y siete AIFA históricas; no mutan aceptaciones
+previas. `combined-global-final-recipe.json`, creado después del binding local
+nuevo, comprueba 11 tareas reales: ocho mensuales y tres trimestrales.
+Las 11 pasan extracción y vínculo físico; siguen faltando 12 tareas requeridas,
+seis controles de calendario de observaciones y los reportes centrales
+compatibles. La fecha trimestral permanece nula y Aerocivil/GDELT obligatorios.
+No son 12 fuentes declaradas caídas ni una ronda lista.
+
+```bash
+python -m src.source_updates.global_readiness --recipe tmp/source-updates/availability-followup-20261027/combined-global-final-recipe.json --workspace tmp/source-updates/availability-followup-20261027/combined-global-final --check
+```
+
+El rechazo global es el resultado esperado de esa prueba; no se usa para
+activar una ejecución. Conservar código, pruebas, originales y recibos
+inmutables. Actualizar únicamente esta guía, skills y Roadmap; sin informes
+paralelos, datos públicos nuevos, retiro de archivos o cambios de autoridad.
+
 ## Pendientes
 
 - La política de productos y el calendario están aprobados; no falta una
@@ -3077,9 +3158,8 @@ Git público. Sin cambios de autoridad, permisos, gastos o disparadores.
   Aeroméxico IR financiero y la evidencia mensual actual (contrato mensual
   ya implementado arriba); otros productos AFAC de
   aeropuertos/marginales (sus libros y ediciones propias; el dossier por empresa
-  no los sustituye); macro/cotizaciones
-  (ventana publicada y sesiones, no confundir última observación con cierre
-  civil); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
+  no los sustituye); macro/cotizaciones (calendario esperado de observaciones
+  aún sin acreditar, aunque las consultas físicas ya se verifican); SEC/GAP/ASUR (dossier y mes dentro del anexo, con adquisición manual
   existente). RSS ya tiene contrato físico de sus consultas actuales arriba,
   con cobertura parcial y GDELT separado. Los otros contratos siguen siendo
   trabajo técnico pendiente, no fuentes declaradas caídas.

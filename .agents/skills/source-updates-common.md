@@ -215,6 +215,12 @@ locales exactos; no hay índice de reportes. Se comprueba su aporte al dossier
 completo de metadatos y se mantienen los días no observados, incompletitud
 mensual, cobertura del medio y elegibilidad del agente sin acreditar. No
 convertir este vínculo en última fecha de publicación ni sustitución de GDELT.
+Las series usan `workspace`, `run_id` y `series_items` con todos los roles
+canónicos del producto: tres Banxico, un libro EIA o cinco tickers. El vínculo
+comprueba las respuestas actuales y su aporte nativo; no aporta un calendario
+esperado de observaciones. Mantener `calendar_completeness_certified=false`,
+último periodo y primera publicación desconocidos, y el bloqueo global. La
+identidad SEC de mercado sigue siendo original retenido, sin nueva captura.
 La disponibilidad se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
 inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una

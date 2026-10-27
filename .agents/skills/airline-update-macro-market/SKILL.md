@@ -125,3 +125,31 @@ la disponibilidad actual y el calendario completo de observaciones siguen sin
 acreditar. Publicación y rezago desconocidos quedan nulos. El pipeline anterior
 conserva su utilidad para adquisición/diagnóstico, no recibe certificación por
 la existencia de este adaptador. No cambia Gold público ni activa calendario.
+
+### Disponibilidad física de las respuestas canónicas
+
+Después de `series_candidate` y su replay integral, readiness admite
+`availability={workspace,run_id,series_items:{<rol>:<id>}}` para una colección
+separada del mismo día local. Roles exactos: Banxico `SF43718`, `SP1`,
+`SF61745`; EIA `workbook`; mercado `AERO`, `VLRS`, `RYAAY`, `DAL`, `ICAGY`.
+Usar IDs emitidos por la selección de `recipe --output round` y revisar el
+plan de `collect` antes de la captura autorizada: tres POST, un GET o cinco
+GET respectivamente, cero pagados. No ejecutar la ingesta activa.
+
+El contrato verifica URL, ventana y, en Banxico, formulario realmente enviado;
+colección completa, manifiesto único, sidecars, alias, hash y aporte de cada
+serie a su tabla nativa reproducida. No reetiquetar una respuesta como otro
+producto. Mercado conserva por separado la identidad SEC retenida y verificada;
+no representa una consulta SEC nueva ni cambia su identidad de acceso.
+Si hace falta reunir originales de dos raíces, copiar literalmente archivo,
+sidecar y registro del manifiesto a un inventario de staging nuevo. No inventar
+capturas, fechas, métodos o recibos; conservar raíces y recibos originales.
+
+Este vínculo acredita respuestas actuales para la ventana histórica solicitada.
+`latest_available_period` y primera publicación siguen nulos. El calendario
+completo de observaciones sigue **sin acreditar** y bloquea incorporación en
+la política global, tanto mensual como trimestral. Los recuentos de datos y
+el último día observado no prueban los días en que debía existir una observación.
+No compartir calendario entre FIX, tasa, inflación, EIA y bolsas. La evidencia
+Yahoo `tradingPeriods` de AERO es solo un insumo candidato, sin prueba aún de
+exhaustividad ni de los cinco tickers; no se usa para cambiar esos flags.

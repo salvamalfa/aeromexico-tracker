@@ -21,7 +21,9 @@ Propuesta — el dueño decide prioridades.
   [PR161](https://github.com/salvamalfa/aeromexico-tracker/pull/161), merge
   `6d78cf8f`, con CI y Codex favorables y CI posterior `40455383797` aprobada.
   Sus datos siguen siendo candidatos. Pasaron
-  1.680 casos de fuentes y 99 financieros (una omisión histórica). Aerocivil,
+  1.680 casos de fuentes y 99 financieros (una omisión histórica). La captura
+  del índice del 27/oct local volvió a anunciar julio: se conserva septiembre
+  en su corte histórico del 26/oct, sin acreditar disponibilidad actual. Aerocivil,
   GDELT, tráfico mensual Volaris y fechas verificadas siguen bloqueando la
   ronda completa. No están activados calendario ni nuevas ingestas/noticias.
   [PR162](https://github.com/salvamalfa/aeromexico-tracker/pull/162), integrado
@@ -47,7 +49,7 @@ Propuesta — el dueño decide prioridades.
 - BTS: contrato físico integrado en
   [PR164](https://github.com/salvamalfa/aeromexico-tracker/pull/164), merge
   `e049eb00`, tras CI `40480306782` y Codex favorables del head `36862fb0`.
-  CI posterior `40484738784` en curso. Usa la fila FJE del historial y descarga
+  CI posterior `40484738784` aprobada. Usa la fila FJE del historial y descarga
   México del año actual y del revisado. Extracción real: 12.459 filas en 2026
   hasta julio; 18.081 en 2023, iguales al baseline explícito. Pasaron 236
   contratos afectados y revisión independiente; disponibilidad de julio
@@ -56,7 +58,10 @@ Propuesta — el dueño decide prioridades.
   global real acepta los cuatro productos AICM/Viva/AFAC/BTS y rechaza
   incorporación por las otras 19 tareas requeridas y los reportes centrales
   sin vínculo. Son tareas no incluidas, no 19 fuentes declaradas caídas.
-- Tráfico IR Aeroméxico: contrato de índice actual/PDF preparado y probado;
+- Tráfico IR Aeroméxico: contrato de índice actual/PDF integrado en
+  [PR165](https://github.com/salvamalfa/aeromexico-tracker/pull/165), merge
+  `ffe7cfa1`, tras CI `40484959407` y Codex favorables de `baaa8bfc`.
+  CI posterior `40489330870` en curso. Tiene
   extracción real del original de septiembre retenido desde 19/oct: 24
   observaciones y siete salidas idénticas. Pasaron 408 casos afectados y
   revisión independiente. Índice del 27/oct HTTP200; falta el PDF actual en
@@ -68,6 +73,13 @@ Propuesta — el dueño decide prioridades.
   metadatos parciales, sin noticias activadas ni sustitución de GDELT.
   AFAC aeropuertos: el índice actual devolvió HTTP403; se conserva el libro
   julio comprobado, con acceso y contrato de la edición actual pendientes.
+- Macro y mercado: contratos físicos de tres CSV Banxico, XLS EIA y cinco
+  JSON de cotizaciones preparados y probados con capturas actuales. Pasaron
+  seis dossiers reales: septiembre y 3T26 por producto. El ensayo combinado
+  verifica 11 tareas y mantiene bloqueada la incorporación: 12 obligatorias
+  no incluidas, seis controles de calendario y reportes centrales sin vínculo.
+  El CSV SF61745 no contiene el 12/jul; no se imputa. No se deriva cobertura
+  completa desde recuentos de datos o metadatos de sesiones de un solo ticker.
 - Airline Monthly del corte 24/oct: revisión estática y funcional realizada
   por el agente de Pages: 23 afirmaciones, seis fuentes y cuatro hashes de
   originales confirmados; dos PDF de Aeroméxico devolvieron HTTP503. Falta la
