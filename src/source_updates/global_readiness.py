@@ -326,7 +326,7 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             if (item["cadence"], item["product"]) in required:
                 core_blockers.append(reason)
     blockers = sorted(set(blockers + core_blockers))
-    for key in sorted(GUARDS):
+    for key in sorted(key for key in GUARDS if key[0] in cadences):
         item = indexed.get(key)
         result = outcomes.get(item["id"], {}) if item else {}
         if (

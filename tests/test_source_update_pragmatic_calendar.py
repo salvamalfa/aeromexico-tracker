@@ -125,9 +125,8 @@ def test_observed_macro_is_warning_but_source_stays_required(product):
     )
     decision = gate.evaluate(value, results)
     assert decision["core_ready"] and decision["requested_bundle_ready"]
-    assert decision["calendar_blockers"] == [
-        "quarterly:aerocivil:required_calendar_prerequisite_not_verified"
-    ]
+    assert decision["calendar_blockers"] == []
+    assert decision["ready_for_calendar_incorporation"]
     assert decision["coverage_warnings"] == [
         f"monthly_{product}:observation_calendar_completeness_not_verified"
     ]

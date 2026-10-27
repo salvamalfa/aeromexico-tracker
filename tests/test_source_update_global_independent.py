@@ -393,6 +393,55 @@ def test_synthetic_complete_calendar_proof_still_cannot_activate_execution():
     assert decision["activation"] == "none" and decision["publication"] == "not_authorized"
 
 
+@pytest.mark.parametrize("kind", ["monthly", "quarterly", "combined"])
+def test_calendar_prerequisites_follow_requested_cadence_without_dropping_required_sources(kind):
+    """Policy-only success fixtures do not establish availability of any source."""
+    value = recipe(kind)
+    results = outcomes(value) if kind == "monthly" else physically_bound_reports(value)
+    decision = global_gate.evaluate(value, results)
+    assert decision["core_ready"] and decision["requested_bundle_ready"]
+    assert decision["ready_for_calendar_incorporation"] and not decision["calendar_blockers"]
+    assert decision["ready_for_automatic_execution"] is False
+    assert decision["activation"] == "none" and decision["publication"] == "not_authorized"
+
+
+@pytest.mark.parametrize(
+    "kind,product,cadence",
+    [
+        ("monthly", "gdelt", "monthly"),
+        ("combined", "gdelt", "monthly"),
+        ("quarterly", "aerocivil", "quarterly"),
+        ("combined", "aerocivil", "quarterly"),
+    ],
+)
+def test_calendar_prerequisites_still_block_their_requested_cadence(kind, product, cadence):
+    value = recipe(kind)
+    results = outcomes(value) if kind == "monthly" else physically_bound_reports(value)
+    item = selected(value, product, cadence)
+    results[item["id"]]["status"] = "blocked"
+    decision = global_gate.evaluate(value, results)
+    assert not decision["core_ready"] and not decision["ready_for_calendar_incorporation"]
+    assert f"{cadence}:{product}:required_calendar_prerequisite_not_verified" in decision["calendar_blockers"]
+
+
+@pytest.mark.parametrize("dependent", [False, True])
+def test_used_outside_cadence_result_and_transitive_dependency_are_still_checked(dependent):
+    value = recipe("monthly")
+    outside = task("aerocivil", "quarterly")
+    value["items"].append(outside)
+    required = selected(value, "gdelt", "monthly")
+    if dependent:
+        required["depends_on"] = [outside["id"]]
+    results = outcomes(value)
+    results[outside["id"]]["semantic_acceptance_verified"] = False
+    decision = global_gate.evaluate(value, results)
+    assert not decision["requested_bundle_ready"] and not decision["ready_for_calendar_incorporation"]
+    assert decision["core_ready"] is not dependent
+    assert "quarterly:aerocivil:official_service_code_legend_pending" in decision["blockers"]
+    if dependent:
+        assert "monthly:gdelt:dependency_not_verified" in decision["blockers"]
+
+
 @pytest.mark.parametrize("mutation", ["url", "sha256", "not_contributing", "missing_report"])
 def test_release_requires_actual_verified_contributor_not_just_a_valid_url(mutation):
     value = recipe("combined")
