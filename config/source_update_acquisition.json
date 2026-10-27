@@ -93,7 +93,7 @@
       "entry_ref": "sec_group:GAP",
       "state": "manual",
       "format": "JSON SEC → anexo HTML",
-      "procedure": "CIK desde SEC_GROUPS de airports.groups. Seleccionar HTML oficial de tráfico GAP, no estados financieros ni mes del formulario. Importar original retenido con airport_group_candidate retain (rol html); certify exige mes cerrado, mercados, comparativos/acumulados y linaje Silver/Gold completo. GAP: preservar cifras preliminares en miles con un decimal, CBX incluido en TIJ internacional y total mundial separado del cálculo de doce aeropuertos MX; no mezclar Jamaica.",
+      "procedure": "CIK desde SEC_GROUPS de airports.groups. Seleccionar HTML oficial de tráfico GAP, no estados financieros ni mes del formulario. Importar original retenido con airport_group_candidate retain (rol html); certify exige mes cerrado, mercados, comparativos/acumulados y linaje Silver/Gold completo. GAP: preservar cifras preliminares en miles con un decimal, CBX incluido en TIJ internacional y total mundial separado del cálculo de doce aeropuertos MX; no mezclar Jamaica. Descubrimiento retenido específico gap_sec_submissions_snapshot_v1: solo julio 2026 al corte mexicano exacto 2026-08-20T18:20:00-06:00, con submissions, índices oficiales y primarias de los dos 6-K revisados. Requiere hashes, sidecars, cronología e inventario de anexos completos; conserva los contenedores listados no descargados como tales. No genera capturas ni acredita actualidad de octubre, septiembre u otra edición; otros expedientes requieren revisión. El modo de adquisición SEC continúa manual.",
       "selection_contract": {
         "source_system": "sec_edgar",
         "entity": "GAP_traffic_<accession>",

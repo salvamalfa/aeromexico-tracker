@@ -49,6 +49,10 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "gap_sec_submissions_snapshot_v1":
+        from src.source_updates.availability_gap import preflight as gap_preflight
+
+        return gap_preflight(binding, candidate)
     if not isinstance(binding, dict) or set(binding) not in (FIELDS, MULTI_FIELDS, RSS_FIELDS, SERIES_FIELDS):
         raise ValueError("Availability requires exact physical collection binding fields")
     if set(binding) == RSS_FIELDS:
@@ -213,6 +217,10 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] == "gap_traffic" and item["adapter"] == "airport_group":
+        from src.source_updates.availability_gap import verify as verify_gap
+
+        return verify_gap(item, result, cutoff)
     if item["product"] in {"banxico", "fuel", "equities"} and item["adapter"] == "series":
         from src.source_updates.availability_series import verify as verify_series
 
