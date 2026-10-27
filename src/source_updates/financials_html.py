@@ -170,8 +170,8 @@ def monetary_headings(table):
         rf"\b{usd}\s*\(?\s*(?:in\s+)?(?:thousands?|miles|'?000)\b)",
         re.I,
     )
-    for row in table.find_all("tr"):
-        columns = cells(row)
+    for row in table.find_all(["tr", "caption"]):
+        columns = [row] if row.name == "caption" else cells(row)
         if not columns or text(columns[0]) in LABELS.values():
             continue
         heading = " ".join(text(c) for c in columns).strip()

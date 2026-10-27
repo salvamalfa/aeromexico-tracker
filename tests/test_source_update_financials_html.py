@@ -191,6 +191,9 @@ def test_local_monetary_table_exceptions_override_intro_without_relabeling_physi
     )
     for target in targets:
         assert target in raw
+        caption = "<caption>Amounts in millions of Mexican pesos</caption>"
+        with pytest.raises(ValueError, match="local monetary table heading"):
+            parsed(raw.replace(target, "<table>" + caption + target.removeprefix("<table>")).encode())
         for unit in (
             "Amounts in millions of Mexican pesos",
             "Cifras en millones de pesos mexicanos",
