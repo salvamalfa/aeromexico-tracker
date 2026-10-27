@@ -107,6 +107,16 @@ seleccionado no demuestra el periodo: `collect` conserva el original y
 la cadena candidata, seguida de `retained certify` con `--execute` y `--check`.
 La retención conserva la fecha real de la captura anterior; no vuelve a descargar.
 
+El índice BMV actual sí contiene filas físicas de tráfico. Conservar su HTML
+de `GVIVA-34292-CGEN_DEUD` y usar `recipe --product viva_traffic --output selection
+--catalog-file <indice-BMV.html> --period latest` o el mes explícito. El selector
+exige la identidad del emisor, título mensual y un único PDF de esa fila;
+rechaza ZIP/visor XBRL, formatos nuevos y ediciones ambiguas. El reloj sin zona
+de BMV no se convierte en primera publicación ni fecha de un reporte financiero.
+El vínculo `availability` solo acredita actualidad si índice y PDF realmente
+utilizados se capturaron en la fecha local de esa ronda, después de certificar
+todo el producto. No acredita otras familias ni activa el calendario.
+
 El lector actual produce 24 filas mensuales/comparativas: cuatro métricas por
 tres segmentos (total/nacional/internacional) y septiembre 2026/2025. Pasajeros
 reservados en miles, ASM/RPM en millones de millas y ocupación solo itinerario.
