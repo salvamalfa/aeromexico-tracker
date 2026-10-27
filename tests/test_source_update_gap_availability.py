@@ -342,7 +342,7 @@ def test_contract_missing_index_http_failure_and_raw_tamper_are_never_empty_succ
     path = root / "dossier/data/bronze" / item["availability"]["filings"][availability_gap.LATER]["index"]
     original = path.read_bytes()
     path.unlink()
-    with pytest.raises(ValueError, match="indexes missing"):
+    with pytest.raises(ValueError, match="Bronze physical inventory"):
         availability.verify(item, result, CUTOFF)
     path.write_bytes(original + b" ")
     with pytest.raises(ValueError, match="exact successful"):
@@ -356,3 +356,45 @@ def test_contract_missing_index_http_failure_and_raw_tamper_are_never_empty_succ
     (bronze / "_manifest.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
     with pytest.raises(ValueError, match="exact successful"):
         availability.verify(item, result, CUTOFF)
+
+
+@pytest.mark.parametrize("attack", ["sixth_coherent", "unregistered", "duplicate_manifest", "symlink"])
+def test_contract_bronze_inventory_is_closed_to_five_originals(physical, attack):
+    root, item, result = physical
+    bronze = root / "dossier/data/bronze"
+    manifest = bronze / "_manifest.jsonl"
+    records = [json.loads(line) for line in manifest.read_text().splitlines()]
+    path = bronze / "unclassified.htm"
+    if attack == "duplicate_manifest":
+        records.append(dict(records[0]))
+        manifest.write_text("".join(json.dumps(r) + "\n" for r in records))
+    elif attack == "symlink":
+        try:
+            path.symlink_to(bronze / records[0]["source_file"])
+        except OSError:
+            pytest.skip("Filesystem does not support test symlinks")
+    else:
+        path.write_bytes(b"<html>Unknown additional SEC disclosure</html>")
+        if attack == "sixth_coherent":
+            row = dict(
+                records[0],
+                source_file="unclassified.htm",
+                source_url="https://www.sec.gov/Archives/edgar/data/1347557/000117184326005334/unclassified.htm",
+                sha256=availability_gap.sha(path),
+                bytes=path.stat().st_size,
+            )
+            records.append(row)
+            Path(str(path) + ".meta.json").write_text(json.dumps(row))
+            manifest.write_text("".join(json.dumps(r) + "\n" for r in records))
+    with pytest.raises(ValueError):
+        availability.verify(item, result, CUTOFF)
+
+
+def test_contract_technical_receipts_outside_bronze_are_preserved(physical):
+    root, item, result = physical
+    receipt = root / "dossier/receipts/offline-copy.json"
+    receipt.parent.mkdir()
+    receipt.write_text(json.dumps({"new_capture": False}))
+    before = readiness.inventory(root)
+    assert availability.verify(item, result, CUTOFF)["historical"] is True
+    assert before == readiness.inventory(root)

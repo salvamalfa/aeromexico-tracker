@@ -205,6 +205,34 @@ def complete_filing(root, accession, entry, cutoff, records, discovery_stamp):
     return path, row, index_record
 
 
+def closed_bronze(root, binding):
+    """Only the five reviewed originals and their metadata may enter this dossier."""
+    bronze = root / "data/bronze"
+    expected = {binding["submissions"]}
+    for filing in binding["filings"].values():
+        expected.update([filing["index"], *filing["documents"].values()])
+    manifest = bronze / "_manifest.jsonl"
+    if manifest.is_symlink():
+        raise ValueError("GAP dossier manifest must be physical")
+    records = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines()]
+    if (
+        len(expected) != 5
+        or len(records) != 5
+        or any(not isinstance(row, dict) or not isinstance(row.get("source_file"), str) for row in records)
+        or {row["source_file"] for row in records} != expected
+    ):
+        raise ValueError("GAP Bronze manifest must contain exactly five distinct reviewed originals")
+    paths = list(bronze.rglob("*"))
+    if any(p.is_symlink() or not (p.is_file() or p.is_dir()) for p in paths):
+        raise ValueError("GAP Bronze cannot contain symlinks or unclassified special entries")
+    physical_files = {p.relative_to(bronze).as_posix() for p in paths if p.is_file()}
+    if physical_files != expected | {name + ".meta.json" for name in expected} | {"_manifest.jsonl"}:
+        raise ValueError(
+            "GAP Bronze physical inventory must match its five originals and five sidecars exactly"
+        )
+    return records
+
+
 def verify(item, result, cutoff):
     binding = item["availability"]
     root = preflight(binding, item["workspace"])
@@ -214,11 +242,8 @@ def verify(item, result, cutoff):
         raise ValueError("GAP historical snapshot cannot verify another round date or current availability")
     from src.source_updates.availability import collection_inventory
 
+    records = closed_bronze(root, binding)
     before = collection_inventory(root)
-    manifest = root / "data/bronze/_manifest.jsonl"
-    if manifest.is_symlink():
-        raise ValueError("GAP dossier manifest must be physical")
-    records = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines()]
     source, discovery = physical(root, binding["submissions"], SUBMISSIONS, cutoff, records)
     relevant = filing_rows(json.loads(source.read_text(encoding="utf-8")), cutoff)
     missing = [a for a in PRIMARY if not (root / "data/bronze" / binding["filings"][a]["index"]).is_file()]
@@ -251,6 +276,7 @@ def verify(item, result, cutoff):
         or set(native.operator_group) != {"GAP"}
         or sha(path) != selected["sha256"]
         or collection_inventory(root) != before
+        or closed_bronze(root, binding) != records
     ):
         raise ValueError("GAP historical discovery does not bind the exact fully certified native bytes")
     return {
