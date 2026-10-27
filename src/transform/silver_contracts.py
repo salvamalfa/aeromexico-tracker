@@ -21,10 +21,11 @@ LINEAGE_TYPES = {
 }
 
 
-def load_silver_contracts() -> dict[str, Any]:
+def load_silver_contracts(path=None) -> dict[str, Any]:
     """Load and structurally validate the Silver catalog."""
 
-    contracts = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
+    path = CONTRACT_PATH if path is None else path
+    contracts = yaml.safe_load(path.read_text(encoding="utf-8"))
     for table_name, definition in contracts.get("tables", {}).items():
         if not definition.get("grain"):
             raise ValueError(f"Silver contract is missing grain: {table_name}")
@@ -60,7 +61,12 @@ def _validate_column_checks(table_name: str, frame: pd.DataFrame, definition: di
 def validate_silver_table(table_name: str, frame: pd.DataFrame) -> int:
     """Validate presence, declared grain, lineage and stable business domains."""
 
-    definition = load_silver_contracts()["tables"][table_name]
+    definitions = load_silver_contracts()["tables"]
+    if table_name not in definitions:
+        # Explicit candidate validation also serves source_updates.checks;
+        # candidates never become required warehouse files by being declared.
+        definitions = load_silver_contracts(PATHS.root / "config/source_update_candidate_silver.yaml")["tables"]
+    definition = definitions[table_name]
     missing = sorted(set(definition["required_columns"]) - set(frame.columns))
     if missing:
         raise ValueError(f"Silver contract {table_name} is missing columns: {missing}")

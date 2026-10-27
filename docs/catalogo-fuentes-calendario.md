@@ -2462,6 +2462,48 @@ no se presenta el primer resultado como favorable. La evidencia adicional vive e
 `aggregate-final-52912929/` y `aggregate-final-fixed-20261026/`, dentro del mismo
 directorio técnico; no se crea otro informe narrativo.
 
+La continuación local recuperó y verificó el respaldo privado: 2.261 archivos
+iniciales y los 2.322 del commit privado `84361b52`, con Git LFS íntegro y los
+once manifiestos derivados correctos. Se restauró en un checkout aislado;
+se conservaron los archivos públicos y el expediente financiero posterior.
+Los tres registros exactos de las tesis ya publicadas se recuperaron desde el
+expediente de Mercado/Noticias, con sus paquetes y cápsulas originales. Las
+capturas del 3T26 se materializaron desde los originales y sus recibos retenidos,
+sin inventar fechas ni aprobaciones. Esas tres pruebas antes bloqueadas pasaron.
+
+La primera ejecución de las 75 pruebas locales terminó con 64 aprobadas,
+seis fallos, tres errores y dos omisiones existentes. Dos fallos identificaron
+un defecto real: el contrato `airport_group_native`, exclusivo de candidatos,
+se había incorporado al inventario global de Silver sin productor global.
+Ahora tiene su catálogo separado y conserva exactamente columnas, grano y
+validación. Las 30 tablas globales obligatorias y su inventario estricto siguen
+iguales a la base. No se creó una tabla ficticia ni se volvió opcional una fuente.
+
+Por la prioridad de eficiencia aprobada, se consolidaron las dos pruebas
+financieras en una que conserva todas sus aserciones y el replay completo.
+La fixture editorial comparte su comprobación entre sus dos consumidores
+inmutables; el verificador conserva la selección explícita del procedimiento
+local y no almacena resultados globales. Se mantienen los controles del modo
+ordinario. La matriz de fechas conserva sus vocabularios y clases de límites:
+se retiran cuatro llamadas exactamente duplicadas y 56 cruces equivalentes de
+dos guardas que rechazan el texto antes de leer esos límites. Las combinaciones
+relativas, mixtas y las demás fronteras siguen completas. La revisión independiente
+comprobó la equivalencia. La matriz pasa de 240 a 180 casos; su coste previo
+fue solo 0,23 s y no se presenta como ahorro material. El ahorro principal se
+mide en los replays financieros, antes de unos 280 s en este entorno.
+La colección pasa de 5.184 a 5.133 pruebas: 61 duplicaciones retiradas y diez
+casos nuevos para el defecto de contrato y el límite del smoke. No hay cuota
+de pruebas ni cambios en required checks. El tiempo remoto aún no se ha medido.
+
+El smoke del chat tiene un modo separado `--fixture-only`: comprueba imports,
+autenticación, worker y comparación en el entorno mínimo, sin proveedor, y
+declara que no valida la publicación. El modo predeterminado sigue comprobando
+el snapshot real y falla sin su pin externo. No se sustituyen las 56 pruebas
+reales por fixtures. Las seis pruebas del nuevo límite y su revisión adversarial
+pasan. Los pins financieros y de noticias no se calcularon desde los archivos
+ni se recuperaron por las rutas previamente denegadas; su entrega por un canal
+autorizado sigue siendo necesaria para cerrar esas comprobaciones reales.
+
 Las nueve ventanas de fuentes se comprobaron otra vez en modo de replay: sus
 53 salidas conservan los mismos hashes. Siguen siendo ventanas separadas y no
 acreditan una ronda completa ni un calendario preparado para activación.

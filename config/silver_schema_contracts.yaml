@@ -32,11 +32,6 @@ tables:
       period_type: {allowed_values: [month]}
       service_type: {allowed_values: [scheduled, charter]}
       market: {allowed_values: [domestic, international]}
-  airport_group_native:
-    grain: [operator_group, entity_key, period_id, period_type, market]
-    primary_key: [operator_group, entity_key, period_id, period_type, market]
-    lineage_type: derived_from_silver
-    required_columns: [operator_group, entity_key, period_id, period_type, market, report_period, metric_key, value, source_value, unit, source_decimals, precision_passengers, value_status, is_preliminary, source_definition, country, source_system, source_file, source_hash, ingested_at, parser_version, source_locator]
   airport_traffic:
     grain: [source_file, period_id, airport_iata]
     primary_key: [source_file, period_id, airport_iata]

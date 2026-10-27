@@ -61,7 +61,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def verify_financial_publication(request):
     if request.config.getoption("--financial-continuity-local"):
         from src.publish.financial_continuity import verify_local

@@ -71,10 +71,21 @@ ABSOLUTE = [
 ]
 
 
-@pytest.mark.parametrize("question,start,end", ABSOLUTE)
-@pytest.mark.parametrize("mask", [0, 1, 2, 3])
-def test_absolute_meaning_is_complete_and_preserved_with_any_nullable_mask(question, start, end, mask):
-    result = resolve_news_query(question, start if mask & 1 else None, end if mask & 2 else None)
+# Open-ended dates have only two unique argument pairs, despite four bit masks.
+ABSOLUTE_CASES = list(
+    dict.fromkeys(
+        (question, start, end, start if mask & 1 else None, end if mask & 2 else None)
+        for question, start, end in ABSOLUTE
+        for mask in (0, 1, 2, 3)
+    )
+)
+
+
+@pytest.mark.parametrize("question,start,end,supplied_start,supplied_end", ABSOLUTE_CASES)
+def test_absolute_meaning_is_complete_and_preserved_with_any_nullable_mask(
+    question, start, end, supplied_start, supplied_end
+):
+    result = resolve_news_query(question, supplied_start, supplied_end)
     assert (result["start_date"], result["end_date"]) == (start, end)
     assert result["date_basis"] == "publication"
 
@@ -144,39 +155,43 @@ def test_evidence_tool_enforces_relative_semantics_before_returning_records(monk
         index.search_news(query, start_date=bounds[0], end_date=bounds[1])
 
 
-@pytest.mark.parametrize("bounds", BOUNDS)
-@pytest.mark.parametrize(
-    "query",
-    [
-        "noticias antes de julio de 2026",
-        "noticias después de julio de 2026",
-        "noticias antes de 2026-07",
-        "noticias después de 2026-07-15",
-        "noticias anteriores a julio de 2026",
-        "noticias posteriores al 15 de julio de 2026",
-        "noticias previas a julio de 2026",
-        "noticias después del anuncio sobre combustible",
-    ],
-)
+DIRECTIONAL = [
+    "noticias antes de julio de 2026",
+    "noticias después de julio de 2026",
+    "noticias antes de 2026-07",
+    "noticias después de 2026-07-15",
+    "noticias anteriores a julio de 2026",
+    "noticias posteriores al 15 de julio de 2026",
+    "noticias previas a julio de 2026",
+    "noticias después del anuncio sobre combustible",
+]
+
+
+def early_guard_cases(queries):
+    # These text-only guards run before caller dates are read. Exercise every
+    # spelling plus every bounds class against one representative spelling.
+    return [(query, BOUNDS[0]) for query in queries] + [(queries[0], b) for b in BOUNDS[1:]]
+
+
+@pytest.mark.parametrize("query,bounds", early_guard_cases(DIRECTIONAL))
 def test_directional_qualifiers_require_explicit_supported_bounds_even_with_caller_dates(query, bounds):
     with pytest.raises(ValueError, match="inicio y fin explícitos"):
         resolve_news_query(query, start_date=bounds[0], end_date=bounds[1])
 
 
-@pytest.mark.parametrize("bounds", BOUNDS)
-@pytest.mark.parametrize(
-    "query",
-    [
-        "noticias a partir de abril de 2026",
-        "noticias a partir del 15 de julio de 2026",
-        "noticias a partir de 2026-04",
-        "noticias de abril de 2026 en adelante",
-        "noticias de 2026-04 en adelante",
-        "noticias de 2026-04-15 en adelante",
-        "noticias a contar de abril de 2026",
-        "noticias de abril de 2026 en lo sucesivo",
-    ],
-)
+ONWARD = [
+    "noticias a partir de abril de 2026",
+    "noticias a partir del 15 de julio de 2026",
+    "noticias a partir de 2026-04",
+    "noticias de abril de 2026 en adelante",
+    "noticias de 2026-04 en adelante",
+    "noticias de 2026-04-15 en adelante",
+    "noticias a contar de abril de 2026",
+    "noticias de abril de 2026 en lo sucesivo",
+]
+
+
+@pytest.mark.parametrize("query,bounds", early_guard_cases(ONWARD))
 def test_onward_qualifiers_are_not_narrowed_to_a_single_month(query, bounds):
     with pytest.raises(ValueError, match="inicio y fin explícitos"):
         resolve_news_query(query, start_date=bounds[0], end_date=bounds[1])

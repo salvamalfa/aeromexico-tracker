@@ -18,7 +18,7 @@ def _unavailable(request, message):
     pytest.skip(message)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def editorial_site(request):
     from src.publish.financial_scope import (
         PROOF as FINANCIAL_PROOF,

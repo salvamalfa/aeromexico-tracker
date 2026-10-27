@@ -40,3 +40,38 @@ def test_duplicate_declared_grain_is_rejected() -> None:
     }
     with pytest.raises(ValueError, match="Duplicate Silver grain"):
         validate_silver_table("fx_rates", pd.DataFrame([row, row]))
+
+
+def test_candidate_schema_does_not_require_a_new_global_dataset():
+    """Separating a candidate preserves both complete, strict contracts."""
+    import subprocess
+    import yaml
+
+    def committed(commit):
+        return yaml.safe_load(
+            subprocess.check_output(
+                ["git", "show", f"{commit}:config/silver_schema_contracts.yaml"], cwd=PATHS.root
+            )
+        )["tables"]
+
+    global_tables = load_silver_contracts()["tables"]
+    assert global_tables == committed("dad0a39b37fbdfe4367396ee4a9b640f3ce857e8")
+    candidate = load_silver_contracts(PATHS.root / "config/source_update_candidate_silver.yaml")["tables"]
+    assert candidate == {
+        "airport_group_native": committed("98b71fb58ff42930f4a18d5411724aa662a5aba0")["airport_group_native"]
+    }
+    assert "airport_group_native" not in global_tables
+
+
+@pytest.mark.parametrize("damage", ["column", "grain", "duplicate"])
+def test_isolated_candidate_keeps_all_required_columns_and_grain_checks(damage):
+    definition = load_silver_contracts(PATHS.root / "config/source_update_candidate_silver.yaml")["tables"][
+        "airport_group_native"
+    ]
+    frame = pd.DataFrame([{name: "fixture" for name in definition["required_columns"]}])
+    if damage == "duplicate":
+        frame = pd.concat([frame, frame], ignore_index=True)
+    else:
+        frame = frame.drop(columns=["source_hash" if damage == "column" else "operator_group"])
+    with pytest.raises(ValueError, match="missing columns|Duplicate Silver grain"):
+        validate_silver_table("airport_group_native", frame)
