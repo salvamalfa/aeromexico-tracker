@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, date, datetime, timedelta
 import hashlib
 import json
-from pathlib import Path
 import re
 import subprocess
+from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from uuid import uuid4
 
 import pandas as pd
 
 from src.pipeline.offline import block_network
-from src.source_updates.am_traffic import parse, pdf_text, validate
+from src.source_updates.am_traffic import ENTRY, parse, pdf_text, validate
 from src.source_updates.calendar import local_time
 from src.source_updates.catalog import ROOT
 from src.source_updates.checks import period_end, require_replay_cutoff, verify_bronze
@@ -29,7 +29,6 @@ from src.transform.stage9_lineage import (
     build_dim_source_artifact,
 )
 from src.transform.validate_stage9 import validate_lineage_frames
-
 
 OUTPUTS = (
     "silver/aeromexico_ir_monthly_metrics",
@@ -83,10 +82,52 @@ def original(workspace: Path, period: str, collection: str, as_of: str) -> tuple
         raise ValueError("Expected a preserved collection receipt ID")
     receipt_path = workspace / "receipts" / f"collection-{collection}.json"
     receipt = json.loads(receipt_path.read_text())
-    if receipt.get("status") != "collected_unvalidated" or len(receipt["items"]) != 1:
+    if (
+        receipt.get("status") != "collected_unvalidated"
+        or receipt.get("run_id") != collection
+        or receipt.get("mode") != "collection"
+        or receipt.get("activation") != "none"
+        or receipt.get("publication") != "not_authorized"
+    ):
         raise ValueError("Select one successfully collected monthly IR PDF")
-    item = receipt["items"][0]
+    rows = receipt["items"]
+    data = [r for r in rows if r.get("status") == "collected_unvalidated"]
+    indexes = [r for r in rows if r.get("status") == "collected_catalog"]
+    if (
+        len(data) != 1
+        or len(indexes) > 1
+        or len(rows) != len(data) + len(indexes)
+        or len({r["id"] for r in rows}) != len(rows)
+        or any(r.get("product") != "am_traffic_ir" for r in rows)
+        or any(r.get("source_url") != ENTRY or r.get("response_url") != ENTRY for r in indexes)
+    ):
+        raise ValueError("Select one IR PDF and at most its official traffic index")
+    item = data[0]
+    manifest = workspace / "data/bronze/_manifest.jsonl"
+    manifest_rows = [json.loads(line) for line in manifest.read_text().splitlines()]
+    if len(manifest_rows) != len(rows) or len({r["source_file"] for r in manifest_rows}) != len(rows):
+        raise ValueError("Traffic manifest requires unique acquisition records; no duplicate revisions")
     records = verify_bronze(workspace)
+    if set(records) != {r.get("source_file") for r in rows} or len(records) != len(rows):
+        raise ValueError("Traffic manifest must match the exact selected acquisition items")
+    for acquired in rows:
+        record = records[acquired["source_file"]]
+        path = workspace / "data/bronze" / acquired["source_file"]
+        meta = json.loads(path.with_suffix(path.suffix + ".meta.json").read_text())
+        if local_time(record["downloaded_at"]) > local_time(as_of):
+            raise ValueError("Traffic capture is after the requested cutoff")
+        if (
+            meta != record
+            or any(record.get(k) != acquired.get(k) for k in ("sha256", "source_url", "http_status"))
+            or record.get("http_status") != 200
+            or record.get("download_method") != "httpx"
+            or acquired.get("bytes") != path.stat().st_size
+            or not local_time(receipt["started_at"])
+            <= local_time(record["downloaded_at"])
+            <= local_time(receipt["finished_at"])
+            <= local_time(as_of)
+        ):
+            raise ValueError("Traffic acquisition receipt, source sidecar or chronology differs")
     if any(row["source_system"] != "aeromexico_ir" for row in records.values()):
         raise ValueError("Monthly IR candidate cannot contain other Bronze sources")
     row = records.get(item.get("source_file"))
@@ -114,8 +155,10 @@ def original(workspace: Path, period: str, collection: str, as_of: str) -> tuple
 def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[dict, dict]:
     content, provenance, receipt_hash = original(workspace, period, collection, as_of)
     silver, details = parse(pdf_text(content), period, provenance)
-    if date.fromisoformat(details["published_date"]) > local_time(as_of).date():
-        raise ValueError("Traffic report publication is after the requested cutoff")
+    if date.fromisoformat(details["published_date"]) > min(
+        local_time(as_of).date(), local_time(provenance["downloaded_at"]).date()
+    ):
+        raise ValueError("Traffic report publication is after its capture or requested cutoff")
     validate(silver)
     facts = validate_table(
         "fact_carrier_metrics",
@@ -152,10 +195,12 @@ def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[d
     metrics = build_dim_metric(set(silver.metric_key))
     lf = metrics.metric_key.eq("load_factor_total")
     metrics.loc[lf, "formula"] = (
-        "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); not derived from itinerary-plus-charter RPM/ASM"
+        "Reported itinerary-only RPM/ASM (equivalent to RPK/ASK); "
+        "not derived from itinerary-plus-charter RPM/ASM"
     )
     metrics.loc[lf, "caveats"] = (
-        "Source-reported, unaudited itinerary-only load factor. Other traffic metrics include charter; their RPM/ASM ratio is a different universe."
+        "Source-reported, unaudited itinerary-only load factor. Other traffic metrics include charter; "
+        "their RPM/ASM ratio is a different universe."
     )
     metrics = validate_table(
         "dim_metric", metrics.loc[metrics.metric_key.isin(silver.metric_key)].reset_index(drop=True)
@@ -183,7 +228,10 @@ def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[d
                     table_name="fact_carrier_metrics",
                     lineage_type="direct_artifact",
                     artifact_ids=identifiers,
-                    lineage_note="IR monthly/comparative columns only. LF itinerary; other metrics itinerary+charter. Unaudited.",
+                    lineage_note=(
+                        "IR monthly/comparative columns only. LF itinerary; "
+                        "other metrics itinerary+charter. Unaudited."
+                    ),
                 )
                 for record in facts.record_id
             ],
@@ -202,9 +250,15 @@ def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[d
         "source_file": provenance["source_file"],
         "latest_validated_period": period,
         "latest_published_period": None,
+        "complete_month_certified": True,
+        "completeness_basis": (
+            "all_12_company_reported_monthly_cells_and_12_prior_year_comparatives_not_operator_census"
+        ),
         "scope": "one_IR_month_and_its_reported_prior_year_comparative_not_corporate_family",
         "revisions": {"status": "not_compared_no_prior_candidate"},
-        "silver_contract": "established operating-observation grain plus explicit IR product domain; candidate-only table",
+        "silver_contract": (
+            "established operating-observation grain plus explicit IR product domain; candidate-only table"
+        ),
         "quarterly_aggregation": "not_built",
         "activation": "none",
         "publication": "not_authorized",
