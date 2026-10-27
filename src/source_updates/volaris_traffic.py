@@ -74,6 +74,56 @@ def decimal(token):
     return -value if negative else value
 
 
+def comparable_warning(reference, derived, *, unit, resolution):
+    """Called only after same-row source context and printed precision are checked."""
+    if any(not v.is_finite() for v in (reference, derived, resolution)):
+        raise ValueError("Volaris comparable values must be finite")
+    if abs(reference) <= resolution:
+        raise ValueError("Volaris zero/near-zero reference cannot receive automatic 5% tolerance")
+    delta = derived - reference
+    if abs(delta) > abs(reference) * Decimal("0.05"):
+        raise ValueError("Volaris comparable difference exceeds the authorized 5%")
+    return dict(
+        code="comparable_derived_difference_within_5pct",
+        severity="warning",
+        policy_id="comparable_official_reference_5pct_v1",
+        official_value_preserved=True,
+        official_reported_value=str(reference),
+        derived_value=str(derived),
+        signed_difference=str(delta),
+        absolute_difference=str(abs(delta)),
+        relative_difference=str(abs(delta) / abs(reference)),
+        relative_difference_pct=str(abs(delta) / abs(reference) * 100),
+        tolerance_pct="5",
+        reference_basis="absolute_official_reported_value",
+        reference_resolution=str(resolution),
+        unit=unit,
+    )
+
+
+def variation(current, prior, reported, *, points):
+    """Same-row/same-universe change, printed precision then authorized 5% warning."""
+    if points:
+        derived = current - prior
+        low, high = derived - Decimal("0.1"), derived + Decimal("0.1")
+    else:
+        if prior <= Decimal("0.5"):
+            raise ValueError("Volaris growth denominator zero/near zero requires separate review")
+        derived = (current / prior - 1) * 100
+        low = (max(Decimal(0), current - Decimal("0.5")) / (prior + Decimal("0.5")) - 1) * 100
+        high = ((current + Decimal("0.5")) / (prior - Decimal("0.5")) - 1) * 100
+    if reported + Decimal("0.05") >= low and reported - Decimal("0.05") <= high:
+        return None
+    warning = comparable_warning(
+        reported,
+        derived,
+        unit="percentage_points" if points else "relative_percent",
+        resolution=Decimal("0.1"),
+    )
+    warning.update(current_reported_value=str(current), prior_reported_value=str(prior))
+    return warning
+
+
 def texts(pages, period, original):
     """Full48 reported values and24 variations; never label bookings as flown."""
     if (
@@ -112,7 +162,7 @@ def texts(pages, period, original):
     table = first.split(required[-1], 1)[1].split(required[3], 1)[0].strip()
     if any(table.count(h) != 1 for h, *_ in METRICS):
         raise ValueError("Volaris table headings missing or duplicated")
-    output, grid, rounding_deltas = [], {}, []
+    output, grid, rounding_deltas, numeric_warnings = [], {}, [], []
     for position, (heading, metric, unit, scale) in enumerate(METRICS):
         section = table.split(heading, 1)[1]
         if position + 1 < len(METRICS):
@@ -139,6 +189,27 @@ def texts(pages, period, original):
                 observed_year = 2026 if column % 2 == 0 else 2025
                 ytd = column >= 2
                 change_token = tokens[2 if column < 2 else 5] if column % 2 == 0 else None
+                warning = None
+                if change_token:
+                    warning = variation(
+                        value,
+                        values[column + 1],
+                        decimal(change_token.removesuffix("pp").strip()),
+                        points=percent,
+                    )
+                    if warning:
+                        warning.update(
+                            product=PRODUCT,
+                            entity="VOLARIS",
+                            metric_key=metric,
+                            segment=segment,
+                            period_id=f"{observed_year}YTD09" if ytd else f"{observed_year}M09",
+                            source_file=original["source_file"],
+                            source_hash=original["sha256"],
+                            current_and_prior_unit=unit,
+                            service_scope="itinerary_and_charter",
+                        )
+                        numeric_warnings.append(warning)
                 output.append(
                     dict(
                         period_id=f"{observed_year}YTD09" if ytd else f"{observed_year}M09",
@@ -164,6 +235,13 @@ def texts(pages, period, original):
                         if change_token
                         else None,
                         reported_change_raw=change_token,
+                        reported_change_reconciliation=(
+                            "warning_within_5pct"
+                            if warning
+                            else "passed_printed_precision"
+                            if change_token
+                            else "not_applicable_prior_year"
+                        ),
                         reported_change_unit="percentage_points" if percent else "relative_percent",
                         passenger_definition="booked_flight_segments_not_observed_flown_passengers",
                         flight_scope="itinerary_and_charter; load_factor_RPM_div_ASM",
@@ -188,7 +266,17 @@ def texts(pages, period, original):
                 native[s][column] for s in ("domestic", "international", "total")
             ]
             if not percent and abs(domestic + international - total) > Decimal("1.5"):
-                raise ValueError("Volaris segment totals exceed mathematical native rounding bound")
+                warning = comparable_warning(
+                    total, domestic + international, unit=unit, resolution=Decimal(1)
+                )
+                warning.update(
+                    check="segment_total",
+                    metric_key=metric,
+                    column=column,
+                    source_file=original["source_file"],
+                    source_hash=original["sha256"],
+                )
+                numeric_warnings.append(warning)
             if not percent and domestic + international != total:
                 rounding_deltas.append(
                     dict(
@@ -198,21 +286,45 @@ def texts(pages, period, original):
                         reported_total=float(total),
                         component_sum=float(domestic + international),
                         difference_native_units=float(total - domestic - international),
-                        status="within_printed_rounding_bound_original_values_preserved",
+                        status="within_printed_rounding_bound_original_values_preserved"
+                        if abs(domestic + international - total) <= Decimal("1.5")
+                        else "warning_within_5pct",
                     )
                 )
         grid[metric] = native
     # Unlike AM/Viva's itinerary-only LF, this document defines the same RPM/ASM scope.
     for segment in ("domestic", "international", "total"):
-        for rpm, asm, factor in zip(
-            grid["rpm"][segment], grid["asm"][segment], grid["load_factor"][segment], strict=True
+        for column, (rpm, asm, factor) in enumerate(
+            zip(grid["rpm"][segment], grid["asm"][segment], grid["load_factor"][segment], strict=True)
         ):
             if asm <= Decimal("0.5") or rpm > asm:
                 raise ValueError("Volaris RPM/ASM invalid or denominator too close to zero")
             lower = max(Decimal(0), rpm - Decimal("0.5")) / (asm + Decimal("0.5")) * 100
             upper = (rpm + Decimal("0.5")) / (asm - Decimal("0.5")) * 100
             if factor + Decimal("0.05") < lower or factor - Decimal("0.05") > upper:
-                raise ValueError("Volaris LF does not overlap reported RPM/ASM rounding intervals")
+                warning = comparable_warning(
+                    factor, rpm / asm * 100, unit="percent", resolution=Decimal("0.1")
+                )
+                warning.update(
+                    check="load_factor_RPM_div_ASM",
+                    metric_key="load_factor",
+                    segment=segment,
+                    column=column,
+                    rpm_reported=str(rpm),
+                    asm_reported=str(asm),
+                    source_file=original["source_file"],
+                    source_hash=original["sha256"],
+                )
+                numeric_warnings.append(warning)
+    for warning in numeric_warnings:
+        warning.update(
+            product=PRODUCT,
+            entity="VOLARIS",
+            coverage="itinerary_and_charter",
+            comparison_basis="same_verified_source_document_entity_period_units_and_definition",
+        )
+        if "column" in warning:
+            warning["period_id"] = ("2026M09", "2025M09", "2026YTD09", "2025YTD09")[warning["column"]]
     frame = pd.DataFrame(output).sort_values(GRAIN).reset_index(drop=True)
     if len(frame) != 48 or frame.duplicated(GRAIN).any():
         raise ValueError("Volaris full48 native monthly/YTD grain incomplete")
@@ -229,13 +341,19 @@ def texts(pages, period, original):
         release_lag_days=None,
         source_preliminary=True,
         source_unaudited=True,
-        native_reconciliations=24,
+        native_reconciliations=48,
+        reported_variation_reconciliations=24,
+        numeric_warnings=numeric_warnings,
+        numeric_warning_count=len(numeric_warnings),
+        numeric_check_status="passed_with_warning" if numeric_warnings else "passed_printed_precision",
+        numeric_policy_id="comparable_official_reference_5pct_v1",
         source_scope="authorized_Volaris_issuer_September2026_month_and_YTD_with_prior_year_not_SEC_or_AOC",
         scope="Volaris_issuer_traffic_bookings_and_miles_month_YTD_separate_not_financial_release",
         monthly_YTD_not_combined=True,
         official_values_preserved=True,
         rounding_policy=(
-            "component sums1.5 native units; LF/RPM/ASM printed precision intervals, no figure adjustment"
+            "printed precision first (sums1.5 native units; ratio/change intervals), then comparable "
+            "5% of absolute official reference with visible warning; zero/near-zero excluded; figures unchanged"
         ),
         rounding_reconciliation_deltas=rounding_deltas,
     )

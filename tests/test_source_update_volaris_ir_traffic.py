@@ -2,6 +2,7 @@
 
 import copy
 import shutil
+from decimal import Decimal
 from uuid import uuid4
 
 import httpx
@@ -151,6 +152,8 @@ def test_material_period_units_definitions_grid_and_dates_fail_closed():
         ("1,366", "2,000"),
         ("84.4%", "94.4%"),
         ("3.8 pp", "3.8%"),
+        ("1.0 pp", "99.9 pp"),
+        ("(3.8%)", "(99.9%)"),
         ("Doméstico 1,786 1,762 1.4% 18,071 16,889 7.0%", ""),
         ("6 de octubre de 2026", "31 de octubre de 2026"),
     ):
@@ -165,3 +168,31 @@ def test_material_period_units_definitions_grid_and_dates_fail_closed():
     ):
         with pytest.raises(ValueError):
             source.texts(pages(), period, row)
+
+
+def test_variation_policy_retains_comparable_5pct_boundary_and_rejects_zero_or_material_difference():
+    # Same-unit LF change:10.0pp official vs10.5pp derived differs by5% relative.
+    warning = source.variation(Decimal("30.5"), Decimal("20"), Decimal("10"), points=True)
+    assert warning["relative_difference_pct"] == "5.00" and warning["unit"] == "percentage_points"
+    assert warning["official_reported_value"] == "10" and warning["official_value_preserved"]
+    for current, prior, reported, points in (
+        ("30.5001", "20", "10", True),
+        ("2", "1", "0", True),
+        ("2", "1", "0.1", True),
+        ("1", "0", "1", False),
+        ("112", "100", "10", False),
+    ):
+        with pytest.raises(ValueError):
+            source.variation(Decimal(current), Decimal(prior), Decimal(reported), points=points)
+    changed = pages()
+    changed[0] = changed[0].replace("28,071", "28,081")
+    frame, result = source.texts(changed, "2026M09", original())
+    assert len(frame) == 48 and result["numeric_warning_count"] >= 1
+    assert (
+        frame.loc[
+            frame.metric_key.eq("asm") & frame.segment.eq("total") & frame.period_id.eq("2026YTD09"),
+            "value",
+        ].iloc[0]
+        == 28081
+    )
+    assert all(w["official_value_preserved"] for w in result["numeric_warnings"])
