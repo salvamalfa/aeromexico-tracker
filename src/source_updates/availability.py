@@ -49,6 +49,10 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "oma_official_newsroom_v1":
+        from src.source_updates.availability_oma_newsroom import preflight as oma_preflight
+
+        return oma_preflight(binding, candidate)
     if isinstance(binding, dict) and binding.get("source_scope") == "gap_sec_submissions_snapshot_v1":
         from src.source_updates.availability_gap import preflight as gap_preflight
 
@@ -217,6 +221,13 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "oma_official_newsroom_v1"
+    ):
+        from src.source_updates.availability_oma_newsroom import verify as verify_oma_newsroom
+
+        return verify_oma_newsroom(item, result, cutoff)
     if item["product"] == "afac_airports" and item["adapter"] == "retained":
         from src.source_updates.availability_afac_airports import verify as verify_afac_airports
 
