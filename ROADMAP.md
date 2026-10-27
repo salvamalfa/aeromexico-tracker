@@ -11,8 +11,9 @@ Propuesta — el dueño decide prioridades.
   en seco. La reconciliación de los cuatro certificadores se reúne en
   [PR156](https://github.com/salvamalfa/aeromexico-tracker/pull/156), integrado
   en `70fb03ec` tras CI y revisión Codex favorables del head `a10c2e69`.
-  PR152/154/155 quedaron integrados con sus heads conservados. La CI posterior
-  del merge (`40450942960`) sigue en curso. La agregada
+  PR152/154/155 quedaron integrados con sus heads conservados. La
+  [CI posterior del merge](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40450942960)
+  conserva su resultado verificable. La agregada
   local previa pasó 5.129 casos; preparación optimizada de 39:47 a 36:33
   (8,1 % observado localmente, sin prometer ahorro remoto).
   AIFA septiembre ya tiene extracción oficial, vínculo físico de disponibilidad

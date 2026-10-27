@@ -1,7 +1,7 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 27 de octubre de 2026 (UTC). **Skills y coordinador implementados;
-entrega técnica en revisión. Calendario sin activar y sin datos nuevos publicados.**
+Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills y coordinador
+integrada; lote AIFA en revisión. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
@@ -12,7 +12,8 @@ aprobados; no hace falta volver a aprobar esas reglas.
 
 Los cuatro certificadores quedaron integrados con PR156 en `70fb03ec`. Su head
 `a10c2e69` pasó CI y Codex sin hallazgos; PR152/154/155 conservaron sus commits y
-quedaron integrados por el mismo merge. La CI posterior está en curso. La agregada local
+quedaron integrados por el mismo merge. La [CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40450942960)
+conserva su resultado verificable. La agregada local
 anterior aprobó 5.129 casos; la optimización redujo su duración observada de
 39:47 a 36:33 (8,1 %). No se atribuye ese ahorro a CI remota ni a un head que
 no haya repetido aquella agregada. Publicación, fuentes y aprobaciones
@@ -2694,8 +2695,8 @@ No se afirma una revisión interactiva remota completada por ese intento.
   falló Python; la corrección `a10c2e69` pasó CI `40448593713`, revisión
   independiente y Codex, sin hallazgos ni hilos. Se marcó listo una sola vez y
   se integró normalmente en `70fb03ec`. GitHub confirmó PR152/154/155 integrados
-  con sus heads originales por ese mismo merge. Falta finalizar la CI posterior
-  `40450942960`; no hay Pages ni despliegue del chat por este diff.
+  con sus heads originales por ese mismo merge. Consultar también la CI posterior
+  `40450942960` al cerrar la entrega; no hay Pages ni despliegue del chat por este diff.
   Las revisiones adicionales antiguas sin resultado terminal no se consideran
   aprobación ni ejecución activa comprobada y no se relanzan a ciegas.
 - El procedimiento financiero local está implementado y probado con el
