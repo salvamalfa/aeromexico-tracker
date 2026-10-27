@@ -2513,11 +2513,43 @@ revisiones permanecen intactas. Las nueve ventanas se recertificaron sin red
 en destinos nuevos y sus 53 salidas siguen idénticas; Volaris conserva su
 rechazo documental. Eso no acredita un calendario completo.
 
-El control general de linaje ahora identifica un material adicional ausente:
-el ZIP BTS del 17/oct, SHA `bda94a69b9d8430163a96b33521300cf8f76ac6f0aa0761d67ce3250a184d568`,
-259.152 bytes. El original retenido del 19/oct tiene otro hash y no se renombra
-ni se usa como sustituto. La búsqueda acotada en copias locales, el respaldo
-privado actualizado y Library no recuperó ese original. El gate sigue cerrado.
+El control general de linaje identificó el ZIP BTS del 17/oct ausente. Se
+recuperaron sus 259.152 bytes exactos: SHA
+`bda94a69b9d8430163a96b33521300cf8f76ac6f0aa0761d67ce3250a184d568`,
+fijado de antemano en el manifiesto Git. Desde el contenedor retenido del 19/oct
+solo se restauraron cuatro campos DOS de fecha/hora; los miembros comprimidos
+y descomprimidos siguen idénticos. Una revisión independiente confirmó la
+identidad completa. No se creó captura, sidecar, fecha de publicación ni zona
+horaria; tampoco se cambió el manifiesto o Gold. La prueba estricta de linaje pasa.
+
+Los pins de aprobación también se recuperaron mediante el procedimiento
+existente de `docs/cloud-development.md`: valores literales del registro Git
+auditado `d456eb8d`, con su decisión del dueño. Se comprobaron el recibo y el
+índice canónicos, cuatro métricas, siete pasajes y tres noticias. No se calcularon
+pins de reemplazo desde los archivos evaluados, ni se consultaron las variables
+GitHub denegadas. Se usan solo en el proceso local. El smoke real aislado pasa;
+las 56 comprobaciones antes bloqueadas y las cuatro adicionales del sitio
+pasan. Un intento de navegador apuntó a una caché vacía; se conservó su fallo
+y los tres recorridos pasaron con la caché ya instalada. No se descargó otro
+navegador ni se modificaron permisos. Esto no acredita la configuración de producción.
+
+Una segunda optimización conserva los 77 casos de Noticias y sus aserciones:
+26 construcciones del mismo snapshot real se sustituyen por una lectura por
+módulo, con copia y guarda de integridad del estado compartido. Aplicaciones,
+proveedores simulados, workers y SQLite siguen separados por caso. Los pins
+por prueba conservan su ámbito y sus declaraciones. La revisión AST y las
+sondas adversariales independientes pasan. La medición local de esos 77 casos
+bajó de 190,52 s en la agregada de control a 50,34 s en el módulo revisado;
+no es una medición de CI remota ni una promesa de ahorro global.
+
+La agregada de control `fa67e88a` conserva sus resultados completos: 5.069
+aprobadas, 35 fallos, 25 errores, cuatro omisiones y 29 subpruebas, 2.354,34 s.
+Sus 60 negativos son exactamente los casos de configuración ya corregidos;
+no se ocultan ni se eliminan sus logs. Las omisiones son el modo editorial
+sustituido por la comprobación financiera estricta, la preview no fijada y dos
+positivos del productor corriente sin una aprobación para ese productor.
+No se fabrica esa aprobación. La repetición final usa los pins documentados,
+el procedimiento local explícito, todos los marcadores y las duraciones.
 
 Las nueve ventanas de fuentes se comprobaron otra vez en modo de replay: sus
 53 salidas conservan los mismos hashes. Siguen siendo ventanas separadas y no
