@@ -73,6 +73,10 @@ def describe(product_id: str) -> dict:
 
 
 def catalog_selection(product_id: str) -> dict:
+    if product_id == "afac_airports":
+        from src.source_updates.availability_afac_airports import index_selection
+
+        return index_selection()
     recipe = describe(product_id)
     source = load_catalog()[recipe["source_key"]]
     if product_id == "rss":

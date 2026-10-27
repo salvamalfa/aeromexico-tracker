@@ -217,6 +217,18 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if item["product"] == "afac_airports" and item["adapter"] == "retained":
+        from src.source_updates.availability_afac_airports import verify as verify_afac_airports
+
+        return verify_afac_airports(item, result, cutoff)
+    if (
+        item["product"] == "am_traffic_ir"
+        and item["adapter"] == "am_traffic_ir"
+        and result.get("source_format") == "official_IR_HTML_6K_Ex99.4"
+    ):
+        from src.source_updates.availability_am_traffic_html import verify as verify_am_traffic_html
+
+        return verify_am_traffic_html(item, result, cutoff)
     if item["product"] == "am_financials" and item["adapter"] == "retained":
         from src.source_updates.availability_am_financials import verify as verify_am_financials
 

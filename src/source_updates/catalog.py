@@ -47,7 +47,7 @@ PRODUCTS = (
         "am_traffic_ir",
         "aeromexico_ir",
         "monthly",
-        "selected_monthly_ir_pdf_dedicated_candidate_command_not_generic_build",
+        "reviewed_monthly_IR_PDF_or_September2026_6K_HTML_dedicated_candidate_no_generic_build",
         None,
     ),
     ("am_sec", "sec_edgar", "both", "sec_identity_requires_dedicated_adapter_or_manual_import", "parse.sec"),
