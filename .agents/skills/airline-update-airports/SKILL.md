@@ -30,8 +30,31 @@ contiene el índice y el PDF/XLSX exacto usado por el candidato. Exige HTTP200,
 manifiesto, sidecars, hashes y captura en la misma fecha local de la ronda;
 después reproduce el producto completo sin red. Un enlace sin PDF descargable,
 un desafío HTTP202, una edición ambigua o un título nuevo bloquean el vínculo.
-El 27/oct el índice OMA anuncia septiembre pero su PDF devolvió HTTP404; el
-candidato retenido de julio no sustituye ese original ni acredita actualidad.
+El 27/oct el PDF del índice IR OMA devolvió HTTP404 y la entrada española HTTP202;
+se conservan ambos fallos. La alternativa oficial newsroom descrita abajo sí
+recuperó septiembre. Julio no se usa para acreditar ese mes.
+
+### Alternativa OMA newsroom
+
+Preparar la selección con `recipe --product oma_traffic --output selection
+--source-url <URL-oficial-del-artículo>`. No inventar una URL futura. Después
+de capturar el artículo, añadir `--catalog-file <HTML-capturado> --period YYYYMmm`
+para seleccionar el mismo artículo y su PDF literal. La vista previa `collect
+--dry-run` muestra dos solicitudes; la selección no descarga nada.
+
+El vínculo `availability` añade `source_scope=oma_official_newsroom_v1` a
+`workspace`, `run_id`, `catalog_item` y `artifact_item`. Solo admite el hostname
+exacto `news.oma.aero`, rutas oficiales revisadas y el enlace de descarga
+literal; no basta con admitir el dominio y sus subdominios. Mantener los hosts
+del catálogo existentes, sin ampliar permisos.
+
+Exigir título/fecha del artículo, PDF y último mes cerrado en México coherentes,
+dos originales capturados en la fecha local de la ronda y replay de todas las
+cifras e identificadores de linaje. Los dos botones del mismo PDF se deduplican
+por URL; dos documentos distintos bloquean. Se conserva la ruta IR anterior.
+Esto acredita disponibilidad del reporte objetivo en ese newsroom, no un censo
+de todas las revisiones en los sitios de OMA. Primera publicación y rezago
+siguen desconocidos; no modificar cifras oficiales ni activar publicación.
 
 ## Adquisición por producto
 
