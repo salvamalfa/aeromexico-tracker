@@ -10,14 +10,20 @@ import pytest
 
 from src.common.storage import save_bronze
 from src.source_updates.build import GRANULAR
-from src.source_updates.catalog import ROOT, load_catalog
+from src.source_updates.catalog import ROOT, bronze_aliases, load_catalog
 from src.source_updates.checks import check_candidate
 from src.source_updates.recipes import catalog_selection
 
 
-def test_airport_input_accepts_every_declared_sec_alias():
+def test_airport_input_accepts_original_sec_aliases_and_excludes_derivatives():
     declared = set(load_catalog()["sec_edgar"]["source_systems"])
-    assert declared <= set(GRANULAR["parse.airports"][1])
+    supported = set(GRANULAR["parse.airports"][1])
+    originals = {"sec", "sec_edgar", "sec_filing"}
+    derivatives = {"asur_visible_reconstruction", "volaris_visible_reconstruction"}
+    assert originals | derivatives <= declared
+    assert originals <= supported and not derivatives & supported
+    for product in ("gap_traffic", "asur_traffic"):
+        assert set(bronze_aliases(product)) == originals
 
 
 @pytest.mark.parametrize(("actual", "claimed"), [("ASUR", "GAP"), ("GAP", "ASUR")])

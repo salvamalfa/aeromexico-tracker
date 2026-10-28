@@ -463,7 +463,6 @@ def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
             key=lambda row: (row["source_url"], row["sha256"]),
         )
     if item["product"] == "volaris_sec":
-        # Only the checked financial exhibit can date Volaris' central report.
         receipt = candidate / "receipts" / f"retained-{item['receipt_id']}.json"
         selected_originals = json.loads(receipt.read_text())["originals"]
         role = "reconstruction_zip" if set(selected_originals) == {"reconstruction_zip"} else "html"
