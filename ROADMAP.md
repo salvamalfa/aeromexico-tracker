@@ -61,7 +61,7 @@ Propuesta — el dueño decide prioridades.
   previo de 16 tareas, sin activar. Las 303 pruebas afectadas y la revisión independiente
   fueron favorables. El hilo principal ya envió la consulta Aerocivil
   autorizada (Gmail `SENT`), esperando
-  respuesta: no acredita la semántica y no se repetirá. GDELT conserva HTTP503. AFAC necesita acceso actual.
+  respuesta: no acredita la semántica y no se repetirá. GDELT conserva HTTP503. AFAC aeropuertos necesita acceso actual.
   OMA quedó comprobado con otra ruta oficial, sin repetir IR404/es202. AIFA quedó comprobado localmente tras corregir la entrada; falta
   su integración. Faltan dossiers actuales aeroportuarios y
   financieros indicados en la matriz. No son cuatro servicios caídos ni faltan 18 adaptadores por la revalidación temporal.

@@ -3837,9 +3837,9 @@ rematerializar Library o repetir cálculos no la acredita. No hace falta volver
 a autorizar los adaptadores ya encargados. Reusar observaciones de otro día
 para declarar actualidad sí cambiaría la política y no se hizo.
 
-Fuentes y fallos quedan retenidos. No se consultó GDELT ni OTC, no hubo nuevo
-acceso SEC, cambios de seguridad, ejecuciones programadas, datos publicados
-ni activaciones. El último18/102 aceptado sigue siendo evidencia histórica
+Fuentes y fallos quedan retenidos. En esta revalidación de selecciones no se
+consultó GDELT ni OTC ni se hizo acceso nuevo SEC. No hubo cambios de seguridad,
+ejecuciones programadas, datos publicados ni activaciones. El último18/102 aceptado sigue siendo evidencia histórica
 propia, sin reetiquetarlo.
 
 Comandos del modo específico, separados del procedimiento SEC original Q2:
