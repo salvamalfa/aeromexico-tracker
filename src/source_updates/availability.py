@@ -49,6 +49,10 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "asur_visible_reconstruction_target_v1":
+        from src.source_updates.availability_asur_reconstructed import preflight as asur_preflight
+
+        return asur_preflight(binding, candidate)
     if isinstance(binding, dict) and binding.get("source_scope") == "gap_official_manual_target_v1":
         from src.source_updates.availability_gap_manual import preflight as gap_manual_preflight
 
@@ -225,6 +229,13 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "asur_visible_reconstruction_target_v1"
+    ):
+        from src.source_updates.availability_asur_reconstructed import verify as verify_asur
+
+        return verify_asur(item, result, cutoff)
     if item["product"] == "volaris_traffic_ir" and item["adapter"] == "retained":
         from src.source_updates.availability_volaris_ir import verify as verify_volaris_ir
 

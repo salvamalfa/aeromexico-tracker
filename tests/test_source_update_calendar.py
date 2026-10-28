@@ -83,7 +83,7 @@ def test_retries_are_proposals_with_a_two_reschedule_limit(holidays):
 
 def test_catalogue_all_sources_have_unique_family_and_products():
     sources = load_catalog()
-    assert len(sources) == 29
+    assert len(sources) == 30
     assert set(sources) == {key for keys in FAMILIES.values() for key in keys}
     assert {row["source_key"] for row in product_map().values()} == set(sources)
     assert not any("aerodatabox" in key for key in product_map())

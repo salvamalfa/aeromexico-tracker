@@ -245,6 +245,10 @@ CHECK_TABLES = {
 def bronze_aliases(product_id: str) -> tuple[str, ...]:
     """Institution aliases span layers; collection must match the advertised parser."""
     legacy = {
+        # The separate authorized reconstruction importer cannot be emulated
+        # through generic SEC collection or borrowed by GAP/airline products.
+        "gap_traffic": ("sec", "sec_edgar", "sec_filing"),
+        "asur_traffic": ("sec", "sec_edgar", "sec_filing"),
         "am_sec": ("sec",),
         "volaris_sec": ("sec",),
         "delta_sec": ("sec",),

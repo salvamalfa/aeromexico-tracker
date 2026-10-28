@@ -35,7 +35,7 @@ sources:
     artifact_expected: true
     is_active: true
   sec_edgar:
-    source_systems: [sec, sec_edgar, sec_filing]
+    source_systems: [sec, sec_edgar, sec_filing, asur_visible_reconstruction]
     display_name: SEC / EDGAR
     institution: U.S. Securities and Exchange Commission
     business_description: Estados financieros, reportes trimestrales y métricas operativas publicadas por Aeroméxico y sus comparables.
@@ -45,7 +45,7 @@ sources:
     official_page_url: https://www.sec.gov/edgar/browse/?CIK=1561861&owner=exclude
     allowed_hosts: [sec.gov]
     artifact_link_policy: direct
-    limitations: Los 6-K de Aeroméxico no siempre incluyen XBRL financiero; parte de la información se extrae de anexos.
+    limitations: Los 6-K de Aeroméxico no siempre incluyen XBRL financiero; parte de la información se extrae de anexos. El alias asur_visible_reconstruction identifica exclusivamente la copia editable autorizada de septiembre 2026; esta institución es la referencia pública ascendente, no el creador del derivado. No es original SEC, captura HTTP ni hash del original y no se admite en la colección SEC genérica.
     source_kind: public
     artifact_expected: true
     is_active: true

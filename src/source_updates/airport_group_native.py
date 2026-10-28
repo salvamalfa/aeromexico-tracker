@@ -406,6 +406,12 @@ def parse_asur(soup, text, original, period):
 def read(product, inputs, period):
     if product not in PRODUCTS:
         raise ValueError("Unsupported airport group product")
+    if product == "asur_traffic" and set(inputs) != {"html"}:
+        from src.source_updates.asur_reconstructed import read as read_reconstruction
+
+        return read_reconstruction(inputs, period)
+    if set(inputs) != {"html"}:
+        raise ValueError("Original SEC mode requires only the exact HTML role")
     year, end = month(period)
     content, original = inputs["html"]
     cik = "1347557" if product == "gap_traffic" else "1123452"
