@@ -14,12 +14,17 @@ Propuesta — el dueño decide prioridades.
   14:30 UTC. [CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40706667984)
   aprobada para ese merge: test y web. El bot antiguo sigue `running`, separado del dictamen
   auténtico. La continuación AIFA está en [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
-  nuevo head `3ab5af7e`, en borrador, con árbol idéntico al revisado `43ae2b95`
+  head `3ab5af7e`, integrado en `0a99dab0` tras la aprobación específica,
+  con árbol idéntico al revisado `43ae2b95`
   y master `4780b8da` incorporado solo a su historia. La CI anterior probó una
   referencia de merge antigua y falló correctamente; se corrigió la ascendencia,
   sin cambiar gates. CI nueva `40713725543` aprobada. Dictamen independiente:
   29 pruebas/replay AIFA y 15 comprobaciones de historia, sin hallazgos.
-  OMA y los lotes siguientes siguen locales; no hay integración PR171 todavía.
+  [CI posterior AIFA](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40742445009)
+  y [CI posterior de la política](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40742533938)
+  quedan en seguimiento; su resultado no se confunde con las CI de los heads.
+  OMA y los lotes siguientes se preparan juntos sobre master `ba553a54`,
+  sin cambiar el runtime local probado.
 - **Preparación comprobada local:** 19 candidatos y 106 salidas compatibles,
   con las 102 previas idénticas y cuatro nuevas Volaris financiero Q3. El último
   snapshot de 18 éxitos es del 27/oct local. La revalidación real del 28/oct
@@ -62,8 +67,7 @@ Propuesta — el dueño decide prioridades.
   fueron favorables. El hilo principal ya envió la consulta Aerocivil
   autorizada (Gmail `SENT`), esperando
   respuesta: no acredita la semántica y no se repetirá. GDELT conserva HTTP503. AFAC aeropuertos necesita acceso actual.
-  OMA quedó comprobado con otra ruta oficial, sin repetir IR404/es202. AIFA quedó comprobado localmente tras corregir la entrada; falta
-  su integración. Faltan dossiers actuales aeroportuarios y
+  OMA quedó comprobado con otra ruta oficial, sin repetir IR404/es202. AIFA quedó comprobado e integrado tras corregir la entrada. Faltan dossiers actuales aeroportuarios y
   financieros indicados en la matriz. No son cuatro servicios caídos ni faltan 18 adaptadores por la revalidación temporal.
   GAP septiembre ya cerró con original manual real, 192 cifras/72 conciliaciones,
   nueve salidas y replay integral. Conserva el archivo de 77.223 bytes con script
@@ -101,8 +105,9 @@ Propuesta — el dueño decide prioridades.
   no se inventó autoridad para ejecutarlas.
   El recibo conjunto conserva las diferencias de fecha, no las oculta.
 - **Política de revisión:** decisión del dueño 28/oct: solo revisión independiente
-  adversarial Codex, sin obligación Claude. Preparada en [PR172](https://github.com/salvamalfa/aeromexico-tracker/pull/172),
-  `b0f31cea`, CI `40695705610` y revisión del mismo head aprobadas; no integrada.
+  adversarial Codex, sin obligación Claude. Integrada en [PR172](https://github.com/salvamalfa/aeromexico-tracker/pull/172),
+  head `b0f31cea`, merge `ba553a54`, CI `40695705610` y revisión del mismo
+  head aprobadas. La compatibilidad sobre AIFA fue limpia: solo dos documentos.
   CI, hilos, protecciones y autoridad originales permanecen exigidos.
 - **Cotizaciones:** auditor local `ee04531a` verifica calendarios y precios
   reales de cuatro instrumentos en ambos periodos: 187 sesiones acumuladas,

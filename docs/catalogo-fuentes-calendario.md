@@ -7,7 +7,7 @@ contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro
 
 Las ocho skills y el coordinador ejecutable preparan, capturan y comprueban
 candidatos separados. El calendario y la política ya están aprobados. La
-infraestructura PR156/161–170 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
+infraestructura PR156/161–172 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
 se integró en `3cbb765a`; [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
 
 El [PR170](https://github.com/salvamalfa/aeromexico-tracker/pull/170), head
@@ -25,7 +25,8 @@ la receta consultaba Normateca, pero el verificador exige Informes. El índice
 correcto actual anuncia septiembre y su libro oficial pasó toda la cadena.
 El ensayo conjunto ahora verifica **catorce tareas, 76 salidas: las 69 anteriores
 idénticas y siete nuevas AIFA**. [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
-nuevo head `3ab5af7e`, sigue en borrador. La CI `40706675152` había declarado
+head `3ab5af7e`, integrado en `0a99dab0` tras la aprobación específica del
+dueño. La CI `40706675152` había declarado
 master `4780b8da`, pero checkoutó el merge antiguo `af2f28b` contra `aff81d0`:
 el gate ordinario rechazó el runtime, con 5.327 aprobadas y tres errores.
 Se reconcilió únicamente historia: padres `43ae2b95`/`4780b8da`, árbol completo
@@ -77,11 +78,15 @@ Además faltan cuatro productos —AFAC aeroportuario actual, GDELT, Aerocivil
 y Viva financiero Q3— y dos controles bursátiles. La suite completa local terminó: 5.474 pruebas y 29 subpruebas aprobadas,
 cero fallos/errores y cuatro omisiones explícitas. No se activa el calendario ni se declaran datos publicados.
 
-El cambio de política pedido el 28/oct está preparado en
+El cambio de política pedido el 28/oct está integrado en
 [PR172](https://github.com/salvamalfa/aeromexico-tracker/pull/172), `b0f31cea`:
 solo revisión independiente adversarial Codex, sin obligación Claude. CI
-`40695705610` y revisión automática del mismo head aprobaron. No está integrado;
-no modifica checks, protecciones ni la autoridad de publicación.
+`40695705610` y revisión automática del mismo head aprobaron. Merge `ba553a54`;
+la unión sobre AIFA solo cambia los dos documentos revisados, sin conflicto.
+[CI posterior AIFA](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40742445009)
+y [CI posterior de la política](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40742533938)
+quedan en seguimiento. No se presentan las CI previas como ejecución sobre el
+nuevo master. No modifica checks, protecciones ni la autoridad de publicación.
 
 El calendario puede usar el **día oficial** sin inventar una hora. El ensayo
 propone 17/nov y 15/dic de 2026; 3T26 espera el reporte de Viva. Detectar y
@@ -4073,9 +4078,13 @@ avisado no implica datos integrados ni tesis autorizada.
   CI `40706667984` aprobada. PR171 `3ab5af7e` incorpora la base solo en su
   historia, con el mismo árbol revisado, tras detectar el checkout antiguo de
   la CI fallida. CI nueva `40713725543` aprobada; revisión independiente
-  favorable del head y su adenda, sin integrar.
-  PR172 `b0f31cea` conserva la política solicitada de revisión solo Codex,
-  CI/revisiones aprobadas y todavía sin integrar. El bot remoto antiguo
+  favorable del head y su adenda. Tras la aprobación específica del dueño,
+  PR171 se integró en `0a99dab0` y PR172 `b0f31cea` en `ba553a54`, con
+  compatibilidad limpia y sin aprobaciones formales en su nombre. Las CI
+  posteriores `40742445009` y `40742533938` quedan en seguimiento. La
+  continuación reúne los lotes locales sobre esa historia, preservando el
+  runtime probado `1c4da3f6`; requiere CI y revisión de su head final.
+  El bot remoto antiguo
   sigue `running`, separado del dictamen auténtico de la otra sesión.
 - Conservar expediente original y dictámenes auténticos en el checkout aislado.
   Main carece del ledger, sin reconstruir autoridad. El procedimiento de
