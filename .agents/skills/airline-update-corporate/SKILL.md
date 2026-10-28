@@ -265,6 +265,38 @@ la tolerancia a copias de cifras oficiales, integridad, ausencias o periodos.
 Fecha impresa y aceptación SEC no acreditan primera publicación o disponibilidad
 actual; esos campos siguen desconocidos. Ver evidencia en la guía canónica.
 
+### Volaris 3T26: reconstrucción editable específica autorizada
+
+El procedimiento SEC original de `recipe --product volaris_sec` conserva su
+alcance Q2 y sus cuatro originales; no se generaliza a Q3. Para Q3 usar el
+modo separado `volaris_q3_inputs`, solo con el ZIP Library verificado de esta
+edición. No reconstruir otros periodos ni etiquetar este ZIP como HTML SEC.
+
+1. Materializar el ZIP mediante Library; comprobar identidad y SHA del handoff.
+   Ejecutar `python -m src.source_updates.volaris_q3_inputs --source <ZIP>
+   --workspace <import-nuevo> --dry-run`; después `--execute` si corresponde.
+   Se verifican cinco miembros, 20 tablas y 1.198 celdas representadas.
+2. Ejecutar `carrier_source_candidate retain --product volaris_sec
+   --source-root <import-nuevo>/data/bronze --workspace <candidato-nuevo>
+   --original reconstruction_zip=volaris/reconstructed/Volaris_3T2026_paquete_reconstruido.zip`.
+   Revisar primero la vista previa y después ejecutar. No mezclar este rol con
+   `html`, `primary`, `submissions` o `index` originales.
+3. Certificar con `--period 2026Q3`, corte con zona y retención reales, y
+   reproducir con `--check` sin cambiar corte ni recibo. Produce cuatro salidas:
+   446 nativas, 364 Gold, un artefacto contenedor y 1.174 vínculos. Las once
+   tablas proyectadas separan trimestre, nueve meses e instantes. La guía y
+   notas en miles quedan retenidas, fuera de la proyección. Guiones no son cero.
+4. Disponibilidad requiere `source_scope=volaris_Q3_visible_reconstruction_target_v1`,
+   workspace del import y su run_id, separados del candidato. La observación
+   real es la lectura independiente del 28/oct; importación no es captura HTTP.
+   No promoverla a otro día ni sustituir hashes originales nulos. Una ronda
+   con verificaciones de fechas distintas sigue el fallo temporal vigente.
+
+Preservar advertencia de reconstrucción en cada vínculo, fechas SEC/release
+separadas y límite de QA visual no completado. El 5 % no permite cambiar un
+token transcrito. El replay real no prueba disponibilidad nueva. Este modo
+no incorpora datos al dashboard ni aprueba tesis, publicación o calendario.
+
 ## Finanzas Viva retenidas: tablas y comparación entre ediciones
 
 Usar `python -m src.source_updates.viva_financial_candidate retain` con

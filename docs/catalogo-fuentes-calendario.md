@@ -7,24 +7,34 @@ contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro
 
 Las ocho skills y el coordinador ejecutable preparan, capturan y comprueban
 candidatos separados. El calendario y la política ya están aprobados. La
-infraestructura PR156/161–169 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
+infraestructura PR156/161–170 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
 se integró en `3cbb765a`; [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
 
 El [PR170](https://github.com/salvamalfa/aeromexico-tracker/pull/170), head
-`aff81d0b`, tiene [CI aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40539298923):
-Python 20:23 y web 1:57. Su revisión Codex sigue pendiente; no se presenta como
-integrado. Fuente `4f38ecb9`: trece tareas reales, con las 62 salidas del PR169
-idénticas y siete nuevas de tráfico mensual AM. AFAC añade contrato/lector
-histórico, con disponibilidad actual HTTP403 aún bloqueada.
+`aff81d0b`, se integró en `4780b8da` el 28/oct a las 14:30 UTC tras la
+aprobación específica del dueño y comprobar nuevamente CI, comentarios e
+hilos. La revisión adversarial de otra sesión Codex fue favorable sobre ese
+head; el bot remoto antiguo sigue `running`, sin presentarlo como aprobado.
+[Dictamen auténtico](https://github.com/salvamalfa/aeromexico-tracker/pull/170#issuecomment-6470299236).
+[CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40706667984)
+aprobada para el merge exacto: test y web. Fuente `4f38ecb9`: trece tareas reales, 69 salidas;
+AFAC añade contrato/lector histórico, sin afirmar disponibilidad actual.
 
 La continuación local SRC `24366ace` corrige una entrada equivocada de AIFA:
 la receta consultaba Normateca, pero el verificador exige Informes. El índice
 correcto actual anuncia septiembre y su libro oficial pasó toda la cadena.
 El ensayo conjunto ahora verifica **catorce tareas, 76 salidas: las 69 anteriores
 idénticas y siete nuevas AIFA**. [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
-head `43ae2b95`, sigue en borrador: CI falló porque su base PR170 todavía no
-pertenece a `origin/master`. Se conserva esa comprobación y no se relanza
-mientras la dependencia no esté integrada.
+nuevo head `3ab5af7e`, sigue en borrador. La CI `40706675152` había declarado
+master `4780b8da`, pero checkoutó el merge antiguo `af2f28b` contra `aff81d0`:
+el gate ordinario rechazó el runtime, con 5.327 aprobadas y tres errores.
+Se reconcilió únicamente historia: padres `43ae2b95`/`4780b8da`, árbol completo
+idéntico al revisado. Otra sesión Codex validó 15 propiedades; se conservan las
+29 pruebas, 19 comprobaciones positivas, ocho rechazos y replay AIFA reales,
+sin atribuir una repetición nueva. [Dictamen/adenda](https://github.com/salvamalfa/aeromexico-tracker/pull/171#issuecomment-6472816508).
+[CI nueva](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40713725543)
+aprobada; su merge de prueba `88214473` tiene los padres correctos. Sin
+modificar tests, gates, pins, permisos ni archivo alguno del head revisado.
 
 OMA septiembre añade un cierre local real desde su newsroom oficial, sin
 ampliar hosts: **quince tareas y 80 salidas; las 76 anteriores idénticas y
@@ -42,16 +52,36 @@ continuidad técnica local pasaron las comprobaciones.
 
 ASUR septiembre cierra otra tarea mediante la **reconstrucción editable
 expresamente autorizada**, diferenciada del original SEC. El recibo conjunto
-actual verifica **dieciocho tareas y 102 salidas: las 93 anteriores idénticas
-y nueve nuevas ASUR**. Quedan **cinco tareas obligatorias y dos controles
-bursátiles**. El control local de catálogo materializado ya pasó tras
+del corte local 27/oct verifica **dieciocho tareas y 102 salidas: las 93 anteriores
+idénticas y nueve nuevas ASUR**. Ese snapshot mantenía cinco tareas y dos
+controles bursátiles. El control local de catálogo materializado ya pasó tras
 actualizar únicamente sus metadatos técnicos de 29 a 30 fuentes.
 La [matriz operativa](#cierre-operativo-de-la-ronda) conserva los once pendientes
 del snapshot PR169: AM mensual, AIFA, OMA, Volaris mensual y GAP cerraron con
 originales reales; ASUR con su representación reconstruida autorizada y
-verificada. Se distingue código, material y decisiones. Aerocivil/GDELT siguen
+verificada; Volaris financiero Q3 añade otra reconstrucción autorizada.
+Se distingue código, material y decisiones. Aerocivil/GDELT siguen
 requeridos; las tres advertencias macro no son calendarios exhaustivos
 certificados. No se declara lista la ronda ni se activan datos o disparadores.
+
+Volaris financiero 3T26 también queda **certificado localmente mediante la
+reconstrucción autorizada**: 446 observaciones, 364 Gold y cuatro salidas.
+Las 102 salidas anteriores se regeneraron o reprodujeron sin diferencias;
+son **106 salidas técnicamente compatibles de 19 candidatos**. No es una
+ronda actual de 19 éxitos. La revalidación física del 28/oct dejó **16 tareas
+actuales aprobadas**: 14 candidatos nuevos desde las selecciones ya admitidas,
+AIFA capturado hoy y Volaris Q3 observado hoy. Las tres restantes conservan
+su prueba histórica: AM mensual tiene un bucle301 en el índice oficial; GAP y
+ASUR solo acreditan observación27/oct. El replay no cambia esas fechas.
+Además faltan cuatro productos —AFAC aeroportuario actual, GDELT, Aerocivil
+y Viva financiero Q3— y dos controles bursátiles. La suite completa local terminó: 5.474 pruebas y 29 subpruebas aprobadas,
+cero fallos/errores y cuatro omisiones explícitas. No se activa el calendario ni se declaran datos publicados.
+
+El cambio de política pedido el 28/oct está preparado en
+[PR172](https://github.com/salvamalfa/aeromexico-tracker/pull/172), `b0f31cea`:
+solo revisión independiente adversarial Codex, sin obligación Claude. CI
+`40695705610` y revisión automática del mismo head aprobaron. No está integrado;
+no modifica checks, protecciones ni la autoridad de publicación.
 
 El calendario puede usar el **día oficial** sin inventar una hora. El ensayo
 propone 17/nov y 15/dic de 2026; 3T26 espera el reporte de Viva. Detectar y
@@ -2370,8 +2400,9 @@ Validación de esta reconciliación:
   catorce módulos de fuentes coinciden con los heads exactos de los cuatro PR.
   Las ocho constantes de política global y los prefijos de datos/publicaciones
   no cambiaron. Dictamen de contratos de fuentes favorable; la integración
-  permanece bloqueada. No sustituye Codex, CI ni el cruce Claude/dueño exigido
-  por AGENTS cuando corresponda.
+  permanece bloqueada en ese corte. No sustituye Codex ni CI. La exigencia de
+  cruce Claude/dueño de AGENTS citada entonces fue reemplazada el 28/oct por
+  revisión independiente Codex; se conserva el dictamen y sus límites históricos.
 - Pyflakes y formato exigidos por CI aprobados. Un chequeo exploratorio de
   todas las reglas Ruff encontró 47 incidencias en 25 módulos idénticos a
   master; no se reformató código ajeno ni se modificaron excepciones.
@@ -3693,7 +3724,8 @@ y base protegida. No se relanza CI de PR171 mientras su base siga inválida.
 Este es el desglose de las **once tareas obligatorias pendientes del snapshot
 PR169**. Cinco cerraron con originales reales: AM mensual, AIFA, OMA,
 Volaris mensual y GAP. ASUR cerró con una reconstrucción expresamente
-autorizada, sin presentarla como original SEC. Las otras cinco siguen abiertas.
+autorizada, sin presentarla como original SEC. Volaris financiero Q3 también
+cerró mediante una reconstrucción específica autorizada; las otras cuatro siguen abiertas.
 «Implementación» significa trabajo técnico por completar; «evidencia»
 significa originales oficiales o acceso aún no acreditados. Pueden coexistir.
 No son once servicios caídos ni once parsers ausentes.
@@ -3702,36 +3734,124 @@ No son once servicios caídos ni once parsers ausentes.
 |---|---|---|
 | Mensual AFAC aeropuertos | Lector julio y contrato de selección/vínculo físico implementados; replay real 2.730 filas | **Evidencia/acceso:** índice actual HTTP403; comprobar edición oficial vigente con índice y libro. No exige septiembre si existe rezago oficial. Sin decisión genérica pendiente |
 | Mensual AIFA | **Cerrada localmente:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; entrega/CI propia pendientes |
-| Mensual AM tráfico | **Cerrada:** índice y 6-K IR capturados juntos el 27/oct; 24 filas mensuales/comparativas y siete salidas reproducidas | No queda implementación para esta edición comprobada. No acredita otros meses ni publicación |
-| Mensual ASUR | **Cerrada localmente con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. Falta integración/CI del lote, no conseguir otro original para este modo autorizado |
-| Mensual GAP | **Cerrada localmente:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. Falta integración/CI del lote, no el original ni el lector |
+| Mensual AM tráfico | **Cadena de septiembre comprobada:** 24 cifras y siete salidas; índice/6-K observados27/oct | El28/oct el6-K respondió200, pero el índice cayó en bucle301. Falta actualidad del índice; no se sustituye por otro catálogo ni se cambia el corte histórico |
+| Mensual ASUR | **Cerrada localmente con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. Para declarar actualidad falta observación oficial vigente; rematerializar Library no la crea. Falta integración/CI del lote, no conseguir otro original para el modo ya autorizado |
+| Mensual GAP | **Cerrada localmente:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. Para el corte28/oct falta observación oficial vigente. Falta integración/CI del lote, no el original ni el lector |
 | Mensual GDELT | Adaptador existente; último intento acotado HTTP503, sin septiembre válido | **Disponibilidad externa:** respuesta válida del periodo. Sin nuevas consultas en esta pasada; RSS no lo sustituye. Cambiar proveedor o requisito sería otra decisión, no se ha aplicado |
 | Mensual OMA | **Cerrada localmente:** artículo y PDF oficiales septiembre HTTP200, 168 observaciones y cuatro salidas reproducidas | Vínculo newsroom `472a0528` revisado; entrega/CI propias pendientes. Se conservan los fallos IR404/es202 sin repetirlos. Disponibilidad del reporte objetivo, no censo de revisiones |
 | Mensual Volaris | **Cerrada localmente:** admisión autorizada y exacta, dos GET200, 48 cifras/24 variaciones, cuatro salidas y replay actuales comprobados | Global y continuidad comprobados; falta entrega/CI remota. Emisor IR separado de SEC financiero; sin descubrimiento dinámico desde el HTML. No falta otra autorización de ese documento ni el lector |
 | Trimestral Aerocivil | Comprobación numérica, sin leyenda/atribución acreditadas del conjunto exacto | **Evidencia oficial:** consulta autorizada y enviada desde el hilo principal; esperando respuesta sobre `jh8x-n6h6`, `TIPO_VUELO`, `TRAFICO` y operador. No repetir envío, inferir leyenda ni declarar opcional |
 | Trimestral Viva | Certificador completo Q2; Q3 no verificado | **Material y adaptación:** reporte financiero oficial Q3 y cadena de esa edición. No inventar fecha; tráfico o ZIP XBRL no equivalen al release |
-| Trimestral Volaris | Reporte Q3 primario existe y ya fue avisado; reconstrucción específica autorizada el 28/oct; preparación de identidad/periodos/unidades probada, certificador real aún solo Q2 | **Implementación e insumos:** recibir los derivados Library, comprobar sus identidades/hashes y completar extracción, conciliaciones, linaje y replay Q3. No falta detectar el reporte ni otra autorización genérica para programar; CASM Q2 no es el bloqueo Q3 |
+| Trimestral Volaris | **Cerrada localmente en modo reconstruido autorizado:** ZIP Library verificado, 446 nativas/364 Gold, 187 conciliaciones, linaje y replay reales; disponibilidad del documento objetivo verificada 28/oct | Falta integración/CI del lote y ronda con verificaciones temporales coherentes. No faltan el derivado ni el lector. Mantiene cuatro guiones desconocidos y excluye guía/notas en miles de la proyección; no es HTML original SEC ni tesis aprobada |
 
-**Volaris financiero 3T26: preparación del modo reconstruido autorizado.**
-La aprobación del 28/oct cubre esta representación editable específica, sin
-publicación ni tesis. No se extiende a otras fuentes ni modifica el lector
-SEC original de 2T26. `python -m src.source_updates.volaris_q3_reconstructed`
-emite una vista previa offline: filing `0001292814-26-005010`, aceptación
-26/oct 21:31:25 UTC y fecha de presentación 27/oct separadas. Las cuatro URLs
-son referencias al anexo, cover, índice y submissions, no descargas comprobadas.
-Observación, HTTP y hashes de originales/derivados aún desconocidos quedan nulos.
+**Volaris financiero 3T26: cadena real del derivado autorizado.**
+El ZIP materializado conserva su identidad Library, 39.039 bytes y SHA-256
+`b94aa81a…`. Se verifican los cinco miembros exactos: JSON, HTML editable,
+manifiesto, verificación independiente y notas de entrega. Son derivados:
+ninguna cifra, tamaño SEC observado o fecha se usa como hash/captura del original.
+El alias `volaris_visible_reconstruction` está separado de `sec`; la colección
+SEC genérica conserva sus alias originales. Las cuatro URLs son referencias
+al filing `0001292814-26-005010`, no cuatro documentos originales descargados.
 
-Los contratos preparados distinguen julio–septiembre, enero–septiembre y los
-instantes de balance/flota; no restan acumulados para inventar un trimestre.
-Comprueban tokens, unidades, escala y guiones desconocidos. La tolerancia del
-5 % para conciliaciones derivadas no permite alterar una cifra transcrita.
-**67 pruebas locales pasaron en 7,27 s**, incluidas las regresiones Q2 y la
-política numérica. Otra revisión local Codex comprobó 31 rechazos adversariales
-y ocho positivos; detectó y se corrigió la aceptación de años fraccionarios
-que generaba fechas inválidas. Ruff pasó. Son pruebas de contrato, no extracción.
-Los derivados Library todavía no se han recibido en esta entrega: no hay
-cifras Q3 certificadas, candidato ni integración/readiness nuevos. Los conteos
-18/102 siguen perteneciendo al cierre ASUR anterior, no a este módulo nuevo.
+Se cotejaron **20 tablas/309 filas representadas/1.198 celdas HTML–JSON**,
+668 valores normalizados y siete guiones del paquete. La segunda lectura del
+DOM original retenida por el hilo principal cubrió 345 filas/1.314 celdas:
+la diferencia incluye pies y filas no representados; no se afirma reconstruir
+el filing completo. Narrativa y pies son resúmenes propios. QA visual no fue
+completado; no se presenta el HTML como renderizado verificado.
+
+El lector proyecta once tablas revisadas: **446 nativas y 364 Gold**, con
+trimestre julio–septiembre, acumulado enero–septiembre e instantes de balance/flota
+separados. Mantiene USD millones, pasajeros reservados miles, millas y escalas
+por métrica. Las otras nueve tablas, incluidas guía y notas USD miles, quedan
+conservadas en el ZIP y no se proyectan como resultados realizados adicionales.
+**187 conciliaciones pasaron, sin aplicar el 5 %**. Cuatro comprobaciones de
+componentes quedan indeterminadas por cuatro guiones publicados; no se imputan.
+La aceptación SEC 26/oct 21:31:25 UTC, presentación 27/oct y release declarado
+26/oct siguen separados de primera publicación desconocida. La observación es
+el término de la lectura independiente, 28/oct 13:16:03 UTC; la importación local
+es posterior, nunca una captura HTTP ni una primera disponibilidad ficticia.
+
+Importación → Bronze → nativo → Silver/Gold → linaje → replay y `check_task`
+pasaron realmente en `candidate-c64ae235`: cuatro salidas, un artefacto ZIP
+con miembros verificados y **1.174 vínculos**. La revisión de otra sesión Codex,
+`8e03a8ec…`, cotejó los 446 tokens/contextos y 364 escalas/padres, y rechazó
+31 ataques. Corrigió un retrofechado posible y notas que alteraban linaje
+heredado. Las cuatro salidas Q2 y AFAC comparadas por el revisor quedan exactas.
+Los tests afectados iniciales detectaron expectativas anteriores al nuevo modo;
+se preservan roles originales y reconstruidos como conjuntos completos distintos.
+No se retiraron casos ni se convirtieron fallos en omisiones.
+
+Continuidad técnica final: fuente `6ea243f3`, runtime `1c4da3f6…`, dictamen
+independiente auténtico `852f7e7c…` y binding `11dd5d68`. Solo cambian las
+mismas tres rutas técnicas; ancla, consentimiento y autoridad originales
+permanecen exactos. `dim_source` conserva 30 instituciones con solo los dos
+campos SEC ya revisados. La CLI real única de ese head terminó en **81,655 s**,
+válida y `publication_authorized=false`; adenda posbinding `4cc4a1df…`.
+Conservación fresca: 188/177/811/803 archivos y 53 salidas históricas.
+
+La agregada de `88b7436f` terminó con 5.438 pruebas y 29 subpruebas aprobadas, tres fallos, cinco errores
+y 32 omisiones. Se separaron specs y pruebas de planificación para cumplir
+el presupuesto existente, sin ampliar excepciones: once tablas/orden exactos,
+cinco funciones y 57 aserciones intactas. El test de alias ahora exige los tres
+originales y rechaza las dos representaciones derivadas en el lector genérico;
+no se habilitan alias indebidos. La preparación documentada de npm/navegador
+resolvió las incidencias web. Pasaron 83 focales, otras 23 recuperadas y 63 de
+revisión independiente; las cuatro salidas Volaris siguen idénticas byte a byte.
+La nueva agregada de `11dd5d68` terminó: **5.474 pruebas y 29 subpruebas
+aprobadas**, cero fallos/errores y cuatro omisiones; 2.512,072 s de proceso
+(41:52), con navegador/datos locales y sin exclusiones nuevas. Las omisiones
+son una comprobación editorial cubierta por la preservación financiera estricta,
+un preview Pages sin pin y dos recorridos genéricos sin draft actualmente
+aprobado. No se fabricaron ese draft o su autoridad. Las 28 omisiones web
+anteriores sí se ejecutaron y pasaron. Las 75 pruebas `local_data` se identificaron
+contra el XML real: 73 pasaron y dos corresponden al draft aprobado ausente;
+no quedaron otras sin ejecutar. La clasificación se obtuvo sin repetir tests.
+El perfil no permite comparar rendimiento
+con las 5.129 pruebas del lote anterior ni con CI remota.
+
+Los 19 candidatos técnicos conservan **106 salidas compatibles**, incluidas
+102 previas idénticas, tras 17 regeneraciones reales y un replay de productor
+sin cambios. Los recibos `global-19-current-88b7436f` y `global-19-current-11dd5d68`
+conservan sus cortes intermedios y no se presentan como ronda completa aceptada.
+
+Para comprobar disponibilidad hoy se reutilizaron doce selecciones literales
+ya exitosas: 31 solicitudes base previstas, máximo de 155 solicitudes, sin hosts nuevos o pagos.
+Once colecciones terminaron completas. El índice mensual AM devolvió un bucle
+301 y se conserva cuerpo458bytes/SHA `1a97d288…`, no elegible; no hubo reintento.
+Su6-K sí respondió200, sin sustituir el índice contractual por otro documento.
+AIFA añadió dos GET200, con XLSX `a26a3d21…` idéntico y nuevas fecha/localizador
+reales. Sus 180 observaciones de negocio siguen iguales.
+
+Catorce candidatos se construyeron desde las capturas nuevas, con Bronze,
+nativo, Silver/Gold, linaje y replay efectivos. La identidad SEC histórica de
+cotizaciones y metodología Banxico se copiaron con bytes/fechas originales;
+no se presentan como capturas actuales. El recibo `global-19-fresh-20261028`
+se escribió y reprodujo: **16 verificadas hoy, cuatro productos ausentes y tres
+sin disponibilidad actual**, más dos controles bursátiles. Sigue
+`blocked_global_policy`, fecha trimestral nula y Viva como único reporte central
+faltante. AFAC agosto, BTS julio y RSS conservan sus alcances observados; RSS
+no sustituye GDELT. Las tres advertencias macro no son calendarios exhaustivos.
+GAP/ASUR requieren observación oficial vigente para el contrato de ese día;
+rematerializar Library o repetir cálculos no la acredita. No hace falta volver
+a autorizar los adaptadores ya encargados. Reusar observaciones de otro día
+para declarar actualidad sí cambiaría la política y no se hizo.
+
+Fuentes y fallos quedan retenidos. No se consultó GDELT ni OTC, no hubo nuevo
+acceso SEC, cambios de seguridad, ejecuciones programadas, datos publicados
+ni activaciones. El último18/102 aceptado sigue siendo evidencia histórica
+propia, sin reetiquetarlo.
+
+Comandos del modo específico, separados del procedimiento SEC original Q2:
+
+```bash
+python -m src.source_updates.volaris_q3_inputs --source <ZIP-Library-verificado> --workspace <import-nuevo> --dry-run
+# Tras revisar el plan: mismo comando con --execute.
+python -m src.source_updates.carrier_source_candidate retain --product volaris_sec --source-root <import-nuevo>/data/bronze --workspace <candidato-nuevo> --original reconstruction_zip=volaris/reconstructed/Volaris_3T2026_paquete_reconstruido.zip --dry-run
+# Tras retención --execute, usar su run_id real:
+python -m src.source_updates.carrier_source_candidate certify --product volaris_sec --period 2026Q3 --as-of <corte-con-zona> --workspace <candidato-nuevo> --retention <run_id> --execute
+# Repetir certify con --check, mismo cutoff y retención.
+```
 
 **GAP septiembre: cadena manual real cerrada, sin publicación.** El
 [6-K oficial](https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm)
@@ -3931,37 +4051,32 @@ avisado no implica datos integrados ni tesis autorizada.
 
 ## Pendientes
 
-- Cerrar las cinco tareas actuales y los dos controles de sesiones descritos.
+- Cerrar los cuatro productos sin evidencia válida y los dos controles de sesiones
+  descritos. Revalidar disponibilidad en una fecha de ronda coherente antes de
+  declarar actual el conjunto; los 19 certificados técnicos no sustituyen ese paso.
   Aerocivil/GDELT siguen requeridos; un fallo no es cero ni se sustituye.
 - Conservar la admisión Volaris limitada al documento aprobado, sin inventar
   futuras URLs o abrir subdominios. Esperar respuesta Aerocivil; no repetir
   la consulta ni confundir envío con evidencia semántica.
   No repetir reintentos prohibidos GDELT/PDF ni eludir accesos fallidos.
 - Verificar Viva 3T26 antes de fechar la ronda trimestral. AM y Volaris están
-  detectados; Volaris ya fue avisado. La receta física global aún carece del
-  dossier Q3 Volaris: su límite difiere del aviso documental del hilo principal.
+  detectados; Volaris ya fue avisado y su reconstrucción Q3 pasó la cadena local.
+  No falta otro original para ese modo específico autorizado; falta Viva Q3.
 - Completar CI, comentarios, revisión Codex y conservación del head final de
   cada entrega, y seguir CI posterior. PR168/169 ya tienen CI posterior aprobada;
   esos resultados no sustituyen el gate de un head nuevo.
-- **Integración PR170: falta un dictamen de revisión válido.** Comprobación
-  del 28/oct a las 12:59 UTC: head `aff81d0`, CI `40539298923` con `test` y
-  `web` aprobados, sin hilos abiertos, pero el resumen Codex sigue `running`
-  desde las 01:44 UTC. Eso no acredita un worker activo ni un resultado favorable.
-  La revisión local `focused_efficiency_review` procede de otro agente Codex
-  de esta sesión; no acredita Claude ni revisión personal del dueño. El comentario
-  `6447401205` conserva expresamente su límite: no sustituye la revisión remota.
-  La [ruta manual](https://github.com/salvamalfa/aeromexico-tracker/blob/aff81d0b140fea673bdd0d96f52cf2ba6f73ea8a/AGENTS.md#L180-L185)
-  no exige un recibo automático terminal por sí sola. Sí aplica la
-  [revisión cruzada](https://github.com/salvamalfa/aeromexico-tracker/blob/aff81d0b140fea673bdd0d96f52cf2ba6f73ea8a/AGENTS.md#L215-L223):
-  si falta Codex, el código preparado por ChatGPT/Codex debe recibir revisión
-  adversarial auténtica de Claude, con hallazgos en el PR y atención de estos.
-  Esa vía no necesita auto-merge ni cambiar reglas; todavía no está cumplida.
-  En este ejecutor no hay CLI Claude ni herramienta/modelo Claude invocable.
-  Falta obtener esa revisión del head exacto mediante un acceso ya autorizado,
-  o recibir el dictamen Codex pendiente; no una aprobación genérica para continuar.
-  Después se revalidan head, CI, comentarios y compatibilidad antes del merge
-  normal. No se ha intentado integrar ni se ha cambiado el pendiente de Codex
-  en el documento histórico de `aff81d0` para hacerlo pasar por resuelto.
+- **PR170 integrado y CI posterior aprobada.** El primer intento fue
+  rechazado y no se repitió hasta recibir autorización específica del dueño
+  para `aff81d0`. Tras comprobar de nuevo head, CI, comentarios e hilos se
+  hizo un único reintento por la ruta manual normal, sin bypass ni aprobación
+  formal en nombre del usuario. Merge `4780b8da`, 28/oct 14:30:46 UTC;
+  CI `40706667984` aprobada. PR171 `3ab5af7e` incorpora la base solo en su
+  historia, con el mismo árbol revisado, tras detectar el checkout antiguo de
+  la CI fallida. CI nueva `40713725543` aprobada; revisión independiente
+  favorable del head y su adenda, sin integrar.
+  PR172 `b0f31cea` conserva la política solicitada de revisión solo Codex,
+  CI/revisiones aprobadas y todavía sin integrar. El bot remoto antiguo
+  sigue `running`, separado del dictamen auténtico de la otra sesión.
 - Conservar expediente original y dictámenes auténticos en el checkout aislado.
   Main carece del ledger, sin reconstruir autoridad. El procedimiento de
   continuidad local no aprueba publicación ni sustituye digests originales.

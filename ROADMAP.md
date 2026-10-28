@@ -5,21 +5,33 @@ Propuesta — el dueño decide prioridades.
 ## Ahora
 
 - **Skills y calendario:** infraestructura de ocho familias/coordinador y
-  contratos PR156/161–169 integrados. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
+  contratos PR156/161–170 integrados. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
   merge `3cbb765a`, CI/revisión del head aprobadas y
   [CI posterior verde](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
   [PR170](https://github.com/salvamalfa/aeromexico-tracker/pull/170), head
-  `aff81d0b`, tiene CI aprobada (Python 20:23, web 1:57); Codex sigue pendiente,
-  sin integración. Añade AM mensual/contrato AFAC. La continuación AIFA
-  `24366ace` está en [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
-  head `43ae2b95`, en borrador: CI falla por la base PR170 no integrada; no se
-  relanza hasta resolver esa dependencia legítima. OMA `472a0528` está local.
-- **Preparación comprobada local:** dieciocho tareas y 102 salidas pasan;
-  las 93 previas son idénticas y hay nueve nuevas ASUR. Quedan cinco
-  tareas requeridas y dos controles bursátiles. La [matriz operativa](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda)
+  `aff81d0b`, integrado manualmente tras autorización específica del dueño,
+  CI y revisión Codex independiente favorables: merge `4780b8da`, 28/oct
+  14:30 UTC. [CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40706667984)
+  aprobada para ese merge: test y web. El bot antiguo sigue `running`, separado del dictamen
+  auténtico. La continuación AIFA está en [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
+  nuevo head `3ab5af7e`, en borrador, con árbol idéntico al revisado `43ae2b95`
+  y master `4780b8da` incorporado solo a su historia. La CI anterior probó una
+  referencia de merge antigua y falló correctamente; se corrigió la ascendencia,
+  sin cambiar gates. CI nueva `40713725543` aprobada. Dictamen independiente:
+  29 pruebas/replay AIFA y 15 comprobaciones de historia, sin hallazgos.
+  OMA y los lotes siguientes siguen locales; no hay integración PR171 todavía.
+- **Preparación comprobada local:** 19 candidatos y 106 salidas compatibles,
+  con las 102 previas idénticas y cuatro nuevas Volaris financiero Q3. El último
+  snapshot de 18 éxitos es del 27/oct local. La revalidación real del 28/oct
+  deja **16 tareas vigentes**, sin cambiar reglas: 14 candidatos nuevos,
+  AIFA capturado hoy y Volaris Q3 observado hoy. Tres siguen sin disponibilidad
+  actual: AM tráfico (bucle301 en su índice), GAP/ASUR (observados27/oct). No equivale a ronda completa lista. Quedan cuatro productos sin
+  evidencia válida y dos controles bursátiles. La [matriz operativa](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda)
   desglosa las once del snapshot PR169: AM mensual, AIFA, OMA, Volaris mensual
-  y GAP cerraron con originales reales; ASUR con reconstrucción autorizada;
-  AFAC histórico/contrato está probado, pero actualidad HTTP403 sigue abierta.
+  y GAP cerraron con originales reales; ASUR y Volaris financiero Q3 con
+  reconstrucciones específicas autorizadas;
+  AFAC aeropuertos tiene lector/contrato histórico; su acceso actual HTTP403 sigue abierto,
+  separado de AFAC por aerolínea que respondió200 hoy.
   Banxico/EIA conservan tres advertencias de cobertura observada: su
   reclasificación anterior no equivale a calendarios exhaustivos comprobados.
   Aerocivil/GDELT siguen obligatorios según su cadencia; cotizaciones requiere
@@ -39,6 +51,8 @@ Propuesta — el dueño decide prioridades.
   hábiles bancarios mexicanos en/después del 15. Trimestral: +2 hábiles tras el
   último reporte real del trimestre; agrupar si dista ≤7 días naturales de la
   mensual, en la fecha posterior. Día oficial explícito admite hora nula.
+  Dry-run real con cero ejecuciones programadas. La prueba de fuentes actual
+  es septiembre/Q3; noviembre/diciembre necesitarán sus ediciones posteriores.
   AM y Volaris Q3 están detectados; falta Viva para fechar. Avisar es independiente
   de incorporar cifras/aprobar tesis; Volaris ya fue avisado el 27/oct 13:09 UTC.
 - **Admisión Volaris autorizada:** contrato local limitado al documento exacto
@@ -50,7 +64,7 @@ Propuesta — el dueño decide prioridades.
   respuesta: no acredita la semántica y no se repetirá. GDELT conserva HTTP503. AFAC necesita acceso actual.
   OMA quedó comprobado con otra ruta oficial, sin repetir IR404/es202. AIFA quedó comprobado localmente tras corregir la entrada; falta
   su integración. Faltan dossiers actuales aeroportuarios y
-  financieros indicados en la matriz. No son cinco servicios caídos.
+  financieros indicados en la matriz. No son cuatro servicios caídos ni faltan 18 adaptadores por la revalidación temporal.
   GAP septiembre ya cerró con original manual real, 192 cifras/72 conciliaciones,
   nueve salidas y replay integral. Conserva el archivo de 77.223 bytes con script
   no ejecutado, sin fingir igualdad binaria con el listado SEC de 77.102.
@@ -71,6 +85,25 @@ Propuesta — el dueño decide prioridades.
   Otros 79 casos financieros posbinding pasaron. Fuentes/autoridad/sitio/53
   salidas históricas conservados exactamente. No se atribuye suite completa
   ni CI remota aprobada a este lote; falta integración ordenada y sus gates.
+- **Volaris financiero Q3:** ZIP reconstruido verificado, 20 tablas/1.198 celdas;
+  446 nativas, 364 Gold, 187 conciliaciones sin recurrir al 5 %, cuatro salidas y
+  1.174 vínculos; cuatro guiones desconocidos y guía/notas miles no proyectadas.
+  Execute/replay/readiness locales reales aprobados. Fuente final `6ea243f3`,
+  revisión independiente favorable; binding `11dd5d68`, CLI financiera válida
+  en 81,655 s, publicación no autorizada. Se corrigieron presupuesto de módulos
+  y contrato de alias sin retirar casos; 83 focales y 63 de revisión independiente
+  pasaron. Navegador/cache/npm preparados: otras 23 pruebas recuperadas pasaron.
+  La agregada anterior dejó tres fallos, cinco errores y 32 omisiones. La nueva
+  de `11dd5d68`, con datos locales/navegador y sin exclusiones nuevas, terminó:
+  **5.474 pruebas y 29 subpruebas aprobadas**, cero fallos/errores y cuatro
+  omisiones explícitas; 41:52 de proceso local. De las 75 pruebas `local_data`,
+  73 pasaron y dos son las omisiones por draft actualmente aprobado ausente;
+  no se inventó autoridad para ejecutarlas.
+  El recibo conjunto conserva las diferencias de fecha, no las oculta.
+- **Política de revisión:** decisión del dueño 28/oct: solo revisión independiente
+  adversarial Codex, sin obligación Claude. Preparada en [PR172](https://github.com/salvamalfa/aeromexico-tracker/pull/172),
+  `b0f31cea`, CI `40695705610` y revisión del mismo head aprobadas; no integrada.
+  CI, hilos, protecciones y autoridad originales permanecen exigidos.
 - **Cotizaciones:** auditor local `ee04531a` verifica calendarios y precios
   reales de cuatro instrumentos en ambos periodos: 187 sesiones acumuladas,
   21 de septiembre y 64 del trimestre; incluye ancla anual e historial para
