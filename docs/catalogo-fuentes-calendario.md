@@ -3710,7 +3710,28 @@ No son once servicios caídos ni once parsers ausentes.
 | Mensual Volaris | **Cerrada localmente:** admisión autorizada y exacta, dos GET200, 48 cifras/24 variaciones, cuatro salidas y replay actuales comprobados | Global y continuidad comprobados; falta entrega/CI remota. Emisor IR separado de SEC financiero; sin descubrimiento dinámico desde el HTML. No falta otra autorización de ese documento ni el lector |
 | Trimestral Aerocivil | Comprobación numérica, sin leyenda/atribución acreditadas del conjunto exacto | **Evidencia oficial:** consulta autorizada y enviada desde el hilo principal; esperando respuesta sobre `jh8x-n6h6`, `TIPO_VUELO`, `TRAFICO` y operador. No repetir envío, inferir leyenda ni declarar opcional |
 | Trimestral Viva | Certificador completo Q2; Q3 no verificado | **Material y adaptación:** reporte financiero oficial Q3 y cadena de esa edición. No inventar fecha; tráfico o ZIP XBRL no equivalen al release |
-| Trimestral Volaris | Reporte Q3 primario existe y ya fue avisado; certificador retenido solo Q2 | **Implementación y material:** retener dossier Q3 admitido, adaptar y probar. No falta detectar el reporte; CASM Q2 no es el bloqueo Q3. No requiere otra autorización genérica para programar |
+| Trimestral Volaris | Reporte Q3 primario existe y ya fue avisado; reconstrucción específica autorizada el 28/oct; preparación de identidad/periodos/unidades probada, certificador real aún solo Q2 | **Implementación e insumos:** recibir los derivados Library, comprobar sus identidades/hashes y completar extracción, conciliaciones, linaje y replay Q3. No falta detectar el reporte ni otra autorización genérica para programar; CASM Q2 no es el bloqueo Q3 |
+
+**Volaris financiero 3T26: preparación del modo reconstruido autorizado.**
+La aprobación del 28/oct cubre esta representación editable específica, sin
+publicación ni tesis. No se extiende a otras fuentes ni modifica el lector
+SEC original de 2T26. `python -m src.source_updates.volaris_q3_reconstructed`
+emite una vista previa offline: filing `0001292814-26-005010`, aceptación
+26/oct 21:31:25 UTC y fecha de presentación 27/oct separadas. Las cuatro URLs
+son referencias al anexo, cover, índice y submissions, no descargas comprobadas.
+Observación, HTTP y hashes de originales/derivados aún desconocidos quedan nulos.
+
+Los contratos preparados distinguen julio–septiembre, enero–septiembre y los
+instantes de balance/flota; no restan acumulados para inventar un trimestre.
+Comprueban tokens, unidades, escala y guiones desconocidos. La tolerancia del
+5 % para conciliaciones derivadas no permite alterar una cifra transcrita.
+**67 pruebas locales pasaron en 7,27 s**, incluidas las regresiones Q2 y la
+política numérica. Otra revisión local Codex comprobó 31 rechazos adversariales
+y ocho positivos; detectó y se corrigió la aceptación de años fraccionarios
+que generaba fechas inválidas. Ruff pasó. Son pruebas de contrato, no extracción.
+Los derivados Library todavía no se han recibido en esta entrega: no hay
+cifras Q3 certificadas, candidato ni integración/readiness nuevos. Los conteos
+18/102 siguen perteneciendo al cierre ASUR anterior, no a este módulo nuevo.
 
 **GAP septiembre: cadena manual real cerrada, sin publicación.** El
 [6-K oficial](https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm)
