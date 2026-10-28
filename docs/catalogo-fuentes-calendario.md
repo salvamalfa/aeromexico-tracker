@@ -3922,6 +3922,25 @@ avisado no implica datos integrados ni tesis autorizada.
 - Completar CI, comentarios, revisión Codex y conservación del head final de
   cada entrega, y seguir CI posterior. PR168/169 ya tienen CI posterior aprobada;
   esos resultados no sustituyen el gate de un head nuevo.
+- **Integración PR170: falta un dictamen de revisión válido.** Comprobación
+  del 28/oct a las 12:59 UTC: head `aff81d0`, CI `40539298923` con `test` y
+  `web` aprobados, sin hilos abiertos, pero el resumen Codex sigue `running`
+  desde las 01:44 UTC. Eso no acredita un worker activo ni un resultado favorable.
+  La revisión local `focused_efficiency_review` procede de otro agente Codex
+  de esta sesión; no acredita Claude ni revisión personal del dueño. El comentario
+  `6447401205` conserva expresamente su límite: no sustituye la revisión remota.
+  La [ruta manual](https://github.com/salvamalfa/aeromexico-tracker/blob/aff81d0b140fea673bdd0d96f52cf2ba6f73ea8a/AGENTS.md#L180-L185)
+  no exige un recibo automático terminal por sí sola. Sí aplica la
+  [revisión cruzada](https://github.com/salvamalfa/aeromexico-tracker/blob/aff81d0b140fea673bdd0d96f52cf2ba6f73ea8a/AGENTS.md#L215-L223):
+  si falta Codex, el código preparado por ChatGPT/Codex debe recibir revisión
+  adversarial auténtica de Claude, con hallazgos en el PR y atención de estos.
+  Esa vía no necesita auto-merge ni cambiar reglas; todavía no está cumplida.
+  En este ejecutor no hay CLI Claude ni herramienta/modelo Claude invocable.
+  Falta obtener esa revisión del head exacto mediante un acceso ya autorizado,
+  o recibir el dictamen Codex pendiente; no una aprobación genérica para continuar.
+  Después se revalidan head, CI, comentarios y compatibilidad antes del merge
+  normal. No se ha intentado integrar ni se ha cambiado el pendiente de Codex
+  en el documento histórico de `aff81d0` para hacerlo pasar por resuelto.
 - Conservar expediente original y dictámenes auténticos en el checkout aislado.
   Main carece del ledger, sin reconstruir autoridad. El procedimiento de
   continuidad local no aprueba publicación ni sustituye digests originales.
