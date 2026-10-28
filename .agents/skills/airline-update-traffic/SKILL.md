@@ -47,7 +47,7 @@ python -m src.source_updates recipe --product afac_carriers
 Consultar cada producto de esta familia:
 
 - `afac_carriers` — parser candidato de boletines y base 2026, condicionado a sus insumos. Entrada canónica: `constant:src.ingest.afac.download:DATATUR_CATALOG_URL`. Formato: HTML → PDF/XLS/ZIP DATATUR.
-- `afac_airports` — adaptador offline de original retenido revisado. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: archivo independiente por edición.
+- `afac_airports` — adaptador retenido y descubrimiento/vínculo físico de índice y libro; actualidad sujeta al acceso oficial. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: archivo independiente por edición.
 - `afac_countries` — adaptador offline de cajas exactas acumuladas; no serie mensual desde gráficas. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: boletín/archivo de países.
 - `afac_margins` — adaptador offline de dos libros de la misma edición. Entrada canónica: `url:https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404`. Formato: XLSX sase/resumen de la misma edición.
 - `bts_segments` — certificador integral de originales T-100, descubrimiento FJE y vínculo físico; mes explícito y diccionario incorporado revisado. Entrada canónica: `constant:src.ingest.bts.t100:FORM_URL`. Formato: formulario GET + POST → ZIP CSV.
@@ -184,3 +184,26 @@ la colisión de grano tras normalizar. La configuración 3 está respaldada por
 el lookup como combinación de pasajeros/carga; 0, 4 y 9 quedan fuera del
 formato físico revisado. No inferir flota, nombres ni regularidad de estos
 códigos. Guardar lookups, fechas y hashes junto a la evidencia técnica.
+
+### Descubrimiento y disponibilidad de aeropuertos AFAC
+
+`recipe --product afac_airports --output selection` emite el índice oficial.
+Con `--catalog-file <indice.html> --period latest` selecciona únicamente el
+libro anunciado en la fila aeroportuaria; el mes explícito debe coincidir.
+No generar URLs futuras ni presentar julio como septiembre. La selección
+pareada de índice y libro tiene dos GET base y cero pagados; revisar `collect
+--dry-run` antes de una captura autorizada. Un 403 no prueba que no exista
+una edición y no permite eludir acceso.
+
+Después de certificar todo el original con `retained`, `availability` declara
+`workspace`, `run_id`, `catalog_item` y `artifact_item`. Valida los dos roles,
+URLs, manifiesto, sidecars, contenido nativo y fecha local real de la ronda.
+Conserva el alias histórico del índice `route_research` o el canónico `afac`,
+y `afac` del libro, sin cambiar identidades. `source_period` admite el rezago
+AFAC existente; no exige el mes corporativo si no es la edición oficial vigente.
+
+El replay real de julio conservó 2.730 filas, 65 aeropuertos y 173 cruces.
+Índice del 8/sep y libro del 13/sep no forman una captura contemporánea nueva:
+no se fabrica recibo de colección. El HTTP403 del 27/oct conserva actualidad
+bloqueada aunque el lector histórico y el contrato estén implementados.
+Fecha genérica de página y números del filename no prueban publicación.

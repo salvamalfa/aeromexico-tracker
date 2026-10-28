@@ -5,24 +5,26 @@ Propuesta — el dueño decide prioridades.
 ## Ahora
 
 - **Skills y calendario:** infraestructura de ocho familias/coordinador y
-  contratos PR156/161–168 integrados. [PR168](https://github.com/salvamalfa/aeromexico-tracker/pull/168)
-  se integró en `24097209`, con CI/Codex del head `336af97e` favorables;
-  [CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40519239644).
-  El cierre pragmático del SRC `d55934f7` está verificado con originales reales,
-  revisión independiente y conservación financiera. La integración de cada
-  entrega exige CI/revisión del head final, sin bypass.
-- **Preparación comprobada:** doce tareas del mismo runtime pasan. Las 58
-  salidas previas son idénticas y se añaden cuatro AM 3T26. Quedan once tareas
-  requeridas y dos controles bursátiles; ver [matriz operativa](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda).
-  Banxico/EIA mantienen cobertura y agregados observados; la falta de un censo
-  de días no bloquea esos cálculos. Cotizaciones conserva el control de sesiones
-  que sí requieren rendimientos y volatilidad. Aerocivil/GDELT siguen obligatorios.
-- **Cierres prácticos:** AM 3T26 certifica veinte métricas desde el 6-K oficial,
-  con trimestre/unidades/linaje exactos. Volaris Q2 conserva CASM 7,97; su
-  conciliación derivada difiere 0,105 % y pasa con advertencia bajo el 5 %
-  autorizado. El cambio no admite fuentes ausentes, periodos/unidades erróneos,
-  integridad falsa ni convierte Q2 en Q3. Final: 327 afectadas y 80 independientes
-  aprobadas; 79 financieras y CLI local con el expediente original favorables.
+  contratos PR156/161–169 integrados. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
+  merge `3cbb765a`, CI/revisión del head aprobadas y
+  [CI posterior verde](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
+  El siguiente cierre SRC `4f38ecb9` añade tráfico mensual AM desde 6-K oficial
+  y el contrato AFAC aeroportuario. Sigue sujeto a gates de su propio head.
+- **Preparación comprobada:** trece tareas del mismo runtime pasan; las 62
+  salidas PR169 son idénticas y hay siete nuevas AM mensuales. Quedan diez
+  tareas requeridas y dos controles bursátiles. La [matriz operativa](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda)
+  desglosa las once del snapshot PR169: AM mensual es el cierre real nuevo;
+  AFAC histórico/contrato está probado, pero actualidad HTTP403 sigue abierta.
+  Banxico/EIA conservan tres advertencias de cobertura observada: su
+  reclasificación anterior no equivale a calendarios exhaustivos comprobados.
+  Aerocivil/GDELT siguen obligatorios según su cadencia; cotizaciones requiere
+  sesiones verificadas para rendimientos y volatilidad.
+- **Cierres prácticos:** AM mensual extrae 24 cifras de septiembre/comparativo,
+  separadas del anexo financiero Q3 de veinte métricas. Fecha/unidad/linaje
+  se conservan, sin nueva publicación. AFAC julio reproduce 2.730 filas y
+  173 cruces; los originales de distintos días no crean una captura actual.
+  La conciliación Volaris Q2 de 0,105 % permanece como advertencia autorizada,
+  sin convertir Q2 en Q3. Pruebas y preservación final se detallan en la guía.
 - **Calendario probado, sin activar:** mensual 17/nov y 15/dic de 2026, primeros
   hábiles bancarios mexicanos en/después del 15. Trimestral: +2 hábiles tras el
   último reporte real del trimestre; agrupar si dista ≤7 días naturales de la
@@ -33,7 +35,7 @@ Propuesta — el dueño decide prioridades.
   publicador Aerocivil; GDELT conserva HTTP503. OMA/AFAC necesitan material
   accesible; AIFA conserva septiembre histórico y el índice actual anuncia un
   julio con fecha incoherente. Faltan dossiers actuales aeroportuarios y
-  financieros indicados en la matriz. No son once servicios caídos.
+  financieros indicados en la matriz. No son diez servicios caídos.
 - **Eficiencia:** la agregada local anterior aprobó 5.129 casos; el total
   comparable pasó de 39:47 a 36:33 (8,1 % local). No se promete ese ahorro
   remoto ni se atribuye aquella suite a los heads posteriores.

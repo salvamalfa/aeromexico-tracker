@@ -133,16 +133,26 @@ def original(workspace: Path, period: str, collection: str, as_of: str) -> tuple
     row = records.get(item.get("source_file"))
     if row is None or row["sha256"] != item.get("sha256") or row["source_url"] != item["source_url"]:
         raise ValueError("Traffic receipt differs from the verified Bronze manifest")
+    html = row["logical_key"] == "aeromexico_ir|am_traffic_ir_2026M09_6K|2026M09|html"
     if (
         row["source_system"] != "aeromexico_ir"
         or item.get("product") != "am_traffic_ir"
-        or row["logical_key"] != f"aeromexico_ir|am_traffic_ir|{period}|pdf"
+        or not (
+            row["logical_key"] == f"aeromexico_ir|am_traffic_ir|{period}|pdf" or html and period == "2026M09"
+        )
         or item.get("http_status") != 200
         or item.get("status") != "collected_unvalidated"
     ):
         raise ValueError("Wrong source/product/month or unsuccessful traffic capture")
     validate_url(row["source_url"], ["aeromexico.com"])
     validate_url(item.get("response_url", ""), ["aeromexico.com"])
+    if html and (
+        row.get("source_url") != "https://ir.aeromexico.com/node/9131/html"
+        or item.get("requested_period") != period
+    ):
+        raise ValueError("Traffic HTML requires its reviewed exact official IR6-K URL")
+    if html and item.get("response_url") != row["source_url"]:
+        raise ValueError("Traffic HTML response must preserve its official IR6-K identity")
     if local_time(row["downloaded_at"]) > local_time(as_of):
         raise ValueError("Traffic capture is after the requested cutoff")
     path = workspace / "data/bronze" / row["source_file"]
@@ -154,7 +164,12 @@ def original(workspace: Path, period: str, collection: str, as_of: str) -> tuple
 
 def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[dict, dict]:
     content, provenance, receipt_hash = original(workspace, period, collection, as_of)
-    silver, details = parse(pdf_text(content), period, provenance)
+    if provenance["logical_key"].endswith("|html"):
+        from src.source_updates.am_traffic_html import parse as parse_html
+
+        silver, details = parse_html(content, period, provenance)
+    else:
+        silver, details = parse(pdf_text(content), period, provenance)
     if date.fromisoformat(details["published_date"]) > min(
         local_time(as_of).date(), local_time(provenance["downloaded_at"]).date()
     ):
@@ -231,6 +246,12 @@ def frames(workspace: Path, period: str, as_of: str, collection: str) -> tuple[d
                     lineage_note=(
                         "IR monthly/comparative columns only. LF itinerary; "
                         "other metrics itinerary+charter. Unaudited."
+                        + (
+                            " Native preliminary status is not stated; Gold false is only the existing "
+                            "predicate source-marks-preliminary, not confirmation of finality."
+                            if details.get("source_format") == "official_IR_HTML_6K_Ex99.4"
+                            else ""
+                        )
                     ),
                 )
                 for record in facts.record_id
