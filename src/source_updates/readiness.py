@@ -329,7 +329,10 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
             if "calendar_completeness_certified" in result
             else {}
         ),
-        "latest_source_availability_verified": availability is not None,
+        "latest_source_availability_verified": availability is not None
+        and availability.get("validated_closed_edition", {}).get(
+            "source_observation_current_for_round", True
+        ),
         **({"source_availability_evidence": availability} if availability is not None else {}),
         "activation": "none",
         "publication": "not_authorized",

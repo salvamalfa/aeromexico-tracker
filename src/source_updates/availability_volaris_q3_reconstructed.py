@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.source_updates.calendar import local_time
+from src.source_updates.closed_editions import binding_fields, evidence
 from src.source_updates.collection import safe_workspace
 from src.source_updates.retained import digest
 from src.source_updates.volaris_q3_inputs import ROLE, VERIFIED_AT, decode, validate_import_artifact
@@ -18,7 +19,7 @@ SCOPE = "volaris_Q3_visible_reconstruction_target_v1"
 def preflight(binding, candidate):
     if not (
         isinstance(binding, dict)
-        and set(binding) == {"source_scope", "workspace", "run_id"}
+        and binding_fields(binding, {"source_scope", "workspace", "run_id"})
         and binding["source_scope"] == SCOPE
         and isinstance(binding["run_id"], str)
         and re.fullmatch(r"[a-f0-9]{32}", binding["run_id"])
@@ -57,7 +58,6 @@ def verify(item, result, cutoff):
         and receipt.get("publication") == "not_authorized"
         and receipt.get("network_requests") == 0
         and set(receipt.get("records", {})) == {ROLE}
-        and local_time(VERIFIED_AT).date() == local_time(cutoff).date()
         and local_time(VERIFIED_AT) <= local_time(receipt["imported_at"]) <= local_time(cutoff)
         and local_time(item["candidate_as_of"]) <= local_time(cutoff)
         and result.get("effective_as_of") == item["candidate_as_of"]
@@ -81,6 +81,9 @@ def verify(item, result, cutoff):
     if before != collection_inventory(root):
         raise ValueError("Volaris Q3 import changed during its availability check")
     return {
+        "validated_closed_edition": evidence(
+            item, cutoff, VERIFIED_AT, precision="timestamp", source_url=source["source_url"]
+        ),
         "source_scope": SCOPE,
         "source_representation": "authorized_visible_reconstruction",
         "source_url": source["source_url"],

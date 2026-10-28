@@ -378,6 +378,10 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                         "content_type": failed.headers.get("content-type"),
                         "eligible_as_source_data": False,
                     }
+                if item.get("mode") != "manual":
+                    from src.source_updates.manual_recovery import plan as manual_recovery_plan
+
+                    result["manual_recovery"] = manual_recovery_plan(item, result, receipt["run_id"])
             receipt["items"].append(result)
         receipt["status"] = (
             "collected_unvalidated"

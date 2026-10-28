@@ -73,6 +73,21 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
 
 - 403, TLS, desafío, timeout o archivo inválido = fallo de acceso/contenido.
   Conservar último dato aceptado. No declarar ausencia de reporte ni cero.
+- Si falla la adquisición programática, usar el navegador soportado para abrir
+  la página oficial y descargar mediante su interfaz normal. Si el entorno de
+  código no dispone de navegador, entregar el enlace, documento/periodo y recibo
+  fallido a dot para su navegador cloud; la integración sigue en este entorno.
+  `collect` conserva ese handoff pendiente en `manual_recovery`, sin fingir que
+  ya hizo clics o descargó. Antes de declarar vías agotadas, intentar esa vía o
+  registrar el bloqueo concreto de herramienta/acceso. No evadir denegaciones,
+  autenticación, CAPTCHA ni avisos de seguridad. Conservar el fallo anterior.
+- Verificar bytes legibles, tipo, identidad, periodo, cobertura, unidades y SHA
+  del archivo descargado. Conservar URL, método y fecha reales; transferir por
+  Library soportado y verificar de nuevo en el consumidor antes de importar.
+  Una ruta del navegador no implica acceso desde el ejecutor. La importación
+  manual no es una nueva respuesta HTTP; su fecha tampoco es la observación
+  del editor. Una reconstrucción requiere su modo autorizado y nunca se llama
+  original. Un error también en el navegador sigue siendo un bloqueo real.
 - Fecha futura oficial: propuesta a +2 hábiles. Fallo técnico: siguiente hábil.
   Fecha desconocida: un intento dentro de 7 días o siguiente ronda mensual.
   `retry` produce propuestas, no tareas; a las dos reprogramaciones bloquea.
@@ -235,10 +250,22 @@ Banxico septiembre pasó; Q3 sigue no certificado frente al universo diario,
 sin inferir error del proveedor. Último periodo y primera publicación siguen
 desconocidos y la ronda global permanece bloqueada. La
 identidad SEC de mercado sigue siendo original retenido, sin nueva captura.
-La disponibilidad se limita a la fecha local de captura y corte real de la
+La disponibilidad HTTP se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
 inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una
 familia aún sin contrato, la disponibilidad permanece sin verificar.
+
+La excepción aprobada el 28/oct a las 23:15 UTC acepta ediciones cerradas ya
+validadas de GAP septiembre, ASUR septiembre y Volaris financiero 3T26 con sus
+contratos específicos. Conserva las fechas originales y reconstrucciones como
+tales. `validated_closed_edition` acredita el periodo solicitado, separado de
+`latest_source_availability_verified`: no exige recaptura del mismo día ni
+afirma última edición. No tiene un vencimiento diario artificial; un periodo
+distinto o una edición nueva conocida exige validación nueva. Las consultas de
+novedades se registran aparte, con recibo físico, fecha y fallo/incertidumbre;
+sin consulta se declara `not_checked`. `known_new_edition` bloquea la reutilización.
+Nunca se extiende a noticias, precios ni fuentes ausentes. Siguen pasando hash,
+Bronze/Silver/Gold, unidades, conciliación y replay; no autoriza publicación.
 
 GAP tiene una forma histórica específica: `source_scope`, `historical`,
 `snapshot_day`, `workspace`, `submissions` y `filings`, con índice y documentos

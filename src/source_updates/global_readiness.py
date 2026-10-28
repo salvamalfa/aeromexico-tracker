@@ -1,5 +1,4 @@
 """Fail-closed global policy over actual, read-only source-candidate replays.
-
 A subset receipt is never a complete round. Unknown availability and unsupported
 whole-product adapters stay blocked; user-supplied check results are not inputs.
 """
@@ -24,6 +23,7 @@ from src.source_updates.calendar import (
 )
 from src.source_updates.catalog import ROOT, product_map
 from src.source_updates.checks import period_end
+from src.source_updates.closed_editions import accepted as source_evidence_accepted
 from src.source_updates.collection import safe_workspace, writer
 
 REQUIRED = {
@@ -294,12 +294,12 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             )
             target = coverage_warnings if observed else calendar_blockers
             target.append(f"{item['id']}:observation_calendar_completeness_not_verified")
-        if result.get("latest_source_availability_verified") is not True:
+        if result.get("source_availability_evidence", {}).get("validated_closed_edition"):
+            coverage_warnings.append(f"{item['id']}:closed_edition_latest_revision_not_certified")
+        if not source_evidence_accepted(item, result):
             calendar_blockers.append(f"{item['id']}:current_source_availability_not_verified")
     by_id = {i["id"]: i for i in items}
-
     dependency_cache = {}
-
     def dependencies_verified(item):
         if item["id"] in dependency_cache:
             return dependency_cache[item["id"]]
