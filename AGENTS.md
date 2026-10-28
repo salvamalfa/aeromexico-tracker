@@ -206,21 +206,25 @@ publicación. Explica un bloqueo técnico concreto si no hay acceso a él.
   un push o responde por qué no aplican y resuélvelos antes del merge.
 - **Auto-merge** (habilitado en el repo): puedes activarlo en tu PR en vez de
   esperar a que termine la CI, pero solo después de marcarlo como listo y de que
-  llegue la revisión automática (o el aviso de que no habrá revisión, p. ej. el
-  límite de uso de Codex, más la revisión cruzada si el PR cambia código) con
+  llegue una revisión Codex válida, automática o independiente en otra sesión,
+  cuando el PR cambie código, con
   todos sus hilos atendidos. Auto-merge solo espera a
   los checks; no espera revisiones que aún no llegan. Si un push posterior abre
   hilos nuevos, desactívalo hasta atenderlos. Esto también aplica a PRs que
   cambien `site/` por una publicación rutinaria autorizada arriba.
-- **Revisión cruzada entre agentes** (pedida por el dueño el 8 de octubre de
-  2026): un PR que cambie código (`src/`, `scripts/`, `web/src/`, workflows,
-  `Dockerfile.chat` o `railway.toml`) y no reciba revisión de Codex, por
-  ejemplo por el límite de uso, no se fusiona solo con el aviso de que no
-  habrá revisión. Lo revisa el otro agente: lo que prepare ChatGPT/Codex lo
-  revisa Claude, y lo que prepare Claude lo revisa ChatGPT/Codex o el dueño.
-  La revisión es adversarial (buscar fallos con pruebas o pasos concretos, no
-  resumir el diff) y deja sus hallazgos en el PR; se atienden como cualquier
-  hilo antes del merge. Los PRs solo de documentación quedan exentos.
+- **Revisión independiente de Codex** (actualizada por el dueño el 28 de octubre
+  de 2026): un PR que cambie código (`src/`, `scripts/`, `web/src/`, workflows,
+  `Dockerfile.chat` o `railway.toml`) requiere revisión adversarial de Codex,
+  automática o de otra sesión independiente del agente implementador. Busca
+  fallos con pruebas o pasos concretos, no solo resume el diff; identifica el
+  head revisado y deja dictamen, hallazgos y límites en el PR. Los hallazgos se
+  atienden como cualquier hilo antes del merge. Una revisión independiente
+  válida permite seguir la ruta manual cuando la automática no tenga resultado;
+  no convierte su estado `running` en aprobación ni confirma su cancelación.
+  No se exige revisión de Claude. No basta la autoaprobación del implementador
+  ni un aviso de que no habrá revisión. Se conservan CI del head final, resolución
+  de hilos y demás controles de entrega. Los PRs solo de documentación quedan
+  exentos del requisito de revisión de código.
 - GitHub borra la rama del PR al fusionarlo ("Automatically delete head
   branches"); no hace falta limpiarla. Si reutilizas el nombre, recréala desde
   `master`.
