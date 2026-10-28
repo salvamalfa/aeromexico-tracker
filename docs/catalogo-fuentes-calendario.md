@@ -2339,8 +2339,9 @@ Validación de esta reconciliación:
   catorce módulos de fuentes coinciden con los heads exactos de los cuatro PR.
   Las ocho constantes de política global y los prefijos de datos/publicaciones
   no cambiaron. Dictamen de contratos de fuentes favorable; la integración
-  permanece bloqueada. No sustituye Codex, CI ni el cruce Claude/dueño exigido
-  por AGENTS cuando corresponda.
+  permanece bloqueada en ese corte. No sustituye Codex ni CI. La exigencia de
+  cruce Claude/dueño de AGENTS citada entonces fue reemplazada el 28/oct por
+  revisión independiente Codex; se conserva el dictamen y sus límites históricos.
 - Pyflakes y formato exigidos por CI aprobados. Un chequeo exploratorio de
   todas las reglas Ruff encontró 47 incidencias en 25 módulos idénticos a
   master; no se reformató código ajeno ni se modificaron excepciones.
