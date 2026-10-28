@@ -226,10 +226,55 @@ HTTP200 ni hora de captura SEC, primera publicación o censo de revisiones.
 No reutilizar esa observación como actualidad de otro día o mes. El recibo
 global sigue bloqueado por otros requeridos y no activa datos ni calendario.
 
-ASUR septiembre fue identificado, pero el lector revisado sigue siendo el de
-julio. La adquisición CPC cambia el ámbito y el bloque acumulado; hacen falta
-original y revisión de esa edición. No aplicar el 5 % a ámbitos distintos ni
-rellenar guiones con cero.
+### ASUR septiembre: representación reconstruida autorizada
+
+El dueño autorizó una copia editable de las tablas visibles el 28/oct. Este
+modo específico no sustituye el contrato de original SEC ni se extiende a
+otras fuentes o meses. Materializar las cuatro copias Library verificadas:
+JSON autoritativo, HTML, CSV y manifiesto de reconstrucción; mantener sus
+identidades. El importador comprueba los hashes de los derivados, nunca un
+hash del original SEC. No reconstruir ese original ni inventar bytes/captura.
+
+```bash
+python -m src.source_updates.asur_reconstruction_inputs --source-root <copias-Library> --workspace <importacion-nueva> --dry-run
+# --execute importa offline tras revisar el plan; cero solicitudes.
+python -m src.source_updates.airport_group_candidate retain --product asur_traffic --source-root <importacion-nueva>/data/bronze --workspace <candidato-nuevo> \
+  --original reconstruction_json=asur/reconstructed/asur-september-2026-reconstructed.json \
+  --original reconstruction_html=asur/reconstructed/asur-september-2026-reconstructed.html \
+  --original reconstruction_csv=asur/reconstructed/asur-september-2026-reconstructed.csv \
+  --original reconstruction_manifest=asur/reconstructed/asur-september-2026-reconstructed-manifest.json --dry-run
+```
+
+Después usar `--execute`, `certify --period 2026M09 --as-of <corte-con-zona>
+--retention <id> --execute` y el replay `--check`. El alias
+`asur_visible_reconstruction` se distingue de los alias SEC originales y no
+se admite en `collect` genérico. La entrada de catálogo SEC identifica la
+referencia pública ascendente, no al creador ni a los bytes del derivado.
+
+La comprobación física cubre cinco tablas/144 filas/864 celdas, 155 guiones
+desconocidos y 236 porcentajes comprobables. Preservar `BHA`, `BHF`, `(0.0)` y
+MTR internacional YTD 2026=95. El candidato estándar conserva el alcance
+anterior: resumen y nueve aeropuertos mexicanos, 168 observaciones y 92
+conciliaciones; nueve salidas y 752 vínculos con los cuatro derivados.
+El detalle extranjero permanece en el editable, sin convertirse en nuevos
+hechos aeroportuarios comprometidos.
+
+`Brazil and Others` es un grupo multinacional CPC, no Brasil ni un aeropuerto.
+Sus acumulados repiten septiembre; los de CPC y el total mundial usan
+`reported_ytd_coverage_unverified`. Ningún acumulado recibe fecha inicial
+explícita inventada; no rellenar enero–agosto ni guiones, ni aplicar el 5 %
+a cambios de ámbito o transcripciones de cifras oficiales. Gold sigue solo
+México, con la advertencia de reconstrucción en su linaje.
+
+El vínculo `availability` usa `source_scope=asur_visible_reconstruction_target_v1`,
+`workspace` y `run_id` de la importación. Liga observación visible real,
+representación íntegra y candidato completo en el mismo día local. La lectura
+de 28/oct 01:53:22 UTC corresponde al 27/oct en México. Importación es otra
+fecha: `source_http_status=null`, captura/hash del original SEC nulos.
+El cero de `http_status` del esquema técnico significa no observado, nunca
+HTTP200. No se acredita censo de revisiones, otra fecha de actualidad ni
+primera publicación. El HTML reconstruido no tiene QA visual completo; esta
+certificación comprueba tablas y datos, no publicación o apariencia.
 
 ### Entrada operativa AIFA
 

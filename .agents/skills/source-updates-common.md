@@ -169,6 +169,15 @@ su identidad de acceso. El recibo conserva redondeo/preliminar, país y linaje
 calculado; `retained` genérico no puede certificar este producto. Ver la
 [skill de aeropuertos](airline-update-airports/SKILL.md#certificación-integral-gap-asur).
 
+Excepción autorizada solo para ASUR septiembre 2026: admite las cuatro
+representaciones reconstruidas verificadas, con roles `reconstruction_json`,
+`reconstruction_html`, `reconstruction_csv` y `reconstruction_manifest`.
+Usar su importador offline específico y alias `asur_visible_reconstruction`,
+no `collect` ni alias de original SEC. Hash e identidad corresponden al
+derivado, con original/captura HTTP desconocidos. Se mantiene el mismo
+producto requerido y Gold México; no cambia el alcance de otras fuentes.
+Ver [procedimiento y límites](airline-update-airports/SKILL.md#asur-septiembre-representación-reconstruida-autorizada).
+
 Para RSS usar su certificador retenido dedicado, `python -m
 src.source_updates.rss_candidate`, y el adaptador `rss_retained` en readiness.
 Su lote propio admite selección explícita de varios XML de la misma revisión

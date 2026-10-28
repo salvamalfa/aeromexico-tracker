@@ -1,6 +1,6 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
+Revisión: 28 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
 contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
@@ -38,11 +38,18 @@ cierre OMA; reemplaza el estado de autorización pendiente de aquel corte.
 
 GAP septiembre añade un cierre manual real: **diecisiete tareas y 93 salidas**,
 con las 84 anteriores idénticas y nueve nuevas. El código `05a0e75b` y su
-continuidad técnica local pasaron las comprobaciones. Quedan **seis tareas
-obligatorias y dos controles bursátiles** sin verificar.
+continuidad técnica local pasaron las comprobaciones.
+
+ASUR septiembre cierra otra tarea mediante la **reconstrucción editable
+expresamente autorizada**, diferenciada del original SEC. El recibo conjunto
+actual verifica **dieciocho tareas y 102 salidas: las 93 anteriores idénticas
+y nueve nuevas ASUR**. Quedan **cinco tareas obligatorias y dos controles
+bursátiles**. El control local de catálogo materializado ya pasó tras
+actualizar únicamente sus metadatos técnicos de 29 a 30 fuentes.
 La [matriz operativa](#cierre-operativo-de-la-ronda) conserva los once pendientes
-del snapshot PR169: AM mensual, AIFA, OMA, Volaris mensual y GAP están cerradas
-localmente con originales reales. Se distingue código, material y decisiones. Aerocivil/GDELT siguen
+del snapshot PR169: AM mensual, AIFA, OMA, Volaris mensual y GAP cerraron con
+originales reales; ASUR con su representación reconstruida autorizada y
+verificada. Se distingue código, material y decisiones. Aerocivil/GDELT siguen
 requeridos; las tres advertencias macro no son calendarios exhaustivos
 certificados. No se declara lista la ronda ni se activan datos o disparadores.
 
@@ -3684,8 +3691,10 @@ y base protegida. No se relanza CI de PR171 mientras su base siga inválida.
 ### Cierre operativo de la ronda
 
 Este es el desglose de las **once tareas obligatorias pendientes del snapshot
-PR169**. Cinco ya se cerraron con originales reales: AM mensual, AIFA, OMA,
-Volaris mensual y GAP. Las otras seis siguen abiertas. «Implementación» significa trabajo técnico por completar; «evidencia»
+PR169**. Cinco cerraron con originales reales: AM mensual, AIFA, OMA,
+Volaris mensual y GAP. ASUR cerró con una reconstrucción expresamente
+autorizada, sin presentarla como original SEC. Las otras cinco siguen abiertas.
+«Implementación» significa trabajo técnico por completar; «evidencia»
 significa originales oficiales o acceso aún no acreditados. Pueden coexistir.
 No son once servicios caídos ni once parsers ausentes.
 
@@ -3694,7 +3703,7 @@ No son once servicios caídos ni once parsers ausentes.
 | Mensual AFAC aeropuertos | Lector julio y contrato de selección/vínculo físico implementados; replay real 2.730 filas | **Evidencia/acceso:** índice actual HTTP403; comprobar edición oficial vigente con índice y libro. No exige septiembre si existe rezago oficial. Sin decisión genérica pendiente |
 | Mensual AIFA | **Cerrada localmente:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; entrega/CI propia pendientes |
 | Mensual AM tráfico | **Cerrada:** índice y 6-K IR capturados juntos el 27/oct; 24 filas mensuales/comparativas y siete salidas reproducidas | No queda implementación para esta edición comprobada. No acredita otros meses ni publicación |
-| Mensual ASUR | Lector julio existente; comunicado septiembre identificado en SEC | **Implementación y material:** obtener original manual y adaptar la edición que incorpora Brasil y otros países. No se ha acreditado cobertura enero–septiembre comparable para el bloque nuevo; el 5 % no resuelve diferencias de ámbito. Véase insumo exacto abajo |
+| Mensual ASUR | **Cerrada localmente con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. Falta integración/CI del lote, no conseguir otro original para este modo autorizado |
 | Mensual GAP | **Cerrada localmente:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. Falta integración/CI del lote, no el original ni el lector |
 | Mensual GDELT | Adaptador existente; último intento acotado HTTP503, sin septiembre válido | **Disponibilidad externa:** respuesta válida del periodo. Sin nuevas consultas en esta pasada; RSS no lo sustituye. Cambiar proveedor o requisito sería otra decisión, no se ha aplicado |
 | Mensual OMA | **Cerrada localmente:** artículo y PDF oficiales septiembre HTTP200, 168 observaciones y cuatro salidas reproducidas | Vínculo newsroom `472a0528` revisado; entrega/CI propias pendientes. Se conservan los fallos IR404/es202 sin repetirlos. Disponibilidad del reporte objetivo, no censo de revisiones |
@@ -3755,15 +3764,60 @@ dos controles bursátiles y tres advertencias macro; fecha trimestral nula,
 cero activaciones. No se presenta ese bloqueo como una suite fallida ni como
 permiso para programar. Falta integración remota ordenada y su CI/revisión.
 
-**ASUR sigue pendiente de original manual y adaptación.** El
+**ASUR septiembre: reconstrucción autorizada y cadena real cerradas.** El
 [anexo septiembre](https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm)
-declara 7/oct e incorpora CPC. El nuevo bloque agrupa Brasil, Costa Rica,
-Curazao y Ecuador; sus columnas acumuladas coinciden con septiembre. No se
-acredita cobertura enero–septiembre comparable para ese bloque ni se reparten
-agregados. Cambia también la exclusión de pasajeros; los guiones no autorizan
-ceros. La lectura web identifica el documento, pero no es un original HTML
-importable. El flujo manual sigue vigente; no hay una denegación nueva ni se
-requiere otra autorización genérica para implementar el lector.
+declara 7/oct e incorpora CPC. El dueño autorizó el 28/oct reconstruir lo
+visible en un editable. Este modo específico conserva JSON/HTML/CSV/manifiesto
+de aquella copia, con hashes del derivado e identidades Library verificadas.
+No exige fingir que llegó el HTML original ni relaja el contrato de originales
+SEC; tampoco habilita otra fuente, mes o descarga genérica.
+
+Código `2f856890`: cinco tablas/144 filas/864 celdas comprobadas, 155 guiones
+conservados desconocidos y 236 porcentajes verificables. La proyección del
+producto existente usa resumen y nueve aeropuertos mexicanos: **168 cifras,
+92 conciliaciones, nueve salidas y 752 vínculos** con los cuatro artefactos.
+Gold México contiene septiembre 2.446.399 frente al mundial 8.656.117; no se
+intercambian ni atribuyen a una aerolínea. El detalle extranjero permanece en
+las copias verificadas, sin crear nuevas métricas aeroportuarias comprometidas.
+
+`Brazil and Others` agrupa Brasil, Costa Rica, Curazao y Ecuador. Sus 75 filas
+repiten septiembre en acumulados; no completar enero–agosto ni interpretar
+como nueve meses homogéneos. CPC y el total mundial conservan tipo
+`reported_ytd_coverage_unverified`; ningún YTD recibe fecha inicial explícita
+inventada. Se preservan `BHA`, `BHF`, `(0.0)`, MTR internacional YTD2026=95 y las
+exclusiones diferentes por geografía. La falta de definición de Puerto Rico
+permanece explícita. El 5 % no se aplica a transcripción ni cambio de ámbito.
+
+Retención→Bronze→Silver/Gold→linaje→replay→disponibilidad del objetivo pasaron
+con los archivos reales. Revisión independiente `ac55b324…` favorable; corrigió
+y reprobó observación trasladada al día siguiente, metadatos contradictorios e
+identidades Library inventadas. La observación visible de 28/oct 01:53:22 UTC
+es del **27/oct en México**. Importación es otra fecha; HTTP/captura/hash del
+original SEC siguen nulos. El cero del campo HTTP técnico significa no
+observado. No se acredita otra fecha de actualidad, primera publicación ni
+censo universal de revisiones. QA visual del HTML no completado; no afecta al
+cotejo tabular ni autoriza publicar su apariencia.
+
+**284 pruebas afectadas** pasaron en 99,04 s. La única omitida en main por
+warehouse ausente sí se ejecutó en el checkout aislado: detectó un catálogo
+materializado antiguo, ya presente en la base. Se regeneró solo
+`dim_source.parquet` con el materializador canónico: 30 fuentes, registro
+Volaris y URL AIFA vigentes, alias ASUR identificado. Los 811 artefactos eran
+idénticos; no se reconstruyeron bridge, prioridades, warehouse o hechos.
+El control real completo pasó después en 29,63 s, sin omisiones ni cambiar
+aserciones. Otros 79 casos financieros posbinding pasaron en 3,80 s.
+
+Continuidad `919234e0`, productor `2f856890`, runtime `52ed9cdd…`, dictamen
+auténtico `2a6aff99…`: conservación exacta 188/177/811/803 archivos y 53 salidas
+históricas; CLI real única válida en **74,301 s**, `publication_authorized=false`.
+El binding cambia solo productor/runtime/dictamen, sin sustituir autoridad.
+El recibo oficial se escribió y reprodujo después: **18 tareas/102 salidas**,
+93 previas idénticas y nueve ASUR, SHA `1d126391…`; resultado `dd5e38e3…`,
+compatibilidad `44557f4f…`. Dieciséis productores se regeneraron realmente
+desde fuentes retenidas; uno conservó su huella exacta y pasó replay normal.
+Estado `blocked_global_policy`: cinco requeridas ausentes, dos controles
+bursátiles, tres advertencias macro, fecha trimestral nula y cero activaciones.
+La suite completa y los gates remotos del lote no se presentan como aprobados.
 
 Los **dos controles bursátiles** son de sesiones de septiembre y 3T26. Las
 cinco series están capturadas y sus cálculos/números se reproducen. El auditor
@@ -3842,6 +3896,11 @@ La reducción se explica por separado, sin sumar controles distintos:
   **GAP septiembre realmente importado, extraído y vinculado** añade nueve
   salidas; las 84 anteriores siguen iguales. No se reduce ningún requisito ni
   se inventan fechas/HTTP de la captura manual.
+- SRC `2f856890`: dieciocho verificadas, cinco ausentes y dos controles.
+  **ASUR septiembre reconstruido con autorización expresa** añade nueve
+  salidas verificadas; las 93 previas siguen idénticas. El cambio admitido
+  es de representación y procedencia documentada, sin llamar original SEC
+  al derivado, completar historia CPC ni convertir ASUR en opcional.
 
 La admisión Volaris ya fue autorizada y aplicada localmente solo al documento
 verificado. El contacto Aerocivil también fue autorizado y el hilo principal
@@ -3851,7 +3910,7 @@ avisado no implica datos integrados ni tesis autorizada.
 
 ## Pendientes
 
-- Cerrar las seis tareas actuales y los dos controles de sesiones descritos.
+- Cerrar las cinco tareas actuales y los dos controles de sesiones descritos.
   Aerocivil/GDELT siguen requeridos; un fallo no es cero ni se sustituye.
 - Conservar la admisión Volaris limitada al documento aprobado, sin inventar
   futuras URLs o abrir subdominios. Esperar respuesta Aerocivil; no repetir
