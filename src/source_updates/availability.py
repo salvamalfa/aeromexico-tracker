@@ -49,6 +49,13 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if (
+        isinstance(binding, dict)
+        and binding.get("source_scope") == "volaris_Q3_visible_reconstruction_target_v1"
+    ):
+        from src.source_updates.availability_volaris_q3_reconstructed import preflight as volaris_q3_preflight
+
+        return volaris_q3_preflight(binding, candidate)
     if isinstance(binding, dict) and binding.get("source_scope") == "asur_visible_reconstruction_target_v1":
         from src.source_updates.availability_asur_reconstructed import preflight as asur_preflight
 
@@ -229,6 +236,13 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "volaris_Q3_visible_reconstruction_target_v1"
+    ):
+        from src.source_updates.availability_volaris_q3_reconstructed import verify as verify_volaris_q3
+
+        return verify_volaris_q3(item, result, cutoff)
     if (
         isinstance(item.get("availability"), dict)
         and item["availability"].get("source_scope") == "asur_visible_reconstruction_target_v1"

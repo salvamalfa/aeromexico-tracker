@@ -128,7 +128,24 @@ def test_every_product_keeps_its_own_complete_adapter(workspace, product, expect
 )
 def test_registry_preserves_required_roles_and_exact_aliases(product, roles):
     definition = retained.spec(product)
-    assert definition["roles"] == roles
+    if product in {"asur_traffic", "volaris_sec"}:
+        added = (
+            {
+                role: ("asur_visible_reconstruction",)
+                for role in (
+                    "reconstruction_json",
+                    "reconstruction_html",
+                    "reconstruction_csv",
+                    "reconstruction_manifest",
+                )
+            }
+            if product == "asur_traffic"
+            else {"reconstruction_zip": ("volaris_visible_reconstruction",)}
+        )
+        assert definition["roles"] == roles | added
+        assert {frozenset(s) for s in definition["role_sets"]} == {frozenset(roles), frozenset(added)}
+    else:
+        assert definition["roles"] == roles
     assert definition["primary"] in roles
 
 

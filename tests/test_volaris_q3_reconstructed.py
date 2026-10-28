@@ -94,6 +94,73 @@ def test_preparation_cannot_close_q3_readiness_or_relabel_asur_as_sec_originals(
     assert planned["source_original_sha256"] is planned["artifact_derivative_sha256"] is None
     assert planned["source_observed_at"] is planned["source_http_status"] is None
     assert planned["activation"] == "none" and planned["publication"] == "not_authorized"
-    # Preparing the new representation grants the old SEC certifier no new period.
-    with pytest.raises(ValueError, match="2026Q2"):
-        period_check("volaris_sec", "2026Q3")
+    # Q3 now has a separate explicit derivative path, never the old four SEC roles.
+    period_check("volaris_sec", "2026Q3")
+    from src.source_updates.volaris_sec_source import read
+
+    with pytest.raises(ValueError, match="reconstruction ZIP"):
+        read({role: (b"unverified", {}) for role in ("html", "primary", "index", "submissions")}, "2026Q3")
+
+
+def test_reconstructed_packet_record_never_acquires_original_http_or_early_capture(monkeypatch):
+    import hashlib
+
+    from src.source_updates import volaris_q3_inputs as inputs
+
+    # Synthetic identity for a metadata contract test, not an imported source.
+    identity = "libfile_" + "a" * 32
+    monkeypatch.setattr(inputs, "LIBRARY_SHA", hashlib.sha256(identity.encode()).hexdigest())
+    row = dict(
+        source_system=q3.ALIAS,
+        source_url=q3.URLS["exhibit"],
+        sha256=inputs.SHA,
+        bytes=inputs.SIZE,
+        representation_role=inputs.ROLE,
+        representation_kind="authorized_visible_reconstruction",
+        download_method="authorized_visible_reconstruction_import",
+        http_status=0,
+        source_http_status=None,
+        source_original_sha256=None,
+        source_original_bytes_acquired=False,
+        source_observed_at=inputs.VERIFIED_AT,
+        downloaded_at="2026-10-28T13:20:00Z",
+        timestamp_semantics="local_import_not_SEC_HTTP_capture",
+        source_url_role="upstream_visible_reference_not_artifact_download_URL",
+        content_type="application/zip",
+        library_file_id=identity,
+    )
+    inputs.validate_record(row)
+    for key, value in [
+        ("downloaded_at", "2026-10-28T12:00:00Z"),
+        ("downloaded_at", "2026-10-28T14:00:00"),
+        ("http_status", 200),
+        ("http_status", False),
+        ("source_http_status", 200),
+        ("source_original_sha256", "a" * 64),
+        ("source_original_bytes_acquired", True),
+        ("source_system", "sec"),
+        ("source_observed_at", "2026-10-29T13:16:03Z"),
+        ("library_file_id", "libfile_" + "b" * 32),
+    ]:
+        with pytest.raises(ValueError):
+            inputs.validate_record(dict(row, **{key: value}))
+
+
+def test_reconstructed_packet_and_original_roles_remain_disjoint():
+    from src.source_updates.availability_volaris_q3_reconstructed import SCOPE, preflight
+    from src.source_updates.carrier_source_contract import retention_specs
+    from src.source_updates.catalog import ROOT
+    from src.source_updates.volaris_q3_inputs import decode
+
+    spec = retention_specs()["volaris_sec"]
+    assert {frozenset(v) for v in spec["role_sets"]} == {
+        frozenset({"html", "primary", "index", "submissions"}),
+        frozenset({"reconstruction_zip"}),
+    }
+    with pytest.raises(ValueError, match="not an SEC original"):
+        decode(b"not the actual Library derivative")
+    with pytest.raises(ValueError, match="disjoint"):
+        source = ROOT / "tmp/source-updates/volaris-q3-contract-test-import"
+        preflight(
+            {"source_scope": SCOPE, "workspace": str(source), "run_id": "a" * 32}, str(source / "candidate")
+        )

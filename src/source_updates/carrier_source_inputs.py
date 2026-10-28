@@ -22,7 +22,9 @@ def guard(workspace):
 
 def inspect(root, product, selected):
     definition = spec(product)
-    if not isinstance(selected, dict) or set(selected) != set(definition["roles"]):
+    if not isinstance(selected, dict) or set(selected) not in definition.get(
+        "role_sets", [set(definition["roles"])]
+    ):
         raise ValueError("Explicit complete carrier input roles required")
     if len(set(selected.values())) != len(selected):
         raise ValueError("Carrier roles must identify distinct originals")
@@ -32,9 +34,14 @@ def inspect(root, product, selected):
         if len(found) != 1 or found[0].get("source_system") not in definition["roles"][role]:
             raise ValueError("Ambiguous/missing carrier original or source alias")
         row = found[0]
-        if type(row.get("http_status")) is not int or row["http_status"] != 200:
+        if row["source_system"] == "volaris_visible_reconstruction":
+            from src.source_updates.volaris_q3_inputs import validate_import_artifact
+
+            validate_import_artifact(root, row)
+        elif type(row.get("http_status")) is not int or row["http_status"] != 200:
             raise ValueError("Carrier certification requires an explicit successful HTTP capture")
-        original(root, row)
+        else:
+            original(root, row)
 
 
 def retain(workspace, source_root, product, selected, *, execute=False):

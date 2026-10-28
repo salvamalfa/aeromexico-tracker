@@ -93,7 +93,7 @@ def comparable_relative_warning(reference, derived, *, reported_context, derived
 
 def retention_specs():
     """Exact source roles for the two dossiers requiring dedicated certification."""
-    return {
+    result = {
         product: {
             "roles": {role: (alias,) for role in roles},
             "primary": roles[0],
@@ -106,6 +106,12 @@ def retention_specs():
             ("afac_carriers", ("pdf", "database"), "afac"),
         )
     }
+    from src.source_updates.volaris_q3_inputs import ROLE
+    from src.source_updates.volaris_q3_reconstructed import ALIAS
+
+    result["volaris_sec"]["role_sets"] = [set(result["volaris_sec"]["roles"]), {ROLE}]
+    result["volaris_sec"]["roles"][ROLE] = (ALIAS,)
+    return result
 
 
 def amount(token):

@@ -99,6 +99,10 @@ def metadata(inputs):
 
 
 def read(inputs, period):
+    if period == "2026Q3":
+        from src.source_updates.volaris_q3_source import read as read_reconstructed_q3
+
+        return read_reconstructed_q3(inputs, period)
     if period != "2026Q2":
         raise ValueError("Volaris reviewed 2026Q2 dossier only; no monthly, Q3 or annual substitution")
     metadata(inputs)
@@ -180,6 +184,10 @@ def read(inputs, period):
 
 
 def validate(frame):
+    if set(frame.edition) == {"2026Q3"}:
+        from src.source_updates.volaris_q3_source import validate as validate_reconstructed_q3
+
+        return validate_reconstructed_q3(frame)
     expected = {
         (str(t), r, c)
         for t, d in TABLES.items()
@@ -196,6 +204,10 @@ def validate(frame):
 
 
 def validate_row(row):
+    if row.get("edition") == "2026Q3":
+        from src.source_updates.volaris_q3_source import validate_row as validate_reconstructed_q3_row
+
+        return validate_reconstructed_q3_row(row)
     from types import SimpleNamespace
 
     r = SimpleNamespace(**row)
@@ -250,6 +262,10 @@ def validate_row(row):
 
 
 def project(native):
+    if set(native.edition) == {"2026Q3"}:
+        from src.source_updates.volaris_q3_source import project as project_reconstructed_q3
+
+        return project_reconstructed_q3(native)
     validate(native)
     from src.source_updates.volaris_source_checks import reconcile
 

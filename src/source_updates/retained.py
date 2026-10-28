@@ -49,6 +49,10 @@ def public_original(row: dict) -> None:
         from src.source_updates.asur_reconstruction_inputs import validate_record
 
         validate_record(row)
+    if row["source_system"] == "volaris_visible_reconstruction":
+        from src.source_updates.volaris_q3_inputs import validate_record
+
+        validate_record(row)
     if row["source_system"] == "volaris_ir":
         from src.source_updates.volaris_traffic import validate_admitted_url
 
@@ -121,7 +125,10 @@ def retain(workspace: Path, source_root: Path, product: str, selected: dict, *, 
             if destination.exists() or Path(str(destination) + ".meta.json").exists():
                 raise ValueError("Retention destination already exists; preserve partial evidence")
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, destination)
+            if row["source_system"] == "volaris_visible_reconstruction":
+                shutil.copy2(source, destination)  # Preserve the real materialized ZIP Library identity.
+            else:
+                shutil.copyfile(source, destination)
             shutil.copyfile(Path(str(source) + ".meta.json"), Path(str(destination) + ".meta.json"))
             if digest(destination) != row["sha256"]:
                 raise ValueError("Original changed while being copied; no certification")

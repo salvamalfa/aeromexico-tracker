@@ -465,7 +465,9 @@ def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
     if item["product"] == "volaris_sec":
         # Only the checked financial exhibit can date Volaris' central report.
         receipt = candidate / "receipts" / f"retained-{item['receipt_id']}.json"
-        original = json.loads(receipt.read_text())["originals"]["html"]
+        selected_originals = json.loads(receipt.read_text())["originals"]
+        role = "reconstruction_zip" if set(selected_originals) == {"reconstruction_zip"} else "html"
+        original = selected_originals[role]
         identity = {"source_url": original["source_url"], "sha256": original["sha256"]}
         result["financial_report_artifacts"] = (
             [identity] if identity in result.get("contributing_artifacts", []) else []
