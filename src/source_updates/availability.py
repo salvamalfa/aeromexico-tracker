@@ -49,6 +49,10 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "afac_airports_browser_download_v1":
+        from src.source_updates.availability_afac_manual import preflight as afac_manual_preflight
+
+        return afac_manual_preflight(binding, candidate)
     if isinstance(binding, dict) and "equity_calendar_root" in binding:
         from src.source_updates.availability_series import role_sets
 
@@ -276,6 +280,10 @@ def verify(item, result, cutoff):
 
         return verify_oma_newsroom(item, result, cutoff)
     if item["product"] == "afac_airports" and item["adapter"] == "retained":
+        if item["availability"].get("source_scope") == "afac_airports_browser_download_v1":
+            from src.source_updates.availability_afac_manual import verify as verify_afac_manual
+
+            return verify_afac_manual(item, result, cutoff)
         from src.source_updates.availability_afac_airports import verify as verify_afac_airports
 
         return verify_afac_airports(item, result, cutoff)

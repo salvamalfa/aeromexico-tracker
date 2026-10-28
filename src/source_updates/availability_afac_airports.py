@@ -67,7 +67,7 @@ def latest(index):
     url, text = workbooks[0]
     match = re.fullmatch(
         r"https://www\.gob\.mx/cms/uploads/attachment/file/\d+/"
-        r"producto-aeropuerto-2006-(20\d{2})-([a-z]{3})-(\d{8})\.xlsx",
+        r"producto-aeropuertos?-2006-(20\d{2})-([a-z]{3})-(\d{8})\.xlsx",
         url,
     )
     if (

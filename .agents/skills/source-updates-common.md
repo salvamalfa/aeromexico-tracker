@@ -256,6 +256,14 @@ Solo esa prueba completa puede despejar el control de calendario de septiembre
 y trimestre; no cambia el recibo antiguo ni sus cifras. Los parciales son
 sesiones y OTC conserva sus14:00, sin tomar el calendario de NYSE prestado.
 La prueba se limita a2026 y no acredita festivos2027.
+
+AFAC aeropuertos admite el handoff `afac_airports_browser_download_v1`: paquete
+Library con el XLSX original descargado por UI, manifiesto de adquisición y
+texto accesible del índice. El texto es evidencia de navegación, nunca HTML
+original. Comprueba una sola edición aeroportuaria y sus dos enlaces PDF, URL,
+fecha real, hash, periodo y reproducción completa del libro. Mantiene separado
+el momento de importación y la observación del navegador; HTTP desconocido.
+La alternativa manual no amplía la exención de las tres ediciones retenidas.
 Banxico septiembre pasó; Q3 sigue no certificado frente al universo diario,
 sin inferir error del proveedor. Último periodo y primera publicación siguen
 desconocidos y la ronda global permanece bloqueada. La
