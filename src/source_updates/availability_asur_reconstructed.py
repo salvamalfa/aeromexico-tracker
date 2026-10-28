@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.source_updates.asur_reconstructed import ALIAS, PERIOD, URL, read
-from src.source_updates.asur_reconstruction_inputs import FILES, validate_record
+from src.source_updates.asur_reconstruction_inputs import FILES, OBSERVED_AT, validate_record
 from src.source_updates.calendar import local_time
 from src.source_updates.checks import verify_bronze
 from src.source_updates.collection import safe_workspace
@@ -62,6 +62,10 @@ def verify(item, result, cutoff):
         and receipt.get("mode") == "reconstruction_import"
         and receipt.get("status") == "imported_reconstruction_unvalidated"
         and receipt.get("run_id") == binding["run_id"]
+        and receipt.get("product") == "asur_traffic"
+        and receipt.get("period") == PERIOD
+        and receipt.get("source_representation") == "authorized_visible_reconstruction"
+        and receipt.get("source_observed_at") == OBSERVED_AT
         and receipt.get("is_original_SEC_HTML") is False
         and receipt.get("source_original_sha256") is None
         and receipt.get("network_requests") == 0
@@ -70,6 +74,7 @@ def verify(item, result, cutoff):
         and local_time(receipt["source_observed_at"]).date() == day
         and local_time(receipt["source_observed_at"]) <= local_time(cutoff)
         and local_time(receipt["imported_at"]) <= local_time(cutoff)
+        and local_time(receipt["imported_at"]) >= local_time(receipt["source_observed_at"])
         and digest(root / "data/bronze/_manifest.jsonl") == receipt["manifest_sha256"]
     ):
         raise ValueError("ASUR reconstruction identity, scope, observation day or immutable import differs")
@@ -94,6 +99,10 @@ def verify(item, result, cutoff):
             raise ValueError("ASUR import timestamp is not a source HTTP capture")
         inputs[role] = source.read_bytes(), row
     frame, proof = read(inputs, PERIOD)
+    if receipt["source_observed_at"] != proof["source_observed_at"]:
+        raise ValueError("ASUR import cannot change the immutable representation observation time")
+    if receipt.get("library_file_ids") != {role: row[1]["library_file_id"] for role, row in inputs.items()}:
+        raise ValueError("ASUR receipt Library identities differ from its verified physical representations")
     frame = add_record_ids(frame, table_name="airport_group_native", natural_key_columns=GRAIN)
     native = pd.read_parquet(Path(item["workspace"]) / "data/silver/airport_group_native.parquet")
     try:

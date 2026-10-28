@@ -177,10 +177,19 @@ def parse_tables(summary, mexico, original):
 
 
 def read(inputs, period):
-    from src.source_updates.asur_reconstruction_inputs import FILES, KEYS, decode, validate_record
+    from src.source_updates.asur_reconstruction_inputs import (
+        FILES,
+        KEYS,
+        decode,
+        validate_library_identities,
+        validate_record,
+    )
 
     if period != PERIOD or set(inputs) != set(FILES):
         raise ValueError("ASUR derived mode requires the four reviewed September2026 representations")
+    validate_library_identities(
+        {role: original.get("library_file_id") for role, (_, original) in inputs.items()}
+    )
     for role, (_, original) in inputs.items():
         validate_record(original)
         if original["representation_role"] != role:

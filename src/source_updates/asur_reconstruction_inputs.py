@@ -53,6 +53,18 @@ TABLES = (
     ("san_juan", "U.S. Passenger Traffic, San Juan Airport (LMM)", 3),
     ("colombia", "Colombia Passenger Traffic", 21),
 )
+OBSERVED_AT = "2026-10-28T01:53:22Z"
+LIBRARY_IDENTITY_SET_SHA = "f1dba30cef92a89f535e33b74e29dcfdd8f296a2496e18cc61543939db2d6019"
+
+
+def validate_library_identities(identities):
+    # Bind the actual four materialized Library identities without publishing
+    # their private identifiers in code. This is provenance, not an approval.
+    actual = hashlib.sha256(
+        json.dumps(identities, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    if set(identities) != set(FILES) or actual != LIBRARY_IDENTITY_SET_SHA:
+        raise ValueError("ASUR Library identities differ from the verified reconstruction handoff")
 
 
 def validate_document(document):
@@ -67,6 +79,7 @@ def validate_document(document):
         and meta["source_original_sha256"] is None
         and meta["source_url"] == URL
         and meta["source_publication_date"] == "2026-10-07"
+        and meta["observation_time_utc"] == OBSERVED_AT
         and meta["production_publication"] is False
         and meta["calendar_or_ingestion_enabled"] is False
         and contract["unit"] == "passenger_count"
@@ -228,13 +241,23 @@ def validate_record(row):
     role = row.get("representation_role")
     if role not in FILES:
         raise ValueError("Unknown ASUR reconstruction artifact role")
-    name, size, sha, _ = FILES[role]
+    name, size, sha, mime = FILES[role]
     if not (
         row.get("source_system") == ALIAS
         and row.get("source_url") == URL
         and row.get("source_file") == "asur/reconstructed/" + name
         and row.get("bytes") == size
         and row.get("sha256") == sha
+        and row.get("content_type") == mime
+        and row.get("timestamp_semantics") == "local_import_not_SEC_HTTP_capture"
+        and row.get("source_url_role") == "upstream_visible_reference_not_artifact_download_URL"
+        and row.get("source_observed_at") == OBSERVED_AT
+        and row.get("logical_key") == f"{ALIAS}|ASUR_{role}|{PERIOD}|{name.rsplit('.', 1)[1]}"
+        and type(row.get("logical_version")) is int
+        and row["logical_version"] == 1
+        and type(row.get("filename_version")) is int
+        and row["filename_version"] == 1
+        and row.get("is_content_alias") is False
         and row.get("download_method") == "authorized_visible_reconstruction_import"
         and row.get("http_status") == 0
         and row.get("source_http_status") is None
@@ -262,6 +285,7 @@ def import_representation(source_root, workspace, *, execute=False):
         if not re.fullmatch(r"libfile_[a-f0-9]{32}", identity):
             raise ValueError("Preserve the reconstructed file's actual Library identity")
         raw[role], identities[role] = path.read_bytes(), identity
+    validate_library_identities(identities)
     document, proof = decode(raw)
     plan = {
         "mode": "reconstruction_import" if execute else "dry_run",

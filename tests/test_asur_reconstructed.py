@@ -184,3 +184,105 @@ def test_reconstruction_binding_is_narrow_and_disjoint():
     ]:
         with pytest.raises(ValueError):
             preflight(changed, target)
+
+
+def test_reconstruction_provenance_cannot_claim_HTTP_original_or_change_observation():
+    from src.source_updates.asur_reconstruction_inputs import FILES, OBSERVED_AT, validate_record
+
+    role = "reconstruction_json"
+    name, size, sha, mime = FILES[role]
+    row = {
+        **source(),
+        "representation_role": role,
+        "source_file": "asur/reconstructed/" + name,
+        "bytes": size,
+        "sha256": sha,
+        "content_type": mime,
+        "timestamp_semantics": "local_import_not_SEC_HTTP_capture",
+        "source_url_role": "upstream_visible_reference_not_artifact_download_URL",
+        "source_observed_at": OBSERVED_AT,
+        "logical_key": f"{ALIAS}|ASUR_{role}|2026M09|json",
+        "logical_version": 1,
+        "filename_version": 1,
+        "is_content_alias": False,
+        "download_method": "authorized_visible_reconstruction_import",
+        "http_status": 0,
+        "source_http_status": None,
+        "representation_kind": "authorized_visible_reconstruction",
+        "source_original_sha256": None,
+        "source_original_bytes_acquired": False,
+    }
+    validate_record(row)
+    for change in [
+        {"timestamp_semantics": "SEC_HTTP_capture"},
+        {"source_url_role": "downloaded_original_SEC_URL"},
+        {"source_observed_at": "2026-10-28T12:00:00Z"},
+        {"content_type": "application/pdf"},
+        {"logical_key": "wrong"},
+        {"source_http_status": 200},
+        {"source_original_sha256": "b" * 64},
+    ]:
+        with pytest.raises(ValueError):
+            validate_record({**row, **change})
+
+
+def test_reconstruction_false_Library_identity_set_is_not_accepted():
+    from src.source_updates.asur_reconstruction_inputs import FILES, validate_library_identities
+
+    for identities in ({k: "libfile_" + "0" * 32 for k in FILES}, {}):
+        with pytest.raises(ValueError):
+            validate_library_identities(identities)
+
+
+def test_reconstruction_import_receipt_cannot_renew_source_observation(monkeypatch):
+    import hashlib
+    import json
+    from uuid import uuid4
+
+    from src.source_updates import availability_asur_reconstructed as subject
+    from src.source_updates.catalog import ROOT
+
+    root = ROOT / "tmp/source-updates" / ("asur-observation-regression-" + uuid4().hex)
+    (root / "receipts").mkdir(parents=True)
+    (root / "data/bronze").mkdir(parents=True)
+    (root / "data/bronze/_manifest.jsonl").write_text("")
+    shifted = "2026-10-28T12:00:00Z"  # Next Mexico day; immutable source observation was previous day.
+    receipt = dict(
+        mode="reconstruction_import",
+        status="imported_reconstruction_unvalidated",
+        product="asur_traffic",
+        period="2026M09",
+        run_id="a" * 32,
+        source_representation="authorized_visible_reconstruction",
+        is_original_SEC_HTML=False,
+        source_original_sha256=None,
+        network_requests=0,
+        activation="none",
+        publication="not_authorized",
+        source_observed_at=shifted,
+        imported_at="2026-10-28T02:06:32Z",
+        manifest_sha256=hashlib.sha256(b"").hexdigest(),
+    )
+    (root / "receipts" / ("asur-reconstruction-import-" + "a" * 32 + ".json")).write_text(json.dumps(receipt))
+
+    def do_not_reach(_):
+        raise AssertionError("Forged next-day observation reached physical certification")
+
+    monkeypatch.setattr(subject, "verify_bronze", do_not_reach)
+    item = dict(
+        product="asur_traffic",
+        adapter="airport_group",
+        period="2026M09",
+        candidate_as_of="2026-10-28T02:09:26Z",
+        workspace=str(root.parent / (root.name + "-candidate")),
+        availability=dict(source_scope=subject.SCOPE, workspace=str(root), run_id="a" * 32),
+    )
+    result = dict(
+        status="checks_passed",
+        product="asur_traffic",
+        period="2026M09",
+        source_representation="authorized_visible_reconstruction",
+        effective_as_of=item["candidate_as_of"],
+    )
+    with pytest.raises(ValueError):
+        subject.verify(item, result, "2026-10-28T13:00:00Z")
