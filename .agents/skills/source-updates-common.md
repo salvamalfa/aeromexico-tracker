@@ -246,6 +246,16 @@ esperado de observaciones por sí solo. Banxico admite el cuarto original
 `fix_methodology` en su retención: el resultado se calcula y reproduce desde
 los cuatro cuerpos y el calendario bancario, no desde un flag del usuario.
 Tres roles antiguos, EIA y mercado mantienen calendario no certificado.
+Mercado puede añadir al binding `equity_calendar_root` con las cuatro referencias
+físicas NYSE, Nasdaq, OTC y días NYSE. La captura OTC MHTML nativa se importa
+como `browser_mhtml`, con `http_status=null` y fecha de su encabezado; no como
+HTML HTTP ni reconstrucción. Se verifica únicamente su documento raíz oficial,
+sin ejecutar scripts/frames. El suplemento reconstruye las cinco series desde
+sus originales y compara sesiones, ancla anual e historia para treinta retornos.
+Solo esa prueba completa puede despejar el control de calendario de septiembre
+y trimestre; no cambia el recibo antiguo ni sus cifras. Los parciales son
+sesiones y OTC conserva sus14:00, sin tomar el calendario de NYSE prestado.
+La prueba se limita a2026 y no acredita festivos2027.
 Banxico septiembre pasó; Q3 sigue no certificado frente al universo diario,
 sin inferir error del proveedor. Último periodo y primera publicación siguen
 desconocidos y la ronda global permanece bloqueada. La

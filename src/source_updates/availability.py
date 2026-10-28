@@ -49,6 +49,20 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and "equity_calendar_root" in binding:
+        from src.source_updates.availability_series import role_sets
+
+        if (
+            set(binding) != SERIES_FIELDS | {"equity_calendar_root"}
+            or set(binding["series_items"]) != role_sets()["equities"]
+        ):
+            raise ValueError("Supplemental calendars require the exact five-equity availability roles")
+        root = preflight({k: v for k, v in binding.items() if k != "equity_calendar_root"}, candidate)
+        calendar = safe_workspace(Path(binding["equity_calendar_root"]))
+        for other in (root, safe_workspace(Path(candidate))):
+            if calendar == other or calendar.is_relative_to(other) or other.is_relative_to(calendar):
+                raise ValueError("Supplemental calendars must be disjoint from collection and candidate")
+        return root
     if (
         isinstance(binding, dict)
         and binding.get("source_scope") == "volaris_Q3_visible_reconstruction_target_v1"
