@@ -212,7 +212,11 @@ def prepare_fuel_fixture(workspace):
     (workspace / "imports/fuel.xlsx").write_bytes(content)
     selected = selection(mode="manual", extension="xlsx")
     selected["items"][0].update(local_file="fuel.xlsx", sha256=hashlib.sha256(content).hexdigest())
-    collect(selected, workspace, execute=True)
+    receipt = collect(selected, workspace, execute=True)
+    imported = receipt["items"][0]
+    assert imported["source_http_status_observed"] is None and imported["source_capture_utc"] is None
+    record = next(iter(verify_bronze(workspace).values()))
+    assert record["http_status"] == 0 and record["download_method"] == "manual"
     return selected
 
 
