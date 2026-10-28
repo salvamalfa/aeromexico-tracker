@@ -9,9 +9,9 @@ calendarios por mover una tarea entre secciones.
 - **Prioridad: evidencia de fuentes y calendario operativo.** Las ocho familias
   de skills y el coordinador están implementados e integrados. Falta completar
   la evidencia obligatoria de una ronda; no falta volver a aprobar el calendario.
-- **Ronda actual comprobada:** 17 de 23 productos con disponibilidad acreditada,
-  88 salidas y replay global escrito/reproducido. El recuento histórico es otro:
-  19 candidatos y 106 salidas compatibles; no se presenta como ronda actual completa.
+- **Ronda comprobada con el criterio aprobado:** 19 de 23 productos aceptados,
+  106 salidas y replay global escrito/reproducido; 17 observaciones del corte y
+  dos ediciones retenidas, sin renovar sus fechas. No es una ronda completa.
 - **Calendario preparado, sin activar:** mensual 17/nov y 15/dic de 2026,
   primer hábil bancario mexicano en/después del 15; trimestral a +2 hábiles
   del último reporte financiero real de las tres aerolíneas, agrupado con la
@@ -24,25 +24,24 @@ calendarios por mover una tarea entre secciones.
 
 | Pendiente | Estado comprobado | Siguiente acción y criterio de cierre |
 | --- | --- | --- |
-| GAP/ASUR | Ediciones septiembre válidas; el código exige el mismo día de la observación del 27/oct. Los documentos oficiales siguen visibles en lectura web del 28/oct; eso no es una nueva descarga original | Proponer vigencia por edición/periodo con fecha y hashes intactos, sin aplicarla sin aprobación. No falta volver a conseguir el material ya retenido |
-| AFAC aeropuertos | Un nuevo intento del índice oficial del 28/oct, 22:08 UTC respondió 403; el lector histórico julio existe y está separado de AFAC por aerolínea | Obtener una edición aeroportuaria oficial acreditada dentro del rezago permitido. No llamar septiembre a julio ni probar actualidad con el original histórico |
+| AFAC aeropuertos | El índice y libro conocido respondieron403; navegador oficial también Access Denied en estadísticas y HOME23:25UTC; el lector histórico julio existe y está separado de AFAC por aerolínea | Obtener una edición aeroportuaria oficial acreditada dentro del rezago permitido. No llamar septiembre a julio ni probar actualidad con el original histórico |
 | GDELT | Consulta mensual septiembre del 28/oct, 22:08 UTC respondió 503; ninguna extracción nueva acreditada | Una respuesta válida del mes, certificación y replay. No seguir reintentos idénticos ni sustituir por RSS |
 | Aerocivil | Consulta registrada: radicado 2026190010175977, IdControl 2758656, 28/oct; sin diccionario ni atribución verificados | Incorporar respuesta oficial aplicable a jh8x-n6h6. El registro administrativo no responde las preguntas; no duplicar correo |
 | Viva financiero Q3 | La investigación del hilo principal encontró 1T/2T 2026; el tercer trimestre mostrado debajo corresponde a 2025. Sin fecha 2026 confirmada | Incorporar reporte oficial 3T26 y adaptar/verificar esa edición; finales de octubre es solo estimación histórica, no una fecha prometida |
 | ICAGY/OTC | Calendarios/precios de cuatro instrumentos verificados; faltan dos controles de sesiones para el quinto. Página oficial del 28/oct HTTP200 es una shell JavaScript sin tabla | Acreditar calendario OTC 2026 y su lector con material interpretable. No sustituir por NYSE, ni aceptar el 200 como calendario completo |
 
-La ronda sigue bloqueada: seis productos y dos controles bursátiles. Banxico/EIA
+La ronda sigue bloqueada: cuatro productos ausentes y dos controles bursátiles.
+GAP/ASUR septiembre pasan por edición validada; sus novedades quedan sin comprobar. Banxico/EIA
 mantienen tres advertencias de cobertura observada, sin afirmar calendarios
 exhaustivos. Aerocivil y GDELT siguen obligatorios. Se conservan fechas reales,
 periodos, unidades, faltantes y distinción entre original y reconstrucción.
 
-**Decisión propuesta, todavía no aplicada:** para un documento de un periodo
-cerrado ya validado, aceptar su edición en la ronda aunque se haya observado
-el día anterior, conservando fecha, hash y replay; registrar aparte la consulta
-de novedades y cualquier revisión conocida. Cambiar periodo o edición exige
-otra validación. Esto evita confundir vigencia del dato con descargarlo hoy;
-no autoriza fingir una captura nueva ni aceptar datos ausentes. La guía canónica
-explica el riesgo de revisiones no detectadas. No modifica los contratos actuales.
+**Criterio autorizado el 28/oct, 23:15 UTC, preparado en el borrador PR174:**
+reutilizar las ediciones verificadas de GAP/ASUR septiembre y Volaris financiero
+3T26 conservando sus fechas y hashes. Consultas de novedades y fallos quedan
+separados; una edición nueva conocida o un periodo distinto exige otra validación.
+No equivale a una descarga actual ni a permiso de activar o publicar. 196 pruebas focales y 165 de integración afectadas aprobaron. La nueva CI del
+head final y la integración siguen separadas de ese resultado local.
 
 ## Backlog
 
@@ -86,6 +85,12 @@ explica el riesgo de revisiones no detectadas. No modifica los contratos actuale
   `docs/decisiones/decision-007-warehouse-bigquery.md`.
 
 ## Terminado
+
+- **Reutilización local comprobada de ediciones cerradas:** GAP/ASUR septiembre
+  y Volaris financiero 3T26 conservan fechas, bytes y representación; 14
+  candidatos regenerados con salidas idénticas y cinco productores sin cambios.
+  Global19/23 y106salidas reproducidos sin red. PR174 pendiente de CI e integración;
+  calendario y publicación siguen sin autorizar.
 
 - **Aeroméxico mensual recuperado:** el 28/oct a las 22:09 UTC el recolector
   habitual obtuvo índice y 6-K con HTTP200. Certificación/replay: 24 observaciones

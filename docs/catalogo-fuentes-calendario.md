@@ -87,8 +87,8 @@ AIFA capturado hoy y Volaris Q3 observado hoy. Las tres restantes conservan
 su prueba histórica en ese corte: AM mensual tenía un bucle301 en el índice;
 GAP y ASUR solo acreditaban observación27/oct. El corte22:09 resolvió AM con
 originales nuevos y elevó el total vigente a17; no cambió fechas de GAP/ASUR.
-Además faltan cuatro productos —AFAC aeroportuario actual, GDELT, Aerocivil
-y Viva financiero Q3— y dos controles bursátiles. La suite completa local terminó: 5.474 pruebas y 29 subpruebas aprobadas,
+La política aprobada y su ensayo19/23 se explican abajo. Siguen faltando
+cuatro productos —AFAC aeroportuario actual, GDELT, Aerocivil y Viva financiero Q3— y dos controles bursátiles. La suite completa local terminó: 5.474 pruebas y 29 subpruebas aprobadas,
 cero fallos/errores y cuatro omisiones explícitas. No se activa el calendario ni se declaran datos publicados.
 
 El cambio de política pedido el 28/oct está integrado en
@@ -186,32 +186,35 @@ queda bloqueado; no se extrapolan sus festivos.
 Para probarlo, ejecuta la vista previa del apéndice. El resultado muestra las
 fuentes y los pasos previstos. No hace falta aprobar otra vez el calendario.
 
-### Decisión concreta sobre vigencia de documentos cerrados
+### Vigencia de documentos cerrados: criterio aprobado
 
-**Recomendación pendiente de aprobación, sin aplicar:** aceptar la edición de
-un periodo cerrado que ya está validada aunque su observación sea del día
-anterior, mientras corresponda al periodo y rezago exigidos y no exista una
-revisión material conocida. Preservar el original o derivado autorizado, hash,
-fecha real, unidades, ámbito, conciliaciones y replay. Registrar por separado
-cuándo se consultaron novedades y si esa consulta falló; una descarga nueva no
-es condición para que las cifras de la edición retenida sigan siendo válidas.
-Cambiar el periodo requerido o detectar otra edición exige validación nueva.
+El dueño autorizó el cambio el **28/oct a las 23:15 UTC**. La implementación
+acepta las ediciones ya validadas de GAP septiembre, ASUR septiembre y Volaris
+financiero 3T26 sin exigir otra captura el mismo día. Conserva fecha, hash,
+periodo, unidades, cobertura, conciliaciones y replay. ASUR/Volaris siguen
+identificados como reconstrucciones autorizadas, nunca como originales SEC.
 
-El código de GAP fija `OBSERVED_DAY=2026-10-27` y exige igualdad con el día de
-la ronda. ASUR exige la misma igualdad con su `source_observed_at` inmutable;
-Volaris Q3 tiene una restricción análoga. Así, pasar del 27 al 28 puede bloquear
-la misma edición sin que cambien cifras o hashes. Es una exigencia añadida por
-nosotros, no una prueba de que el reporte histórico se haya vuelto incorrecto.
+`validated_closed_edition` acredita esa edición para el periodo solicitado;
+`latest_source_availability_verified` conserva la observación real de ese día.
+No se cambia la fecha del original ni se promete la última edición. No hay un
+vencimiento diario artificial; cambiar el periodo o detectar una edición nueva
+exige otra validación. El criterio no amplía los tres contratos a noticias,
+precios ni fuentes ausentes. Aerocivil y GDELT siguen obligatorios.
 
-**Efecto y riesgo de aprobar:** evita repetir capturas de archivos ya retenidos
-solo para cambiar el día y separa validez de la edición de disponibilidad HTTP.
-Puede quedar una revisión posterior sin detectar mientras el catálogo oficial
-no sea accesible; ese límite y el último intento deben quedar visibles. No se
-promete que sea la última edición ni se inventa una captura o verificación nueva.
-No convierte una respuesta vacía, una leyenda ausente o un periodo equivocado
-en válido. GDELT/Aerocivil siguen requeridos y las fuentes no se hacen opcionales.
-No activa el calendario ni aprueba publicaciones. Los contratos actuales siguen
-intactos hasta recibir esa decisión e implementar y probar el cambio.
+La consulta de novedades se registra aparte. Sin comprobación se informa
+`not_checked`; un fallo conserva su recibo, fecha y respuesta fallida. El
+binding opcional `revision_check` referencia una colección física del documento
+exacto, no un booleano de éxito. Bytes oficiales distintos o una notificación
+`known_new_edition` bloquean hasta validar la nueva edición. Una descarga del
+HTML original no se equipara binariamente al derivado reconstruido. El riesgo
+aceptado es que una corrección del editor permanezca sin detectar mientras no
+pueda comprobarse su sitio. Ninguno de estos estados activa o publica datos.
+
+Si falla la descarga programática, la skill exige un intento normal de navegador
+oficial o un bloqueo concreto documentado. Sin navegador en código se hace
+handoff a dot; el archivo vuelve por Library, con bytes y SHA verificados en el
+consumidor. El recibo conserva `manual_recovery` pendiente, sin fingir clics o
+descarga. Se respetan denegaciones, autenticación, CAPTCHA y avisos de seguridad.
 
 La lectura web oficial del 28/oct permitió volver a ver los documentos GAP/ASUR,
 pero no es una nueva descarga binariamente idéntica ni una comprobación íntegra
@@ -219,10 +222,26 @@ nueva de todas sus celdas. No se usó para renovar los recibos del 27/oct.
 
 ### Última comprobación ejecutada, 28/oct
 
+La política nueva produjo un ensayo offline **19/23 y 106 salidas**, con replay
+exacto: 17 observaciones del corte y dos ediciones retenidas (GAP/ASUR), no dos
+capturas nuevas. Se regeneraron 14 candidatos con el código nuevo, conservando
+las salidas byte a byte, y cinco productores sin cambios pasaron replay normal.
+Los recibos anteriores no se editaron. Pasaron 196 pruebas focales y otras165
+afectadas. Los casos de contrato con datos sintéticos se distinguen de la
+extracción real; la comparación GAP ahora también reconstruye y contrasta cada
+valor/unidad del nativo contra su original. CI final/integración siguen pendientes.
+
+Quedan cuatro productos —AFAC aeropuertos, GDELT, Aerocivil y Viva financiero
+Q3— y dos controles bursátiles. Las tres advertencias macro se mantienen, y las
+tres ediciones reutilizables declaran incertidumbre de revisiones. No se cambia
+la obligatoriedad de fuentes ni se activa el calendario.
+
 - AM: índice y 6-K HTTP200 en la colección `am-current-pair`; 24 observaciones,
   siete salidas y disponibilidad aprobada. Global 17/23 y 88 salidas, execute/check
   reales. La captura del índice anterior301 se conserva como fallo histórico.
-- AFAC aeroportuario: un intento HTTP403; GDELT septiembre: una consulta HTTP503.
+- AFAC aeroportuario: índice y original conocido HTTP403. El navegador cloud
+  del hilo principal también mostró Access Denied en estadísticas y en HOME
+  a las 23:25 UTC; no descargó archivo. GDELT septiembre: una consulta HTTP503.
   Se conservaron cuerpos fallidos y recibos separados, sin forzar Bronze válido.
   El estado HTTP no identifica por sí solo la causa dentro del proveedor.
 - OTC: página oficial HTTP200 de 22.219 bytes, sin tabla; su JavaScript enlazado
@@ -3809,8 +3828,8 @@ No son once servicios caídos ni once parsers ausentes.
 | Mensual AFAC aeropuertos | Lector julio y contrato de selección/vínculo físico implementados; replay real 2.730 filas | **Evidencia/acceso:** índice actual HTTP403; comprobar edición oficial vigente con índice y libro. No exige septiembre si existe rezago oficial. Sin decisión genérica pendiente |
 | Mensual AIFA | **Cerrada e integrada:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; integración PR171 y CI posterior conjunta aprobadas |
 | Mensual AM tráfico | **Cerrada y vigente:** índice y 6-K HTTP200 del28/oct22:09UTC, 24 observaciones, siete salidas y replay/disponibilidad aprobados | Bucle301 anterior resuelto en la nueva colección, sin código ni contratos nuevos; incorporado al global17/23. No se reetiquetó el corte27/oct |
-| Mensual ASUR | **Cadena implementada e integrada con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. Para declarar actualidad falta observación oficial vigente; rematerializar Library no la crea. PR173 integrado/CI aprobada; se propone revisar el requisito del mismo día, sin cambiarlo ni pedir otro original |
-| Mensual GAP | **Cadena implementada e integrada:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. Para el corte28/oct falta observación oficial vigente. PR173 integrado/CI aprobada; se propone revisar el requisito del mismo día, sin cambiarlo. No falta el original ni el lector |
+| Mensual ASUR | **Cadena implementada e integrada con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. La observación oficial sigue siendo 27/oct; rematerializar Library no la renueva. PR173 integrado/CI aprobada; la política aprobada de edición cerrada permite reutilizar el derivado para septiembre con su fecha intacta; no acredita actualidad HTTP ni última revisión |
+| Mensual GAP | **Cadena implementada e integrada:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. La observación original sigue siendo 27/oct; la edición validada se conserva para septiembre. PR173 integrado/CI aprobada; la política aprobada permite reutilizar la edición de septiembre con su fecha intacta. No falta el original ni el lector; no se afirma última revisión |
 | Mensual GDELT | Adaptador existente; consulta mensual del28/oct22:08UTC terminó HTTP503, sin septiembre válido | **Evidencia/acceso:** respuesta válida del periodo y certificación real. Un intento acotado; no más reintentos idénticos en este lote. RSS no lo sustituye; cambiar proveedor o requisito necesita decisión explícita |
 | Mensual OMA | **Cerrada e integrada:** artículo y PDF oficiales septiembre HTTP200, 168 observaciones y cuatro salidas reproducidas | Vínculo newsroom `472a0528` revisado; integración PR173 y CI posterior40758184706 aprobadas. Se conservan los fallos IR404/es202 sin repetirlos. Disponibilidad del reporte objetivo, no censo de revisiones |
 | Mensual Volaris | **Cerrada e integrada:** admisión autorizada y exacta, dos GET200, 48 cifras/24 variaciones, cuatro salidas y replay actuales comprobados | Global y continuidad comprobados; integración PR173 y CI posterior aprobadas. Emisor IR separado de SEC financiero; sin descubrimiento dinámico desde el HTML. No falta otra autorización de ese documento ni el lector |
@@ -3906,7 +3925,7 @@ sin disponibilidad actual**, más dos controles bursátiles. Sigue
 `blocked_global_policy`, fecha trimestral nula y Viva como único reporte central
 faltante. AFAC agosto, BTS julio y RSS conservan sus alcances observados; RSS
 no sustituye GDELT. Las tres advertencias macro no son calendarios exhaustivos.
-GAP/ASUR requieren observación oficial vigente para el contrato de ese día;
+En ese corte previo a la autorización, GAP/ASUR requerían observación oficial del mismo día;
 rematerializar Library o repetir cálculos no la acredita. No hace falta volver
 a autorizar los adaptadores ya encargados. Reusar observaciones de otro día
 para declarar actualidad sí cambiaría la política y no se hizo.
@@ -4129,6 +4148,7 @@ avisado no implica datos integrados ni tesis autorizada.
   descritos. Revalidar disponibilidad en una fecha de ronda coherente antes de
   declarar actual el conjunto; los 19 certificados técnicos no sustituyen ese paso.
   Aerocivil/GDELT siguen requeridos; un fallo no es cero ni se sustituye.
+- Completar CI y la revisión final de PR174; su implementación no concede permiso de integración.
 - Conservar la admisión Volaris limitada al documento aprobado, sin inventar
   futuras URLs o abrir subdominios. Esperar respuesta Aerocivil; no repetir
   la consulta ni confundir envío con evidencia semántica.
