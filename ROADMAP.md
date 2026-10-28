@@ -8,12 +8,14 @@ Propuesta — el dueño decide prioridades.
   contratos PR156/161–169 integrados. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
   merge `3cbb765a`, CI/revisión del head aprobadas y
   [CI posterior verde](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
-  El siguiente cierre SRC `4f38ecb9` añade tráfico mensual AM desde 6-K oficial
-  y el contrato AFAC aeroportuario. Sigue sujeto a gates de su propio head.
-- **Preparación comprobada:** trece tareas del mismo runtime pasan; las 62
-  salidas PR169 son idénticas y hay siete nuevas AM mensuales. Quedan diez
+  [PR170](https://github.com/salvamalfa/aeromexico-tracker/pull/170), head
+  `aff81d0b`, tiene CI aprobada (Python 20:23, web 1:57); Codex sigue pendiente,
+  sin integración. Añade AM mensual/contrato AFAC. La continuación AIFA
+  `24366ace` está comprobada localmente, pendiente de su entrega propia.
+- **Preparación comprobada local:** catorce tareas del mismo runtime pasan;
+  las 69 salidas previas son idénticas y hay siete nuevas AIFA. Quedan nueve
   tareas requeridas y dos controles bursátiles. La [matriz operativa](docs/catalogo-fuentes-calendario.md#cierre-operativo-de-la-ronda)
-  desglosa las once del snapshot PR169: AM mensual es el cierre real nuevo;
+  desglosa las once del snapshot PR169: AM mensual y AIFA son cierres reales;
   AFAC histórico/contrato está probado, pero actualidad HTTP403 sigue abierta.
   Banxico/EIA conservan tres advertencias de cobertura observada: su
   reclasificación anterior no equivale a calendarios exhaustivos comprobados.
@@ -23,8 +25,10 @@ Propuesta — el dueño decide prioridades.
   separadas del anexo financiero Q3 de veinte métricas. Fecha/unidad/linaje
   se conservan, sin nueva publicación. AFAC julio reproduce 2.730 filas y
   173 cruces; los originales de distintos días no crean una captura actual.
-  La conciliación Volaris Q2 de 0,105 % permanece como advertencia autorizada,
-  sin convertir Q2 en Q3. Pruebas y preservación final se detallan en la guía.
+  AIFA corrige receta Normateca→Informes: índice y libro septiembre actuales
+  verificados, 180 nativas/9 Gold y baseline sin cambios; no relaja fechas de
+  julio. 108 pruebas y revisión independiente aprobadas. Volaris Q2 mantiene
+  la advertencia autorizada de 0,105 %, sin convertirse en Q3.
 - **Calendario probado, sin activar:** mensual 17/nov y 15/dic de 2026, primeros
   hábiles bancarios mexicanos en/después del 15. Trimestral: +2 hábiles tras el
   último reporte real del trimestre; agrupar si dista ≤7 días naturales de la
@@ -33,9 +37,9 @@ Propuesta — el dueño decide prioridades.
   de incorporar cifras/aprobar tesis; Volaris ya fue avisado el 27/oct 13:09 UTC.
 - **Pendientes concretos:** host mensual Volaris y permiso para contactar al
   publicador Aerocivil; GDELT conserva HTTP503. OMA/AFAC necesitan material
-  accesible; AIFA conserva septiembre histórico y el índice actual anuncia un
-  julio con fecha incoherente. Faltan dossiers actuales aeroportuarios y
-  financieros indicados en la matriz. No son diez servicios caídos.
+  accesible. AIFA quedó comprobado localmente tras corregir la entrada; falta
+  su integración. Faltan dossiers actuales aeroportuarios y
+  financieros indicados en la matriz. No son nueve servicios caídos.
 - **Eficiencia:** la agregada local anterior aprobó 5.129 casos; el total
   comparable pasó de 39:47 a 36:33 (8,1 % local). No se promete ese ahorro
   remoto ni se atribuye aquella suite a los heads posteriores.

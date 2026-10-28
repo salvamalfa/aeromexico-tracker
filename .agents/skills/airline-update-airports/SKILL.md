@@ -175,3 +175,19 @@ Los contenedores SEC listados pero no descargados permanecen explícitos; no
 se afirma haberlos leído. El corte real de readiness debe ser exactamente
 `2026-08-20T18:20:00-06:00` en México. No reutilizar ese expediente como disponibilidad de octubre o
 como tráfico de septiembre; no fabricar un `run_id` ni renovar fechas.
+
+### Entrada operativa AIFA
+
+La receta AIFA resuelve `constant:src.source_updates.availability:AIFA_INDEX`:
+`https://www.aifa.aero/legal-y-finanzas/informes`. Es la misma entrada que
+exige su contrato físico. Normateca y el libro julio se conservan en las rutas
+históricas; no sustituyen este índice. `recipe --output selection` prepara la
+selección del índice correcto; `collect` ejecuta la captura.
+`--catalog-file <HTML> --period latest` selecciona únicamente su XLSX real. Mantener hosts y enlace directo al original, sin generar URLs.
+
+La corrección del 27/oct cerró la disponibilidad septiembre con dos originales
+HTTP200 y replay integral: 180 observaciones nativas y nueve filas Gold,
+con 180 observaciones del baseline sin cambios. Los recibos
+anteriores mantienen su corte; emitir nuevos cuando cambien fingerprints, sin
+reetiquetar capturas. No relajar fechas internas de julio ni tratar la pasada
+de AIFA como calendario global listo. La guía canónica distingue gates remotos.

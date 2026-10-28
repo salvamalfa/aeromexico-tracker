@@ -10,18 +10,25 @@ candidatos separados. El calendario y la política ya están aprobados. La
 infraestructura PR156/161–169 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
 se integró en `3cbb765a`; [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
 
-El siguiente cierre, SRC `4f38ecb9`, verifica **trece tareas reales** en el
-mismo runtime: las 62 salidas del PR169 siguen idénticas y se añaden siete de
-tráfico mensual Aeroméxico. El 6-K IR oficial aporta septiembre y sus
-comparativos; no se reutiliza el anexo financiero como tráfico. AFAC añade
-selección y vínculo físico de su libro aeroportuario, con replay histórico
-real; su actualidad sigue bloqueada por HTTP403.
+El [PR170](https://github.com/salvamalfa/aeromexico-tracker/pull/170), head
+`aff81d0b`, tiene [CI aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40539298923):
+Python 20:23 y web 1:57. Su revisión Codex sigue pendiente; no se presenta como
+integrado. Fuente `4f38ecb9`: trece tareas reales, con las 62 salidas del PR169
+idénticas y siete nuevas de tráfico mensual AM. AFAC añade contrato/lector
+histórico, con disponibilidad actual HTTP403 aún bloqueada.
 
-Quedan **diez tareas obligatorias y dos controles bursátiles** sin verificar.
+La continuación local SRC `24366ace` corrige una entrada equivocada de AIFA:
+la receta consultaba Normateca, pero el verificador exige Informes. El índice
+correcto actual anuncia septiembre y su libro oficial pasó toda la cadena.
+El ensayo conjunto ahora verifica **catorce tareas, 76 salidas: las 69 anteriores
+idénticas y siete nuevas AIFA**. Este segundo cierre también espera su entrega
+y revisión; no implica publicación de candidatos.
+
+Quedan **nueve tareas obligatorias y dos controles bursátiles** sin verificar.
 La [matriz operativa](#cierre-operativo-de-la-ronda) conserva los once pendientes
-del snapshot PR169, señala el cierre real de AM mensual y distingue código,
-material y decisiones. Aerocivil/GDELT siguen requeridos. Las tres advertencias
-macro del PR169 siguen siendo cobertura observada, no calendarios exhaustivos
+del snapshot PR169: AM mensual y AIFA están cerradas localmente con originales
+reales. Se distingue código, material y decisiones. Aerocivil/GDELT siguen
+requeridos; las tres advertencias macro no son calendarios exhaustivos
 certificados. No se declara lista la ronda ni se activan datos o disparadores.
 
 El calendario puede usar el **día oficial** sin inventar una hora. El ensayo
@@ -3428,18 +3435,81 @@ público ni se borran intermedios fallidos. La guía/ROADMAP consolidan estado y
 límites, sin otro informe narrativo. Se revisaron manualmente URLs/anclas,
 identidades y la recuperación exacta del recibo técnico D89.
 
+### AIFA: entrada operativa corregida, continuación del 27/oct
+
+SRC `24366ace8c35e2e1e9f82ec36972a9281ba516b8`, con el mismo runtime financiero
+`0e41ea37…`. La receta apuntaba al `AIFA_STATS_INDEX` histórico de Normateca,
+mientras `availability.AIFA_INDEX` exige
+[Informes](https://www.aifa.aero/legal-y-finanzas/informes). La captura de
+Normateca que anunciaba julio no demuestra que el índice contractual haya
+retirado septiembre. Se corrigen únicamente `entry_ref` y la página oficial
+del catálogo, conservando el ingestor histórico, los hosts y la política
+`direct` de enlaces a originales. Una prueba une receta/selector/contrato y
+página institucional para impedir otra discrepancia.
+
+La comprobación deliberada hizo un GET de descubrimiento y una colección
+pareada de dos GET, todos HTTP200 y cero pagados. La colección final
+`af1b7445e44e4089816caf05061e55c9` conserva índice y XLSX a las
+16:42:58,442 y 16:42:58,916 UTC del 27/oct. El índice (72.852 bytes) tiene SHA
+`95becd34996a6671c1b35150269943406fd618d6b7b68d86a5c8423cf831f1dc` y anuncia
+septiembre; el XLSX (308.490 bytes) conserva SHA
+`a26a3d21ad767c5ded2bb450845795abdea16c62408845c263650390ad9668d3` del original
+retenido. No se reintenta una fuente denegada ni se forma una URL futura.
+
+Retención, certificación, replay y disponibilidad física pasaron offline por
+el contrato existente. **180 nativas, nueve Silver, nueve Gold, un aeropuerto,
+nueve periodos, un artefacto y 189 vínculos**; siete salidas. El baseline dio
+180 sin cambio y cero altas/bajas/revisiones. No se modificaron cifras de julio
+ni sus fechas incoherentes; no se aplicó el 5 % ni se relajó ningún guard.
+El item AIFA tiene `latest_source_availability_verified=true`; el wrapper de
+subconjunto sigue sin declarar listo el calendario global.
+
+Pasaron **108 pruebas en 160,04 s**, sin fallos/errores/omisiones. La revisión
+independiente añade una prueba focal, 0,29 s, y rehash de originales, recibos,
+siete Parquet y baseline. Recibo
+`independent-aifa-config-24366ace-review-v1.json`, SHA `420cdbd4…`.
+Se conservan dos intentos anteriores: uno no ejecutó pruebas por nombre de
+archivo incorrecto; el otro detectó un valor de política de enlace no admitido
+(84 aprobadas, 12 fallos y 12 errores). Se restituyó `direct`, sin cambiar
+aserciones ni criterios, antes del commit final.
+
+El cambio de configuración invalida fingerprints de fuente: se recertificaron
+los diez dependientes en espacios nuevos desde originales retenidos, sin
+nuevas capturas ni editar recibos antiguos. Los otros tres pasaron sus
+verificadores normales, con productores sin cambios. El recibo global nuevo
+se escribió y releyó: `combined-global-24366ace-result.json`, SHA `946d7d0a…`;
+compatibilidad `58c8b86f…`, **14 tareas y 76 salidas, 69 anteriores idénticas y
+siete AIFA nuevas**. Quedan nueve obligatorias ausentes, dos controles de
+sesiones y tres advertencias de cobertura observada. Fecha trimestral nula,
+calendario no listo y cero activaciones.
+
+El procedimiento de continuidad admite descendientes del productor revisado
+con el mismo runtime y closures: `src/`, `web/` y contratos permanecen idénticos
+a `aff81d0b`; el dictamen `67052deb…` y su binding `4f38ecb9`/`0e41ea37`
+no cambian. No se emite otra autorización ni se atribuye otra CLI a este commit:
+la ejecución financiera real de 90,84 s sigue siendo la de `7a5a3138`.
+El cierre técnico de configuración revisa su conservación por separado.
+La nota `aifa-config-financial-continuity-note-24366ace.json`, SHA `a5ce5968…`,
+revalidó en 5,951 s ascendencia, runtime, política y conservación exacta de
+188/177/811/803/53 archivos/salidas. No llamó la CLI, las 79 pruebas ni el replay
+original, y no certifica por sí misma la ronda de fuentes.
+
+Lifecycle: seis archivos de configuración, prueba y documentación clasificados,
+sin retiros. Los originales, recibos y logs ignorados se conservan para
+reproducción; no se publican fuentes privadas ni se eliminan intentos fallidos.
+
 ### Cierre operativo de la ronda
 
 Este es el desglose de las **once tareas obligatorias pendientes del snapshot
-PR169**. Una ya se cerró con extracción real: AM mensual. Las otras diez siguen
-abiertas. «Implementación» significa trabajo técnico por completar; «evidencia»
+PR169**. Dos ya se cerraron con originales reales: AM mensual y AIFA. Las otras nueve
+siguen abiertas. «Implementación» significa trabajo técnico por completar; «evidencia»
 significa originales oficiales o acceso aún no acreditados. Pueden coexistir.
 No son once servicios caídos ni once parsers ausentes.
 
 | Tarea del snapshot PR169 | Comprobado ahora | Qué falta y de qué depende |
 |---|---|---|
 | Mensual AFAC aeropuertos | Lector julio y contrato de selección/vínculo físico implementados; replay real 2.730 filas | **Evidencia/acceso:** índice actual HTTP403; comprobar edición oficial vigente con índice y libro. No exige septiembre si existe rezago oficial. Sin decisión genérica pendiente |
-| Mensual AIFA | Septiembre histórico certificado; índice actual anuncia julio y ese libro tiene fecha anterior al cierre | **Evidencia:** edición oficial coherente y actualidad verificable. No corregir fechas ni aplicar tolerancia numérica a ese conflicto |
+| Mensual AIFA | **Cerrada localmente:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; entrega/CI propia pendientes |
 | Mensual AM tráfico | **Cerrada:** índice y 6-K IR capturados juntos el 27/oct; 24 filas mensuales/comparativas y siete salidas reproducidas | No queda implementación para esta edición comprobada. No acredita otros meses ni publicación |
 | Mensual ASUR | Lector julio existente | **Implementación y material:** retener dossier oficial septiembre con índices/documentos y adaptar/comprobar esa edición. No hay fallo de servicio probado |
 | Mensual GAP | Vínculo histórico julio comprobado al snapshot de agosto | **Implementación y material:** dossier septiembre, descubrimiento/vínculo y revisión de edición. Julio no demuestra actualidad de octubre |
@@ -3477,6 +3547,9 @@ La reducción se explica por separado, sin sumar controles distintos:
   realmente extraído** cerró otra tarea. AFAC cerró código/contrato histórico,
   pero no una tarea actual. El ajuste de prerrequisitos por cadencia no cambia
   los conteos de la ronda combinada ni elimina GDELT/Aerocivil.
+- SRC `24366ace`: catorce verificadas, nueve ausentes y dos controles. **AIFA
+  cerró realmente** tras corregir la entrada, comprobar el índice correcto y
+  reproducir el libro oficial. No hubo reclasificación ni tolerancia adicional.
 
 Las únicas decisiones externas acotadas ya preparadas son el host mensual
 Volaris y el contacto Aerocivil. No se amplió ese host ni se contactó a nadie.
@@ -3485,7 +3558,7 @@ avisado no implica datos integrados ni tesis autorizada.
 
 ## Pendientes
 
-- Cerrar las diez tareas actuales y los dos controles de sesiones descritos.
+- Cerrar las nueve tareas actuales y los dos controles de sesiones descritos.
   Aerocivil/GDELT siguen requeridos; un fallo no es cero ni se sustituye.
 - Resolver las decisiones acotadas de host Volaris y contacto Aerocivil. No se
   repiten reintentos prohibidos GDELT/PDF ni se eluden los accesos fallidos.
@@ -3493,7 +3566,7 @@ avisado no implica datos integrados ni tesis autorizada.
   detectados; Volaris ya fue avisado. La receta física global aún carece del
   dossier Q3 Volaris: su límite difiere del aviso documental del hilo principal.
 - Completar CI, comentarios, revisión Codex y conservación del head final de
-  esta entrega, y seguir CI posterior. PR168/169 ya tienen CI posterior aprobada;
+  cada entrega, y seguir CI posterior. PR168/169 ya tienen CI posterior aprobada;
   esos resultados no sustituyen el gate de un head nuevo.
 - Conservar expediente original y dictámenes auténticos en el checkout aislado.
   Main carece del ledger, sin reconstruir autoridad. El procedimiento de

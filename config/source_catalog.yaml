@@ -170,7 +170,7 @@ sources:
     coverage: Tráfico doméstico e internacional del AIFA.
     update_frequency: Mensual.
     access_method: Numeralia aeroportuaria pública en Excel.
-    official_page_url: https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Numeralia-Aeroportuaria-Jul-2026.xlsx
+    official_page_url: https://www.aifa.aero/legal-y-finanzas/informes
     allowed_hosts: [aifa-repositorio.s3.us-east-1.amazonaws.com, aifa.aero]
     artifact_link_policy: direct
     limitations: Mide el aeropuerto completo y la estructura del archivo puede cambiar entre publicaciones.

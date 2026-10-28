@@ -77,3 +77,21 @@ def test_aifa_cumulative_label_selects_end_month_and_keeps_host_guard(tmp_path):
     path.write_text(path.read_text().replace("aifa-repositorio.s3.us-east-1.amazonaws.com", "evil.example"))
     with pytest.raises(ValueError, match="catalogue hosts"):
         select_documents("aifa_traffic", path, "latest")
+
+
+def test_aifa_operational_recipe_and_physical_contract_share_official_index():
+    from src.source_updates.availability import AIFA_INDEX, discovery_contract
+    from src.source_updates.catalog import load_catalog
+    from src.source_updates.recipes import catalog_selection, describe
+
+    entry = "https://www.aifa.aero/legal-y-finanzas/informes"
+    assert AIFA_INDEX == discovery_contract("aifa_traffic", "government")[0] == entry
+    assert describe("aifa_traffic")["entry_url"] == entry
+    selected = catalog_selection("aifa_traffic")["items"]
+    assert len(selected) == 1 and selected[0]["url"] == entry
+    assert selected[0]["source_system"] == "aifa" and selected[0]["purpose"] == "catalog"
+    assert load_catalog()["aifa"]["official_page_url"] == entry
+    assert load_catalog()["aifa"]["allowed_hosts"] == [
+        "aifa-repositorio.s3.us-east-1.amazonaws.com", "aifa.aero"
+    ]
+    assert load_catalog()["aifa"]["artifact_link_policy"] == "direct"
