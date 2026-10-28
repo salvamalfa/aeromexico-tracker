@@ -23,6 +23,7 @@ def spec(product: str) -> dict:
         slots,
         viva_financials,
         viva_traffic,
+        volaris_traffic,
     )
 
     registry = {
@@ -117,6 +118,25 @@ def spec(product: str) -> dict:
         "revision_values": ["value", "unit", "entity_as_reported"],
         "code_files": [Path(viva_traffic.__file__)],
     }
+    registry["volaris_traffic_ir"] = {
+        "roles": {"pdf": ("volaris_ir",)},
+        "primary": "pdf",
+        "table": volaris_traffic.TABLE,
+        "grain": volaris_traffic.GRAIN,
+        "parse": volaris_traffic.parse,
+        "code_files": [Path(volaris_traffic.__file__)],
+        "revision_values": [
+            "value",
+            "unit",
+            "scale_multiplier",
+            "reported_change",
+            "reported_change_unit",
+            "flight_scope",
+            "passenger_definition",
+            "is_preliminary",
+            "is_unaudited",
+        ],
+    }
     registry["aicm_slots"] = {
         "roles": {"pdf": ("aicm",)},
         "primary": "pdf",
@@ -191,6 +211,18 @@ def spec(product: str) -> dict:
             "grain": airport_group_native.GRAIN,
             "code_files": [Path(airport_group_native.__file__)],
         }
+        if name == "asur_traffic":
+            from src.source_updates import asur_reconstructed, asur_reconstruction_inputs
+
+            definition = registry[name]
+            definition["roles"].update(
+                {role: (asur_reconstructed.ALIAS,) for role in asur_reconstruction_inputs.FILES}
+            )
+            definition["role_sets"] = [{"html"}, set(asur_reconstruction_inputs.FILES)]
+            definition["code_files"] += [
+                Path(asur_reconstructed.__file__),
+                Path(asur_reconstruction_inputs.__file__),
+            ]
     registry.update(series_native.definitions())
     from src.source_updates.carrier_source_contract import retention_specs
 

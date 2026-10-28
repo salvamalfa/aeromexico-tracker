@@ -29,7 +29,7 @@ from src.source_updates.collection import safe_workspace, writer
 REQUIRED = {
     "monthly": frozenset(
         (
-            "am_traffic_ir volaris_sec viva_traffic afac_carriers afac_airports bts_segments "
+            "am_traffic_ir volaris_traffic_ir viva_traffic afac_carriers afac_airports bts_segments "
             "gap_traffic asur_traffic oma_traffic aicm_traffic aifa_traffic banxico fuel equities rss gdelt"
         ).split()
     ),
@@ -463,9 +463,10 @@ def verify(item: dict, workspace: Path, round_as_of: str | None = None) -> dict:
             key=lambda row: (row["source_url"], row["sha256"]),
         )
     if item["product"] == "volaris_sec":
-        # Only the checked financial exhibit can date Volaris' central report.
         receipt = candidate / "receipts" / f"retained-{item['receipt_id']}.json"
-        original = json.loads(receipt.read_text())["originals"]["html"]
+        selected_originals = json.loads(receipt.read_text())["originals"]
+        role = "reconstruction_zip" if set(selected_originals) == {"reconstruction_zip"} else "html"
+        original = selected_originals[role]
         identity = {"source_url": original["source_url"], "sha256": original["sha256"]}
         result["financial_report_artifacts"] = (
             [identity] if identity in result.get("contributing_artifacts", []) else []

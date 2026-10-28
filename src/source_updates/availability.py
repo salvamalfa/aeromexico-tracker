@@ -49,6 +49,25 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if (
+        isinstance(binding, dict)
+        and binding.get("source_scope") == "volaris_Q3_visible_reconstruction_target_v1"
+    ):
+        from src.source_updates.availability_volaris_q3_reconstructed import preflight as volaris_q3_preflight
+
+        return volaris_q3_preflight(binding, candidate)
+    if isinstance(binding, dict) and binding.get("source_scope") == "asur_visible_reconstruction_target_v1":
+        from src.source_updates.availability_asur_reconstructed import preflight as asur_preflight
+
+        return asur_preflight(binding, candidate)
+    if isinstance(binding, dict) and binding.get("source_scope") == "gap_official_manual_target_v1":
+        from src.source_updates.availability_gap_manual import preflight as gap_manual_preflight
+
+        return gap_manual_preflight(binding, candidate)
+    if isinstance(binding, dict) and binding.get("source_scope") == "oma_official_newsroom_v1":
+        from src.source_updates.availability_oma_newsroom import preflight as oma_preflight
+
+        return oma_preflight(binding, candidate)
     if isinstance(binding, dict) and binding.get("source_scope") == "gap_sec_submissions_snapshot_v1":
         from src.source_updates.availability_gap import preflight as gap_preflight
 
@@ -217,6 +236,31 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "volaris_Q3_visible_reconstruction_target_v1"
+    ):
+        from src.source_updates.availability_volaris_q3_reconstructed import verify as verify_volaris_q3
+
+        return verify_volaris_q3(item, result, cutoff)
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "asur_visible_reconstruction_target_v1"
+    ):
+        from src.source_updates.availability_asur_reconstructed import verify as verify_asur
+
+        return verify_asur(item, result, cutoff)
+    if item["product"] == "volaris_traffic_ir" and item["adapter"] == "retained":
+        from src.source_updates.availability_volaris_ir import verify as verify_volaris_ir
+
+        return verify_volaris_ir(item, result, cutoff)
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "oma_official_newsroom_v1"
+    ):
+        from src.source_updates.availability_oma_newsroom import verify as verify_oma_newsroom
+
+        return verify_oma_newsroom(item, result, cutoff)
     if item["product"] == "afac_airports" and item["adapter"] == "retained":
         from src.source_updates.availability_afac_airports import verify as verify_afac_airports
 
@@ -234,6 +278,10 @@ def verify(item, result, cutoff):
 
         return verify_am_financials(item, result, cutoff)
     if item["product"] == "gap_traffic" and item["adapter"] == "airport_group":
+        if item["availability"].get("source_scope") == "gap_official_manual_target_v1":
+            from src.source_updates.availability_gap_manual import verify as verify_gap_manual
+
+            return verify_gap_manual(item, result, cutoff)
         from src.source_updates.availability_gap import verify as verify_gap
 
         return verify_gap(item, result, cutoff)

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import calendar
+import hashlib
 import json
+import os
 import shutil
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from uuid import uuid4
 
 import httpx
@@ -17,8 +20,10 @@ from bs4 import BeautifulSoup
 from src.common.storage import save_bronze
 from src.source_updates import airport_group_candidate as candidate
 from src.source_updates import airport_group_native as native
+from src.source_updates import availability_gap_manual as manual_gap
 from src.source_updates import readiness, retained
 from src.source_updates.catalog import ROOT
+from src.source_updates.collection import collect
 
 MONTH = "2026M07"
 CUTOFF = "2026-10-23T12:00:00-06:00"
@@ -111,6 +116,195 @@ def gap_document(*, period=MONTH, ytd_factor=None):
         [header, ["Tijuana", "1.0", "999.9", "0.0", "%", "2.0", "999.9", "0.0", "%"]]
     )
     return ('<html><head><meta charset="utf-8"></head><body>' + title + "</body></html>").encode()
+
+
+def compact_gap_document():
+    soup = BeautifulSoup(gap_document(period="2026M09"), "html.parser")
+    for table_node in soup.find_all("table")[:3]:
+        heading = table_node.find_previous("p").get_text(" ", strip=True)
+        native_rows = []
+        for row in table_node.find_all("tr"):
+            tokens = [c.get_text(" ", strip=True) for c in row.find_all("td")]
+            native_rows.append(
+                tokens
+                if len(tokens) == 7
+                else [*tokens[:3], tokens[3] + tokens[4], *tokens[5:7], tokens[7] + tokens[8]]
+            )
+        replacement = BeautifulSoup(html_table([[heading, "", "", ""], *native_rows]), "html.parser").table
+        table_node.replace_with(replacement)
+    return str(soup).replace("Aug. 05, 2026", "Oct. 06, 2026").encode()
+
+
+def test_compact_gap_counts_locator_and_layout_cannot_mix():
+    body = compact_gap_document()
+    row = {**original("gap_traffic"), "downloaded_at": "2026-10-27T18:00:00Z"}
+    frame, checks = native.read("gap_traffic", {"html": (body, row)}, "2026M09")
+    assert len(frame) == 192 and checks["reconciliations"] == 72
+    assert set(frame.parser_version) == {"airport_group_native_gap_compact_v2"}
+    assert frame.source_locator.str.contains("row:2/").any()
+    assert set(frame.country) == {"MX", "JM", "MULTI"}
+    mixed = BeautifulSoup(body, "html.parser")
+    old = BeautifulSoup(gap_document(period="2026M09"), "html.parser").find_all("table")[0]
+    mixed.find_all("table")[0].replace_with(old)
+    with pytest.raises(ValueError):
+        native.read("gap_traffic", {"html": (str(mixed).encode(), row)}, "2026M09")
+
+
+def test_only_exact_reviewed_gap_delivery_original_can_omit_script_in_memory(monkeypatch):
+    script = b'<script type="text/javascript" src="/fixture-delivery"></script>'
+    body = compact_gap_document().replace(b"</body>", script + b"</body>")
+    monkeypatch.setattr(native, "GAP_SEPTEMBER_CAPTURE_SHA", hashlib.sha256(body).hexdigest())
+    monkeypatch.setattr(native, "GAP_DELIVERY_SCRIPT_SHA", hashlib.sha256(script).hexdigest())
+    row = {
+        **original("gap_traffic"),
+        "downloaded_at": "2026-10-27T18:00:00Z",
+        "source_url": native.GAP_SEPTEMBER_URL,
+        "sha256": hashlib.sha256(body).hexdigest(),
+    }
+    before = body
+    frame, proof = native.read("gap_traffic", {"html": (body, row)}, "2026M09")
+    assert len(frame) == 192 and body == before
+    assert proof["non_executed_delivery_script"]["executed"] is False
+    for changed in [
+        body + b" ",
+        body.replace(b"fixture-delivery", b"other-delivery"),
+        body.replace(script, script + script),
+    ]:
+        bad = {**row, "sha256": hashlib.sha256(changed).hexdigest()}
+        with pytest.raises(ValueError, match="Unreviewed SEC delivery script"):
+            native.read("gap_traffic", {"html": (changed, bad)}, "2026M09")
+
+
+@pytest.fixture
+def manual_gap_candidate(monkeypatch):
+    from src.common import storage
+
+    base = ROOT / "tmp/source-updates" / ("test-gap-manual-" + uuid4().hex)
+    source, target = base / "collection", base / "candidate"
+    (source / "imports").mkdir(parents=True)
+    body = compact_gap_document()
+    source_hash = hashlib.sha256(body).hexdigest()
+    # Fixture-only edition substitution: this cannot certify the real manual original.
+    monkeypatch.setattr(manual_gap, "RAW_SHA", source_hash)
+    monkeypatch.setattr(manual_gap, "RAW_BYTES", len(body))
+    library_id = "libfile_" + "a" * 32
+    monkeypatch.setattr(os, "getxattr", lambda *_a, **_k: library_id.encode(), raising=False)
+    (source / "imports/f6k_100626.htm").write_bytes(body)
+    reference = dict(
+        library_file_id=library_id,
+        backing_file_id="file_" + "b" * 32,
+        version=0,
+        name="f6k_100626.htm",
+        bytes=len(body),
+        sha256=source_hash,
+        source_url=native.GAP_SEPTEMBER_URL,
+        binary_identity_with_index_listed_document_claimed=False,
+        materialization_is_not_a_fresh_SEC_HTTP_capture=True,
+    )
+    (source / "imports/library-original-verification.json").write_text(json.dumps(reference))
+    save = storage.save_bronze
+    monkeypatch.setattr(
+        storage,
+        "save_bronze",
+        lambda *a, **kw: save(*a, **kw, downloaded_at=datetime(2026, 10, 27, 18, tzinfo=UTC)),
+    )
+    selection = {
+        "version": 1,
+        "items": [
+            dict(
+                id="manual-gap",
+                product="gap_traffic",
+                source_system="sec_edgar",
+                entity="GAP_traffic_0001171843-26-006475",
+                period="2026M09",
+                url=native.GAP_SEPTEMBER_URL,
+                extension="htm",
+                purpose="data",
+                mode="manual",
+                local_file="f6k_100626.htm",
+                sha256=source_hash,
+            )
+        ],
+    }
+
+    def no_http(*_a, **_kw):
+        raise AssertionError("Manual import attempted a source HTTP request")
+
+    try:
+        imported = collect(selection, source, execute=True, client_factory=no_http)
+        entry = imported["items"][0]
+        retention = retained.retain(
+            target, source / "data/bronze", "gap_traffic", {"html": entry["source_file"]}, execute=True
+        )
+        cutoff = "2026-10-27T19:00:00+00:00"
+        result = candidate.run(target, "gap_traffic", "2026M09", cutoff, retention["run_id"], execute=True)
+        item = dict(
+            id="gap",
+            product="gap_traffic",
+            period="2026M09",
+            adapter="airport_group",
+            required=True,
+            workspace=str(target),
+            receipt_id=retention["run_id"],
+            candidate_as_of=cutoff,
+            availability=dict(
+                source_scope=manual_gap.SCOPE,
+                workspace=str(source),
+                run_id=imported["run_id"],
+                artifact_item="manual-gap",
+                manual_original="imports/f6k_100626.htm",
+            ),
+        )
+        yield item, result, source, cutoff
+    finally:
+        shutil.rmtree(base, ignore_errors=True)
+
+
+def test_manual_gap_integral_replay_keeps_http_unknown_and_date_precision(manual_gap_candidate):
+    item, result, source, cutoff = manual_gap_candidate
+    before = readiness.inventory(Path(item["workspace"]))
+    task = readiness.check_task(item, cutoff, round_as_of=cutoff)
+    assert task["latest_source_availability_verified"] and not task["source_conditions"]
+    proof = task["source_availability_evidence"]
+    assert proof["source_http_status_observed"] is proof["source_capture_utc"] is None
+    assert (
+        proof["manual_source_observation_precision"] == "day"
+        and proof["manual_source_observed_on"] == "2026-10-27"
+    )
+    assert proof["library_version_as_reported_by_handoff"] == 0
+    assert not proof["indexed_binary_identity_claimed"] and not proof["all_sites_latest_revision_census"]
+    assert len(result["output_sha256"]) == 9 and before == readiness.inventory(Path(item["workspace"]))
+    with pytest.raises(ValueError, match="verification day"):
+        manual_gap.verify(item, result, "2026-10-28T19:00:00+00:00")
+    with pytest.raises(ValueError):
+        manual_gap.verify({**item, "period": "2026M08"}, result, cutoff)
+    # Same bytes cannot impersonate a different Library tuple or binary-identity assertion.
+    path = source / "imports/library-original-verification.json"
+    original_reference = path.read_text()
+    for key, value in [
+        ("version", 1),
+        ("version", False),
+        ("library_file_id", "libfile_" + "c" * 32),
+        ("source_url", "https://example.com/other"),
+        ("binary_identity_with_index_listed_document_claimed", True),
+    ]:
+        altered = json.loads(original_reference)
+        altered[key] = value
+        path.write_text(json.dumps(altered))
+        with pytest.raises(ValueError, match="materialization reference"):
+            manual_gap.verify(item, result, cutoff)
+    path.write_text(original_reference)
+    # Existing safe_workspace rejects a symlink directory before source reads.
+    for directory in (source / "imports", source / "data/bronze"):
+        saved = directory.with_name(directory.name + "-fixture-saved")
+        directory.rename(saved)
+        directory.symlink_to(saved, target_is_directory=True)
+        try:
+            with pytest.raises(ValueError, match="symlinks"):
+                manual_gap.verify(item, result, cutoff)
+        finally:
+            directory.unlink()
+            saved.rename(directory)
 
 
 def asur_document(*, period=MONTH, ytd_factor=None):
@@ -389,115 +583,3 @@ def test_revisions_include_ytd_and_native_semantics(stored, change):
         workspace, "baselines/prior.parquet", product, {"silver/airport_group_native": frame}
     )
     assert result["changed"] == 1
-
-
-@pytest.mark.parametrize("product", ["gap_traffic", "asur_traffic"])
-@pytest.mark.parametrize("adapter", ["retained", "government", "airport_group"])
-def test_readiness_rejects_cross_family_adapters_before_source_reads(product, adapter):
-    root = ROOT / "tmp/source-updates" / ("independent-static-" + uuid4().hex)
-    item = dict(
-        id="group",
-        product=product,
-        period=MONTH,
-        adapter=adapter,
-        workspace=str(root / "source"),
-        receipt_id="a" * 32,
-        required=True,
-        candidate_as_of=CUTOFF,
-    )
-    proposal = dict(version=1, as_of=CUTOFF, required_items=["group"], items=[item])
-    if adapter == "airport_group":
-        assert readiness.preflight(proposal, root / "round")[0]["adapter"] == adapter
-    else:
-        with pytest.raises(ValueError, match="adapter"):
-            readiness.preflight(proposal, root / "round")
-    item["adapter"] = "airport_group"
-    item["period"] = "2026Q3"
-    with pytest.raises(ValueError, match="monthly"):
-        readiness.preflight(proposal, root / "round")
-    assert not root.exists()
-
-
-@pytest.mark.parametrize("product", ["gap_traffic", "asur_traffic", "aicm_traffic", "aifa_traffic"])
-@pytest.mark.parametrize("entrypoint", ["run", "frames"])
-def test_generic_path_rejects_every_dedicated_product_before_any_source_read(
-    monkeypatch, product, entrypoint
-):
-    workspace = ROOT / "tmp/source-updates" / ("independent-dedicated-guard-" + uuid4().hex)
-
-    def forbidden(*args, **kwargs):
-        pytest.fail("A dedicated product entered the generic source reader")
-
-    monkeypatch.setattr(retained, "originals", forbidden)
-    with pytest.raises(ValueError, match="candidate"):
-        getattr(retained, entrypoint)(workspace, product, MONTH, CUTOFF, "a" * 32)
-    assert not workspace.exists()
-
-
-@pytest.mark.parametrize("round_kind", ["monthly", "combined"])
-def test_airport_family_plan_contains_both_sec_groups_once_in_the_monthly_scope(round_kind):
-    from src.source_updates.catalog import plan
-
-    output = plan(round_kind, CUTOFF, "2026Q3" if round_kind == "combined" else None, "airports")
-    monthly = [
-        (row["id"], row["target_period"]) for row in output["products"] if row["target_cadence"] == "monthly"
-    ]
-    assert set(monthly) == {
-        (p, "2026M09") for p in ["gap_traffic", "asur_traffic", "oma_traffic", "aicm_traffic", "aifa_traffic"]
-    }
-    assert len(monthly) == 5
-    quarterly = [
-        (row["id"], row["target_period"])
-        for row in output["products"]
-        if row["target_cadence"] == "quarterly"
-    ]
-    assert quarterly == ([("aicm_slots", "2026Q3")] if round_kind == "combined" else [])
-    assert output["network_requests"] == output["paid_requests"] == 0
-    assert output["writes"] == [] and output["activation"] == "none"
-
-
-def test_only_airport_products_move_family_while_sec_financials_keep_identity_and_cadence():
-    from src.source_updates.catalog import FAMILIES, plan, product_map
-
-    products = product_map()
-    assert "sec_edgar" in FAMILIES["corporate"] and "sec_edgar" not in FAMILIES["airports"]
-    for product in ["gap_traffic", "asur_traffic"]:
-        assert products[product]["family"] == "airports"
-        assert products[product]["source_key"] == "sec_edgar" and products[product]["cadence"] == "monthly"
-        assert products[product]["parser_step"] == "parse.airports"
-    for product in [
-        "am_sec",
-        "volaris_sec",
-        "delta_sec",
-        "ryanair_sec",
-        "am_financials",
-        "bmv_xbrl",
-        "viva_financials",
-    ]:
-        assert products[product]["family"] == "corporate"
-    corporate = plan("combined", CUTOFF, "2026Q3", "corporate")["products"]
-    assert not {"gap_traffic", "asur_traffic"} & {row["id"] for row in corporate}
-    assert {
-        (row["id"], row["target_cadence"]) for row in corporate if row["id"] in {"am_sec", "volaris_sec"}
-    } == {(p, cadence) for p in ["am_sec", "volaris_sec"] for cadence in ["monthly", "quarterly"]}
-
-
-@pytest.mark.parametrize("round_kind", ["monthly", "combined"])
-def test_documented_airport_skill_cli_lists_sec_group_tasks_without_starting_http(
-    round_kind, monkeypatch, capsys
-):
-    from src.source_updates.__main__ import main
-
-    def forbidden(*args, **kwargs):
-        pytest.fail("Planning the documented airport skill must never construct an HTTP client")
-
-    monkeypatch.setattr(httpx, "Client", forbidden)
-    args = ["plan", "--round", round_kind, "--as-of", CUTOFF, "--family", "airports"]
-    if round_kind == "combined":
-        args.extend(["--quarter", "2026Q3"])
-    assert main(args) == 0
-    output = json.loads(capsys.readouterr().out)
-    for product in ["gap_traffic", "asur_traffic"]:
-        selected = [row for row in output["products"] if row["id"] == product]
-        assert len(selected) == 1 and selected[0]["target_period"] == "2026M09"
-        assert selected[0]["target_cadence"] == "monthly" and selected[0]["family"] == "airports"

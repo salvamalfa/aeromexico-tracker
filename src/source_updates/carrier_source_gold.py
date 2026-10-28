@@ -82,10 +82,14 @@ def frames(workspace, product, period, native, details):
             verify_files=True,
         ),
     )
-    expected_artifacts = 4 if product == "volaris_sec" else 2
+    reconstructed = product == "volaris_sec" and set(native.source_system) == {
+        "volaris_visible_reconstruction"
+    }
+    expected_artifacts = (1 if reconstructed else 4) if product == "volaris_sec" else 2
     if len(artifacts) != expected_artifacts:
         raise ValueError("Carrier source dossier physical artifact inventory differs")
     by_file = artifacts.set_index("source_file").artifact_id.to_dict()
+    provenance_prefix = (details["provenance_warning"] + " ") if details.get("provenance_warning") else ""
     hashes = artifacts.set_index("source_file").artifact_sha256.to_dict()
     if any(hashes.get(r.source_file) != r.source_hash for r in native.itertuples(index=False)):
         raise ValueError("Carrier native source does not match its physical artifact")
@@ -97,7 +101,8 @@ def frames(workspace, product, period, native, details):
                 table_name=NATIVE[product],
                 lineage_type="direct_artifact",
                 artifact_ids=(by_file[r.source_file],),
-                lineage_note="Exact retained source cell/token. Source dates, literal entity, reported "
+                lineage_note=provenance_prefix
+                + "Exact retained source cell/token. Source dates, literal entity, reported "
                 "units and unknown/dash status preserved. No new capture or approval.",
             )
         )
@@ -119,7 +124,14 @@ def frames(workspace, product, period, native, details):
                 lineage_type="derived",
                 artifact_ids=ids,
                 parent_record_ids=tuple(parents),
-                lineage_note="Exact native parent(s), explicit scale only; AFAC PDF month values "
+                lineage_note=(
+                    provenance_prefix + "Exact native parent(s), explicit scale only; "
+                    "observed SEC metadata and verified reconstructed ZIP/member identity, "
+                    "not original SEC bytes. "
+                    "No quarter from YTD or publication approval."
+                )
+                if reconstructed
+                else "Exact native parent(s), explicit scale only; AFAC PDF month values "
                 "have matching database support when present. SEC index/submissions/6-K "
                 "support filing identity. No quarter from YTD, booked/transported or "
                 "operator/group substitution. No publication approval.",

@@ -50,8 +50,8 @@ def fingerprints() -> dict:
 
 def period_check(product, period):
     if product == "volaris_sec":
-        if period != "2026Q2":
-            raise ValueError("Volaris 2026Q2 report only; monthly SEC evidence is not certified")
+        if period not in {"2026Q2", "2026Q3"}:
+            raise ValueError("Volaris 2026Q2 original or authorized 2026Q3 reconstruction only; not monthly")
     elif product == "afac_carriers":
         from src.source_updates.afac_carrier_source import month
 

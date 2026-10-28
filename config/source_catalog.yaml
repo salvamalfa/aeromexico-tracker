@@ -35,7 +35,7 @@ sources:
     artifact_expected: true
     is_active: true
   sec_edgar:
-    source_systems: [sec, sec_edgar, sec_filing]
+    source_systems: [sec, sec_edgar, sec_filing, asur_visible_reconstruction, volaris_visible_reconstruction]
     display_name: SEC / EDGAR
     institution: U.S. Securities and Exchange Commission
     business_description: Estados financieros, reportes trimestrales y métricas operativas publicadas por Aeroméxico y sus comparables.
@@ -45,7 +45,23 @@ sources:
     official_page_url: https://www.sec.gov/edgar/browse/?CIK=1561861&owner=exclude
     allowed_hosts: [sec.gov]
     artifact_link_policy: direct
-    limitations: Los 6-K de Aeroméxico no siempre incluyen XBRL financiero; parte de la información se extrae de anexos.
+    limitations: Los 6-K de Aeroméxico no siempre incluyen XBRL financiero; parte de la información se extrae de anexos. Los alias asur_visible_reconstruction y volaris_visible_reconstruction identifican exclusivamente las copias editables autorizadas de ASUR septiembre 2026 y Volaris 3T26; esta institución es la referencia pública ascendente, no el creador del derivado. No son originales SEC, capturas HTTP ni hashes del original y no se admiten en la colección SEC genérica.
+    source_kind: public
+    artifact_expected: true
+    is_active: true
+
+  volaris_ir:
+    source_systems: [volaris_ir]
+    display_name: Volaris — tráfico mensual del emisor
+    institution: Controladora Vuela Compañía de Aviación, S.A.B. de C.V.
+    business_description: Reporte oficial mensual de tráfico, separado de estados financieros SEC.
+    coverage: Solo el PDF de septiembre 2026 expresamente autorizado y su índice oficial.
+    update_frequency: Selección mensual explícita; sin ejecución automática.
+    access_method: Página oficial y documento CDN exacto, con control adicional por producto.
+    official_page_url: https://ir.volaris.com/es/informacion-financiera/reportes-de-trafico/
+    allowed_hosts: [ir.volaris.com, filemanager-cdn.mziq.com]
+    artifact_link_policy: direct
+    limitations: collection.validate_product_url limita las dos URLs exactas autorizadas; allowed_hosts por sí solo permitiría subdominios y no acredita el periodo ni el contenido. Otros documentos requieren decisión explícita; no se activa ingesta ni publicación.
     source_kind: public
     artifact_expected: true
     is_active: true

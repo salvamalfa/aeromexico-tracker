@@ -72,6 +72,13 @@ def test_estimation_note_applies_to_documented_period_only():
 
 @pytest.mark.parametrize("period", ["2026M06", "2026Q3", "2026FY", "2025Q2"])
 def test_quarterly_volaris_does_not_satisfy_monthly_or_other_edition(period):
+    if period == "2026Q3":
+        # Only the separately authorized reconstructed ZIP accepts Q3, never a Q2 SEC dossier.
+        from src.source_updates.volaris_sec_source import read
+
+        with pytest.raises(ValueError, match="reconstruction ZIP"):
+            read({role: (b"unverified", {}) for role in ("html", "primary", "submissions", "index")}, period)
+        return
     with pytest.raises(ValueError):
         period_check("volaris_sec", period)
 

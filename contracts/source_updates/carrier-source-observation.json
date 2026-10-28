@@ -13,7 +13,7 @@
       },
       "edition": {
         "type": "string",
-        "pattern": "^2026(?:Q2|M(?:0[1-9]|1[0-2]))$"
+        "pattern": "^2026(?:Q[23]|M(?:0[1-9]|1[0-2]))$"
       },
       "entity_as_reported": {
         "type": "string",
@@ -45,7 +45,7 @@
       },
       "period_id": {
         "type": "string",
-        "pattern": "^20\\d{2}(?:Q2|H1|FY|YTD(?:0[1-9]|1[0-2])|M(?:0[1-9]|1[0-2])|-\\d{2}-\\d{2})$"
+        "pattern": "^20\\d{2}(?:Q[23]|H1|FY|YTD(?:0[1-9]|1[0-2])|M(?:0[1-9]|1[0-2])|-\\d{2}-\\d{2})$"
       },
       "period_start_date": {
         "type": [
@@ -153,7 +153,8 @@
       "source_system": {
         "enum": [
           "sec",
-          "afac"
+          "afac",
+          "volaris_visible_reconstruction"
         ]
       },
       "source_file": {
@@ -278,7 +279,7 @@
       },
       "edition": {
         "type": "string",
-        "pattern": "^2026(?:Q2|M(?:0[1-9]|1[0-2]))$"
+        "pattern": "^2026(?:Q[23]|M(?:0[1-9]|1[0-2]))$"
       },
       "entity_as_reported": {
         "type": "string",
@@ -310,7 +311,7 @@
       },
       "period_id": {
         "type": "string",
-        "pattern": "^20\\d{2}(?:Q2|H1|FY|YTD(?:0[1-9]|1[0-2])|M(?:0[1-9]|1[0-2])|-\\d{2}-\\d{2})$"
+        "pattern": "^20\\d{2}(?:Q[23]|H1|FY|YTD(?:0[1-9]|1[0-2])|M(?:0[1-9]|1[0-2])|-\\d{2}-\\d{2})$"
       },
       "period_start_date": {
         "type": [
@@ -415,7 +416,8 @@
       "source_system": {
         "enum": [
           "sec",
-          "afac"
+          "afac",
+          "volaris_visible_reconstruction"
         ]
       },
       "source_file": {

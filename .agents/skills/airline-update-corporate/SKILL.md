@@ -45,7 +45,8 @@ Consultar cada producto de esta familia:
 - `am_financials` — candidatos retenidos Q2 PDF y Q3 HTML IR revisado; otras ediciones requieren adaptación. Entrada canónica: `catalogue:aeromexico_ir`. Formato: HTML/PDF oficiales.
 - `am_traffic_ir` — adaptador mensual candidato dedicado. Entrada canónica: `url:https://ir.aeromexico.com/news-events/traffic-reports`. Formato: índice HTML → PDF inglés seleccionado o 6-K HTML oficial con atribución independiente revisada.
 - `am_sec` — selección/importación manual. Entrada canónica: `sec:AEROMEXICO`. Formato: JSON submissions/companyfacts → index.json → anexos HTML.
-- `volaris_sec` — selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
+- `volaris_sec` — financieros trimestrales con selección/importación manual. Entrada canónica: `sec:VOLARIS`. Formato: JSON → anexos HTML.
+- `volaris_traffic_ir` — tráfico mensual IR, solo el PDF septiembre 2026 expresamente autorizado y su página oficial; ambas URLs exactas limitadas por producto. No se etiqueta SEC ni habilita futuros documentos.
 - `delta_sec` — selección/importación manual. Entrada canónica: `sec:DELTA`. Formato: JSON → 10-Q/10-K/anexos.
 - `ryanair_sec` — adaptador retenido acotado de FY2026; otras ediciones con selección/importación manual. Entrada canónica: `sec:RYANAIR`. Formato: JSON → 20-F/6-K/anexos.
 - `gap_traffic` — selección/importación manual. Entrada canónica: `sec_group:GAP`. Formato: JSON SEC → anexo HTML.
@@ -264,6 +265,38 @@ la tolerancia a copias de cifras oficiales, integridad, ausencias o periodos.
 Fecha impresa y aceptación SEC no acreditan primera publicación o disponibilidad
 actual; esos campos siguen desconocidos. Ver evidencia en la guía canónica.
 
+### Volaris 3T26: reconstrucción editable específica autorizada
+
+El procedimiento SEC original de `recipe --product volaris_sec` conserva su
+alcance Q2 y sus cuatro originales; no se generaliza a Q3. Para Q3 usar el
+modo separado `volaris_q3_inputs`, solo con el ZIP Library verificado de esta
+edición. No reconstruir otros periodos ni etiquetar este ZIP como HTML SEC.
+
+1. Materializar el ZIP mediante Library; comprobar identidad y SHA del handoff.
+   Ejecutar `python -m src.source_updates.volaris_q3_inputs --source <ZIP>
+   --workspace <import-nuevo> --dry-run`; después `--execute` si corresponde.
+   Se verifican cinco miembros, 20 tablas y 1.198 celdas representadas.
+2. Ejecutar `carrier_source_candidate retain --product volaris_sec
+   --source-root <import-nuevo>/data/bronze --workspace <candidato-nuevo>
+   --original reconstruction_zip=volaris/reconstructed/Volaris_3T2026_paquete_reconstruido.zip`.
+   Revisar primero la vista previa y después ejecutar. No mezclar este rol con
+   `html`, `primary`, `submissions` o `index` originales.
+3. Certificar con `--period 2026Q3`, corte con zona y retención reales, y
+   reproducir con `--check` sin cambiar corte ni recibo. Produce cuatro salidas:
+   446 nativas, 364 Gold, un artefacto contenedor y 1.174 vínculos. Las once
+   tablas proyectadas separan trimestre, nueve meses e instantes. La guía y
+   notas en miles quedan retenidas, fuera de la proyección. Guiones no son cero.
+4. Disponibilidad requiere `source_scope=volaris_Q3_visible_reconstruction_target_v1`,
+   workspace del import y su run_id, separados del candidato. La observación
+   real es la lectura independiente del 28/oct; importación no es captura HTTP.
+   No promoverla a otro día ni sustituir hashes originales nulos. Una ronda
+   con verificaciones de fechas distintas sigue el fallo temporal vigente.
+
+Preservar advertencia de reconstrucción en cada vínculo, fechas SEC/release
+separadas y límite de QA visual no completado. El 5 % no permite cambiar un
+token transcrito. El replay real no prueba disponibilidad nueva. Este modo
+no incorpora datos al dashboard ni aprueba tesis, publicación o calendario.
+
 ## Finanzas Viva retenidas: tablas y comparación entre ediciones
 
 Usar `python -m src.source_updates.viva_financial_candidate retain` con
@@ -297,3 +330,41 @@ un desajuste propio bloquea antes de escribir Silver/Gold. Cada cifra Gold
 tiene un padre nativo de la edición correcta y su artefacto físico verificado.
 La retención no prueba disponibilidad reciente, fecha inicial de publicación,
 aprobación de datos ni preparación completa del calendario.
+
+
+## Volaris mensual IR: documento expresamente autorizado
+
+`recipe --product volaris_traffic_ir --output selection` prepara las dos URLs
+exactas; `collect --dry-run` muestra dos GET y cero pagos. Cada destino se
+valida antes de llamar, también en redirecciones: otro PDF del mismo servidor
+o subdominio se rechaza. No ampliar hosts, documentos ni permisos al adaptar
+otra edición sin la decisión correspondiente.
+
+La colección real del 27/oct obtuvo página y PDF septiembre HTTP200. El HTML
+usa JavaScript y no contiene el enlace al PDF en sus bytes; no afirma
+publicación ausente, discovery automático o censo de revisiones. El vínculo
+comprueba el documento exacto aprobado del último mes cerrado en México,
+con captura física ese día, emisor, fecha y todas sus observaciones.
+
+Aplicar `python -m src.source_updates.retained retain --product volaris_traffic_ir
+--workspace <candidato> --source-root <coleccion>/data/bronze --original pdf=<ruta>`;
+primero vista previa, después `--execute`. `certify` añade `--period 2026M09
+--as-of <corte-con-zona> --retention <id>` y admite `--dry-run/--execute/--check`.
+Readiness usa `adapter=retained` y el vínculo físico `availability` del contrato
+común, con `catalog_item`/`artifact_item` exactos y colección separada.
+
+Conservar 48 cifras y 24 variaciones: septiembre y acumulado, 2026/2025,
+RPM/ASM en millones de millas, pasajeros reservados en miles y factor de
+ocupación porcentual. Las variaciones de ocupación son puntos porcentuales.
+No sumar mes/acumulado, llamar volados a reservados o mapear operadores AOC.
+Son cifras preliminares y no auditadas. Se reproducen las cuatro salidas y
+cada ID de linaje, sin modificar Gold del dashboard.
+
+Sumas, factor y variaciones comprueban primero precisión impresa. Fuera de
+ella, solo comparables del mismo documento/entidad/periodo/unidades/definición
+pueden continuar con diferencia ≤5% de la referencia oficial absoluta y
+advertencia visible, conservando ambas cifras. Cero/cercano a cero no admite
+porcentaje automático. Unidades, periodos, faltantes, identidad o integridad
+incorrectos bloquean. El original real pasa sin advertencias de5%; conserva
+cuatro diferencias de redondeo declaradas. Sin baseline mensual explícito,
+revisiones quedan no comparadas; Q2 financiero no es un baseline sustituto.

@@ -1,35 +1,92 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 27 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
+Revisión: 28 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
 contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
 Las ocho skills y el coordinador ejecutable preparan, capturan y comprueban
 candidatos separados. El calendario y la política ya están aprobados. La
-infraestructura PR156/161–169 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
+infraestructura PR156/161–172 está integrada. [PR169](https://github.com/salvamalfa/aeromexico-tracker/pull/169)
 se integró en `3cbb765a`; [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40528783248).
 
 El [PR170](https://github.com/salvamalfa/aeromexico-tracker/pull/170), head
-`aff81d0b`, tiene [CI aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40539298923):
-Python 20:23 y web 1:57. Su revisión Codex sigue pendiente; no se presenta como
-integrado. Fuente `4f38ecb9`: trece tareas reales, con las 62 salidas del PR169
-idénticas y siete nuevas de tráfico mensual AM. AFAC añade contrato/lector
-histórico, con disponibilidad actual HTTP403 aún bloqueada.
+`aff81d0b`, se integró en `4780b8da` el 28/oct a las 14:30 UTC tras la
+aprobación específica del dueño y comprobar nuevamente CI, comentarios e
+hilos. La revisión adversarial de otra sesión Codex fue favorable sobre ese
+head; el bot remoto antiguo sigue `running`, sin presentarlo como aprobado.
+[Dictamen auténtico](https://github.com/salvamalfa/aeromexico-tracker/pull/170#issuecomment-6470299236).
+[CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40706667984)
+aprobada para el merge exacto: test y web. Fuente `4f38ecb9`: trece tareas reales, 69 salidas;
+AFAC añade contrato/lector histórico, sin afirmar disponibilidad actual.
 
 La continuación local SRC `24366ace` corrige una entrada equivocada de AIFA:
 la receta consultaba Normateca, pero el verificador exige Informes. El índice
 correcto actual anuncia septiembre y su libro oficial pasó toda la cadena.
 El ensayo conjunto ahora verifica **catorce tareas, 76 salidas: las 69 anteriores
-idénticas y siete nuevas AIFA**. Este segundo cierre también espera su entrega
-y revisión; no implica publicación de candidatos.
+idénticas y siete nuevas AIFA**. [PR171](https://github.com/salvamalfa/aeromexico-tracker/pull/171),
+head `3ab5af7e`, integrado en `0a99dab0` tras la aprobación específica del
+dueño. La CI `40706675152` había declarado
+master `4780b8da`, pero checkoutó el merge antiguo `af2f28b` contra `aff81d0`:
+el gate ordinario rechazó el runtime, con 5.327 aprobadas y tres errores.
+Se reconcilió únicamente historia: padres `43ae2b95`/`4780b8da`, árbol completo
+idéntico al revisado. Otra sesión Codex validó 15 propiedades; se conservan las
+29 pruebas, 19 comprobaciones positivas, ocho rechazos y replay AIFA reales,
+sin atribuir una repetición nueva. [Dictamen/adenda](https://github.com/salvamalfa/aeromexico-tracker/pull/171#issuecomment-6472816508).
+[CI nueva](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40713725543)
+aprobada; su merge de prueba `88214473` tiene los padres correctos. Sin
+modificar tests, gates, pins, permisos ni archivo alguno del head revisado.
 
-Quedan **nueve tareas obligatorias y dos controles bursátiles** sin verificar.
+OMA septiembre añade un cierre local real desde su newsroom oficial, sin
+ampliar hosts: **quince tareas y 80 salidas; las 76 anteriores idénticas y
+cuatro nuevas OMA** en el diagnóstico del código `472a0528`. El apéndice
+separa su extracción, revisión y continuidad técnica de los gates remotos.
+
+El cierre local Volaris `dcee6c8f` añade otro original real: **dieciséis tareas
+y 84 salidas; las 80 anteriores idénticas y cuatro nuevas Volaris IR** en el
+diagnóstico conjunto. La aprobación del documento se recibió después del
+cierre OMA; reemplaza el estado de autorización pendiente de aquel corte.
+
+GAP septiembre añade un cierre manual real: **diecisiete tareas y 93 salidas**,
+con las 84 anteriores idénticas y nueve nuevas. El código `05a0e75b` y su
+continuidad técnica local pasaron las comprobaciones.
+
+ASUR septiembre cierra otra tarea mediante la **reconstrucción editable
+expresamente autorizada**, diferenciada del original SEC. El recibo conjunto
+del corte local 27/oct verifica **dieciocho tareas y 102 salidas: las 93 anteriores
+idénticas y nueve nuevas ASUR**. Ese snapshot mantenía cinco tareas y dos
+controles bursátiles. El control local de catálogo materializado ya pasó tras
+actualizar únicamente sus metadatos técnicos de 29 a 30 fuentes.
 La [matriz operativa](#cierre-operativo-de-la-ronda) conserva los once pendientes
-del snapshot PR169: AM mensual y AIFA están cerradas localmente con originales
-reales. Se distingue código, material y decisiones. Aerocivil/GDELT siguen
+del snapshot PR169: AM mensual, AIFA, OMA, Volaris mensual y GAP cerraron con
+originales reales; ASUR con su representación reconstruida autorizada y
+verificada; Volaris financiero Q3 añade otra reconstrucción autorizada.
+Se distingue código, material y decisiones. Aerocivil/GDELT siguen
 requeridos; las tres advertencias macro no son calendarios exhaustivos
 certificados. No se declara lista la ronda ni se activan datos o disparadores.
+
+Volaris financiero 3T26 también queda **certificado localmente mediante la
+reconstrucción autorizada**: 446 observaciones, 364 Gold y cuatro salidas.
+Las 102 salidas anteriores se regeneraron o reprodujeron sin diferencias;
+son **106 salidas técnicamente compatibles de 19 candidatos**. No es una
+ronda actual de 19 éxitos. La revalidación física del 28/oct dejó **16 tareas
+actuales aprobadas**: 14 candidatos nuevos desde las selecciones ya admitidas,
+AIFA capturado hoy y Volaris Q3 observado hoy. Las tres restantes conservan
+su prueba histórica: AM mensual tiene un bucle301 en el índice oficial; GAP y
+ASUR solo acreditan observación27/oct. El replay no cambia esas fechas.
+Además faltan cuatro productos —AFAC aeroportuario actual, GDELT, Aerocivil
+y Viva financiero Q3— y dos controles bursátiles. La suite completa local terminó: 5.474 pruebas y 29 subpruebas aprobadas,
+cero fallos/errores y cuatro omisiones explícitas. No se activa el calendario ni se declaran datos publicados.
+
+El cambio de política pedido el 28/oct está integrado en
+[PR172](https://github.com/salvamalfa/aeromexico-tracker/pull/172), `b0f31cea`:
+solo revisión independiente adversarial Codex, sin obligación Claude. CI
+`40695705610` y revisión automática del mismo head aprobaron. Merge `ba553a54`;
+la unión sobre AIFA solo cambia los dos documentos revisados, sin conflicto.
+[CI posterior AIFA](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40742445009)
+y [CI posterior de la política](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40742533938)
+quedan en seguimiento. No se presentan las CI previas como ejecución sobre el
+nuevo master. No modifica checks, protecciones ni la autoridad de publicación.
 
 El calendario puede usar el **día oficial** sin inventar una hora. El ensayo
 propone 17/nov y 15/dic de 2026; 3T26 espera el reporte de Viva. Detectar y
@@ -151,36 +208,45 @@ siempre visible con su fecha y alcance. La aceptación de una ronda sigue bloque
 La clasificación exacta está en el
 [apéndice técnico](#política-mínima-aprobada).
 
-**Decisión preparada, todavía no aplicada:** recomiendo conservar Volaris SEC
-para estados financieros y añadir el PDF mensual oficial del emisor como
-fuente atribuida de tráfico. El original de septiembre está identificado en el
-expediente de Monthly, pero el contrato operativo actual es exclusivamente
-SEC; no autoriza llamar SEC a ese PDF ni descargarlo desde otro host. La
-decisión sería admitir específicamente `filemanager-cdn.mziq.com` para el
-tráfico oficial enlazado por Volaris, conservando métricas, validación y estado
-obligatorio. No activa datos ni sustituye el reporte financiero. Recomiendo
-también solicitar al publicador de Aerocivil la leyenda y atribución del conjunto
-exacto `jh8x-n6h6`; requiere autorización para ese contacto. No se ha enviado
-ningún mensaje ni se han cambiado esos contratos. GDELT mantiene su fallo
-conservado; no recomiendo reemplazarlo silenciosamente o hacerlo opcional.
+**Autorización aplicada localmente el 27 de octubre:** el dueño autorizó el
+PDF oficial de tráfico Volaris septiembre, alojado en `filemanager-cdn.mziq.com`.
+Se conservan `volaris_sec` para financieros y `sec.gov`; el tráfico mensual
+usa identidad `volaris_traffic_ir`/alias `volaris_ir`. Sigue siendo obligatorio:
+se separa la procedencia, no se reduce el núcleo ni se sustituye el trimestre.
 
-El permiso Volaris sería **solo de la aplicación**: registrar el host exacto
-`filemanager-cdn.mziq.com` en `config/source_catalog.yaml` para tráfico IR y
-su lector, conservando SEC con `sec.gov`. El descargador valida hosts en
-`collection.validate_url`; no se propone cambiar firewall, salida de red,
-permisos cloud, credenciales, protecciones o servicios. El contrato específico
-acotaría el hostname al PDF oficial comprobado. No se ha aplicado la admisión.
+El contrato admite exactamente la [página oficial](https://ir.volaris.com/es/informacion-financiera/reportes-de-trafico/)
+y el [PDF autorizado](https://filemanager-cdn.mziq.com/published/ea52c1bb-e8e2-457e-820a-98ca17753a37/d13b9b6b-4e2e-471f-a6db-60f23a9f2262).
+Ambos respondieron HTTP200 en la captura real de este runner. La validación
+por producto se aplica antes de cada petición y redirección, a la respuesta,
+al descubrimiento y a originales retenidos. Rechaza otros documentos del mismo
+host, subdominios y variantes URL. Registrar `allowed_hosts` por sí solo no
+impone ese límite. No cambia firewall, permisos, secretos, servicios ni activa
+ingestas. Otro documento futuro requiere una decisión explícita.
 
-Para Aerocivil, destinatario propuesto: **Atención al Ciudadano de la Aeronáutica
+El HTML oficial es una página dinámica sin vínculo al PDF visible en los
+bytes capturados. No se afirma descubrimiento automático del documento ni
+ausencia de reportes: se valida directamente el documento exacto autorizado,
+con emisor, periodo, fecha, unidades y captura actuales. El cierre técnico
+completo está en el apéndice, separado de integración y publicación.
+
+La consulta Aerocivil fue autorizada y enviada desde el hilo principal el
+27/oct a Atención al Ciudadano: Gmail confirmó `SENT`, sin adjuntos ni copia.
+Espera respuesta; el envío no acredita todavía la leyenda ni la atribución.
+No repetir el correo. GDELT mantiene su fallo conservado; no se reemplaza
+silenciosamente ni se convierte en opcional.
+
+Para Aerocivil, destinatario institucional de la consulta: **Atención al Ciudadano de la Aeronáutica
 Civil de Colombia**, `atencionalciudadano@aerocivil.gov.co`, por correo
 institucional y solicitando traslado al responsable de estadísticas/datos
 abiertos. La dirección figura en el índice de búsqueda del
 [contacto oficial](https://www.aerocivil.gov.co/publicaciones/2783/contactenos/)
 y de la [portada oficial](https://www.aerocivil.gov.co/), consultados el 27/oct.
-La lectura directa de contacto devolvió HTTP403: no se afirma entrega probada,
-acceso al formulario ni una dirección personal especializada verificada.
+La lectura directa de contacto devolvió HTTP403; el envío de correo `SENT`
+fue confirmado después por el hilo principal. No acredita recepción, respuesta,
+acceso al formulario ni una dirección personal especializada.
 
-Borrador de consulta, **no enviado**:
+Preguntas pendientes de aclaración. El siguiente es el borrador preparado,
+no una copia verificada del texto exacto del correo enviado:
 
 > Asunto: Diccionario y atribución del conjunto de operaciones `jh8x-n6h6`.
 >
@@ -3499,11 +3565,173 @@ Lifecycle: seis archivos de configuración, prueba y documentación clasificados
 sin retiros. Los originales, recibos y logs ignorados se conservan para
 reproducción; no se publican fuentes privadas ni se eliminan intentos fallidos.
 
+### OMA: reporte oficial objetivo recuperado y vinculado
+
+La alternativa del [newsroom oficial](https://news.oma.aero/news/oma-reports-a-4-8-decrease-in-september-2026-passenger-traffic-314d3-f8d04.html)
+enlaza literalmente el [PDF septiembre](https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1).
+La colección real `66607d72…` capturó ambos con HTTP200 el 27/oct; hashes
+`4e8169c9…` y `929ecd3c…`. No se reintentó el PDF IR404 ni la entrada española202.
+El nuevo vínculo usa los hosts existentes y limita efectivamente el hostname
+exacto `news.oma.aero`, la ruta y el enlace seleccionado. No añade permisos.
+
+El artículo declara 7/oct y septiembre; el PDF completo conserva 13 aeropuertos,
+total de grupo, tres mercados y mes/acumulado separados: **168 observaciones,
+80 conciliaciones y cuatro salidas**. El verificador reproduce también los
+identificadores de linaje, con todas las columnas exactas. Una prueba real
+inicial rechazó correctamente el esquema porque faltaba reproducir esos IDs;
+la corrección `472a0528` aplica el mismo generador y clave que el certificador.
+No se quitó la comparación. El intento fallido se conserva.
+
+`source_scope=oma_official_newsroom_v1` acredita disponibilidad del reporte del
+último mes cerrado en México observado en ese newsroom. Exige captura el día
+de la ronda, vínculo literal al PDF y coherencia artículo/documento. No afirma
+un censo de revisiones en todos los sitios, ni primera publicación/hora/rezago.
+Dos botones al mismo PDF se deduplican; dos documentos distintos bloquean.
+La ruta anterior de índice IR permanece disponible por separado.
+
+La CLI `recipe --product oma_traffic --output selection --source-url <artículo>`
+prepara el índice; con `--catalog-file <HTML> --period 2026M09` prepara la pareja.
+`collect --dry-run` mostró dos solicitudes y cero pagadas, sin crear candidato.
+La prueba real se informa aparte. Revisión independiente exacta `472a0528`,
+SHA `e7661768…`: 168 cifras Poppler idénticas, once ataques rechazados incluido
+cambio de ID, y sin hallazgos. Pruebas afectadas **150 aprobadas en 22,58 s**
+(cuatro avisos pandas existentes); coordinador **203 en 3,86 s**, sin omitidas.
+
+El diagnóstico `prepolicy-actual15-472a0528-v2.json`, SHA `c5b54b8d…`, verificó
+las quince tareas de producto/periodo y 80 archivos: 76 idénticos al corte anterior y cuatro OMA.
+Once candidatos dependientes se recertificaron desde originales retenidos;
+los cuatro productores sin cambios pasaron replay normal. Sin nuevas peticiones.
+La v1 conservada omitía la anotación del vínculo documental AM al llamar las
+funciones de diagnóstico; v2 verificó el original y la añadió por el mismo
+procedimiento de `execute`. No se cambió el verificador ni se inventó una hora.
+Es diagnóstico offline, no recibo global aceptado ni aprobación de publicación.
+
+Continuidad técnica local: revisión auténtica `47023191…`, fuente `472a0528`
+y runtime `c150a12c…`, con 188/177/811/803 archivos y 53 salidas originales
+conservados. Las 79 pruebas financieras pasaron en 4,14 s sobre `6d5b6dfa`;
+sus archivos de código/prueba financieros se comprobaron idénticos hasta
+`472a0528`. No se atribuye esa ejecución a otro head. La policy `56ee5d85`
+solo vincula productor/runtime/dictamen; consentimiento y autoridad original
+permanecen exactos. Una CLI real en ese head terminó en **81,655 s**, válida,
+sin problemas, stderr vacío y `publication_authorized=false`. Evidencia
+`oma-final-isolated-continuity-56ee5d85-evidence.json`, SHA `4b877d86…`.
+El gate ordinario rechazó correctamente el runtime distinto. La revisión
+intermedia `1ac030b0…` no se aplicó y conserva su hold; no sustituye la final.
+
+Después de esa CLI se escribió y comprobó el recibo global con fingerprints
+reales de la policy final: `combined-global-472a0528-final-result.json`,
+SHA `41cc59db…`. Compatibilidad `ef33efba…`: **15 tareas y 80 salidas, 76
+anteriores idénticas y cuatro OMA**. Persisten ocho tareas, dos controles
+bursátiles, tres advertencias macro y reportes centrales Viva/Volaris aún
+sin dossier físico validado para la ronda. El estado global es
+`blocked_global_policy`, fecha trimestral nula y calendario sin activar.
+Los avisos documentales previos permanecen separados. La recuperación breve
+del entorno no duplicó CLI ni escritura del recibo; se confirmaron los
+archivos y el resultado completo antes de continuar.
+
+Lifecycle: ocho archivos del diff contra `43ae2b95`, clasificados en el
+resumen de entrega; originales, sidecars, recibos, pruebas y revisiones
+ignoradas conservados para reproducir. No se retiran fuentes ni intentos
+fallidos. Esta entrega queda local hasta resolver normalmente la revisión
+PR170, la base protegida PR171 y CI/revisión de su propio head remoto.
+
+### Volaris mensual: admisión autorizada y cadena real completa
+
+El dueño autorizó el 27/oct a las 17:58 UTC admitir el documento exacto.
+`volaris_ir` es su fuente IR y `volaris_traffic_ir` su producto mensual;
+`volaris_sec` conserva financieros trimestrales/importación manual. La política
+mensual cambia solo esa identidad de procedencia y conserva todas sus métricas
+obligatorias. No equipara reportes mensuales a financieros ni elimina tareas.
+El inventario de 42 productos del 19/oct sigue siendo histórico; el registro
+operativo actual tiene 43 productos, por esta separación explícita.
+
+La colección del runner obtuvo **dos HTTP200** a las 18:07 UTC: página oficial
+83.333 bytes, SHA `b96d5de2…`, y PDF exacto 191.086 bytes, SHA `a6c88c05…`.
+No cambió red/permisos ni usó credenciales. `validate_product_url` valida
+las dos URLs exactas en planificación, antes de cada redirección, en respuestas
+y enlaces; la retención también limita el alias nuevo. Pruebas independientes
+rechazan otros UUID, documentos, subdominios y queries sin solicitar esos
+nuevos destinos. `allowed_hosts` por sí solo no demuestra ese aislamiento.
+
+El HTML tiene el identificador público del emisor, pero es una página dinámica
+sin href del PDF en sus bytes. Los indicadores
+`dynamic_index_link_to_document_verified`, `automatic_new_document_discovery`
+y `all_sites_latest_revision_census` quedan falsos. Se acredita disponibilidad
+del **documento concreto autorizado**, con captura en el día local de la ronda,
+último mes cerrado, entidad, contenido y procedencia verificados. No se afirma
+que el índice no tenga archivos, un censo de revisiones o permiso para futuros
+PDF. El reporte declara 6/oct; primera publicación/hora/rezago siguen nulos.
+
+El certificador conserva **48 cifras y 24 variaciones**: cuatro métricas,
+tres segmentos y cuatro periodos (mes y acumulado, 2026/2025). Millones de
+millas RPM/ASM, miles de pasajeros **reservados en segmentos** y ocupación
+porcentual. La variación de ocupación usa puntos porcentuales. No deriva
+pasajeros volados de la frase narrativa ni sustituye 84,4% por el título 84%.
+Preserva condición preliminar y no auditada. Produce cuatro tablas aisladas
+con 48 IDs y su linaje físico; sin baseline mensual, no afirma revisiones
+comparadas ni usa Q2 financiero como sustituto.
+
+Las 48 conciliaciones cubren sumas, ocupación y las 24 variaciones. La revisión
+halló inicialmente que variaciones 99,9 podían pasar; la corrección las
+concilia y rechaza. Primero usa la precisión impresa; solo una diferencia
+comparable ≤5% de la referencia oficial absoluta puede continuar con valores,
+fuente, diferencias y advertencia visibles. Cero/cercano a cero no recibe un
+porcentaje automático. Unidades/periodos/identidad/integridad incorrectos
+bloquean. **El documento real pasa sin advertencias del 5%**: conserva cuatro
+deltas de redondeo: tres de una unidad nativa en las tablas de millones
+RPM/ASM y uno en la tabla de pasajeros en miles. No modifica cifras oficiales.
+
+El replay del candidato y de readiness verificó las cuatro salidas y todas
+las observaciones e identificadores. Revisión independiente exacta `dcee6c8f`,
+SHA `2a08daf3…`: Poppler confirmó 48 cifras y 24 variaciones, 17 alteraciones
+rechazadas y ocho casos de límites/signos/ceros aprobados. La admisión tiene
+pruebas independientes de redirecciones/respuestas y enlaces; son simuladas,
+separadas de los dos HTTP200 reales. Las **303 pruebas afectadas pasaron en
+25,93 s**, sin omitidas. La fuente del código y su runtime `6c082296…` quedan
+congelados para revisión; no se reutilizan resultados de otro head como nuevos.
+
+El diagnóstico `prepolicy-actual16-dcee6c8f.json`, SHA `9da8c1c6…`, comprobó
+16 tareas y 84 archivos físicos: **80 anteriores idénticos y cuatro Volaris**.
+Catorce candidatos dependientes se recertificaron realmente desde sus fuentes
+retenidas; AM mensual pasó el replay normal de su productor sin cambios.
+Se verificó también el vínculo documental AM por el procedimiento existente.
+Quedan siete tareas, dos controles bursátiles y tres advertencias macro;
+Viva y Volaris financieros Q3 aún carecen de dossier físico validado para la
+ronda. La fecha trimestral sigue nula y no se programa ninguna ejecución.
+Este diagnóstico se distingue del recibo global definitivo posterior al
+procedimiento de continuidad técnica local.
+
+Continuidad financiera independiente: 79 pruebas reales aprobadas en 4,76 s,
+sin fallos, errores ni omisiones; conservación exacta de 188/177/811/803 archivos
+y 53 salidas históricas. Revisión técnica auténtica `56e44019…`, atestación
+`independent-financial-volaris-delta-attestation-dcee6c8f.json`, SHA `660a4229…`.
+La policy `45b2c13f` cambia solo productor/runtime/dictamen; fuentes, autoridad
+y consentimiento originales permanecen exactos. La CLI real única en ese head
+pasó en **79,265 s**, `valid=true`, cero problemas, stderr vacío y
+`publication_authorized=false`. Evidencia
+`volaris-final-isolated-continuity-45b2c13f-evidence.json`, SHA `4791a392…`.
+El gate financiero ordinario conserva su rechazo al runtime nuevo; el
+procedimiento local no es una aprobación editorial ni una vía de publicación.
+
+Después de esa CLI y del binding final se escribió y comprobó el recibo
+`combined-global-dcee6c8f-final-result.json`, SHA `7925119e…`.
+Compatibilidad `dae32a55…`: **16 tareas/84 salidas, 80 anteriores idénticas y
+cuatro Volaris IR nuevas**. Estado `blocked_global_policy`: siete requeridas,
+dos controles de sesiones y tres advertencias macro. No cambia fechas,
+calendario, ingesta, noticias o tesis ni declara lista una ronda incompleta.
+Lifecycle: 17 archivos del diff contra el cierre OMA `565d01f0`, con originales,
+sidecars, recibos, pruebas y revisiones ignorados conservados. Entrega local;
+la integración sigue en orden PR170→PR171→OMA→Volaris, con CI/revisión propias
+y base protegida. No se relanza CI de PR171 mientras su base siga inválida.
+
 ### Cierre operativo de la ronda
 
 Este es el desglose de las **once tareas obligatorias pendientes del snapshot
-PR169**. Dos ya se cerraron con originales reales: AM mensual y AIFA. Las otras nueve
-siguen abiertas. «Implementación» significa trabajo técnico por completar; «evidencia»
+PR169**. Cinco cerraron con originales reales: AM mensual, AIFA, OMA,
+Volaris mensual y GAP. ASUR cerró con una reconstrucción expresamente
+autorizada, sin presentarla como original SEC. Volaris financiero Q3 también
+cerró mediante una reconstrucción específica autorizada; las otras cuatro siguen abiertas.
+«Implementación» significa trabajo técnico por completar; «evidencia»
 significa originales oficiales o acceso aún no acreditados. Pueden coexistir.
 No son once servicios caídos ni once parsers ausentes.
 
@@ -3511,26 +3739,277 @@ No son once servicios caídos ni once parsers ausentes.
 |---|---|---|
 | Mensual AFAC aeropuertos | Lector julio y contrato de selección/vínculo físico implementados; replay real 2.730 filas | **Evidencia/acceso:** índice actual HTTP403; comprobar edición oficial vigente con índice y libro. No exige septiembre si existe rezago oficial. Sin decisión genérica pendiente |
 | Mensual AIFA | **Cerrada localmente:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; entrega/CI propia pendientes |
-| Mensual AM tráfico | **Cerrada:** índice y 6-K IR capturados juntos el 27/oct; 24 filas mensuales/comparativas y siete salidas reproducidas | No queda implementación para esta edición comprobada. No acredita otros meses ni publicación |
-| Mensual ASUR | Lector julio existente | **Implementación y material:** retener dossier oficial septiembre con índices/documentos y adaptar/comprobar esa edición. No hay fallo de servicio probado |
-| Mensual GAP | Vínculo histórico julio comprobado al snapshot de agosto | **Implementación y material:** dossier septiembre, descubrimiento/vínculo y revisión de edición. Julio no demuestra actualidad de octubre |
+| Mensual AM tráfico | **Cadena de septiembre comprobada:** 24 cifras y siete salidas; índice/6-K observados27/oct | El28/oct el6-K respondió200, pero el índice cayó en bucle301. Falta actualidad del índice; no se sustituye por otro catálogo ni se cambia el corte histórico |
+| Mensual ASUR | **Cerrada localmente con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. Para declarar actualidad falta observación oficial vigente; rematerializar Library no la crea. Falta integración/CI del lote, no conseguir otro original para el modo ya autorizado |
+| Mensual GAP | **Cerrada localmente:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. Para el corte28/oct falta observación oficial vigente. Falta integración/CI del lote, no el original ni el lector |
 | Mensual GDELT | Adaptador existente; último intento acotado HTTP503, sin septiembre válido | **Disponibilidad externa:** respuesta válida del periodo. Sin nuevas consultas en esta pasada; RSS no lo sustituye. Cambiar proveedor o requisito sería otra decisión, no se ha aplicado |
-| Mensual OMA | Lector y contrato existentes; PDF septiembre HTTP404 e índice alternativo HTTP202 | **Evidencia/acceso:** enlace y documento oficial legibles. No eludir el challenge ni afirmar inexistencia de publicación |
-| Mensual Volaris | PDF identificado; adaptador mensual aún pendiente | **Decisión:** admitir solo `filemanager-cdn.mziq.com`. Después **implementación/prueba real** del lector mensual. No reetiquetar como SEC ni ampliar hosts implícitamente |
-| Trimestral Aerocivil | Comprobación numérica, sin leyenda/atribución acreditadas del conjunto exacto | **Evidencia oficial y decisión:** permiso de contacto al publicador de `jh8x-n6h6` para `TIPO_VUELO`, `TRAFICO` y operador. No inferir otra leyenda ni declarar opcional |
+| Mensual OMA | **Cerrada localmente:** artículo y PDF oficiales septiembre HTTP200, 168 observaciones y cuatro salidas reproducidas | Vínculo newsroom `472a0528` revisado; entrega/CI propias pendientes. Se conservan los fallos IR404/es202 sin repetirlos. Disponibilidad del reporte objetivo, no censo de revisiones |
+| Mensual Volaris | **Cerrada localmente:** admisión autorizada y exacta, dos GET200, 48 cifras/24 variaciones, cuatro salidas y replay actuales comprobados | Global y continuidad comprobados; falta entrega/CI remota. Emisor IR separado de SEC financiero; sin descubrimiento dinámico desde el HTML. No falta otra autorización de ese documento ni el lector |
+| Trimestral Aerocivil | Comprobación numérica, sin leyenda/atribución acreditadas del conjunto exacto | **Evidencia oficial:** consulta autorizada y enviada desde el hilo principal; esperando respuesta sobre `jh8x-n6h6`, `TIPO_VUELO`, `TRAFICO` y operador. No repetir envío, inferir leyenda ni declarar opcional |
 | Trimestral Viva | Certificador completo Q2; Q3 no verificado | **Material y adaptación:** reporte financiero oficial Q3 y cadena de esa edición. No inventar fecha; tráfico o ZIP XBRL no equivalen al release |
-| Trimestral Volaris | Reporte Q3 primario existe y ya fue avisado; certificador retenido solo Q2 | **Implementación y material:** retener dossier Q3 admitido, adaptar y probar. No falta detectar el reporte; CASM Q2 no es el bloqueo Q3. No requiere otra autorización genérica para programar |
+| Trimestral Volaris | **Cerrada localmente en modo reconstruido autorizado:** ZIP Library verificado, 446 nativas/364 Gold, 187 conciliaciones, linaje y replay reales; disponibilidad del documento objetivo verificada 28/oct | Falta integración/CI del lote y ronda con verificaciones temporales coherentes. No faltan el derivado ni el lector. Mantiene cuatro guiones desconocidos y excluye guía/notas en miles de la proyección; no es HTML original SEC ni tesis aprobada |
+
+**Volaris financiero 3T26: cadena real del derivado autorizado.**
+El ZIP materializado conserva su identidad Library, 39.039 bytes y SHA-256
+`b94aa81a…`. Se verifican los cinco miembros exactos: JSON, HTML editable,
+manifiesto, verificación independiente y notas de entrega. Son derivados:
+ninguna cifra, tamaño SEC observado o fecha se usa como hash/captura del original.
+El alias `volaris_visible_reconstruction` está separado de `sec`; la colección
+SEC genérica conserva sus alias originales. Las cuatro URLs son referencias
+al filing `0001292814-26-005010`, no cuatro documentos originales descargados.
+
+Se cotejaron **20 tablas/309 filas representadas/1.198 celdas HTML–JSON**,
+668 valores normalizados y siete guiones del paquete. La segunda lectura del
+DOM original retenida por el hilo principal cubrió 345 filas/1.314 celdas:
+la diferencia incluye pies y filas no representados; no se afirma reconstruir
+el filing completo. Narrativa y pies son resúmenes propios. QA visual no fue
+completado; no se presenta el HTML como renderizado verificado.
+
+El lector proyecta once tablas revisadas: **446 nativas y 364 Gold**, con
+trimestre julio–septiembre, acumulado enero–septiembre e instantes de balance/flota
+separados. Mantiene USD millones, pasajeros reservados miles, millas y escalas
+por métrica. Las otras nueve tablas, incluidas guía y notas USD miles, quedan
+conservadas en el ZIP y no se proyectan como resultados realizados adicionales.
+**187 conciliaciones pasaron, sin aplicar el 5 %**. Cuatro comprobaciones de
+componentes quedan indeterminadas por cuatro guiones publicados; no se imputan.
+La aceptación SEC 26/oct 21:31:25 UTC, presentación 27/oct y release declarado
+26/oct siguen separados de primera publicación desconocida. La observación es
+el término de la lectura independiente, 28/oct 13:16:03 UTC; la importación local
+es posterior, nunca una captura HTTP ni una primera disponibilidad ficticia.
+
+Importación → Bronze → nativo → Silver/Gold → linaje → replay y `check_task`
+pasaron realmente en `candidate-c64ae235`: cuatro salidas, un artefacto ZIP
+con miembros verificados y **1.174 vínculos**. La revisión de otra sesión Codex,
+`8e03a8ec…`, cotejó los 446 tokens/contextos y 364 escalas/padres, y rechazó
+31 ataques. Corrigió un retrofechado posible y notas que alteraban linaje
+heredado. Las cuatro salidas Q2 y AFAC comparadas por el revisor quedan exactas.
+Los tests afectados iniciales detectaron expectativas anteriores al nuevo modo;
+se preservan roles originales y reconstruidos como conjuntos completos distintos.
+No se retiraron casos ni se convirtieron fallos en omisiones.
+
+Continuidad técnica final: fuente `6ea243f3`, runtime `1c4da3f6…`, dictamen
+independiente auténtico `852f7e7c…` y binding `11dd5d68`. Solo cambian las
+mismas tres rutas técnicas; ancla, consentimiento y autoridad originales
+permanecen exactos. `dim_source` conserva 30 instituciones con solo los dos
+campos SEC ya revisados. La CLI real única de ese head terminó en **81,655 s**,
+válida y `publication_authorized=false`; adenda posbinding `4cc4a1df…`.
+Conservación fresca: 188/177/811/803 archivos y 53 salidas históricas.
+
+La agregada de `88b7436f` terminó con 5.438 pruebas y 29 subpruebas aprobadas, tres fallos, cinco errores
+y 32 omisiones. Se separaron specs y pruebas de planificación para cumplir
+el presupuesto existente, sin ampliar excepciones: once tablas/orden exactos,
+cinco funciones y 57 aserciones intactas. El test de alias ahora exige los tres
+originales y rechaza las dos representaciones derivadas en el lector genérico;
+no se habilitan alias indebidos. La preparación documentada de npm/navegador
+resolvió las incidencias web. Pasaron 83 focales, otras 23 recuperadas y 63 de
+revisión independiente; las cuatro salidas Volaris siguen idénticas byte a byte.
+La nueva agregada de `11dd5d68` terminó: **5.474 pruebas y 29 subpruebas
+aprobadas**, cero fallos/errores y cuatro omisiones; 2.512,072 s de proceso
+(41:52), con navegador/datos locales y sin exclusiones nuevas. Las omisiones
+son una comprobación editorial cubierta por la preservación financiera estricta,
+un preview Pages sin pin y dos recorridos genéricos sin draft actualmente
+aprobado. No se fabricaron ese draft o su autoridad. Las 28 omisiones web
+anteriores sí se ejecutaron y pasaron. Las 75 pruebas `local_data` se identificaron
+contra el XML real: 73 pasaron y dos corresponden al draft aprobado ausente;
+no quedaron otras sin ejecutar. La clasificación se obtuvo sin repetir tests.
+El perfil no permite comparar rendimiento
+con las 5.129 pruebas del lote anterior ni con CI remota.
+
+Los 19 candidatos técnicos conservan **106 salidas compatibles**, incluidas
+102 previas idénticas, tras 17 regeneraciones reales y un replay de productor
+sin cambios. Los recibos `global-19-current-88b7436f` y `global-19-current-11dd5d68`
+conservan sus cortes intermedios y no se presentan como ronda completa aceptada.
+
+Para comprobar disponibilidad hoy se reutilizaron doce selecciones literales
+ya exitosas: 31 solicitudes base previstas, máximo de 155 solicitudes, sin hosts nuevos o pagos.
+Once colecciones terminaron completas. El índice mensual AM devolvió un bucle
+301 y se conserva cuerpo458bytes/SHA `1a97d288…`, no elegible; no hubo reintento.
+Su6-K sí respondió200, sin sustituir el índice contractual por otro documento.
+AIFA añadió dos GET200, con XLSX `a26a3d21…` idéntico y nuevas fecha/localizador
+reales. Sus 180 observaciones de negocio siguen iguales.
+
+Catorce candidatos se construyeron desde las capturas nuevas, con Bronze,
+nativo, Silver/Gold, linaje y replay efectivos. La identidad SEC histórica de
+cotizaciones y metodología Banxico se copiaron con bytes/fechas originales;
+no se presentan como capturas actuales. El recibo `global-19-fresh-20261028`
+se escribió y reprodujo: **16 verificadas hoy, cuatro productos ausentes y tres
+sin disponibilidad actual**, más dos controles bursátiles. Sigue
+`blocked_global_policy`, fecha trimestral nula y Viva como único reporte central
+faltante. AFAC agosto, BTS julio y RSS conservan sus alcances observados; RSS
+no sustituye GDELT. Las tres advertencias macro no son calendarios exhaustivos.
+GAP/ASUR requieren observación oficial vigente para el contrato de ese día;
+rematerializar Library o repetir cálculos no la acredita. No hace falta volver
+a autorizar los adaptadores ya encargados. Reusar observaciones de otro día
+para declarar actualidad sí cambiaría la política y no se hizo.
+
+Fuentes y fallos quedan retenidos. En esta revalidación de selecciones no se
+consultó GDELT ni OTC ni se hizo acceso nuevo SEC. No hubo cambios de seguridad,
+ejecuciones programadas, datos publicados ni activaciones. El último18/102 aceptado sigue siendo evidencia histórica
+propia, sin reetiquetarlo.
+
+Comandos del modo específico, separados del procedimiento SEC original Q2:
+
+```bash
+python -m src.source_updates.volaris_q3_inputs --source <ZIP-Library-verificado> --workspace <import-nuevo> --dry-run
+# Tras revisar el plan: mismo comando con --execute.
+python -m src.source_updates.carrier_source_candidate retain --product volaris_sec --source-root <import-nuevo>/data/bronze --workspace <candidato-nuevo> --original reconstruction_zip=volaris/reconstructed/Volaris_3T2026_paquete_reconstruido.zip --dry-run
+# Tras retención --execute, usar su run_id real:
+python -m src.source_updates.carrier_source_candidate certify --product volaris_sec --period 2026Q3 --as-of <corte-con-zona> --workspace <candidato-nuevo> --retention <run_id> --execute
+# Repetir certify con --check, mismo cutoff y retención.
+```
+
+**GAP septiembre: cadena manual real cerrada, sin publicación.** El
+[6-K oficial](https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm)
+declara 6/oct. El hilo principal obtuvo el original con descarga manual nativa;
+este entorno lo materializó desde Library y verificó sus **77.223 bytes**, SHA
+`4f351f91…` e identidad. No hubo solicitudes SEC desde este ejecutor ni cambios
+al flujo de importación manual. Se conservan todos los bytes recibidos: el
+índice declara 77.102 y la respuesta contiene un script de entrega de 121.
+**No se afirma identidad binaria con el archivo listado en EDGAR.**
+
+El lector admite títulos dentro de las tablas y siete columnas, conservando
+el formato anterior. Solo el archivo y script revisados permiten omitir ese
+script del DOM de extracción, sin ejecutarlo, seguirlo ni modificar el original.
+Produce **180 cifras reportadas y doce sumas México**, tres mercados y
+mensual/acumulado actual/comparativo separados. Las 72 conciliaciones son de
+conteos; los porcentajes impresos solo se comprueban estructuralmente. No se
+recalcula una tasa oficial desde cifras redondeadas para sustituirla.
+
+La retención, Bronze, Silver/Gold, linaje y replay real pasaron. Son nueve
+salidas: 192 observaciones nativas, 26 filas Silver aeroportuarias, 24 Gold de
+aeropuertos mexicanos y dos Gold del grupo México; dimensiones y 434 vínculos
+completan el conjunto. Los doce aeropuertos México excluyen Jamaica; CBX sigue
+incluido en Tijuana internacional. El grupo México de septiembre es 3.711,2
+miles frente a 4.081,9 mundiales; no se intercambian. La revisión independiente
+`d681e708…` cotejó las tres tablas y sus 12/36 padres de linaje.
+
+`gap_official_manual_target_v1` liga el archivo Library íntegro, referencia de
+identidad, colección manual y candidato. **Observado el 27/oct, precisión de
+día**; `downloaded_at` del importador es importación, no hora de captura SEC.
+HTTP observado/captura UTC/primera publicación/rezago siguen nulos. Tampoco se
+acreditan índice completo, última revisión universal ni disponibilidad de otro
+día. Una tupla alterada, archivo enlazado, bytes cambiados u otro periodo
+bloquean. No se crea otra aprobación ni se requiere otra del calendario.
+
+Código `05a0e75b`: **252 pruebas afectadas aprobadas en 102,95 s**, sin omisiones.
+Se corrigió una prueba heredada que aún esperaba tráfico mensual en
+`volaris_sec`: ahora exige explícitamente IR mensual y SEC financiero trimestral.
+No cambió esa política aprobada. Otros 79 casos financieros pasaron en 4,30 s.
+Continuidad auténtica `d153a3ec…`, runtime `3bb20c57…`: se conservaron
+188/177/811/803 archivos y 53 salidas históricas. El binding local cambia solo
+productor/runtime/dictamen. Una CLI real única en `8b356124` terminó en
+**78,753 s**, válida y `publication_authorized=false`; evidencia `da7bd100…`.
+
+Tras ese binding y CLI se escribió y reprodujo el recibo global
+`global-17-final-8b356124-result.json`, SHA `d1ce7cfd…`; compatibilidad
+`5c26252b…`: **17 tareas y 93 salidas**, 84 anteriores idénticas y nueve GAP.
+Once productores dependientes se retuvieron y regeneraron realmente desde
+originales previos. Los otros cinco conservaron exactamente sus huellas y
+pasaron el replay normal. Estado `blocked_global_policy`: seis tareas ausentes,
+dos controles bursátiles y tres advertencias macro; fecha trimestral nula,
+cero activaciones. No se presenta ese bloqueo como una suite fallida ni como
+permiso para programar. Falta integración remota ordenada y su CI/revisión.
+
+**ASUR septiembre: reconstrucción autorizada y cadena real cerradas.** El
+[anexo septiembre](https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm)
+declara 7/oct e incorpora CPC. El dueño autorizó el 28/oct reconstruir lo
+visible en un editable. Este modo específico conserva JSON/HTML/CSV/manifiesto
+de aquella copia, con hashes del derivado e identidades Library verificadas.
+No exige fingir que llegó el HTML original ni relaja el contrato de originales
+SEC; tampoco habilita otra fuente, mes o descarga genérica.
+
+Código `2f856890`: cinco tablas/144 filas/864 celdas comprobadas, 155 guiones
+conservados desconocidos y 236 porcentajes verificables. La proyección del
+producto existente usa resumen y nueve aeropuertos mexicanos: **168 cifras,
+92 conciliaciones, nueve salidas y 752 vínculos** con los cuatro artefactos.
+Gold México contiene septiembre 2.446.399 frente al mundial 8.656.117; no se
+intercambian ni atribuyen a una aerolínea. El detalle extranjero permanece en
+las copias verificadas, sin crear nuevas métricas aeroportuarias comprometidas.
+
+`Brazil and Others` agrupa Brasil, Costa Rica, Curazao y Ecuador. Sus 75 filas
+repiten septiembre en acumulados; no completar enero–agosto ni interpretar
+como nueve meses homogéneos. CPC y el total mundial conservan tipo
+`reported_ytd_coverage_unverified`; ningún YTD recibe fecha inicial explícita
+inventada. Se preservan `BHA`, `BHF`, `(0.0)`, MTR internacional YTD2026=95 y las
+exclusiones diferentes por geografía. La falta de definición de Puerto Rico
+permanece explícita. El 5 % no se aplica a transcripción ni cambio de ámbito.
+
+Retención→Bronze→Silver/Gold→linaje→replay→disponibilidad del objetivo pasaron
+con los archivos reales. Revisión independiente `ac55b324…` favorable; corrigió
+y reprobó observación trasladada al día siguiente, metadatos contradictorios e
+identidades Library inventadas. La observación visible de 28/oct 01:53:22 UTC
+es del **27/oct en México**. Importación es otra fecha; HTTP/captura/hash del
+original SEC siguen nulos. El cero del campo HTTP técnico significa no
+observado. No se acredita otra fecha de actualidad, primera publicación ni
+censo universal de revisiones. QA visual del HTML no completado; no afecta al
+cotejo tabular ni autoriza publicar su apariencia.
+
+**284 pruebas afectadas** pasaron en 99,04 s. La única omitida en main por
+warehouse ausente sí se ejecutó en el checkout aislado: detectó un catálogo
+materializado antiguo, ya presente en la base. Se regeneró solo
+`dim_source.parquet` con el materializador canónico: 30 fuentes, registro
+Volaris y URL AIFA vigentes, alias ASUR identificado. Los 811 artefactos eran
+idénticos; no se reconstruyeron bridge, prioridades, warehouse o hechos.
+El control real completo pasó después en 29,63 s, sin omisiones ni cambiar
+aserciones. Otros 79 casos financieros posbinding pasaron en 3,80 s.
+
+Continuidad `919234e0`, productor `2f856890`, runtime `52ed9cdd…`, dictamen
+auténtico `2a6aff99…`: conservación exacta 188/177/811/803 archivos y 53 salidas
+históricas; CLI real única válida en **74,301 s**, `publication_authorized=false`.
+El binding cambia solo productor/runtime/dictamen, sin sustituir autoridad.
+El recibo oficial se escribió y reprodujo después: **18 tareas/102 salidas**,
+93 previas idénticas y nueve ASUR, SHA `1d126391…`; resultado `dd5e38e3…`,
+compatibilidad `44557f4f…`. Dieciséis productores se regeneraron realmente
+desde fuentes retenidas; uno conservó su huella exacta y pasó replay normal.
+Estado `blocked_global_policy`: cinco requeridas ausentes, dos controles
+bursátiles, tres advertencias macro, fecha trimestral nula y cero activaciones.
+La suite completa y los gates remotos del lote no se presentan como aprobados.
 
 Los **dos controles bursátiles** son de sesiones de septiembre y 3T26. Las
-cinco series están capturadas y sus cálculos/números se reproducen, pero falta
-el verificador integral del calendario y su evidencia física por instrumento:
-AERO/VLRS/DAL en NYSE, RYAAY en Nasdaq e ICAGY en OTC. Es trabajo de
-**implementación y evidencia**, no solo una caída externa. NYSE/Nasdaq tienen
-páginas oficiales 2026 identificadas; OTC devolvió una aplicación JavaScript
-sin calendario extraíble. No se ha probado que OTC y NYSE tengan las mismas
-sesiones ni que OTC Bulletin Board equivalga a ese instrumento.
+cinco series están capturadas y sus cálculos/números se reproducen. El auditor
+local `ee04531a` ya verifica **cuatro de cinco instrumentos** con originales
+oficiales: AERO/VLRS/DAL en NYSE y RYAAY en Nasdaq. Compara fechas exactas,
+no solo cantidades: 187 sesiones enero–septiembre, 21 de septiembre y 64 del
+trimestre por instrumento. Incluye ancla anual y treinta precios previos para
+los treinta retornos usados por la volatilidad. Un hueco en agosto bloquea
+aunque septiembre conserve sus 21 filas. Los cierres anticipados cuentan como
+sesiones. Los años sin edición revisada no se extrapolan.
+
+Las páginas NYSE/Nasdaq y el PDF oficial NYSE de días de negociación se
+capturaron realmente con HTTP200. El PDF dice **2026 Estimated** y distingue
+acciones de otras clases de activos; se conserva esa etiqueta. La comprobación
+independiente contrastó 12.037 precios por candidato contra los JSON originales.
+99 pruebas afectadas pasaron en 31,75 s; otras 22 comprobaciones adversariales
+cubren recibos, fechas, anclaje y límites del historial. Es evidencia local;
+no se atribuye a CI ni a una ronda global nueva.
+
+**ICAGY sigue pendiente.** OTC devolvió HTTP200 con una aplicación JavaScript
+sin tabla; su endpoint público de contenido devolvió HTTP403 sin cuerpo. Esa
+vía se detuvo. No se ha probado equivalencia con NYSE ni con OTC Bulletin Board.
+Faltan contenido oficial interpretable y el lector de esa edición OTC: el
+auditor devuelve pendiente para OTC, incluso si se le ofrece una tabla NYSE.
+La continuidad local del cierre GAP ya incluye este auditor de cuatro
+instrumentos. Después falta añadir el lector OTC y acoplar la prueba completa
+al flujo de certificación/readiness con sus revisiones. Los dos bloqueos globales permanecen;
+este auditor separado no los elimina ni recertifica los recibos congelados.
 [NYSE](https://www.nyse.com/markets/hours-calendars),
-[Nasdaq](https://www.nasdaq.com/market-activity/stock-market-holiday-schedule).
+[Nasdaq](https://www.nasdaq.com/market-activity/stock-market-holiday-schedule),
+[días NYSE](https://www.nyse.com/publicdocs/Trading_Days.pdf),
+[página OTC](https://www.otcmarkets.com/market-hours).
+
+Reproducción sin red, desde la raíz, con la receta congelada de dieciséis
+tareas y los cuatro originales/sidecars del lote retenido:
+
+```bash
+python -m src.source_updates.equity_calendar --recipe tmp/source-updates/availability-followup-20261027/combined-global-dcee6c8f-recipe.json --calendar-root tmp/source-updates/availability-followup-20261027/equity-calendars-20261027/research-originals --as-of 2026-10-27T19:31:50.034237+00:00
+# La vista previa no lee cotizaciones ni hace solicitudes. --execute comprueba offline.
+```
+
+Resultado real: `final-session-ee04531a.json`, SHA `4167969e…`, dos periodos,
+cuatro instrumentos completos en cada uno, `all_five_instruments_complete=false`,
+cero solicitudes y ninguna activación. Se conservan originales, fallos,
+atestaciones y pruebas en el mismo directorio del lote. Las 16 tareas/84
+salidas de `dcee6c8f` siguen siendo su recibo histórico, no uno del runtime nuevo.
 No hay una decisión de negocio identificada para programar ese verificador;
 si un acceso nuevo exigiera permiso, se plantearía la acción concreta. No se
 eliminan instrumentos, rendimiento diario o volatilidad para forzar el cierre.
@@ -3551,24 +4030,62 @@ La reducción se explica por separado, sin sumar controles distintos:
 - SRC `24366ace`: catorce verificadas, nueve ausentes y dos controles. **AIFA
   cerró realmente** tras corregir la entrada, comprobar el índice correcto y
   reproducir el libro oficial. No hubo reclasificación ni tolerancia adicional.
+- SRC `472a0528`: quince verificadas, ocho ausentes y dos controles. **OMA
+  septiembre realmente extraído y vinculado** cierra otra tarea. Las 76 salidas
+  anteriores siguen iguales; no se reclasifican requisitos ni se aplica el 5 %.
+- SRC `dcee6c8f`: dieciséis verificadas, siete ausentes y dos controles.
+  **Volaris mensual realmente extraído y vinculado** añade cuatro salidas;
+  las 80 anteriores siguen iguales. La identidad IR se separa de financieros
+  SEC, con el mismo requisito mensual. El original pasa sin tolerancia del5%.
 
-Las únicas decisiones externas acotadas ya preparadas son el host mensual
-Volaris y el contacto Aerocivil. No se amplió ese host ni se contactó a nadie.
-Los otros puntos exigen código o material verificable. Un reporte detectado o
+- SRC `05a0e75b`: diecisiete verificadas, seis ausentes y dos controles.
+  **GAP septiembre realmente importado, extraído y vinculado** añade nueve
+  salidas; las 84 anteriores siguen iguales. No se reduce ningún requisito ni
+  se inventan fechas/HTTP de la captura manual.
+- SRC `2f856890`: dieciocho verificadas, cinco ausentes y dos controles.
+  **ASUR septiembre reconstruido con autorización expresa** añade nueve
+  salidas verificadas; las 93 previas siguen idénticas. El cambio admitido
+  es de representación y procedencia documentada, sin llamar original SEC
+  al derivado, completar historia CPC ni convertir ASUR en opcional.
+
+La admisión Volaris ya fue autorizada y aplicada localmente solo al documento
+verificado. El contacto Aerocivil también fue autorizado y el hilo principal
+confirmó el envío; ahora depende de respuesta oficial. Los otros puntos exigen código o
+material verificable. Un reporte detectado o
 avisado no implica datos integrados ni tesis autorizada.
 
 ## Pendientes
 
-- Cerrar las nueve tareas actuales y los dos controles de sesiones descritos.
+- Cerrar los cuatro productos sin evidencia válida y los dos controles de sesiones
+  descritos. Revalidar disponibilidad en una fecha de ronda coherente antes de
+  declarar actual el conjunto; los 19 certificados técnicos no sustituyen ese paso.
   Aerocivil/GDELT siguen requeridos; un fallo no es cero ni se sustituye.
-- Resolver las decisiones acotadas de host Volaris y contacto Aerocivil. No se
-  repiten reintentos prohibidos GDELT/PDF ni se eluden los accesos fallidos.
+- Conservar la admisión Volaris limitada al documento aprobado, sin inventar
+  futuras URLs o abrir subdominios. Esperar respuesta Aerocivil; no repetir
+  la consulta ni confundir envío con evidencia semántica.
+  No repetir reintentos prohibidos GDELT/PDF ni eludir accesos fallidos.
 - Verificar Viva 3T26 antes de fechar la ronda trimestral. AM y Volaris están
-  detectados; Volaris ya fue avisado. La receta física global aún carece del
-  dossier Q3 Volaris: su límite difiere del aviso documental del hilo principal.
+  detectados; Volaris ya fue avisado y su reconstrucción Q3 pasó la cadena local.
+  No falta otro original para ese modo específico autorizado; falta Viva Q3.
 - Completar CI, comentarios, revisión Codex y conservación del head final de
   cada entrega, y seguir CI posterior. PR168/169 ya tienen CI posterior aprobada;
   esos resultados no sustituyen el gate de un head nuevo.
+- **PR170 integrado y CI posterior aprobada.** El primer intento fue
+  rechazado y no se repitió hasta recibir autorización específica del dueño
+  para `aff81d0`. Tras comprobar de nuevo head, CI, comentarios e hilos se
+  hizo un único reintento por la ruta manual normal, sin bypass ni aprobación
+  formal en nombre del usuario. Merge `4780b8da`, 28/oct 14:30:46 UTC;
+  CI `40706667984` aprobada. PR171 `3ab5af7e` incorpora la base solo en su
+  historia, con el mismo árbol revisado, tras detectar el checkout antiguo de
+  la CI fallida. CI nueva `40713725543` aprobada; revisión independiente
+  favorable del head y su adenda. Tras la aprobación específica del dueño,
+  PR171 se integró en `0a99dab0` y PR172 `b0f31cea` en `ba553a54`, con
+  compatibilidad limpia y sin aprobaciones formales en su nombre. Las CI
+  posteriores `40742445009` y `40742533938` quedan en seguimiento. La
+  continuación reúne los lotes locales sobre esa historia, preservando el
+  runtime probado `1c4da3f6`; requiere CI y revisión de su head final.
+  El bot remoto antiguo
+  sigue `running`, separado del dictamen auténtico de la otra sesión.
 - Conservar expediente original y dictámenes auténticos en el checkout aislado.
   Main carece del ledger, sin reconstruir autoridad. El procedimiento de
   continuidad local no aprueba publicación ni sustituye digests originales.

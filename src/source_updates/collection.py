@@ -70,6 +70,14 @@ def _credential_query_key(key: str) -> bool:
     )
 
 
+def validate_product_url(product_id: str, url: str, allowed_hosts: list[str]) -> None:
+    validate_url(url, allowed_hosts)
+    if product_id == "volaris_traffic_ir":
+        from src.source_updates.volaris_traffic import validate_admitted_url
+
+        validate_admitted_url(url)
+
+
 def selection_plan(selection: dict, workspace: Path) -> dict:
     safe_workspace(workspace)
     sources, products = load_catalog(), product_map()
@@ -85,7 +93,7 @@ def selection_plan(selection: dict, workspace: Path) -> dict:
         source = sources[product["source_key"]]
         if not source["is_active"] or not source["artifact_expected"]:
             raise ValueError("Inactive/error/internal sources cannot be collected")
-        validate_url(item["url"], source["allowed_hosts"])
+        validate_product_url(item["product"], item["url"], source["allowed_hosts"])
         if item.get("source_system") not in bronze_aliases(item["product"]):
             raise ValueError("source_system must be a parser-compatible Bronze alias for this product")
         if item.get("purpose") not in {"catalog", "data"}:
@@ -253,7 +261,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                         def request(method, target, **kwargs):
                             nonlocal response
                             for _ in range(5):
-                                validate_url(target, source["allowed_hosts"])
+                                validate_product_url(item["product"], target, source["allowed_hosts"])
                                 try:
                                     response = client.request(
                                         method, target, follow_redirects=False, **kwargs
@@ -291,7 +299,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                             response = request("POST", action, data=payload)
                         content, status = response.content, response.status_code
                         response_url = str(response.url)
-                        validate_url(response_url, source["allowed_hosts"])
+                        validate_product_url(item["product"], response_url, source["allowed_hosts"])
                         result["response_url"] = response_url
                         content_type = response.headers.get("content-type", content_type)
                         result["http_status"] = status
@@ -341,7 +349,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     for anchor in soup.find_all("a", href=True):
                         candidate = urljoin(link_base, anchor["href"])
                         try:
-                            validate_url(candidate, source["allowed_hosts"])
+                            validate_product_url(item["product"], candidate, source["allowed_hosts"])
                         except ValueError:
                             continue
                         links.append({"url": candidate, "label": anchor.get_text(" ", strip=True)[:240]})

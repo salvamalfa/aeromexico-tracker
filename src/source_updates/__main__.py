@@ -49,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     recipes.add_argument("--as-of")
     recipes.add_argument("--catalog-file", type=Path)
     recipes.add_argument(
-        "--source-url", help="Explicit official Viva PDF URL; content still needs certification"
+        "--source-url", help="Explicit official Viva PDF or OMA newsroom URL; still requires certification"
     )
     recipes.add_argument("--ticker", action="append", choices=["AERO", "VOLAR"])
     dates = commands.add_parser("calendar")
@@ -101,11 +101,17 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "plan":
             result = plan(args.round, args.as_of, args.quarter, args.family)
         elif args.command == "recipe":
-            if args.source_url and (
+            if args.source_url and args.product == "oma_traffic":
+                from src.source_updates.availability_oma_newsroom import selection
+
+                if args.output != "selection":
+                    raise ValueError("Explicit OMA newsroom URL requires selection output")
+                result = selection(args.source_url, args.period, args.catalog_file)
+            elif args.source_url and (
                 args.product != "viva_traffic" or args.output != "selection" or args.catalog_file
             ):
                 raise ValueError("Explicit source URL requires Viva PDF selection without catalog-file")
-            if args.output == "selection":
+            elif args.output == "selection":
                 if args.source_url:
                     from src.source_updates.viva_traffic import selection_for_url
 

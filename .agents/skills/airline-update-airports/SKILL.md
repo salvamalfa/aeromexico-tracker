@@ -30,8 +30,31 @@ contiene el índice y el PDF/XLSX exacto usado por el candidato. Exige HTTP200,
 manifiesto, sidecars, hashes y captura en la misma fecha local de la ronda;
 después reproduce el producto completo sin red. Un enlace sin PDF descargable,
 un desafío HTTP202, una edición ambigua o un título nuevo bloquean el vínculo.
-El 27/oct el índice OMA anuncia septiembre pero su PDF devolvió HTTP404; el
-candidato retenido de julio no sustituye ese original ni acredita actualidad.
+El 27/oct el PDF del índice IR OMA devolvió HTTP404 y la entrada española HTTP202;
+se conservan ambos fallos. La alternativa oficial newsroom descrita abajo sí
+recuperó septiembre. Julio no se usa para acreditar ese mes.
+
+### Alternativa OMA newsroom
+
+Preparar la selección con `recipe --product oma_traffic --output selection
+--source-url <URL-oficial-del-artículo>`. No inventar una URL futura. Después
+de capturar el artículo, añadir `--catalog-file <HTML-capturado> --period YYYYMmm`
+para seleccionar el mismo artículo y su PDF literal. La vista previa `collect
+--dry-run` muestra dos solicitudes; la selección no descarga nada.
+
+El vínculo `availability` añade `source_scope=oma_official_newsroom_v1` a
+`workspace`, `run_id`, `catalog_item` y `artifact_item`. Solo admite el hostname
+exacto `news.oma.aero`, rutas oficiales revisadas y el enlace de descarga
+literal; no basta con admitir el dominio y sus subdominios. Mantener los hosts
+del catálogo existentes, sin ampliar permisos.
+
+Exigir título/fecha del artículo, PDF y último mes cerrado en México coherentes,
+dos originales capturados en la fecha local de la ronda y replay de todas las
+cifras e identificadores de linaje. Los dos botones del mismo PDF se deduplican
+por URL; dos documentos distintos bloquean. Se conserva la ruta IR anterior.
+Esto acredita disponibilidad del reporte objetivo en ese newsroom, no un censo
+de todas las revisiones en los sitios de OMA. Primera publicación y rezago
+siguen desconocidos; no modificar cifras oficiales ni activar publicación.
 
 ## Adquisición por producto
 
@@ -175,6 +198,83 @@ Los contenedores SEC listados pero no descargados permanecen explícitos; no
 se afirma haberlos leído. El corte real de readiness debe ser exactamente
 `2026-08-20T18:20:00-06:00` en México. No reutilizar ese expediente como disponibilidad de octubre o
 como tráfico de septiembre; no fabricar un `run_id` ni renovar fechas.
+
+### GAP septiembre obtenido manualmente
+
+El original revisado `f6k_100626.htm` procede de descarga manual nativa y
+materialización Library verificadas: 77.223 bytes/SHA `4f351f91…`. La referencia
+de materialización conserva sus IDs/versión reportada sin publicarlos. No se
+reconstruye HTML desde texto web ni se usa otro cliente para sustituir SEC manual.
+Conservar íntegros los 121 bytes de script de entrega; el listado declara
+77.102, sin identidad binaria acreditada. Solo el script revisado, dentro del
+archivo exacto, se omite del DOM de extracción, sin ejecutar código ni modificar Bronze.
+
+Importar por `collect` con `mode=manual` y rol `html` de `gap_traffic`;
+retener/certificar/reproducir con `airport_group_candidate` como antes. El
+formato compacto añade títulos dentro de tablas y siete columnas. Son 192
+cifras/72 conciliaciones de conteos, no de porcentajes; nueve salidas completas.
+El formato anterior y la separación México/Jamaica/CBX permanecen soportados.
+
+`availability` usa `source_scope=gap_official_manual_target_v1`, `workspace`,
+`run_id`, `artifact_item` y `manual_original=imports/f6k_100626.htm`. Esa colección
+separada conserva además `imports/library-original-verification.json`, generado
+desde la materialización real: identidad/versión, bytes, SHA, URL y límites de
+la captura. No fabricar ese comprobante ni sus identidades. El vínculo se
+refiere al documento objetivo observado manualmente el **27/oct/2026**, con
+precisión diaria. El `downloaded_at` del importador es importación: no acredita
+HTTP200 ni hora de captura SEC, primera publicación o censo de revisiones.
+No reutilizar esa observación como actualidad de otro día o mes. El recibo
+global sigue bloqueado por otros requeridos y no activa datos ni calendario.
+
+### ASUR septiembre: representación reconstruida autorizada
+
+El dueño autorizó una copia editable de las tablas visibles el 28/oct. Este
+modo específico no sustituye el contrato de original SEC ni se extiende a
+otras fuentes o meses. Materializar las cuatro copias Library verificadas:
+JSON autoritativo, HTML, CSV y manifiesto de reconstrucción; mantener sus
+identidades. El importador comprueba los hashes de los derivados, nunca un
+hash del original SEC. No reconstruir ese original ni inventar bytes/captura.
+
+```bash
+python -m src.source_updates.asur_reconstruction_inputs --source-root <copias-Library> --workspace <importacion-nueva> --dry-run
+# --execute importa offline tras revisar el plan; cero solicitudes.
+python -m src.source_updates.airport_group_candidate retain --product asur_traffic --source-root <importacion-nueva>/data/bronze --workspace <candidato-nuevo> \
+  --original reconstruction_json=asur/reconstructed/asur-september-2026-reconstructed.json \
+  --original reconstruction_html=asur/reconstructed/asur-september-2026-reconstructed.html \
+  --original reconstruction_csv=asur/reconstructed/asur-september-2026-reconstructed.csv \
+  --original reconstruction_manifest=asur/reconstructed/asur-september-2026-reconstructed-manifest.json --dry-run
+```
+
+Después usar `--execute`, `certify --period 2026M09 --as-of <corte-con-zona>
+--retention <id> --execute` y el replay `--check`. El alias
+`asur_visible_reconstruction` se distingue de los alias SEC originales y no
+se admite en `collect` genérico. La entrada de catálogo SEC identifica la
+referencia pública ascendente, no al creador ni a los bytes del derivado.
+
+La comprobación física cubre cinco tablas/144 filas/864 celdas, 155 guiones
+desconocidos y 236 porcentajes comprobables. Preservar `BHA`, `BHF`, `(0.0)` y
+MTR internacional YTD 2026=95. El candidato estándar conserva el alcance
+anterior: resumen y nueve aeropuertos mexicanos, 168 observaciones y 92
+conciliaciones; nueve salidas y 752 vínculos con los cuatro derivados.
+El detalle extranjero permanece en el editable, sin convertirse en nuevos
+hechos aeroportuarios comprometidos.
+
+`Brazil and Others` es un grupo multinacional CPC, no Brasil ni un aeropuerto.
+Sus acumulados repiten septiembre; los de CPC y el total mundial usan
+`reported_ytd_coverage_unverified`. Ningún acumulado recibe fecha inicial
+explícita inventada; no rellenar enero–agosto ni guiones, ni aplicar el 5 %
+a cambios de ámbito o transcripciones de cifras oficiales. Gold sigue solo
+México, con la advertencia de reconstrucción en su linaje.
+
+El vínculo `availability` usa `source_scope=asur_visible_reconstruction_target_v1`,
+`workspace` y `run_id` de la importación. Liga observación visible real,
+representación íntegra y candidato completo en el mismo día local. La lectura
+de 28/oct 01:53:22 UTC corresponde al 27/oct en México. Importación es otra
+fecha: `source_http_status=null`, captura/hash del original SEC nulos.
+El cero de `http_status` del esquema técnico significa no observado, nunca
+HTTP200. No se acredita censo de revisiones, otra fecha de actualidad ni
+primera publicación. El HTML reconstruido no tiene QA visual completo; esta
+certificación comprueba tablas y datos, no publicación o apariencia.
 
 ### Entrada operativa AIFA
 

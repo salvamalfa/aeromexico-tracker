@@ -198,12 +198,16 @@ def frames(workspace, product, period, native, details):
                     "Transit/general excluded only MX/CO; worldwide total not Mexico."
                 )
             )
+            if details.get("source_representation") == "authorized_visible_reconstruction":
+                note = details["provenance_warning"] + " " + note
             specs.append(
                 LineageSpec(
                     record_id=row.record_id,
                     table_name=name,
                     lineage_type="derived" if is_mexico_derived else "direct_artifact",
-                    artifact_ids=(by_file[row.source_file],),
+                    artifact_ids=tuple(by_file.values())
+                    if details.get("source_representation") == "authorized_visible_reconstruction"
+                    else (by_file[row.source_file],),
                     parent_record_ids=parents,
                     lineage_note=note,
                 )
