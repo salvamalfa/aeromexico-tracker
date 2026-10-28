@@ -12,10 +12,6 @@ calendarios por mover una tarea entre secciones.
 - **Ronda actual comprobada:** 17 de 23 productos con disponibilidad acreditada,
   88 salidas y replay global escrito/reproducido. El recuento histórico es otro:
   19 candidatos y 106 salidas compatibles; no se presenta como ronda actual completa.
-- **Aeroméxico mensual recuperado:** el 28/oct a las 22:09 UTC el recolector
-  habitual obtuvo índice y 6-K con HTTP200. Certificación/replay: 24 observaciones
-  mensuales/comparativas y siete salidas; disponibilidad vigente aprobada. El
-  bucle301 anterior queda como fallo histórico, no como bloqueo vigente.
 - **Calendario preparado, sin activar:** mensual 17/nov y 15/dic de 2026,
   primer hábil bancario mexicano en/después del 15; trimestral a +2 hábiles
   del último reporte financiero real de las tres aerolíneas, agrupado con la
@@ -91,6 +87,10 @@ explica el riesgo de revisiones no detectadas. No modifica los contratos actuale
 
 ## Terminado
 
+- **Aeroméxico mensual recuperado:** el 28/oct a las 22:09 UTC el recolector
+  habitual obtuvo índice y 6-K con HTTP200. Certificación/replay: 24 observaciones
+  mensuales/comparativas y siete salidas; disponibilidad vigente aprobada. El
+  bucle301 anterior queda como fallo histórico, no como bloqueo vigente.
 - **Integración técnica PR170–173:** [PR173](https://github.com/salvamalfa/aeromexico-tracker/pull/173)
   se integró en `62607e869d553b3ebb387404a63b726a8ce17f08` el 28/oct19:52 UTC,
   con árbol idéntico al head autorizado `efc579d8`. [CI posterior](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40758184706)
