@@ -8,6 +8,15 @@ description: "Actualizar candidatos de la familia autoridades y evidencia de rut
 Leer y aplicar [el contrato común](../source-updates-common.md).
 Familia ejecutable: `routes`. Alcance: ANAC, Aerocivil, CAA, Aena y evidencia fechada de Aeroméxico, OMA, Colima y Expansión.
 
+Decisión del dueño del 29/oct: Aerocivil sigue requerido, utilizable con los
+supuestos S/I y atribución AMX/SLI documentados en el catálogo. La espera de la
+respuesta oficial no bloquea por sí sola; no afirmar leyenda oficial ni cambiar
+`agent_eligible=false`. `readiness` adjunta la política operacional solo tras
+replay positivo de datos, conteos, periodo, originales y linaje y huellas
+semánticas revisadas. Disponibilidad desconocida, filas ausentes, definiciones
+cambiadas u otros códigos no se sustituyen con supuestos. Conservar advertencia
+y originales; una respuesta contradictoria exige nueva versión de los cálculos.
+
 Seleccionar documentos reales; no ejecutar el descargador histórico con URLs fijas como refresh universal. ANAC puede bloquear acceso; Aerocivil necesita paginación acotada y reconciliar cantidad de registros. CAA Flight Punctuality no es Airport Data. Aena requiere exportación manual; compañía×aeropuerto y mercado entre aeropuertos no producen compañía×ambos extremos. Comunicados y listados permiten presencia/programación/inferencia limitada, no pasajeros o vuelos observados. Conservación del original no autoriza activar inferencias ni estimaciones.
 
 ## Ejecución

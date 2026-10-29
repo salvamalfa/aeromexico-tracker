@@ -6,6 +6,16 @@ ni publicación. Leer primero `AGENTS.md`, el catálogo aprobado en
 política ejecutable `src/source_updates/catalog.py`. La guía para Salva está al
 principio del catálogo; estas instrucciones son referencia interna.
 
+Decisión del dueño del 29/oct: Aerocivil puede usarse con los supuestos
+operacionales vigentes, conservando confirmación oficial pendiente. La política
+dedicada se adjunta solo tras replay real, conteos/filas/hashes/periodo/linaje y
+huellas semánticas revisadas. No rellena datos faltantes, elimina el producto
+requerido ni sustituye disponibilidad desconocida. La respuesta oficial queda
+como seguimiento; si contradice los supuestos se versionan los cálculos afectados.
+Los workers siguen sin habilitar calendarios, datos o publicaciones. La autorización
+condicional del calendario pertenece únicamente a su coordinador, tras las
+comprobaciones reales de Viva, datos requeridos y despacho nativo.
+
 Los alias de una institución abarcan varias capas. Para capturar, usar
 `bronze_source_systems` de `recipe`: empresas SEC requieren `sec`; tráfico
 GAP/ASUR admite sus alias aeroportuarios, con `sec_edgar` en la receta; el
