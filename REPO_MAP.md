@@ -120,7 +120,9 @@ Medición del 29/oct/2026: base `62607e8`, implementación `ce9e152`, Python
 3.13.5, dependencias de `uv.lock`, datos públicos y pins aprobados iguales.
 Las ejecuciones medidas fueron en serie, en checkouts aislados; no se
 restauraron insumos privados. El [registro técnico](docs/referencias/ci-efficiency-20261029.json)
-conserva comandos, hashes, IDs, resultados y tiempos por fase y proceso.
+conserva comandos, hashes, resultados y tiempos por fase y proceso. El
+[detalle comprimido por caso](docs/referencias/ci-efficiency-20261029-cases.json.gz)
+conserva todos los IDs y fases del perfil público; se abre como JSON con gzip.
 
 | Perfil | Pytest antes / después | Proceso antes / después | Resultado |
 |---|---|---|---|
