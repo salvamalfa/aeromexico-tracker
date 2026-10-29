@@ -1,13 +1,15 @@
 import json
-from pathlib import Path
-
 from _published_flight_profiles import has_signed_flight_components
-from src.conversational_analytics.data.snapshot import Snapshot
+from tests._published_snapshot_fixtures import (
+    _verified_published_snapshot as _verified_published_snapshot,
+    published_snapshot as published_snapshot,
+)
+
 from src.conversational_analytics.tools.routes import RouteTools
 
 
-def test_default_shared_route_result_fits_provider_budget_and_keeps_display_valid() -> None:
-    tools = RouteTools(Snapshot(Path("site")))
+def test_default_shared_route_result_fits_provider_budget_and_keeps_display_valid(published_snapshot) -> None:
+    tools = RouteTools(published_snapshot)
     result = tools.invoke(
         "find_shared_routes",
         {
@@ -51,8 +53,8 @@ def test_default_shared_route_result_fits_provider_budget_and_keeps_display_vali
             assert source_label
 
 
-def test_shared_route_size_limit_reports_applied_and_available_counts() -> None:
-    tools = RouteTools(Snapshot(Path("site")))
+def test_shared_route_size_limit_reports_applied_and_available_counts(published_snapshot) -> None:
+    tools = RouteTools(published_snapshot)
     result = tools.invoke(
         "find_shared_routes",
         {
@@ -71,14 +73,14 @@ def test_shared_route_size_limit_reports_applied_and_available_counts() -> None:
         assert result["truncation_reason"] == "tool_result_size_limit"
 
 
-def test_real_international_quarter_route_queries_fit_presented_tool_budget() -> None:
+def test_real_international_quarter_route_queries_fit_presented_tool_budget(published_snapshot) -> None:
     import json
     from types import SimpleNamespace
 
     from src.conversational_analytics.presentation import DisplayRegistry
     from src.conversational_analytics.tools.registry import ToolRegistry
 
-    snapshot = Snapshot(Path("site"))
+    snapshot = published_snapshot
     registry = ToolRegistry(snapshot, SimpleNamespace(enable_route_tools=True))
     available_routes = 102 if has_signed_flight_components(snapshot) else 75
     for top_n, comparison_period in ((None, None), (20, None), (None, "2026Q1"), (20, "2026Q1")):
@@ -119,13 +121,13 @@ def test_real_international_quarter_route_queries_fit_presented_tool_budget() ->
         assert enriched["displays"][0]["display_id"] == result["display"]["display_id"]
 
 
-def test_shared_route_queries_fit_presented_budget_and_display_contract() -> None:
+def test_shared_route_queries_fit_presented_budget_and_display_contract(published_snapshot) -> None:
     from types import SimpleNamespace
 
     from src.conversational_analytics.presentation import DisplayRegistry
     from src.conversational_analytics.tools.registry import ToolRegistry
 
-    snapshot = Snapshot(Path("site"))
+    snapshot = published_snapshot
     registry = ToolRegistry(snapshot, SimpleNamespace(enable_route_tools=True))
     cases = (
         (["AEROMEXICO_GROUP", "VIVA_AEROBUS"], "2026M07"),
