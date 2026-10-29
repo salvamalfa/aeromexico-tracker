@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pytest
 
-from src.source_updates import calendar
+from src.source_updates import calendar, round_tasks
 from src.source_updates import global_readiness as gate
 from src.source_updates.catalog import ROOT
 
@@ -102,7 +102,7 @@ def recipe(kind="monthly"):
 
 
 def outcomes(value):
-    return {
+    results = {
         item["id"]: dict(
             status="checks_passed",
             source_conditions=[],
@@ -111,6 +111,10 @@ def outcomes(value):
         )
         for item in value["items"]
     }
+    if value["round"] in {"monthly", "combined"}:
+        # Pure policy fixture; no actual editorial search or receipt is asserted.
+        results[round_tasks.EDITORIAL_ID] = dict(status="checks_passed", period=value["monthly_period"])
+    return results
 
 
 @pytest.mark.parametrize("product", ["banxico", "fuel"])

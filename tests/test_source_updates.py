@@ -123,6 +123,10 @@ def test_access_failure_never_becomes_empty_success(workspace, fake_client, stat
     result = collect(selection(), workspace, execute=True, client_factory=fake_client)
     assert result["status"] == "incomplete"
     assert result["items"][0]["status"] == "access_or_payload_failed"
+    fallback = result["items"][0]["manual_recovery"]
+    assert fallback["status"] == "pending_official_browser_attempt"
+    assert fallback["official_url"] == selection()["items"][0]["url"]
+    assert fallback["programmatic_http_status"] == status and not fallback["manual_download_completed"]
     assert not (workspace / "data/bronze/_manifest.jsonl").exists()
     failure = result["items"][0]["failed_response"]
     retained = workspace / failure["file"]
@@ -208,7 +212,11 @@ def prepare_fuel_fixture(workspace):
     (workspace / "imports/fuel.xlsx").write_bytes(content)
     selected = selection(mode="manual", extension="xlsx")
     selected["items"][0].update(local_file="fuel.xlsx", sha256=hashlib.sha256(content).hexdigest())
-    collect(selected, workspace, execute=True)
+    receipt = collect(selected, workspace, execute=True)
+    imported = receipt["items"][0]
+    assert imported["source_http_status_observed"] is None and imported["source_capture_utc"] is None
+    record = next(iter(verify_bronze(workspace).values()))
+    assert record["http_status"] == 0 and record["download_method"] == "manual"
     return selected
 
 

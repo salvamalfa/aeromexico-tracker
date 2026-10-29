@@ -288,11 +288,15 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
         if inventory(candidate) != before:
             raise ValueError("Source candidate changed during availability verification")
     conditions = []
+    calendar_complete = result.get("calendar_completeness_certified")
+    supplemental = (availability or {}).get("supplemental_observation_calendar")
+    if supplemental is not None:
+        calendar_complete = supplemental["calendar_completeness_certified"]
     if retained and availability is None:
         conditions.append("retained_original_does_not_verify_current_source_availability")
     if result.get("service_code_mapping_verified") is False:
         conditions.append("official_service_code_legend_pending")
-    if result.get("calendar_completeness_certified") is False:
+    if calendar_complete is False:
         conditions.append("publication_calendar_completeness_not_verified")
     if result.get("complete_month_certified") is False:
         conditions.append("source_does_not_certify_complete_month")
@@ -325,11 +329,14 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
             if key in result
         },
         **(
-            {"calendar_completeness_certified": result["calendar_completeness_certified"]}
+            {"calendar_completeness_certified": calendar_complete}
             if "calendar_completeness_certified" in result
             else {}
         ),
-        "latest_source_availability_verified": availability is not None,
+        "latest_source_availability_verified": availability is not None
+        and availability.get("validated_closed_edition", {}).get(
+            "source_observation_current_for_round", True
+        ),
         **({"source_availability_evidence": availability} if availability is not None else {}),
         "activation": "none",
         "publication": "not_authorized",
