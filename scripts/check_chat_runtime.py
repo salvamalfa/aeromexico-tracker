@@ -140,6 +140,23 @@ def _check_packaged_business_metrics_snapshot() -> None:
             assert approved["metadata"]["metric_ids"] == ["total_revenue"]
 
 
+def _preflight_missing_approval_pin(snapshot_root: Path) -> None:
+    """Reject missing financial configuration before the expensive reader load."""
+    from src.web_export.business_metrics_approval import (
+        APPROVAL_RECEIPT_SHA256_ENV,
+        validate_approval_receipt,
+    )
+
+    if os.environ.get(APPROVAL_RECEIPT_SHA256_ENV, "").strip():
+        return
+    root = snapshot_root.resolve()
+    receipt = (root / "data/v1/business_metrics.approval.json").resolve()
+    # Leave missing files and unsafe paths to the complete Snapshot checks.
+    if root not in receipt.parents or not receipt.is_file():
+        return
+    validate_approval_receipt(json.loads(receipt.read_text(encoding="utf-8")))
+
+
 async def _check(*, fixture_only: bool = False) -> None:
     # The command parser and official provider adapter must import without
     # creating a client or making a provider request.
@@ -155,7 +172,10 @@ async def _check(*, fixture_only: bool = False) -> None:
 
     # Keep the real snapshot as the default. The explicit fixture mode tests
     # runtime mechanics without asserting trust in the published snapshot.
-    snapshot = Snapshot(ROOT / ("tests/fixtures/chat/site" if fixture_only else "site"))
+    snapshot_root = ROOT / ("tests/fixtures/chat/site" if fixture_only else "site")
+    _preflight_missing_approval_pin(snapshot_root)
+    # A successful preflight never substitutes for any reader verification.
+    snapshot = Snapshot(snapshot_root)
     assert snapshot.version != "unavailable"
     _check_packaged_business_metrics_snapshot()
     password = secrets.token_urlsafe(18)

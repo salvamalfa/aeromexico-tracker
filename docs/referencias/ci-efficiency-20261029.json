@@ -916,5 +916,635 @@
     "existing_cases_retained": 9,
     "existing_assertions_retained": 82,
     "method": "AST comparison preserves all nine cases and 82 assertions; measured module setup and original real-data adversarial readers run separately from the shared fixture."
+  },
+  "global_followup": {
+    "schema_version": "ci-global-efficiency-v1",
+    "rejected_consumer_trial": {
+      "decision": "Discarded and reverted normally; focal gain did not demonstrate net global benefit. No proof the fixture caused the two timeouts.",
+      "base": "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+      "candidate": "cb5fcdde17bbb073995c2a21305c236411347909",
+      "revert": "270c14e7",
+      "runs": {
+        "baseline-focal": {
+          "label": "baseline-focal",
+          "revision": "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+          "command": [
+            "uv",
+            "run",
+            "--no-sync",
+            "pytest",
+            "-q",
+            "tests/test_chat_route_tool_budget.py",
+            "tests/test_chat_route_metric_provenance.py",
+            "tests/test_chat_evaluation_observation.py",
+            "--financial-publication-base",
+            "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+            "--durations=0",
+            "--durations-min=0",
+            "--junitxml=/workspace/ci-global-measurements/baseline-focal.xml"
+          ],
+          "cwd": "/workspace/ci-global",
+          "started_epoch": 1793278049.5410311,
+          "elapsed_seconds": 206.67468070983887,
+          "exit_code": 0,
+          "user_seconds": 199.328332,
+          "system_seconds": 7.3871579999999994,
+          "max_rss_kib": 457832,
+          "pytest_summary": "25 passed in 204.85s (0:03:24)",
+          "case_count": 25,
+          "case_ids_sha256": "92a4f0c4c5e025dbe3b9c5b22040839e2f1d1340f292c4035a3372872c551f43",
+          "skipped_cases": [],
+          "phase_totals_seconds_rounded": {
+            "call": 204.24,
+            "teardown": 0.0,
+            "setup": 0.0
+          },
+          "raw_artifacts_sha256": {
+            "log": "405d9995169b2fb6dda4c833da0604c3af384e6d00e5fbe8876b3a8c02088247",
+            "xml": "0667cbcaa8bf5a0871b24ea98578543453c50cca33c65868b7b6b50c7930b1b0",
+            "json": "7a9524affa885f24653e2c5e863e23f38be8d0eea4c756c0ed9e99a8e56db354"
+          }
+        },
+        "after-focal": {
+          "label": "after-focal",
+          "revision": "cb5fcdde17bbb073995c2a21305c236411347909",
+          "command": [
+            "uv",
+            "run",
+            "--no-sync",
+            "pytest",
+            "-q",
+            "tests/test_chat_route_tool_budget.py",
+            "tests/test_chat_route_metric_provenance.py",
+            "tests/test_chat_evaluation_observation.py",
+            "--financial-publication-base",
+            "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+            "--durations=0",
+            "--durations-min=0",
+            "--junitxml=/workspace/ci-global-measurements/after-focal.xml"
+          ],
+          "cwd": "/workspace/ci-global",
+          "started_epoch": 1793281476.5518365,
+          "elapsed_seconds": 131.22406458854675,
+          "exit_code": 0,
+          "user_seconds": 127.500049,
+          "system_seconds": 4.110785,
+          "max_rss_kib": 717288,
+          "pytest_summary": "25 passed in 129.40s (0:02:09)",
+          "case_count": 25,
+          "case_ids_sha256": "92a4f0c4c5e025dbe3b9c5b22040839e2f1d1340f292c4035a3372872c551f43",
+          "skipped_cases": [],
+          "phase_totals_seconds_rounded": {
+            "setup": 124.59,
+            "call": 1.75,
+            "teardown": 1.7
+          },
+          "raw_artifacts_sha256": {
+            "log": "3a8aa2c560a8a0b10f30585d0430bce2b09f30c5b6dd8ffced8e0cbb25a487c5",
+            "xml": "589f35831382046d8e29a7aef69582f4da39cc2b764a71dffbf936d08ed3ea0c",
+            "json": "64eb4c676082c9e21b575a1b644327a85d7d43ac74332232155df77fe2aa68b0"
+          }
+        },
+        "baseline-public": {
+          "label": "baseline-public",
+          "revision": "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+          "command": [
+            "uv",
+            "run",
+            "--no-sync",
+            "pytest",
+            "-m",
+            "not local_data and not browser",
+            "-q",
+            "--financial-publication-base",
+            "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+            "--durations=0",
+            "--durations-min=0",
+            "--junitxml=/workspace/ci-global-measurements/baseline-public.xml"
+          ],
+          "cwd": "/workspace/ci-global",
+          "started_epoch": 1793278264.8957798,
+          "elapsed_seconds": 3209.4338114261627,
+          "exit_code": 0,
+          "user_seconds": 3113.093207,
+          "system_seconds": 89.291677,
+          "max_rss_kib": 1202624,
+          "pytest_summary": "5433 passed, 9 skipped, 106 deselected, 50 warnings, 29 subtests passed in 3203.99s (0:53:23)",
+          "case_count": 5442,
+          "case_ids_sha256": "11aa98b88c3ccfb29d0429b5e1bc545b66fdb7fd49b32abb2905ce221c2b9595",
+          "skipped_cases": [
+            {
+              "id": "tests/test_editorial_site_parity.py::test_editorial_site_preserves_every_historical_file",
+              "reason": "Financial mode has its own strict historical structure/byte preservation check"
+            },
+            {
+              "id": "tests/test_editorial_site_parity.py::test_editorial_new_payload_matches_its_full_approved_source_replay",
+              "reason": "Current editorial source record is not restored; its full source replay is required locally"
+            },
+            {
+              "id": "tests/test_financial_site_parity.py::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+              "reason": "Financial source record is not restored; complete replay is required"
+            },
+            {
+              "id": "tests/test_pages_preview.py::test_preview_pin_is_well_formed",
+              "reason": "no Pages preview pinned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[fx_rates.parquet-required_columns0]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[fuel_prices.parquet-required_columns1]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[market_prices.parquet-required_columns2]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[airport_traffic.parquet-required_columns3]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[news_headlines.parquet-required_columns4]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            }
+          ],
+          "phase_totals_seconds_rounded": {
+            "setup": 397.24,
+            "teardown": 2.46,
+            "call": 2770.88
+          },
+          "raw_artifacts_sha256": {
+            "log": "6df193de18e327eb048699d497248f06366062551cbe7632ab7345261fc0dc23",
+            "xml": "455ebb63b471d792edd3d6bf699e946184d52bb59f3b6aac3b4ad59308e18c10",
+            "json": "a96c0f8e8c1ebcb9d0240c50d56bcad0af454f47bf2f3e08473cc67f37ff029a"
+          }
+        },
+        "after-public": {
+          "label": "after-public",
+          "revision": "cb5fcdde17bbb073995c2a21305c236411347909",
+          "command": [
+            "uv",
+            "run",
+            "--no-sync",
+            "pytest",
+            "-m",
+            "not local_data and not browser",
+            "-q",
+            "--financial-publication-base",
+            "fa6c8d4e7f19d872c0fd3b6dd5f5b709d5b31548",
+            "--durations=0",
+            "--durations-min=0",
+            "--junitxml=/workspace/ci-global-measurements/after-public.xml"
+          ],
+          "cwd": "/workspace/ci-global",
+          "started_epoch": 1793281639.3046608,
+          "elapsed_seconds": 3463.5085122585297,
+          "exit_code": 1,
+          "user_seconds": 3347.207756,
+          "system_seconds": 98.939143,
+          "max_rss_kib": 1186840,
+          "pytest_summary": "1 failed, 5432 passed, 8 skipped, 106 deselected, 50 warnings, 1 error, 29 subtests passed in 3458.00s (0:57:38)",
+          "case_count": 5442,
+          "case_ids_sha256": "11aa98b88c3ccfb29d0429b5e1bc545b66fdb7fd49b32abb2905ce221c2b9595",
+          "skipped_cases": [
+            {
+              "id": "tests/test_editorial_site_parity.py::test_editorial_site_preserves_every_historical_file",
+              "reason": "Financial mode has its own strict historical structure/byte preservation check"
+            },
+            {
+              "id": "tests/test_editorial_site_parity.py::test_editorial_new_payload_matches_its_full_approved_source_replay",
+              "reason": "Current editorial source record is not restored; its full source replay is required locally"
+            },
+            {
+              "id": "tests/test_pages_preview.py::test_preview_pin_is_well_formed",
+              "reason": "no Pages preview pinned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[fx_rates.parquet-required_columns0]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[fuel_prices.parquet-required_columns1]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[market_prices.parquet-required_columns2]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[airport_traffic.parquet-required_columns3]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "id": "tests/test_stage4.py::test_stage4_silver_contracts[news_headlines.parquet-required_columns4]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            }
+          ],
+          "phase_totals_seconds_rounded": {
+            "call": 2887.78,
+            "setup": 526.81,
+            "teardown": 5.05
+          },
+          "raw_artifacts_sha256": {
+            "log": "236957e08b0220ef98bac53e3f665023872b07575445a72c556a23f00394aef9",
+            "xml": "25fd8eae01a7185e26baa95bffd0bcf24a539bc4985d9fd8542456bb74481020",
+            "json": "4e4f1799671d02aed4da53e647c63b28f4157a8df0c2cf6b05c819710928cdb4"
+          }
+        }
+      },
+      "full_process_seconds_added": 254.07470083236694,
+      "outcome_changes": [
+        {
+          "id": "tests/test_chat_runtime_smoke_scope.py::test_real_cli_still_rejects_missing_pin_while_fixture_runs_without_network",
+          "before": "passed",
+          "after": "failure"
+        },
+        {
+          "id": "tests/test_financial_site_parity.py::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "before": "skipped",
+          "after": "error"
+        }
+      ],
+      "confirmed_failures": [
+        "Published CLI negative configuration case timed out at90s",
+        "Historical financial verifier setup timed out at120s; source replay skip was never reached"
+      ],
+      "focal_original_assertions_retained": 173,
+      "focal_existing_functions_retained": 22,
+      "memory_note": "max_rss_kib is the kernel largest-child metric, not aggregate; these original measurements remain valid. Later recorder smoke aggregate fields were invalid until/proc PPid enumeration was fixed."
+    },
+    "accepted_parallel_trial": {
+      "decision": "Keep two file-grouped local workers, no automatic restarts. Remove temporary baseline/instrumentation from recurring CI; no case/criterion/timeout removed.",
+      "github": {
+        "pr": 179,
+        "run_id": 40902930996,
+        "test_job_id": 123549841395,
+        "web_job_id": 123549841554,
+        "run_url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40902930996",
+        "head": "ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5",
+        "base": "6ae57cb100a8b4bb37272e7fa710fdc7bedf0b44",
+        "artifact_id": 12912476102,
+        "artifact_sha256": "7357638fb166b0a10a6c85368ab29989dfab4347e007c53b360b92419c3063af",
+        "artifact_retention_days": 7
+      },
+      "measurement_order": [
+        "warm collection only",
+        "public-serial",
+        "public-parallel"
+      ],
+      "before": {
+        "schema_version": "ci-pytest-profile-v1",
+        "label": "public-serial",
+        "workers": 0,
+        "revision": "656e7901cb4fabebb4ea8476d67262ebc68e2c9b",
+        "tree": "cf793da9d926017b767e7d96df6838b54df6d180",
+        "source_input_tree_sha256": "e9c2544e57950874476cc149c279dbeeb63a415656b074b4a63871509c3aabad",
+        "source_inputs_before": {
+          "clean": true,
+          "untracked_count": 0,
+          "untracked_paths_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "source_inputs_after": {
+          "clean": true,
+          "untracked_count": 0,
+          "untracked_paths_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "command": [
+          "/home/runner/work/aeromexico-tracker/aeromexico-tracker/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-n",
+          "0",
+          "--dist=loadfile",
+          "--max-worker-restart=0",
+          "-p",
+          "ci_pytest_inventory",
+          "-m",
+          "not local_data and not browser",
+          "-q",
+          "--durations=30",
+          "--financial-publication-base",
+          "6ae57cb100a8b4bb37272e7fa710fdc7bedf0b44",
+          "--junitxml=/home/runner/work/aeromexico-tracker/aeromexico-tracker/test-results/public-serial.xml"
+        ],
+        "cwd": "/home/runner/work/aeromexico-tracker/aeromexico-tracker",
+        "python": "3.13.18 (main, Oct 26 2026, 14:08:20) [Clang 23.1.3 ]",
+        "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+        "cpu_count": 4,
+        "versions": {
+          "pytest": "9.1.1",
+          "pytest-xdist": "3.8.0",
+          "execnet": "2.1.1"
+        },
+        "pytest_exit_code": 0,
+        "inventory_errors": [],
+        "exit_code": 0,
+        "elapsed_seconds": 993.7521552420001,
+        "child_user_seconds": 947.173322,
+        "child_system_seconds": 31.824581,
+        "sampler_user_seconds": 9.083707,
+        "sampler_system_seconds": 8.716587,
+        "largest_child_max_rss_kib": 1159448,
+        "sampled_aggregate_rss_bytes": 1562034176,
+        "peak_process_count": 4,
+        "sampling_interval_seconds": 0.2,
+        "samples": 4879,
+        "rss_note": "Sampled sum of profiler/descendant RSS; shared pages may count more than once. Separate kernel metric is largest child, not aggregate.",
+        "pin_fingerprints": {
+          "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256": "4eaab1d913b3dfbbb577c8172843639bcf99c7331b6ed7a95e3b35e777380f2a",
+          "CHAT_EVIDENCE_APPROVED_INDEX_SHA256": "e99e17d39398bdc7fb76978923db647bbbdb332d5973ba1f657f9e06427a1b40"
+        },
+        "tool_inputs_sha256": {
+          "uv.lock": "89ff2bbaaa226e836b0f577aedcc9c6bb07647f1c20bfd70d83ead6e1828ab11",
+          "pyproject.toml": "375d8eeca1f1d9716f7ab08ab63e640f5fc06590922ddef0e4d9a18bde268a1d",
+          ".github/ci-test-tools.txt": "946b3fcabf534a7b35eaa999041da637d1a1d37ebd3bba58d1aa7d4e4bf62c11",
+          ".github/ci/profile_pytest.py": "2e3cf3451ecccdd9e2edc5dccebabfd0395ba06b822561ca92c1cccd48655697",
+          ".github/ci/ci_pytest_inventory.py": "3f10ebc9b3c927ccead52efd22c04f31a190b82437880b9fc8f6e48b7f3be434"
+        }
+      },
+      "after": {
+        "schema_version": "ci-pytest-profile-v1",
+        "label": "public-parallel",
+        "workers": 2,
+        "revision": "656e7901cb4fabebb4ea8476d67262ebc68e2c9b",
+        "tree": "cf793da9d926017b767e7d96df6838b54df6d180",
+        "source_input_tree_sha256": "e9c2544e57950874476cc149c279dbeeb63a415656b074b4a63871509c3aabad",
+        "source_inputs_before": {
+          "clean": true,
+          "untracked_count": 0,
+          "untracked_paths_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "source_inputs_after": {
+          "clean": true,
+          "untracked_count": 0,
+          "untracked_paths_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "command": [
+          "/home/runner/work/aeromexico-tracker/aeromexico-tracker/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-n",
+          "2",
+          "--dist=loadfile",
+          "--max-worker-restart=0",
+          "-p",
+          "ci_pytest_inventory",
+          "-m",
+          "not local_data and not browser",
+          "-q",
+          "--durations=30",
+          "--financial-publication-base",
+          "6ae57cb100a8b4bb37272e7fa710fdc7bedf0b44",
+          "--junitxml=/home/runner/work/aeromexico-tracker/aeromexico-tracker/test-results/public-parallel.xml"
+        ],
+        "cwd": "/home/runner/work/aeromexico-tracker/aeromexico-tracker",
+        "python": "3.13.18 (main, Oct 26 2026, 14:08:20) [Clang 23.1.3 ]",
+        "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+        "cpu_count": 4,
+        "versions": {
+          "pytest": "9.1.1",
+          "pytest-xdist": "3.8.0",
+          "execnet": "2.1.1"
+        },
+        "pytest_exit_code": 0,
+        "inventory_errors": [],
+        "exit_code": 0,
+        "elapsed_seconds": 536.6388123170002,
+        "child_user_seconds": 1007.186167,
+        "child_system_seconds": 34.806664,
+        "sampler_user_seconds": 6.401377,
+        "sampler_system_seconds": 5.602144,
+        "largest_child_max_rss_kib": 1128520,
+        "sampled_aggregate_rss_bytes": 3079684096,
+        "peak_process_count": 7,
+        "sampling_interval_seconds": 0.2,
+        "samples": 2623,
+        "rss_note": "Sampled sum of profiler/descendant RSS; shared pages may count more than once. Separate kernel metric is largest child, not aggregate.",
+        "pin_fingerprints": {
+          "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256": "4eaab1d913b3dfbbb577c8172843639bcf99c7331b6ed7a95e3b35e777380f2a",
+          "CHAT_EVIDENCE_APPROVED_INDEX_SHA256": "e99e17d39398bdc7fb76978923db647bbbdb332d5973ba1f657f9e06427a1b40"
+        },
+        "tool_inputs_sha256": {
+          "uv.lock": "89ff2bbaaa226e836b0f577aedcc9c6bb07647f1c20bfd70d83ead6e1828ab11",
+          "pyproject.toml": "375d8eeca1f1d9716f7ab08ab63e640f5fc06590922ddef0e4d9a18bde268a1d",
+          ".github/ci-test-tools.txt": "946b3fcabf534a7b35eaa999041da637d1a1d37ebd3bba58d1aa7d4e4bf62c11",
+          ".github/ci/profile_pytest.py": "2e3cf3451ecccdd9e2edc5dccebabfd0395ba06b822561ca92c1cccd48655697",
+          ".github/ci/ci_pytest_inventory.py": "3f10ebc9b3c927ccead52efd22c04f31a190b82437880b9fc8f6e48b7f3be434"
+        }
+      },
+      "comparison": {
+        "selected_main_cases": 5460,
+        "deselected": 106,
+        "subtests": 29,
+        "same_main_phase_ids_outcomes": 16380,
+        "same_skip_ids_reasons": 9,
+        "before_s": 993.7521552420001,
+        "after_s": 536.6388123170002,
+        "saved_s": 457.11334292499987,
+        "reduction_pct": 45.99872719910558,
+        "before_cpu_s": 996.798197,
+        "after_cpu_s": 1053.996352,
+        "cpu_increase_pct": 5.738188047705695,
+        "before_aggregate_mib": 1489.671875,
+        "after_aggregate_mib": 2937.015625,
+        "aggregate_increase_pct": 97.15856050514479,
+        "same_source_env_dependencies_pins": true,
+        "input_tree_matches_benchmark_head": true,
+        "all_results_match": true
+      },
+      "case_outcomes": {
+        "public-serial": {
+          "passed": 5451,
+          "skipped": 9
+        },
+        "public-parallel": {
+          "passed": 5451,
+          "skipped": 9
+        }
+      },
+      "main_phase_totals_seconds": {
+        "public-serial": {
+          "setup": 120.814540809998,
+          "call": 864.0600545100001,
+          "teardown": 2.2048647829996924
+        },
+        "public-parallel": {
+          "setup": 152.35282110400544,
+          "call": 887.7904736499886,
+          "teardown": 2.7837511799966705
+        }
+      },
+      "junit": {
+        "public-serial": {
+          "suites": [
+            {
+              "name": "pytest",
+              "errors": "0",
+              "failures": "0",
+              "skipped": "9",
+              "tests": "5489",
+              "time": "990.778",
+              "timestamp": "2026-10-29T15:35:00.152239+00:00",
+              "hostname": "runnervm48cm3"
+            }
+          ],
+          "main_case_count": 5460,
+          "skips": [
+            {
+              "class": "tests.test_editorial_site_parity",
+              "name": "test_editorial_new_payload_matches_its_full_approved_source_replay",
+              "reason": "Current editorial source record is not restored; its full source replay is required locally"
+            },
+            {
+              "class": "tests.test_editorial_site_parity",
+              "name": "test_editorial_site_preserves_every_historical_file",
+              "reason": "Financial mode has its own strict historical structure/byte preservation check"
+            },
+            {
+              "class": "tests.test_financial_site_parity",
+              "name": "test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+              "reason": "Financial source record is not restored; complete replay is required"
+            },
+            {
+              "class": "tests.test_pages_preview",
+              "name": "test_preview_pin_is_well_formed",
+              "reason": "no Pages preview pinned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[airport_traffic.parquet-required_columns3]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[fuel_prices.parquet-required_columns1]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[fx_rates.parquet-required_columns0]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[market_prices.parquet-required_columns2]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[news_headlines.parquet-required_columns4]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            }
+          ]
+        },
+        "public-parallel": {
+          "suites": [
+            {
+              "name": "pytest",
+              "errors": "0",
+              "failures": "0",
+              "skipped": "9",
+              "tests": "5489",
+              "time": "535.395",
+              "timestamp": "2026-10-29T15:51:34.922114+00:00",
+              "hostname": "runnervm48cm3"
+            }
+          ],
+          "main_case_count": 5460,
+          "skips": [
+            {
+              "class": "tests.test_editorial_site_parity",
+              "name": "test_editorial_new_payload_matches_its_full_approved_source_replay",
+              "reason": "Current editorial source record is not restored; its full source replay is required locally"
+            },
+            {
+              "class": "tests.test_editorial_site_parity",
+              "name": "test_editorial_site_preserves_every_historical_file",
+              "reason": "Financial mode has its own strict historical structure/byte preservation check"
+            },
+            {
+              "class": "tests.test_financial_site_parity",
+              "name": "test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+              "reason": "Financial source record is not restored; complete replay is required"
+            },
+            {
+              "class": "tests.test_pages_preview",
+              "name": "test_preview_pin_is_well_formed",
+              "reason": "no Pages preview pinned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[airport_traffic.parquet-required_columns3]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[fuel_prices.parquet-required_columns1]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[fx_rates.parquet-required_columns0]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[market_prices.parquet-required_columns2]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            },
+            {
+              "class": "tests.test_stage4",
+              "name": "test_stage4_silver_contracts[news_headlines.parquet-required_columns4]",
+              "reason": "Stage 4 local data artifacts are intentionally not versioned"
+            }
+          ]
+        }
+      },
+      "selection_sha256": "be95785170da0561f513fedfa514379e3b1ba2401a1a540acf7311b596a9ba2b",
+      "deselection_sha256": "5b460e763a849c07678ec7f81896a5d48c9835da2fafd8f5f41e4cacce227f53",
+      "raw_files_sha256": {
+        "collection-warmup.txt": "c6466cfd0edbbaf2365814e9da80544a461180c81b0b66726f925e3d7ba26d3c",
+        "public-parallel-inventory-gw0.json": "345d883f2416f69ebf8066e39f3c86a8aa131b335ac887b28c369cfaccd3c4c1",
+        "public-parallel-inventory-gw1.json": "c275c59045267db1483b7d77f650616970c1d80efeaf053bcde21bf60bd0ce5e",
+        "public-parallel-inventory-main.json": "676e217e230cfccc08019be3230441d00b461e52a7d525596ce09584c0ea4c5c",
+        "public-parallel-metrics.json": "9fb453685751539025304f6074edf37df18455b062c5f18af729145ea8991ae6",
+        "public-parallel.xml": "be3f1762ac625b787251bc6f7ff00db94fd676fc07a18299eba336efe5625f1e",
+        "public-serial-inventory-main.json": "0ddcf6a5619adb3848b7cc5f72b993de82548e0f5c495b49d970194f9131e47d",
+        "public-serial-metrics.json": "1fd5c4441f50d13c27f0bbdb00d871d823657b129b8081c3466b1408e5a0cdad",
+        "public-serial.xml": "7ae429a71a6c856c1042c54d80ed8e74120af7bdaf5f4adba3d9b255cf4bb99e"
+      },
+      "temporary_measurement_sources": [
+        {
+          "path": ".github/ci/profile_pytest.py",
+          "disposition": "retire",
+          "recovery": "https://github.com/salvamalfa/aeromexico-tracker/blob/ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5/.github/ci/profile_pytest.py"
+        },
+        {
+          "path": ".github/ci/ci_pytest_inventory.py",
+          "disposition": "retire",
+          "recovery": "https://github.com/salvamalfa/aeromexico-tracker/blob/ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5/.github/ci/ci_pytest_inventory.py"
+        }
+      ],
+      "web_validation": {
+        "unit_passed": 268,
+        "browser_passed": 31
+      },
+      "caveats": [
+        "One matched pair on the same four-CPU GitHub runner, hostname verified. No statistical or future timing guarantee. This is the complete public pytest profile, not the entire job or private/browser profile.",
+        "CPU totals include child-family CPU plus sampler CPU. Sampled aggregate RSS sums simultaneous process RSS every nominal0.2s and may count shared pages more than once or miss short peaks; kernel largest-child RSS is separate.",
+        "Two workers duplicate some imports/session preparation; this trades extra CPU/memory for lower wall time on already allocated cores. No safety verdict or approval is reused.",
+        "Each worker records full fresh selected/deselected inventory. xdist may omit the deselected count from terminal output; the106 exclusions are validated from inventories. Subtest identities/outcomes use raw worker records, not a second repr of reconstructed controller context.",
+        "Temporary collection/measurement instruments are retained in the fixed benchmark commit. Final CI removes them and the serial baseline; application/test inputs and dependency pins retain their measured behavior, with final-head CI/review required."
+      ]
+    },
+    "case_detail": {
+      "path": "docs/referencias/ci-global-efficiency-20261029-cases.json.gz",
+      "sha256": "56832ec516cea221d19badb9797ae1a78e5b4ec85c50b016d64051851a489b74",
+      "main_ids": 5460,
+      "compressed_bytes": 593253,
+      "uncompressed_bytes": 3784780
+    }
   }
 }
