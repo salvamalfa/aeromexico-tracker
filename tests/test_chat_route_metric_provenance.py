@@ -7,11 +7,7 @@ from _published_flight_profiles import (
     has_signed_flight_components,
 )
 
-from tests._published_snapshot_fixtures import (
-    _verified_published_snapshot as _verified_published_snapshot,
-    published_snapshot as published_snapshot,
-)
-
+from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.tools.routes import RouteTools
 
 
@@ -31,8 +27,8 @@ def _route_query(tools: RouteTools, market: str, metric: str) -> dict:
     )["rows"][0]
 
 
-def test_published_international_metric_provenance_is_component_specific(published_snapshot) -> None:
-    tools = RouteTools(published_snapshot)
+def test_published_international_metric_provenance_is_component_specific() -> None:
+    tools = RouteTools(Snapshot(Path("site")))
     components = has_signed_flight_components(tools.snapshot)
     frequency_kind = "estimated" if components else "scheduled"
     expected = {
@@ -63,8 +59,8 @@ def test_published_international_metric_provenance_is_component_specific(publish
     assert gua_passengers["metric_source_label"].startswith("AFAC + AeroDataBox")
 
 
-def test_published_scheduled_statuses_classify_departures_not_capacity(published_snapshot) -> None:
-    tools = RouteTools(published_snapshot)
+def test_published_scheduled_statuses_classify_departures_not_capacity() -> None:
+    tools = RouteTools(Snapshot(Path("site")))
     components = has_signed_flight_components(tools.snapshot)
     network, _ = tools._load("AEROMEXICO_GROUP", "international", "2026Q2")
     scheduled = [
@@ -134,10 +130,10 @@ def test_attributed_market_counts_are_never_observed_company_flights():
     assert provenance["method"] == "market_total_attribution_not_observed_carrier_operations"
 
 
-def test_frozen_domestic_flight_estimates_remain_queryable_without_relabelling_as_observed(published_snapshot):
+def test_frozen_domestic_flight_estimates_remain_queryable_without_relabelling_as_observed():
     import json
 
-    snapshot = published_snapshot
+    snapshot = Snapshot(Path("site"))
     relative = "data/v1/flights/domestic/2026M06.json"
     # No policy removes route passengers, frequencies or their historical provenance.
     assert snapshot.payload(relative) == json.loads((Path("site") / relative).read_text())
@@ -229,8 +225,8 @@ def test_chat_query_and_shared_routes_preserve_mixed_flight_cell_kinds():
         )
 
 
-def test_queries_the_signed_public_snapshot_without_private_inputs(published_snapshot) -> None:
-    tools = RouteTools(published_snapshot)
+def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
+    tools = RouteTools(Snapshot(Path("site")))
     components = has_signed_flight_components(tools.snapshot)
     result = tools.invoke(
         "query_routes",

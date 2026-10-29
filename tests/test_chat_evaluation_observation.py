@@ -1,12 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from tests._published_snapshot_fixtures import (
-    _verified_published_snapshot as _verified_published_snapshot,
-    published_snapshot as published_snapshot,
-)
-
+from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.evaluation import load_fixture, verify_observation
 from src.conversational_analytics.evaluation_observation import observation_from_tool_calls
 from src.conversational_analytics.tools.registry import ToolRegistry
@@ -74,8 +72,8 @@ def _call(name: str, arguments: dict, rows: list[dict], **result_fields) -> dict
     return {"name": name, "arguments": arguments, "result": result, "scope": {}}
 
 
-def test_comparison_preserves_all_actual_periods_and_rows(published_snapshot):
-    snapshot = published_snapshot
+def test_comparison_preserves_all_actual_periods_and_rows():
+    snapshot = Snapshot(Path("site"))
     registry = ToolRegistry(snapshot)
     args = {
         "metric_id": "load_factor",
@@ -96,8 +94,8 @@ def test_comparison_preserves_all_actual_periods_and_rows(published_snapshot):
     assert not verify_observation(_load_factor_case(), observation, check_response=False).passed
 
 
-def test_time_series_exact_period_matches_numeric_fixture(published_snapshot):
-    snapshot = published_snapshot
+def test_time_series_exact_period_matches_numeric_fixture():
+    snapshot = Snapshot(Path("site"))
     registry = ToolRegistry(snapshot)
     args = {
         "metric_id": "load_factor",
@@ -115,8 +113,8 @@ def test_time_series_exact_period_matches_numeric_fixture(published_snapshot):
     assert verify_observation(_load_factor_case(), observation, check_response=False).passed
 
 
-def test_query_with_wrong_metric_remains_supported_evidence_and_fails_golden(published_snapshot):
-    snapshot = published_snapshot
+def test_query_with_wrong_metric_remains_supported_evidence_and_fails_golden():
+    snapshot = Snapshot(Path("site"))
     registry = ToolRegistry(snapshot)
     args = {"metric_ids": ["ask_km"], "entity_ids": ["AEROMEXICO"], "periods": ["2026Q2"]}
     result = registry.invoke("query_metrics", args)
