@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "native": {
     "type": "object",
     "additionalProperties": false,
@@ -33,7 +33,8 @@
       "edition": {
         "enum": [
           "2026Q1",
-          "2026Q2"
+          "2026Q2",
+          "2026Q3"
         ]
       },
       "statement": {
@@ -50,7 +51,8 @@
         "enum": [
           "quarter",
           "half_year",
-          "instant"
+          "instant",
+          "nine_month"
         ]
       },
       "period_end_date": {
@@ -185,7 +187,8 @@
       "edition": {
         "enum": [
           "2026Q1",
-          "2026Q2"
+          "2026Q2",
+          "2026Q3"
         ]
       },
       "statement": {
@@ -202,7 +205,8 @@
         "enum": [
           "quarter",
           "half_year",
-          "instant"
+          "instant",
+          "nine_month"
         ]
       },
       "period_end_date": {

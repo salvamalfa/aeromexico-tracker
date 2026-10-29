@@ -133,7 +133,7 @@
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",
       "state": "manual",
       "format": "HTML → PDF InvestorCloud",
-      "procedure": "Localizar release real de GVIVA y enlace InvestorCloud. No sustituir números en VIVA_REPORT_URL: es plantilla histórica, no prueba de disponibilidad. Para el 2T26 retenido usar viva_financial_candidate, roles pdf=2T26 y prior_quarter=1T26; verifica tablas completas con USD/millas/pasajeros reservados, trimestre/acumulado/instantes y preliminar/no auditado. El 1T26 es soporte diagnóstico: H1−Q2 no se publica como 1T validado ni se armonizan diferencias entre ediciones. Otra edición requiere adaptación. No ejecutar peers como certificador integral."
+      "procedure": "Localizar el release oficial real. Certificador viva_financial_candidate explícito: 2026Q2 con soporte 2026Q1, o 2026Q3 con soporte 2026Q2; roles pdf/prior_quarter. Separar trimestre/semestre/nueve meses e instantes; USD, millas y pasajeros reservados. Conservar cifras originales, revisión entre ediciones, pérdidas, flota y notas no auditadas. Retain, certify y replay offline en candidato aislado. Q3 original comprobado puede vincularse como edición cerrada validada; no acredita última corrección ni activa calendario/tesis/publicación. No ejecutar peers como certificador integral ni extrapolar perfiles."
     },
     "viva_traffic": {
       "entry_ref": "url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD",

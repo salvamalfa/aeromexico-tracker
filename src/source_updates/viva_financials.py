@@ -1,4 +1,4 @@
-"""Fail closed parsing of the retained Viva 2026Q2 dossier and Q1 comparison support."""
+"""Fail closed parsing of the explicit Viva 2026Q2/Q3 dossiers with prior-edition support."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from src.source_updates.viva_financial_spec import (
     INCOME,
     INDICATORS,
     VERSION,
+    profile,
 )
 
 NUMBER = r"-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?"
@@ -72,15 +73,18 @@ def between(text, start, stop):
 
 
 def edition(pages, original, q):
-    if len(pages) != (12 if q == 2 else 10):
+    selected = profile(q)
+    if len(pages) != selected["pages"]:
         raise ValueError("Viva reviewed edition page coverage changed")
     pages = [norm(p) for p in pages]
-    date, month, end = ("July 24th", "June 30", "06-30") if q == 2 else ("April 30th", "March 31", "03-31")
+    date, month, end = (selected[k] for k in ("date", "month", "end"))
     required = [
         f"Mexico City, {date}, 2026",
         f"announced today its {q}Q 2026 financial results.",
         "Grupo Viva Aerobus, S.A. de C.V.",
-        "the parent company of Aeroenlaces Nacionales S.A. de C.V.",
+        "the parent company of Aeroenlaces Nacionales, S.A. de C.V."
+        if q == 3
+        else "the parent company of Aeroenlaces Nacionales S.A. de C.V.",
         "Viva’s functional and reporting currency is the U.S. Dollar.",
     ]
     if not all(s in pages[0] for s in required):
@@ -141,19 +145,19 @@ def edition(pages, original, q):
                         source_locator=f"page:{page}/{statement}/{kind}/row:{index}/column:{column}",
                         is_unaudited=True if financial else None,
                         is_preliminary=True if financial and stop.startswith("2026") else None,
-                        report_date="2026-07-24" if q == 2 else "2026-04-30",
+                        report_date=selected["report_date"],
                         source_system=original["source_system"],
                         source_file=original["source_file"],
                         source_hash=original["sha256"],
                         ingested_at=pd.Timestamp(original["downloaded_at"]),
-                        parser_version=VERSION,
+                        parser_version="viva_2026q3_reported_financial_dossier_v1" if q == 3 else VERSION,
                         agent_eligible=False,
                     )
                 )
 
     def duration(page, statement, kind, count, definitions, header):
         text = pages[page - 1]
-        context = f"{'Three' if kind == 'quarter' else 'Six'}-month period ended {month}, 2026 and 2025"
+        context = f"{'Three' if kind == 'quarter' else selected['cumulative_prefix']}-month period ended {month}, 2026 and 2025"
         if ENTITY not in text or context not in text or "Thousands of U.S. Dollars" not in text:
             raise ValueError("Viva financial statement period/entity/scale heading changed")
         suffix = "(1)" if statement != "indicators" and "(1) Our consolidated" in text else None
@@ -163,18 +167,18 @@ def edition(pages, original, q):
             # Separate the two explicit tables before recognizing their headings.
             text = between(text, context, None)
             text = text.split("During ", 1)[0]
-            if q == 2 and kind == "quarter":
+            if q in (2, 3) and kind == "quarter":
                 suffix = None
         block = between(text, header, suffix)
         dates = [
-            (f"{year}-{'04-01' if q == 2 and kind == 'quarter' else '01-01'}", f"{year}-{end}")
+            (f"{year}-{selected['quarter_start'] if kind == 'quarter' else '01-01'}", f"{year}-{end}")
             for year in (2026, 2025)
         ]
         add(statement, page, block, definitions, kind, dates)
 
     indicators_header = f"Financial and Operational Indicators {q}Q 2026 {q}Q 2025 % Var"
     duration(7, "indicators", "quarter", 3, INDICATORS, indicators_header)
-    income_q = 9 if q == 2 else 8
+    income_q = 8 if q == 1 else 9
     income = list(INCOME)
     if q == 1:
         income = [
@@ -186,6 +190,10 @@ def edition(pages, original, q):
             )
             for label, *rest in income
         ]
+    if q == 3:
+        income = [
+            (label.replace("Operating profit (loss)", "Operating profit"), *rest) for label, *rest in income
+        ]
     duration(
         income_q,
         "income",
@@ -194,14 +202,16 @@ def edition(pages, original, q):
         income,
         f"US$ Thousand (unaudited){'1' if q == 1 else ''} {q}Q 2026 {q}Q 2025 % Var",
     )
-    if q == 2:
+    if q in (2, 3):
+        cumulative_kind = selected["cumulative_kind"]
+        cumulative_label = selected["cumulative_label"]
         duration(
             8,
             "indicators",
-            "half_year",
-            6,
+            cumulative_kind,
+            6 if q == 2 else 9,
             INDICATORS,
-            "Financial and Operational Indicators 6M 2026 6M 2025 % Var",
+            f"Financial and Operational Indicators {cumulative_label} 2026 {cumulative_label} 2025 % Var",
         )
         half_income = [
             (
@@ -212,8 +222,15 @@ def edition(pages, original, q):
             )
             for label, *rest in INCOME
         ]
-        duration(10, "income", "half_year", 6, half_income, "US$ Thousand (unaudited)1 6M 2026 6M 2025 % Var")
-    balance_page = 11 if q == 2 else 9
+        duration(
+            10,
+            "income",
+            cumulative_kind,
+            6 if q == 2 else 9,
+            half_income,
+            f"US$ Thousand (unaudited)1 {cumulative_label} 2026 {cumulative_label} 2025 % Var",
+        )
+    balance_page = 9 if q == 1 else 11
     balance = pages[balance_page - 1]
     if (
         f"As of {month}, 2026 and December 31, 2025" not in balance
@@ -222,7 +239,7 @@ def edition(pages, original, q):
     ):
         raise ValueError("Viva balance instant/entity/currency scale changed")
     preliminary = f"financial statements for the period ended {month}, 2026, are not yet available."
-    for page in [10, 11, 12] if q == 2 else [8, 9, 10]:
+    for page in [8, 9, 10] if q == 1 else [10, 11, 12]:
         if preliminary not in pages[page - 1] or "These figures are preliminary" not in pages[page - 1]:
             raise ValueError("Viva preliminary statement note missing")
     add(
@@ -230,25 +247,37 @@ def edition(pages, original, q):
         balance_page,
         between(
             balance,
-            f"US$ Thousand (unaudited)1 {'Jun' if q == 2 else 'Mar'} 2026 Dec 2025 % Var",
+            f"US$ Thousand (unaudited)1 {selected['short']} 2026 Dec 2025 % Var",
             "(1) Our consolidated",
         ),
-        BALANCE,
+        [
+            (label.replace("Accounts receivables and other", "Accounts receivable and other"), *rest)
+            for label, *rest in BALANCE
+        ]
+        if q == 3
+        else BALANCE,
         "instant",
         [(None, f"2026-{end}"), (None, "2025-12-31")],
     )
-    cash_page = 12 if q == 2 else 10
+    cash_page = 10 if q == 1 else 12
     # Each table is explicitly scoped; never derive Q2 cash flow from H1-Q1.
-    if q == 2:
+    if q in (2, 3):
         whole = pages[cash_page - 1]
-        cut = whole.index("Six-month period")
+        cut = whole.index(selected["cumulative_prefix"] + "-month period")
         quarter = whole[:cut].split("During ", 1)[0]
         saved = pages[cash_page - 1]
         pages[cash_page - 1] = quarter
-        duration(cash_page, "cash_flow", "quarter", 3, CASH, "US$ Thousand (unaudited) 2Q 2026 2Q 2025 % Var")
+        duration(
+            cash_page, "cash_flow", "quarter", 3, CASH, f"US$ Thousand (unaudited) {q}Q 2026 {q}Q 2025 % Var"
+        )
         pages[cash_page - 1] = saved
         duration(
-            cash_page, "cash_flow", "half_year", 6, CASH, "US$ Thousand (unaudited)1 6M 2026 6M 2025 % Var"
+            cash_page,
+            "cash_flow",
+            selected["cumulative_kind"],
+            6 if q == 2 else 9,
+            CASH,
+            f"US$ Thousand (unaudited)1 {selected['cumulative_label']} 2026 {selected['cumulative_label']} 2025 % Var",
         )
     else:
         duration(
@@ -265,21 +294,15 @@ def edition(pages, original, q):
         3,
         between(
             debt,
-            f"US$ Million {'Jun' if q == 2 else 'Mar'} 2026 Dec 2025 % Var",
+            f"US$ Million {selected['short']} 2026 Dec 2025 % Var",
             "(1) Cash and cash equivalents",
         ),
         DEBT,
         "instant",
         dates,
     )
-    fleet_dates = (
-        [(None, "2026-06-30"), (None, "2026-03-31"), (None, "2025-12-31"), (None, "2025-06-30")]
-        if q == 2
-        else [(None, "2026-03-31"), (None, "2025-12-31"), (None, "2025-03-31")]
-    )
-    fleet_header = (
-        "Aircraft* Jun 2026 Mar 2026 Dec 2025 Jun 2025" if q == 2 else "Aircraft* Mar 2026 Dec 2025 Mar 2025"
-    )
+    fleet_dates = selected["fleet_dates"]
+    fleet_header = selected["fleet_header"]
     add(
         "fleet",
         3,
@@ -296,10 +319,11 @@ def edition(pages, original, q):
 
 
 def parse(inputs, period):
-    if period != "2026Q2" or set(inputs) != {"pdf", "prior_quarter"}:
-        raise ValueError("Viva financial certifier requires reviewed 2026Q2 and explicit Q1 support")
+    if period not in {"2026Q2", "2026Q3"} or set(inputs) != {"pdf", "prior_quarter"}:
+        raise ValueError("Viva financial certifier requires explicit Q2/Q3 and its prior-edition support")
+    primary_q = int(period[-1])
     frames = []
-    for role, q in [("pdf", 2), ("prior_quarter", 1)]:
+    for role, q in [("pdf", primary_q), ("prior_quarter", primary_q - 1)]:
         content, original = inputs[role]
         if len(content) > 4_000_000 or not content.startswith(b"%PDF-"):
             raise ValueError("Viva financial reviewed PDF bounds exceeded")
