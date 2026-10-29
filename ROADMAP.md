@@ -103,6 +103,11 @@ La CI remota del head corregido y la integración son controles distintos.
 
 ## Terminado
 
+- **CI y suite, mejora acotada verificada:** preparación compartida del snapshot
+  en pruebas de conversación y lifecycle/Ruff antes del perfil público, sin
+  retirar casos. La [medición canónica](REPO_MAP.md#eficiencia-de-pruebas-y-ci)
+  distingue ahorro focal, memoria y perfil completo sin ahorro observado.
+
 - **AFAC aeroportuario septiembre, verificado localmente:** descarga real desde
   Chrome local, original 705.225 bytes/SHA comprobado; 3.510 filas, nueve meses,
   65 aeropuertos y 173 cruces. Julio conserva baseline:780 altas,0 bajas,9diferencias
@@ -228,7 +233,7 @@ remotas todavía abiertas ni ejecuciones nuevas atribuidas retrospectivamente.
   head aprobadas. La compatibilidad sobre AIFA fue limpia: solo dos documentos.
   CI, hilos, protecciones y autoridad originales permanecen exigidos.
 
-- **Eficiencia:** la agregada local anterior aprobó 5.129 casos; el total
+- **Eficiencia, medición anterior:** la agregada local anterior aprobó 5.129 casos; el total
   comparable pasó de 39:47 a 36:33 (8,1 % local). No se promete ese ahorro
   remoto ni se atribuye aquella suite a los heads posteriores.
 

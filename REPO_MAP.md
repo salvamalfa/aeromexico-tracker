@@ -103,6 +103,65 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 | `uv run python -m src.publish --record … --out site/` | Publica `site/` (verifica el registro ya aprobado, exporta v1, compila `web/`, ensambla y firma). Autorizado para cambios rutinarios solicitados según `AGENTS.md`. |
 | `uv run python -m src.publish.verify site/` | Revisa `site/` contra su manifiesto, los esquemas y `privacy.yaml` — sin datos privados; lo mismo que corre `.github/workflows/pages.yml` antes de desplegar. |
 
+### Eficiencia de pruebas y CI
+
+CI ejecuta lifecycle y Ruff antes del perfil público, con los mismos controles.
+Los jobs `test` y `web` muestran las treinta fases más lentas y conservan JUnit
+durante siete días en `public-test-results` y `browser-test-results`.
+
+Las pruebas de conversación comparten una lectura real de `Snapshot` por
+módulo: dos construcciones en vez de ocho. Cada consumidor comprueba que no
+cambió su estado, incluidas las estructuras anidadas. Los nueve casos y sus
+82 aserciones se conservan. App, SQLite, proveedor y worker siguen siendo
+independientes por caso. Las pruebas que alteran archivos, contratos, pins o
+validación construyen su propio lector y no usan esta fixture.
+
+Medición del 29/oct/2026: base `62607e8`, implementación `ce9e152`, Python
+3.13.5, dependencias de `uv.lock`, datos públicos y pins aprobados iguales.
+Las ejecuciones medidas fueron en serie, en checkouts aislados; no se
+restauraron insumos privados. El [registro técnico](docs/referencias/ci-efficiency-20261029.json)
+conserva comandos, hashes, IDs, resultados y tiempos por fase y proceso.
+
+| Perfil | Pytest antes / después | Proceso antes / después | Resultado |
+|---|---|---|---|
+| Dos módulos de chat | 122,52 / 71,00 s | 124,70 / 72,60 s | Nueve casos aprobados; IDs y resultados iguales. |
+| Público completo | 2112,54 / 2118,20 s | 2116,66 / 2121,25 s | 5.363 casos y 29 subpruebas aprobados; nueve omisiones y 106 exclusiones. IDs y resultados iguales. |
+
+En la toma completa, el proceso subió 4,59 s (0,22 %):
+no se observó ahorro global. Los dos módulos afectados sumaron 93,101
+→ 30,533 s de JUnit inclusivo dentro de ese perfil; ese dato describe
+solo esos módulos.
+
+El proceso focal bajó un 41,8 % observado. Su pico de memoria
+subió de 539,1 a 725,8 MiB por la copia profunda
+de la guarda.
+
+Es un solo par local por perfil; no acredita un ahorro estadístico ni garantiza
+esos tiempos en GitHub Actions. La comparación fija los commits indicados y
+no se mezcla con CI de otros heads o perfiles. El perfil público excluye
+`local_data` y `browser`; no demuestra validación privada ni autoriza publicar.
+Los tiempos de fase de `--durations` están redondeados a centésimas. JUnit
+conserva el total inclusivo por caso y por suite; el proceso incluye el arranque
+de `uv` y pytest.
+
+Para repetir, usa dos checkouts con los mismos datos, dependencias y pins
+externos del [registro de aprobación auditado](https://github.com/salvamalfa/aeromexico-tracker/blob/d456eb8dc05e586d7119161c710db5ff47af0da3/docs/chat/fase-2-decision-dueno.md).
+Ejecuta primero la base y después el cambio, sin competir por CPU:
+
+```bash
+export CI_PROFILE_BASE=62607e869d553b3ebb387404a63b726a8ce17f08
+uv sync --all-extras --all-groups --locked
+uv run --no-sync pytest -q tests/test_chat_mock_conversation.py tests/test_chat_integration.py --durations=0 --durations-min=0 --junitxml=tmp/ci-profile/focal.xml
+uv run --no-sync pytest -m "not local_data and not browser" -q --financial-publication-base "$CI_PROFILE_BASE" --durations=0 --durations-min=0 --junitxml=tmp/ci-profile/public.xml
+```
+
+`CI_PROFILE_BASE` debe ser el SHA completo confiable del baseline de CI. Usa
+esa opción solo cuando el sitio y su autoridad estén conservados: verifica la
+publicación existente con su verificador liberado, sin aprobar el runtime nuevo.
+Registra también el tiempo total del subproceso, CPU y pico de memoria; no
+incluyas instalaciones en un lado y las excluyas del otro.
+
+
 ## Recetas
 
 ### a) Mover o agregar un elemento de UI en Vuelos
