@@ -1,11 +1,11 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
-Revisión: 28 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
+Revisión: 29 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
 contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 
 ## Resumen
 
-**Estado vigente, 29/oct (UTC), implementación local de PR174:** un solo
+**Estado vigente, 29/oct (UTC):** un solo
 calendario incluye datos y Noticias. La búsqueda editorial nativa de septiembre
 ya produjo cinco eventos desde seis páginas leídas y siete búsquedas; son
 candidatos para revisión, sin publicar. El dueño sustituyó GDELT como requisito
@@ -16,9 +16,12 @@ la ronda completa sigue exigiendo todos sus componentes obligatorios.
 AFAC aeroportuario septiembre y los cinco instrumentos bursátiles pasan con
 archivos obtenidos por navegación normal. GAP/ASUR septiembre conservan sus
 fechas originales bajo el criterio de edición cerrada aprobado. La comprobación
-conjunta del nuevo código y su replay se registran abajo; no son activación ni
-integración de PR174. Aerocivil y Viva financiero 3T26 siguen pendientes de
-material oficial. Airline Monthly está en backlog. PR173 ya está integrado en
+conjunta de PR174 y su replay se registran abajo. PR174 ya se integró en
+`d8cebf69`, con [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40814025862).
+Viva financiero 3T26 ya tiene extracción real, conciliación y replay candidato
+verificados en la entrega descrita al final del apéndice. La leyenda y atribución
+oficiales de Aerocivil siguen sin confirmar. El calendario no se activó.
+Airline Monthly está en backlog. PR173 ya está integrado en
 `62607e86`, con [CI posterior aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40758184706).
 
 Los cortes y ensayos anteriores se conservan a continuación como evidencia;
@@ -4305,18 +4308,67 @@ SHA`3140ca25…`, respectivamente; no son los hashes de los archivos de replay.
 El nuevo head necesita su propia CI; el verde
 `40800804349` acredita176933ff, no el código corregido ni un permiso de merge.
 
+### Viva 3T26: incorporación candidata verificada el 29 de octubre
+
+El [original oficial inglés](https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-3T26-en.pdf)
+se descargó con HTTP 200 el 29/oct a las 06:37:58UTC: 336.146 bytes,
+SHA256 `a198374a6e74f983e0ea449506b613b996c57c275c45733b91b14fa97e554003`.
+La portada declara 28/oct2026, con precisión diaria; su hora de publicación sigue
+nula. No confundirla con la captura ni con Last-Modified. Original Library
+`libfile_76acec3be4448191bda34106579e41aa`, versión 0.
+
+`viva_financial_candidate` ya extrajo realmente **803 filas nativas**: 405 del
+3T26 y 398 del2T26 de soporte. Gold candidato proyecta 393 filas primarias,
+dos artefactos y 1.589 vínculos de linaje. Se conserva trimestre julio–septiembre,
+acumulado enero–septiembre, balances y cinco fechas de flota. Las pérdidas
+mantienen sus signos y las unidades/escala de cada tabla; las doce filas de
+contexto macro primarias permanecen fuera de Gold. Los perfiles 1T/2T continúan
+compatibles. No se ejecutó la ingesta heredada de peers.
+
+Pasaron 319 conciliaciones contables/operativas y 42 diagnósticos entre ediciones,
+todos dentro de la precisión impresa. Comparar 9M−Q3 con H1 no emite cifras
+históricas nuevas. El baseline aceptado conserva398 filas Q2 sin cambios;
+las 257 filas Q1 salen únicamente del soporte de este dossier, sin borrar sus
+expedientes ni los datos publicados. Poppler verificó independientemente los
+405 tokens primarios extraídos por pypdf.
+
+La ejecución y el replay del productor `81d2ab1b` dieron las mismas cuatro salidas
+que la primera extracción real `52c0ed5b`. La receta de readiness de **esta única
+tarea** pasó escritura y reproducción. Su vínculo
+`viva_Q3_official_retained_target_v1` aplica el criterio autorizado de edición
+cerrada: hash, URL exacta, manifiesto, sidecar, captura original y replay.
+No afirma último índice ni correcciones posteriores:
+`latest_source_availability_verified=false`, novedades `not_checked` y nueva
+edición conocida bloqueante. Otra edición/hash requiere revisión nueva.
+
+Evidencia privada conservada en
+`tmp/source-updates/evidence-audit-20261028/viva-q3-documentary-20261029/incorporation/`:
+`certify-final.json`, `replay-final.json`, `readiness-recipe.json`,
+`readiness.json`, `readiness-replay.json`, `final-execution.json` y el vínculo
+documental `central-release.json`, comprobado por `central-release-verification.json`.
+Los comandos son `python -m src.source_updates.viva_financial_candidate`
+`retain` y `certify --period 2026Q3`, con los roles `pdf=3T26` y
+`prior_quarter=2T26`; primero vista previa, después `--execute` y`--check`.
+No hay red durante certificación/replay ni descargas adicionales atribuidas.
+
+**Límite del resultado:** se cerró el producto candidato Viva, sin publicar sus
+cifras, activar tesis o instalar ejecuciones. El último recibo conjunto20/22,
+110 salidas, conserva su corte anterior; esta comprobación individual no lo
+convierte en 21/22 ni en 7/7. La siguiente comprobación del calendario debe enlazar
+este candidato, los otros productos y el tratamiento explícito de Aerocivil.
+La integración del código, revisión Codex y CI del head final se acreditan en
+el PR de esta entrega, por separado de la validación de cifras.
+
 ## Pendientes
 
 - Incorporar la respuesta sustantiva de Aerocivil sobre leyenda y atribución de
   `jh8x-n6h6`. Radicado2026190010175977, IdControl2758656 acredita registro,
   no respuesta metodológica. No duplicar el correo ni inferir equivalencias.
-- Obtener y validar el reporte financiero Viva3T26 antes de fechar la ronda
-  trimestral. AM/Volaris no sustituyen el tercer insumo. No inventar fecha ni
-  confundir tráfico, convocatoria, año2025 o ZIP XBRL con el release requerido.
-- Completar CI y revisión del nuevo head corregido de PR174. La constancia de
- 176933ff sí se publicó tras autorización específica y el PR dejó de ser
- borrador; el hallazgo automático posterior detuvo el merge. La autorización
- de integrar 176933ff no se traslada a otro SHA. No eludir el hilo abierto.
+- Enlazar el candidato Viva3T26 y su día documental verificado a la siguiente
+  comprobación conjunta. La tarea aislada pasó; falta ese recibo de la ronda
+  actual con todos sus componentes, sin inferir7/7 ni última edición.
+- Conservar CI y revisión Codex del head final de cada entrega. PR174 está
+  integrado y su CI posterior pasó; sus bloqueos anteriores quedan históricos.
 - La ronda completa permanece incompleta mientras falten sus componentes;
   conservar las tareas válidas y pendientes dentro de un solo calendario.
   No activar horarios, ingestas, noticias o tesis ni publicar candidatos.
