@@ -180,7 +180,7 @@ def nyse_counts(body, closed):
     return {
         "source_label": "2026 Estimated",
         "asset_class": "US Cash Equities, US Equity Options",
-        "monthly_session_counts": counts,
+        "monthly_session_counts": {str(month): count for month, count in counts.items()},
     }
 
 

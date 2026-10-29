@@ -62,6 +62,22 @@ def test_semantic_editions_and_early_closes_are_sessions():
     assert subject.html_calendar("OTC", calendar_html("NYSE")) is None
 
 
+def test_session_count_evidence_preserves_exact_types_after_JSON_roundtrip(monkeypatch):
+    from types import SimpleNamespace
+
+    counts = [20, 19, 22, 21, 20, 21, 22, 21, 21, 22, 20, 22]
+    months = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+    text = "US Cash Equities, US Equity Options Trading days: 2026 Estimated\n" + "\n".join(
+        f"{month} {count} {month} {count} {month} 0" for month, count in zip(months, counts, strict=True)
+    )
+    # Synthetic extraction response tests the persisted evidence contract, not a live PDF.
+    page = SimpleNamespace(extract_text=lambda **_: text)
+    monkeypatch.setattr(subject, "PdfReader", lambda _: SimpleNamespace(pages=[page]))
+    evidence = subject.nyse_counts(b"synthetic", subject.CLOSED_2026)
+    assert evidence["monthly_session_counts"]["9"] == 21
+    assert json.loads(json.dumps(evidence)) == evidence
+
+
 def test_changed_or_ambiguous_official_calendar_fails():
     for venue in ["NYSE", "NASDAQ"]:
         body = calendar_html(venue)
