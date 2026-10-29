@@ -227,9 +227,11 @@ def test_global_keeps_missing_products_required_and_reuse_warning_visible():
         source_availability_evidence={"validated_closed_edition": proof(task)},
     )
     output = global_gate.evaluate(recipe, {"gap": result})
-    assert len(global_gate.REQUIRED["monthly"]) + len(global_gate.REQUIRED["quarterly"]) == 23
+    assert len(global_gate.REQUIRED["monthly"]) + len(global_gate.REQUIRED["quarterly"]) == 21
     assert "monthly:afac_airports:missing" in output["blockers"]
-    assert "monthly:gdelt:missing" in output["blockers"]
+    assert "monthly:gdelt:missing" not in output["blockers"]
+    assert "monthly:editorial_news:not_verified" in output["blockers"]
+    assert not output["news_task"]["prepared"]
     assert "gap:current_source_availability_not_verified" not in output["calendar_blockers"]
     assert "gap:closed_edition_latest_revision_not_certified" in output["coverage_warnings"]
     assert not output["ready_for_calendar_incorporation"] and not output["ready_for_automatic_execution"]

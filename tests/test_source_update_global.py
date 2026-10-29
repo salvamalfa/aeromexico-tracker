@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 
 from src.source_updates import global_readiness as gate
+from src.source_updates import round_tasks
 from src.source_updates.catalog import ROOT
 
 
@@ -23,7 +24,7 @@ def recipe():
     }
 
 
-def task(product="gdelt", cadence="monthly"):
+def task(product="afac_airports", cadence="monthly"):
     return {
         "id": product,
         "product": product,
@@ -49,7 +50,8 @@ def workspace():
 def test_empty_dry_run_lists_obligations_without_source_io(workspace, monkeypatch):
     monkeypatch.setattr(gate, "verify", lambda *a: pytest.fail("Dry run read source"))
     result = gate.execute(recipe(), workspace)
-    assert len(result["blockers"]) == 16
+    assert len(result["blockers"]) == 15  # Fourteen data tasks plus the editorial task.
+    assert "monthly:editorial_news:not_verified" in result["blockers"]
     assert not result["core_ready"] and not result["requested_bundle_ready"]
     assert result["status"] == "planned_not_executed"
     assert not workspace.exists()
@@ -60,8 +62,9 @@ def test_actual_unsupported_path_writes_blocked_receipt_and_exact_replay(workspa
     r = recipe()
     r["items"] = [task()]
     result = gate.execute(r, workspace, write=True)
-    assert result["results"]["gdelt"]["status"] == "blocked"
-    assert "whole-product" in result["results"]["gdelt"]["reason"]
+    assert result["results"]["afac_airports"]["status"] == "blocked"
+    assert "whole-product" in result["results"]["afac_airports"]["reason"]
+    assert result["results"][round_tasks.EDITORIAL_ID]["status"] == "pending_native_editorial_review"
     assert not result["ready_for_calendar_incorporation"]
     before = (workspace / "global-readiness.json").read_bytes()
     replay = gate.execute(r, workspace, check=True)
@@ -106,14 +109,44 @@ def test_execute_blocks_network_even_for_accidental_checker_call(workspace, monk
     r = recipe()
     r["items"] = [task()]
     result = gate.execute(r, workspace, write=True)
-    assert result["results"]["gdelt"]["status"] == "blocked"
+    assert result["results"]["afac_airports"]["status"] == "blocked"
     assert not result["requested_bundle_ready"]
+
+
+def test_one_calendar_executes_independent_sources_even_when_optional_provider_and_news_are_pending(
+    workspace, monkeypatch
+):
+    r = recipe()
+    r["items"] = [task("gdelt"), task("afac_airports"), task("banxico")]
+    calls = []
+
+    def check(item, *_args):
+        calls.append(item["product"])
+        return {
+            "status": "blocked" if item["product"] == "gdelt" else "checks_passed",
+            "latest_source_availability_verified": item["product"] != "gdelt",
+        }
+
+    monkeypatch.setattr(gate, "verify", check)
+    result = gate.execute(r, workspace, write=True)
+    assert calls == ["gdelt", "afac_airports", "banxico"]
+    assert result["results"]["afac_airports"]["status"] == "checks_passed"
+    assert result["results"]["banxico"]["status"] == "checks_passed"
+    assert result["results"]["gdelt"]["status"] == "blocked"
+    assert result["results"][round_tasks.EDITORIAL_ID]["status"] == "pending_native_editorial_review"
+    tasks = {task["id"]: task for task in result["calendar_tasks"]}
+    assert tasks["afac_airports"]["prepared_for_review"] and tasks["banxico"]["prepared_for_review"]
+    assert not tasks["gdelt"]["required"] and not tasks["gdelt"]["prepared_for_review"]
+    assert tasks[round_tasks.EDITORIAL_ID]["required"]
+    assert "monthly:editorial_news:not_verified" in result["blockers"]
+    assert not result["core_ready"] and not result["ready_for_calendar_incorporation"]
+    assert result["activation"] == "none" and result["publication"] == "not_authorized"
 
 
 def test_candidates_cannot_overlap_global_receipt_even_before_dry_run(workspace):
     r = recipe()
     i = task()
-    i.update(adapter="gdelt", workspace=str(workspace))
+    i.update(adapter="retained", workspace=str(workspace))
     r["items"] = [i]
     with pytest.raises(ValueError, match="disjoint"):
         gate.execute(r, workspace)

@@ -21,7 +21,11 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
 2. Ejecutar `python -m src.source_updates plan --round monthly --as-of <ISO-con-zona>
    --family <familia>` (para trimestral añadir `--quarter YYYYQn`). El plan
    muestra cobertura y brechas; no descarga ni comprueba frescura Gold.
-3. Seleccionar catálogos y documentos con URLs reales del dominio permitido.
+3. Verificar la ruta vigente desde HOME/menús de la fuente oficial y su
+   documentación, además del catálogo: un enlace fallido puede estar obsoleto.
+   Hacer esa búsqueda y las alternativas permitidas de forma autónoma, sin
+   esperar a que el usuario dirija clics o consiga archivos resolubles.
+   Seleccionar catálogos y documentos con URLs reales del dominio permitido.
    Consultar primero `recipe --product <producto>`: resuelve la entrada canónica,
    formato, procedimiento y limitaciones de `config/source_update_acquisition.json`.
    Para `fuel`, `banxico`, `h10` y `equities`, `recipe --output round --period <periodo>
@@ -76,7 +80,10 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
 - Si falla la adquisición programática, usar el navegador soportado para abrir
   la página oficial y descargar mediante su interfaz normal. Si el entorno de
   código no dispone de navegador, entregar el enlace, documento/periodo y recibo
-  fallido a dot para su navegador cloud; la integración sigue en este entorno.
+  fallido a dot para su navegador cloud o local autorizado y conectado; la
+  integración sigue en este entorno. Comprobar capacidades reales, no asumir
+  ausencia de navegador. Escalar solo un bloqueo concreto o decisión necesaria,
+  sin trasladar al usuario verificaciones que el agente puede realizar.
   `collect` conserva ese handoff pendiente en `manual_recovery`, sin fingir que
   ya hizo clics o descargó. Antes de declarar vías agotadas, intentar esa vía o
   registrar el bloqueo concreto de herramienta/acceso. No evadir denegaciones,
@@ -307,3 +314,13 @@ como advertencia global; para retornos/volatilidad bursátiles sigue bloqueando.
 Todos los meses, entradas, fuentes, cifras y linaje requeridos siguen pasando
 sus controles. Un aviso de reporte confirmado tampoco espera esa ronda global:
 separar detección, comprobación primaria, aviso, incorporación y autorización.
+
+## Noticias y el calendario unico
+
+La autorización del 29/oct reemplaza GDELT obligatorio por una tarea editorial
+mensual en el mismo calendario. Web nativa y lectura del editor son la vía
+principal; RSS es complemento y GDELT opcional. Aplicar la skill de Noticias y
+el contrato editorial, sin renombrar esos metadatos como originales HTTP.
+Cada tarea conserva su resultado y las independientes avanzan; la ronda con
+componentes obligatorios pendientes no se declara completa. Se conservan
+los gates de publicación y los fallos históricos. No hay un segundo calendario.

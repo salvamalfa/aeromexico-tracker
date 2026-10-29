@@ -12,7 +12,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from src.pipeline.offline import block_network
-from src.source_updates import readiness
+from src.source_updates import readiness, round_tasks
 from src.source_updates.calendar import (
     business_day,
     local_time,
@@ -30,7 +30,7 @@ REQUIRED = {
     "monthly": frozenset(
         (
             "am_traffic_ir volaris_traffic_ir viva_traffic afac_carriers afac_airports bts_segments "
-            "gap_traffic asur_traffic oma_traffic aicm_traffic aifa_traffic banxico fuel equities rss gdelt"
+            "gap_traffic asur_traffic oma_traffic aicm_traffic aifa_traffic banxico fuel equities"
         ).split()
     ),
     "quarterly": frozenset(
@@ -47,13 +47,13 @@ CONDITIONAL = {
     ),
 }
 OPTIONAL = {
-    "monthly": frozenset(),
+    "monthly": frozenset({"rss", "gdelt"}),
     "quarterly": frozenset(
         "delta_sec ryanair_sec ryanair_ir anac caa am_routes oma_routes colima aifa_roster iasa".split()
     ),
 }
 FINANCIALS = {"AEROMEXICO": "am_financials", "VOLARIS": "volaris_sec", "VIVA_AEROBUS": "viva_financials"}
-GUARDS = {("quarterly", "aerocivil"), ("monthly", "gdelt")}
+GUARDS = {("quarterly", "aerocivil")}
 ITEM_FIELDS = {
     "id",
     "product",
@@ -102,7 +102,7 @@ def preflight(recipe: dict) -> list[dict]:
     policy()
     if (
         not isinstance(recipe, dict)
-        or set(recipe) != RECIPE_FIELDS
+        or set(recipe) not in (RECIPE_FIELDS, RECIPE_FIELDS | {"editorial_news"})
         or type(recipe["version"]) is not int
         or recipe["version"] != 1
     ):
@@ -111,6 +111,7 @@ def preflight(recipe: dict) -> list[dict]:
         )
     if recipe["round"] not in {"monthly", "quarterly", "combined"}:
         raise ValueError("Unknown round")
+    round_tasks.binding_preflight(recipe)
     cutoff = local_time(recipe["as_of"])
     for cadence, pattern in (("monthly", r"20\d{2}M(?:0[1-9]|1[0-2])"), ("quarterly", r"20\d{2}Q[1-4]")):
         period = recipe[cadence + "_period"]
@@ -257,7 +258,8 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
 
     Synthetic outcomes in unit tests exercise the decision contract, not sources.
     """
-    items = preflight(recipe)
+    all_items = preflight(recipe)
+    items = [i for i in all_items if i["product"] not in round_tasks.NEWS_PROVIDERS]
     cadences = set(REQUIRED) if recipe["round"] == "combined" else {recipe["round"]}
     indexed = {(i["cadence"], i["product"]): i for i in items}
     blockers, core_blockers, calendar_blockers, coverage_warnings = [], [], [], []
@@ -298,7 +300,7 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             coverage_warnings.append(f"{item['id']}:closed_edition_latest_revision_not_certified")
         if not source_evidence_accepted(item, result):
             calendar_blockers.append(f"{item['id']}:current_source_availability_not_verified")
-    by_id = {i["id"]: i for i in items}
+    by_id = {i["id"]: i for i in all_items}
     dependency_cache = {}
     def dependencies_verified(item):
         if item["id"] in dependency_cache:
@@ -326,22 +328,12 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             if (item["cadence"], item["product"]) in required:
                 core_blockers.append(reason)
     blockers = sorted(set(blockers + core_blockers))
-    for key in sorted(key for key in GUARDS if key[0] in cadences):
-        item = indexed.get(key)
-        result = outcomes.get(item["id"], {}) if item else {}
-        if (
-            not item
-            or not item["used"]
-            or result.get("status") != "checks_passed"
-            or (
-                key[1] == "aerocivil"
-                and (
-                    result.get("semantic_acceptance_verified") is not True
-                    or "official_service_code_legend_pending" in result.get("source_conditions", [])
-                )
-            )
-        ):
-            calendar_blockers.append(f"{key[0]}:{key[1]}:required_calendar_prerequisite_not_verified")
+    calendar_blockers.extend(round_tasks.calendar_guards(GUARDS, cadences, indexed, outcomes))
+    data_tasks_ready = not core_blockers
+    news = round_tasks.editorial_decision(recipe, outcomes)
+    if news["blocker"]:
+        core_blockers.append(news["blocker"])
+        blockers.append(news["blocker"])
     holidays = json.loads((ROOT / "config/source_update_holidays.json").read_text())
     try:
         business_day(local_time(recipe["as_of"]).date(), holidays)
@@ -391,9 +383,13 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
         if abs((monthly_due - quarterly_due).days) > 7:
             calendar_blockers.append("combined_rounds_more_than_seven_calendar_days_apart")
     return {
+        "calendar_count": 1,
         "monthly_date": monthly_due.isoformat() if monthly_due else None,
         "quarterly_date": quarterly_due.isoformat() if quarterly_due else None,
         "core_ready": not core_blockers,
+        "data_tasks_ready": data_tasks_ready,
+        "news_task": news,
+        "calendar_tasks": round_tasks.calendar_tasks(recipe, outcomes, required),
         "requested_bundle_ready": not blockers,
         "ready_for_calendar_incorporation": not blockers and not calendar_blockers,
         "ready_for_automatic_execution": False,
@@ -481,6 +477,7 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
         raise ValueError("Choose write or check")
     plans = preflight(recipe)
     workspace = safe_workspace(workspace)
+    round_tasks.binding_preflight(recipe, workspace)
     locations = []
     for item in plans:
         if not item["used"] or item["adapter"] == "unsupported":
@@ -555,6 +552,7 @@ def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:
                         result.setdefault("documentary_releases", []).append(proof)
                     except Exception as exc:
                         result.setdefault("documentary_release_errors", []).append(str(exc))
+        results[round_tasks.EDITORIAL_ID] = round_tasks.editorial_result(recipe)
         output.update(evaluate(recipe, results))
         output["results"] = results
         output["status"] = (

@@ -1,0 +1,300 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unapproved monthly editorial observations; not original publisher bytes",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "editorial_news_review_v1"
+    },
+    "period": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}M(0[1-9]|1[0-2])$"
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "\\S"
+    },
+    "searches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "pattern": "\\S"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "method": {
+            "enum": [
+              "native_web",
+              "browser_ui",
+              "rss"
+            ]
+          },
+          "scope_note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 700,
+            "pattern": "\\S"
+          },
+          "outcome": {
+            "enum": [
+              "completed",
+              "access_failed"
+            ]
+          }
+        },
+        "required": [
+          "query",
+          "checked_at",
+          "method",
+          "scope_note",
+          "outcome"
+        ]
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event_key": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{2,159}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "pattern": "\\S"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 320,
+            "pattern": "\\S"
+          },
+          "category": {
+            "enum": [
+              "results",
+              "alliance",
+              "regulation",
+              "fleet",
+              "capacity",
+              "route",
+              "frequency",
+              "airport",
+              "loyalty",
+              "cobrand",
+              "macro"
+            ]
+          },
+          "companies": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "Aeroméxico",
+                "Aeroméxico Connect",
+                "Volaris",
+                "Viva"
+              ]
+            }
+          },
+          "impact_note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "pattern": "\\S"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1500,
+                  "pattern": "\\S"
+                },
+                "publisher": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120,
+                  "pattern": "\\S"
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 300,
+                  "pattern": "\\S"
+                },
+                "published_on": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "observed_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "method": {
+                  "enum": [
+                    "native_web",
+                    "browser_ui"
+                  ]
+                },
+                "source_kind": {
+                  "enum": [
+                    "official",
+                    "journalism"
+                  ]
+                },
+                "publisher_page_read": {
+                  "const": true
+                },
+                "evidence_note": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 700,
+                  "pattern": "\\S"
+                },
+                "event_date": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "event_end_date": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "url",
+                "publisher",
+                "title",
+                "published_on",
+                "observed_at",
+                "method",
+                "source_kind",
+                "publisher_page_read",
+                "evidence_note"
+              ]
+            }
+          }
+        },
+        "required": [
+          "event_key",
+          "title",
+          "summary",
+          "category",
+          "companies",
+          "impact_note",
+          "event_date",
+          "event_end_date",
+          "sources"
+        ]
+      }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1500,
+            "pattern": "\\S"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "pattern": "\\S"
+          },
+          "state": {
+            "enum": [
+              "excluded",
+              "pending_verification"
+            ]
+          }
+        },
+        "required": [
+          "url",
+          "reason"
+        ]
+      }
+    },
+    "empty_selection_reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 700
+    }
+  },
+  "required": [
+    "schema",
+    "period",
+    "as_of",
+    "reviewer",
+    "searches",
+    "events",
+    "exclusions",
+    "empty_selection_reason"
+  ]
+}

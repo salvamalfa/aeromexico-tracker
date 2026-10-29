@@ -74,7 +74,9 @@ no llama a red, no programa este calendario y no activa datos/tesis/noticias.
 Para aceptación global usar `python -m src.source_updates.global_readiness`
 con `config/source_update_global.example.json` primero en `--dry-run`. Aplicar
 la política aprobada de la guía: R por cadencia/periodo, C/O cuando se utilizan,
-dependencias transitivas y Aerocivil/GDELT como prerrequisitos de calendario.
+dependencias transitivas y Aerocivil como prerrequisito trimestral. Desde el
+29/oct, la tarea editorial sustituye el proveedor obligatorio GDELT; RSS y
+GDELT son descubrimiento opcional, con sus fallos intactos.
 La receta vacía enumera faltantes; no es una ronda lista. No aportar resultados
 sintéticos ni reducir checks para certificar un producto entero. Adaptadores sin
 certificación completa se mantienen bloqueados (`unsupported`). Disponibilidad
@@ -90,12 +92,30 @@ y se enlaza mediante `adapter=series`, no mediante
 checks parciales ni `retained`. Aplicar el [contrato de series](../../../docs/catalogo-fuentes-calendario.md#certificación-de-series-retenidas-22-de-octubre).
 Una reproducción de originales no comprueba disponibilidad actual ni calendario
 completo de observaciones; mantener esas puertas bloqueadas y los demás R
-pendientes. No omitir Aerocivil/GDELT ni cambiar sus requisitos.
+pendientes. No omitir Aerocivil ni la tarea editorial requerida. La nueva política no
+convierte una respuesta GDELT inválida en válida.
 
 Registrar por separado reporte detectado, fuente primaria comprobada, usuario
 avisado, datos incorporados y publicación/tesis autorizadas. No inferir un
 estado desde otro ni repetir como novedad un reporte ya avisado. El mecanismo
 de avisos existente tiene su propio responsable; este CLI no crea tareas.
+
+## Un calendario con estados por tarea
+
+`plan` incluye `calendar_count=1` y `calendar_tasks` con Noticias editorial y
+los productos del mes/trimestre. Las vistas por familia filtran ese mismo plan.
+`global_readiness` verifica todos los candidatos independientes aunque otro
+falle; conserva `checks_passed` de cada tarea y muestra faltantes, incluida la
+tarea editorial, en la misma lista. `data_tasks_ready` no significa que la ronda
+esté completa: `core_ready` y `ready_for_calendar_incorporation` requieren todos
+sus componentes y dependencias. No publicar ni activar automáticamente por esos flags.
+
+Ejecutar la [skill de Noticias](../airline-update-news/SKILL.md#flujo-editorial-del-calendario)
+para el mes declarado en la receta y añadir su binding `editorial_news` al
+recibo global. Leer realmente web/editor y registrar observaciones antes del
+candidato; el replay no es una búsqueda. En un trimestre separado la tarea
+mensual figura `not_due_this_round`, salvo selección explícita. No crear otro
+calendario, otra frecuencia o una aprobación implícita de contenido.
 
 ## Día oficial y números pendientes
 
@@ -113,8 +133,8 @@ pero no concede `core_ready` ni permite publicar o instalar disparadores. La
 guía canónica documenta campos y evidencia real. Si faltan reportes, conservar
 fecha nula; si falta el calendario bancario de un año, mantener el bloqueo.
 
-Los prerrequisitos se aplican a su cadencia: GDELT a mensual, Aerocivil a
-trimestral y ambos a combinada. Una ronda mensual completa no exige el
+Los componentes se aplican a su cadencia: tarea editorial a mensual, Aerocivil
+a trimestral y ambos a combinada. Una ronda mensual completa no exige el
 prerrequisito exclusivo trimestral. Todo producto realmente utilizado y sus
 dependencias transitivas siguen verificándose, incluso si son de otra cadencia;
 no se omiten por esa separación. Las pruebas de política con resultados

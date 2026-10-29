@@ -5,6 +5,7 @@ import copy
 import pytest
 
 from src.source_updates import global_readiness as global_gate
+from src.source_updates import round_tasks
 from src.source_updates.catalog import product_map
 
 MONTHLY_REQUIRED = frozenset(
@@ -23,8 +24,6 @@ MONTHLY_REQUIRED = frozenset(
         "banxico",
         "fuel",
         "equities",
-        "rss",
-        "gdelt",
     }
 )
 QUARTERLY_REQUIRED = frozenset(
@@ -97,8 +96,8 @@ def recipe(kind="monthly"):
     }
 
 
-def outcomes(value, *, availability=True):
-    return {
+def outcomes(value, *, availability=True, editorial=True):
+    results = {
         item["id"]: {
             "status": "checks_passed",
             "source_conditions": [],
@@ -107,6 +106,13 @@ def outcomes(value, *, availability=True):
         }
         for item in value["items"]
     }
+    if editorial and value["round"] in {"monthly", "combined"}:
+        # Policy fixture only, never a physical editorial review or real search.
+        results[round_tasks.EDITORIAL_ID] = {
+            "status": "checks_passed",
+            "period": value["monthly_period"],
+        }
+    return results
 
 
 def selected(value, product, cadence=None):
@@ -119,7 +125,7 @@ def selected(value, product, cadence=None):
 
 def test_approved_policy_matches_all_catalogued_tasks_without_silent_defaults():
     expected = {
-        "monthly": (MONTHLY_REQUIRED, MONTHLY_CONDITIONAL, frozenset()),
+        "monthly": (MONTHLY_REQUIRED, MONTHLY_CONDITIONAL, frozenset({"rss", "gdelt"})),
         "quarterly": (QUARTERLY_REQUIRED, QUARTERLY_CONDITIONAL, QUARTERLY_OPTIONAL),
     }
     for cadence, groups in expected.items():
@@ -228,10 +234,83 @@ def test_aerocivil_needs_positive_semantic_proof_not_merely_absence_of_warning(p
 
 def test_empty_gdelt_is_neither_absence_of_news_nor_a_pass():
     value = recipe()
-    results = outcomes(value)
+    selected(value, "gdelt")["used"] = True
+    selected(value, "rss")["used"] = True
+    results = outcomes(value, editorial=False)
     results[selected(value, "gdelt")["id"]]["status"] = "empty_result_unproven_coverage"
     result = global_gate.evaluate(value, results)
+    assert result["data_tasks_ready"]
+    assert results[selected(value, "afac_airports")["id"]]["status"] == "checks_passed"
     assert not result["core_ready"] and not result["ready_for_calendar_incorporation"]
+    assert result["news_task"]["prepared"] is False
+    assert "monthly:editorial_news:not_verified" in result["blockers"]
+    tasks = {task["id"]: task for task in result["calendar_tasks"]}
+    assert tasks[selected(value, "gdelt")["id"]]["status"] == "empty_result_unproven_coverage"
+    assert not tasks[selected(value, "gdelt")["id"]]["prepared_for_review"]
+    assert tasks[round_tasks.EDITORIAL_ID]["required"]
+
+
+@pytest.mark.parametrize("kind", ["monthly", "combined"])
+@pytest.mark.parametrize("editorial_state", ["missing", "blocked", "wrong_month"])
+def test_editorial_task_is_required_in_same_calendar_without_blocking_independent_data(kind, editorial_state):
+    value = recipe(kind)
+    results = outcomes(value, editorial=False)
+    if editorial_state != "missing":
+        results[round_tasks.EDITORIAL_ID] = {
+            "status": "blocked" if editorial_state == "blocked" else "checks_passed",
+            "period": "2026M08" if editorial_state == "wrong_month" else value["monthly_period"],
+        }
+    before = copy.deepcopy(results)
+    decision = global_gate.evaluate(value, results)
+    assert decision["data_tasks_ready"]
+    assert not decision["core_ready"] and not decision["requested_bundle_ready"]
+    assert not decision["ready_for_calendar_incorporation"]
+    assert decision["blockers"] == ["monthly:editorial_news:not_verified"]
+    assert decision["news_task"]["same_calendar"] and not decision["news_task"]["prepared"]
+    assert results == before
+    tasks = {item["id"]: item for item in decision["calendar_tasks"]}
+    assert tasks[round_tasks.EDITORIAL_ID]["required"]
+    assert not tasks[round_tasks.EDITORIAL_ID]["prepared_for_review"]
+    assert tasks[selected(value, "afac_airports")["id"]]["prepared_for_review"]
+
+
+@pytest.mark.parametrize("provider", ["gdelt", "rss"])
+@pytest.mark.parametrize("status", ["blocked", "empty_result_unproven_coverage"])
+def test_optional_news_provider_failure_does_not_cancel_verified_calendar_tasks(provider, status):
+    value = recipe()
+    item = selected(value, provider)
+    item["used"] = True
+    results = outcomes(value)
+    results[item["id"]]["status"] = status
+    decision = global_gate.evaluate(value, results)
+    assert decision["data_tasks_ready"] and decision["core_ready"]
+    assert decision["requested_bundle_ready"] and decision["ready_for_calendar_incorporation"]
+    assert decision["news_task"]["prepared"]
+    tasks = {task["id"]: task for task in decision["calendar_tasks"]}
+    assert tasks[item["id"]]["status"] == status
+    assert not tasks[item["id"]]["required"] and not tasks[item["id"]]["prepared_for_review"]
+    assert tasks[round_tasks.EDITORIAL_ID]["prepared_for_review"]
+    assert decision["activation"] == "none" and decision["publication"] == "not_authorized"
+
+
+def test_combined_calendar_has_twenty_one_data_obligations_and_one_editorial_obligation():
+    value = recipe("combined")
+    decision = global_gate.evaluate(value, outcomes(value))
+    required = [task for task in decision["calendar_tasks"] if task["required"]]
+    assert len(required) == 22
+    assert sum(task["kind"] == "source_update" for task in required) == 21
+    assert sum(task["id"] == round_tasks.EDITORIAL_ID for task in required) == 1
+    assert {task["product"] for task in required} >= {"aerocivil", "viva_financials"}
+
+
+def test_editorial_task_is_not_due_in_quarterly_only_calendar():
+    value = recipe("quarterly")
+    decision = global_gate.evaluate(value, outcomes(value))
+    editorial = next(task for task in decision["calendar_tasks"] if task["id"] == round_tasks.EDITORIAL_ID)
+    assert editorial["status"] == "not_due_this_round"
+    assert not editorial["required"] and not editorial["prepared_for_review"]
+    assert decision["core_ready"]
+    assert "monthly:editorial_news:not_verified" not in decision["blockers"]
 
 
 def test_combined_keeps_both_period_tasks_for_shared_required_source():
@@ -304,7 +383,7 @@ def test_failed_transitive_dependency_blocks_the_required_result():
 
 def test_required_product_cannot_be_demoted_by_unused_flag():
     value = recipe()
-    selected(value, "gdelt")["used"] = False
+    selected(value, "afac_airports")["used"] = False
     result = global_gate.evaluate(value, outcomes(value))
     assert not result["core_ready"] and not result["requested_bundle_ready"]
 
@@ -408,8 +487,8 @@ def test_calendar_prerequisites_follow_requested_cadence_without_dropping_requir
 @pytest.mark.parametrize(
     "kind,product,cadence",
     [
-        ("monthly", "gdelt", "monthly"),
-        ("combined", "gdelt", "monthly"),
+        ("monthly", round_tasks.EDITORIAL_ID, "monthly"),
+        ("combined", round_tasks.EDITORIAL_ID, "monthly"),
         ("quarterly", "aerocivil", "quarterly"),
         ("combined", "aerocivil", "quarterly"),
     ],
@@ -417,11 +496,24 @@ def test_calendar_prerequisites_follow_requested_cadence_without_dropping_requir
 def test_calendar_prerequisites_still_block_their_requested_cadence(kind, product, cadence):
     value = recipe(kind)
     results = outcomes(value) if kind == "monthly" else physically_bound_reports(value)
-    item = selected(value, product, cadence)
-    results[item["id"]]["status"] = "blocked"
+    item_id = (
+        round_tasks.EDITORIAL_ID
+        if product == round_tasks.EDITORIAL_ID
+        else selected(value, product, cadence)["id"]
+    )
+    results[item_id]["status"] = "blocked"
     decision = global_gate.evaluate(value, results)
     assert not decision["core_ready"] and not decision["ready_for_calendar_incorporation"]
-    assert f"{cadence}:{product}:required_calendar_prerequisite_not_verified" in decision["calendar_blockers"]
+    if product == round_tasks.EDITORIAL_ID:
+        assert decision["data_tasks_ready"]
+        assert results[selected(value, "afac_airports")["id"]]["status"] == "checks_passed"
+        assert "monthly:editorial_news:not_verified" in decision["blockers"]
+        assert not decision["news_task"]["prepared"]
+    else:
+        assert (
+            f"{cadence}:{product}:required_calendar_prerequisite_not_verified"
+            in decision["calendar_blockers"]
+        )
 
 
 @pytest.mark.parametrize("dependent", [False, True])
@@ -429,7 +521,7 @@ def test_used_outside_cadence_result_and_transitive_dependency_are_still_checked
     value = recipe("monthly")
     outside = task("aerocivil", "quarterly")
     value["items"].append(outside)
-    required = selected(value, "gdelt", "monthly")
+    required = selected(value, "afac_airports", "monthly")
     if dependent:
         required["depends_on"] = [outside["id"]]
     results = outcomes(value)
@@ -439,7 +531,7 @@ def test_used_outside_cadence_result_and_transitive_dependency_are_still_checked
     assert decision["core_ready"] is not dependent
     assert "quarterly:aerocivil:official_service_code_legend_pending" in decision["blockers"]
     if dependent:
-        assert "monthly:gdelt:dependency_not_verified" in decision["blockers"]
+        assert "monthly:afac_airports:dependency_not_verified" in decision["blockers"]
 
 
 @pytest.mark.parametrize("mutation", ["url", "sha256", "not_contributing", "missing_report"])
