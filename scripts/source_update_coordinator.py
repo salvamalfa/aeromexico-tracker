@@ -42,6 +42,12 @@ def persist(workspace: Path, state: dict) -> None:
         stream.flush()
         os.fsync(stream.fileno())
     os.replace(staging, target)
+    if os.name == "posix":
+        directory = os.open(workspace, os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
 
 
 def install_events(state: dict, rounds: list[dict]) -> None:
@@ -111,6 +117,8 @@ def prepare(request: dict) -> dict:
     state = {
         "version": 1,
         "request_sha256": digest(request),
+        "request": request,
+        "releases": request.get("releases", []),
         "prepared_as_of": request["as_of"],
         "timezone": "America/Mexico_City",
         "activation_authorized": False,
@@ -204,10 +212,15 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
     if kind == "refresh_reports":
         if state["active_task"] is not None:
             raise ValueError("Cannot change dates while a task is running")
-        quarter = calendar.quarterly(state["next_quarterly"]["period"], action["releases"], stamp, holidays())
+        releases = list(state["releases"])
+        for release in action["releases"]:
+            if not any(digest(previous) == digest(release) for previous in releases):
+                releases.append(release)
+        quarter = calendar.quarterly(state["next_quarterly"]["period"], releases, stamp, holidays())
         if state["next_quarterly"]["date"] is not None:
             raise ValueError("A dated quarterly round requires explicit reconciliation, not redating")
         state["next_quarterly"] = quarter
+        state["releases"] = releases
         for task in state["tasks"].values():
             if task["cadence"] == "quarterly" and task["status"] == "planned":
                 task["due_date"] = quarter["date"]

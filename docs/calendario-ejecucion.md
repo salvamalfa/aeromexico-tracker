@@ -58,7 +58,9 @@ permanecen separados. `completed` describe el cierre operativo de un despacho;
 `certification` sigue nulo. Un nuevo periodo nunca hereda una certificación.
 
 La escritura usa el `writer` existente y sustitución atómica del JSON tras
-`fsync`. Una intención de despacho guarda el dueño antes del envío externo.
+`fsync`; en POSIX también sincroniza el directorio. En Windows la garantía
+local cubre caída de proceso; la recuperación de host exige el último respaldo
+privado verificado. Una intención guarda el dueño antes del envío externo.
 El bloqueo persistente `active_task` impide otro escritor entre comandos,
 incluso si el proceso desaparece. Las adquisiciones independientes pueden
 preparar candidatos en sus espacios aislados; la consolidación del registro
@@ -70,6 +72,9 @@ Preparar una sola vez con un JSON privado que declare `as_of`, `start`,
 `calendar`; sus confirmaciones son revisiones explícitas de documentos reales,
 no una inferencia del nombre de archivo. Conservar la referencia de revisión
 en ese JSON. La preparación no vuelve a consultar las fuentes.
+El estado retiene esa solicitud íntegra y sus releases. El monitor puede
+aportar solo Viva: los registros nuevos se añaden por contenido, sin sustituir
+ni renovar los días, hashes o referencias anteriores.
 
 ```bash
 python -m scripts.source_update_coordinator --workspace tmp/source-updates/calendar-coordinator --prepare <solicitud-privada.json> --now 2026-10-29T04:00:00Z

@@ -331,6 +331,24 @@ def test_common_calendar_news_is_selected_and_discovery_providers_are_optional(l
     assert len(output["next_trigger"]["pending_task_keys"]) == 15
 
 
+def test_monitor_can_append_only_viva_without_erasing_prior_confirmations(ledger):
+    workspace, request, _ = ledger
+    before = copy.deepcopy(request["releases"])
+    output = record(
+        workspace,
+        {
+            "operation_id": "viva-monitor",
+            "action": "refresh_reports",
+            "releases": releases(("VIVA_AEROBUS",), "2026-11-13"),
+        },
+        "2026-11-14T08:00:00-06:00",
+    )
+    assert output["state"]["next_quarterly"]["date"] == "2026-11-18"
+    assert output["state"]["next_quarterly"]["missing_central_reports"] == []
+    assert output["state"]["request"]["releases"] == before
+    assert output["state"]["releases"][:2] == before
+
+
 def test_combined_event_identity_and_date_survive_completion_of_one_cadence(ledger):
     workspace, _, _ = ledger
     all_reports = releases(("AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"), "2026-11-10")
