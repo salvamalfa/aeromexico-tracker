@@ -49,6 +49,10 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "aerocivil_retained_maximum_month_v1":
+        from src.source_updates.availability_aerocivil import preflight as aerocivil_preflight
+
+        return aerocivil_preflight(binding, candidate)
     if isinstance(binding, dict) and binding.get("source_scope") == "viva_Q3_official_retained_target_v1":
         from src.source_updates.availability_viva_financials import preflight as viva_preflight
 
@@ -258,6 +262,13 @@ def discovery_contract(product, adapter):
 
 def verify(item, result, cutoff):
     """Called only after complete offline candidate replay; never performs IO on the network."""
+    if (
+        isinstance(item.get("availability"), dict)
+        and item["availability"].get("source_scope") == "aerocivil_retained_maximum_month_v1"
+    ):
+        from src.source_updates.availability_aerocivil import verify as verify_aerocivil
+
+        return verify_aerocivil(item, result, cutoff)
     if item["product"] == "viva_financials" and item["adapter"] == "viva_financial":
         from src.source_updates.availability_viva_financials import verify as verify_viva
 

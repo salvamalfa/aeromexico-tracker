@@ -45,6 +45,16 @@ oficial pendiente. Datos faltantes o disponibilidad no acreditada siguen
 bloqueando el resultado correspondiente. Si la respuesta contradice los
 supuestos, se versionan los cálculos afectados. No se repite la consulta enviada.
 
+El enlace de disponibilidad Aerocivil reutiliza el verificador nativo de máximo
+mes y lo incorpora a `readiness`, sin convertirlo en trimestre completo. La
+receta declara `availability` con `source_scope=aerocivil_retained_maximum_month_v1`,
+`workspace` de la colección aislada y `collection_id` real. Se cotejan el mes
+nativo, recibo, consulta, originales, hashes y salidas; se conserva la regla de
+captura en el mismo día local de la ronda. La consulta retenida del 21/oct
+permite reproducir ese corte histórico y **no** acredita disponibilidad al 29/oct.
+Una ronda actual necesita una observación actual autorizada, sin renovar la fecha
+ni el hash del original retenido.
+
 Noticias es una tarea mensual del mismo plan, con búsqueda nativa y lectura
 de fuentes. RSS/GDELT permanecen opcionales. El registro selecciona por defecto
 el núcleo requerido de la política vigente y Noticias. Enumera los demás
