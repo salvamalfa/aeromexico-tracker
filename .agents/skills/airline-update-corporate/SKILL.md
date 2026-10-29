@@ -52,7 +52,7 @@ Consultar cada producto de esta familia:
 - `gap_traffic` — selección/importación manual. Entrada canónica: `sec_group:GAP`. Formato: JSON SEC → anexo HTML.
 - `asur_traffic` — selección/importación manual. Entrada canónica: `sec_group:ASUR`. Formato: JSON SEC → anexo HTML.
 - `bmv_xbrl` — solo descubrimiento. Entrada canónica: `constant:src.config:SOURCE_URLS:bmv_xbrl`. Formato: HTML → visor → ZIP con JSON.
-- `viva_financials` — certificador retenido dedicado de 2T26, con 1T26 como soporte; otras ediciones con selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
+- `viva_financials` — certificador retenido dedicado de 2T26/3T26, con 1T26/2T26 como soporte respectivamente; otras ediciones con selección/importación manual. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Formato: HTML → PDF InvestorCloud.
 - `viva_traffic` — candidato mensual con formatos nativos separados. Entrada canónica: `url:https://www.bmv.com.mx/es/emisoras/eventosrelevantes/GVIVA-34292-CGEN_DEUD`. Septiembre 2026 BMV comprobado; histórico 2021 en kilómetros permanece separado.
 - `ryanair_ir` — solo descubrimiento. Entrada canónica: `constant:src.ingest.peers.stage5:RYANAIR_KEY_STATS_URL`. Formato: HTML.
 
@@ -309,10 +309,24 @@ antes de retener los originales. Luego usar `certify --product viva_financials
 `--check` reconstruye y compara sin modificar archivos. El lote `retained_round`
 y el verificador `readiness` usan el adaptador `viva_financial`.
 
-El contrato acota las dos ediciones revisadas. Conserva todas las filas de las
+Para `2026Q3`, seleccionar `pdf=<PDF-3T26>` y `prior_quarter=<PDF-2T26>`; usar
+`--period 2026Q3`. El original inglés del 28/oct se comprobó realmente, no solo
+con pruebas sintéticas. Conserva trimestre julio–septiembre, nueve meses
+enero–septiembre y las cinco fechas de flota. Pérdidas mantienen sus signos.
+Gold proyecta solo la edición primaria elegida; el soporte no se publica.
+La comparación 9M−Q3 frente al H1 de Q2 es diagnóstico, sin emitir un H1 nuevo.
+
+Para el original Q3 revisado, readiness usa `adapter=viva_financial` y
+`availability={"source_scope":"viva_Q3_official_retained_target_v1"}`.
+Verifica hash, manifiesto, sidecar, captura y replay completos antes de aceptar
+la edición cerrada. Novedades/correcciones posteriores siguen sin comprobar;
+`latest_source_availability_verified=false`, sin una descarga ficticia ni
+permiso de activación. Otro PDF/hash o periodo exige revisión nueva.
+
+El contrato acota las tres ediciones revisadas. Conserva todas las filas de las
 tablas de indicadores, resultados, balances, flujos, deuda y flota, con columna,
 página, token, escala y procedencia. Gold solo proyecta lo reportado en la
-edición 2T26; separa trimestre, semestre e instantes, incluyendo comparativos.
+edición primaria 2T26 o 3T26; separa trimestre, semestre, nueve meses e instantes, incluyendo comparativos.
 El 1T26 aporta exclusivamente diagnóstico. No convertir H1−Q2 en un nuevo 1T26.
 Registrar diferencias entre ediciones y exigir revisión antes de armonizar
 históricos; no inferir su causa ni sobrescribir cifras anteriores.

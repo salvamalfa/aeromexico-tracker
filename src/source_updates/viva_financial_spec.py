@@ -222,3 +222,46 @@ FLEET = [
         ("Neo %", "neo_fraction", "fraction", 0.01),
     ]
 ]
+
+
+# Explicit reviewed layouts only; these profiles do not authorize source ingestion.
+def profile(q):
+    if type(q) is not int or q not in (1, 2, 3):
+        raise ValueError("Viva supports only explicit 2026Q1/Q2/Q3 edition profiles")
+    date, month, short, end = {
+        1: ("April 30th", "March 31", "Mar", "03-31"),
+        2: ("July 24th", "June 30", "Jun", "06-30"),
+        3: ("Oct 28th", "September 30", "Sep", "09-30"),
+    }[q]
+    fleet = {
+        1: ("2026-03-31", "2025-12-31", "2025-03-31"),
+        2: ("2026-06-30", "2026-03-31", "2025-12-31", "2025-06-30"),
+        3: ("2026-09-30", "2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30"),
+    }[q]
+    return dict(
+        q=q,
+        date=date,
+        month=month,
+        short=short,
+        end=end,
+        report_date={1: "2026-04-30", 2: "2026-07-24", 3: "2026-10-28"}[q],
+        pages=10 if q == 1 else 12,
+        cumulative_kind={1: None, 2: "half_year", 3: "nine_month"}[q],
+        cumulative_prefix={1: None, 2: "Six", 3: "Nine"}[q],
+        cumulative_label={1: None, 2: "6M", 3: "9M"}[q],
+        quarter_start={1: "01-01", 2: "04-01", 3: "07-01"}[q],
+        fleet_dates=[(None, day) for day in fleet],
+        fleet_header={
+            1: "Aircraft* Mar 2026 Dec 2025 Mar 2025",
+            2: "Aircraft* Jun 2026 Mar 2026 Dec 2025 Jun 2025",
+            3: "Aircraft* Sep 2026 Jun 2026 Mar 2026 Dec 2025 Sep 2025",
+        }[q],
+    )
+
+
+def dossier_period(editions):
+    selected = set(editions)
+    for period, expected in (("2026Q2", {"2026Q1", "2026Q2"}), ("2026Q3", {"2026Q2", "2026Q3"})):
+        if selected == expected:
+            return period
+    raise ValueError("Viva dossier requires exact primary and prior edition domains")

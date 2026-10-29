@@ -1,4 +1,4 @@
-"""Certify retained Viva 2026Q2 financial dossier offline; never acquire or publish."""
+"""Certify explicit retained Viva 2026Q2/Q3 financial dossier offline; never acquire or publish."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from src.source_updates.checks import period_end, require_replay_cutoff, row_cha
 from src.source_updates.collection import safe_workspace, writer
 from src.source_updates.retained import digest, originals, retain
 from src.source_updates.viva_financial_gold import frames, validate
-from src.source_updates.viva_financial_spec import GRAIN, TABLE
+from src.source_updates.viva_financial_spec import GRAIN, TABLE, dossier_period
 from src.source_updates.viva_financials import parse
 
 PRODUCTS = {"viva_financials"}
@@ -66,14 +66,28 @@ def revisions(workspace: Path, baseline, product: str, outputs: dict) -> dict:
     if not set(GRAIN + values) <= set(before):
         raise ValueError("Revision baseline must contain complete native financial grain and values")
     validate(before.drop(columns="record_id", errors="ignore"))
-    if set(before.edition) != {"2026Q1", "2026Q2"}:
-        raise ValueError("Viva baseline must preserve both explicit editions")
+    baseline_period = dossier_period(before.edition)
+    current_period = dossier_period(outputs["silver/viva_financial_native"].edition)
+    if baseline_period > current_period:
+        raise ValueError("Viva baseline primary cannot be later than the candidate primary")
+    transition = (
+        {}
+        if baseline_period == current_period
+        else {
+            "edition_transition": {
+                "baseline_primary": baseline_period,
+                "current_primary": current_period,
+                "support_scope_shift_not_historical_deletion": True,
+            }
+        }
+    )
 
     return {
         "baseline_file": baseline,
         "baseline_table": "silver/viva_financial_native",
         "baseline_sha256": digest(path),
         **row_changes(before, outputs["silver/viva_financial_native"], GRAIN, values),
+        **transition,
     }
 
 
@@ -98,8 +112,8 @@ def run(
     before = inventory(workspace) if check else None
     if product not in PRODUCTS or execute and check:
         raise ValueError("Select one supported Viva financial product and one execution mode")
-    if period != "2026Q2":
-        raise ValueError("Only reviewed Viva 2026Q2 is supported")
+    if period not in {"2026Q2", "2026Q3"}:
+        raise ValueError("Only explicit Viva 2026Q2/Q3 profiles are supported")
     end = period_end(period)
     if end >= local_time(cutoff).date():
         raise ValueError("Require a closed observation period before the explicit zoned cutoff")
@@ -125,7 +139,7 @@ def run(
         "activation": "none",
         "publication": "not_authorized",
         "approval": "human_review_required",
-        "scope": "retained_Viva_2026Q2_dossier_not_latest_source_availability",
+        "scope": f"retained_Viva_{period}_dossier_not_latest_source_availability",
         "first_publication_date": None,
         "release_lag_days": None,
     }

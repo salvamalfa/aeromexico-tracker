@@ -19,6 +19,8 @@ from src.source_updates.viva_financial_spec import (
     INDICATORS,
     NATIVE,
     TABLE,
+    dossier_period,
+    profile,
 )
 from src.transform.stage6_contracts import validate_table
 from src.transform.stage9_lineage import (
@@ -32,9 +34,14 @@ from src.transform.validate_stage9 import validate_lineage_frames
 CONTRACT = ROOT / "contracts/source_updates/viva_financial_source.json"
 
 
-def validate(frame, *, gold=False):
+def validate(frame, *, gold=False, period=None):
     if frame.empty or frame.duplicated(GRAIN).any():
         raise ValueError("Viva complete nonduplicate financial grain required")
+    if period is None:
+        period = max(set(frame.edition)) if gold else dossier_period(frame.edition)
+    if period not in {"2026Q2", "2026Q3"}:
+        raise ValueError("Viva supported primary financial period required")
+    primary_q = int(period[-1])
     schema = json.loads(CONTRACT.read_text())
     validator = Draft202012Validator(schema["gold" if gold else "native"])
     definitions = dict(
@@ -43,15 +50,16 @@ def validate(frame, *, gold=False):
     from src.source_updates.viva_financials import amount
 
     expected = set()
-    for edition in ["2026Q2"] if gold else ["2026Q1", "2026Q2"]:
+    for edition in [period] if gold else [f"2026Q{primary_q - 1}", period]:
         q = int(edition[-1])
-        end = "06-30" if q == 2 else "03-31"
+        selected = profile(q)
+        end = selected["end"]
         for statement, rows in definitions.items():
             kinds = (
                 ["instant"]
                 if statement in {"balance", "debt", "fleet"}
-                else ["quarter", "half_year"]
-                if q == 2
+                else ["quarter", selected["cumulative_kind"]]
+                if q in (2, 3)
                 else ["quarter"]
             )
             for kind in kinds:
@@ -59,21 +67,15 @@ def validate(frame, *, gold=False):
                     [(None, f"2026-{end}"), (None, "2025-12-31")]
                     if kind == "instant"
                     else [
-                        (f"{year}-{'04-01' if q == 2 and kind == 'quarter' else '01-01'}", f"{year}-{end}")
+                        (
+                            f"{year}-{selected['quarter_start'] if kind == 'quarter' else '01-01'}",
+                            f"{year}-{end}",
+                        )
                         for year in (2026, 2025)
                     ]
                 )
                 if statement == "fleet":
-                    dates = (
-                        [
-                            (None, "2026-06-30"),
-                            (None, "2026-03-31"),
-                            (None, "2025-12-31"),
-                            (None, "2025-06-30"),
-                        ]
-                        if q == 2
-                        else [(None, "2026-03-31"), (None, "2025-12-31"), (None, "2025-03-31")]
-                    )
+                    dates = selected["fleet_dates"]
                 for start, stop in dates:
                     expected.update(
                         (edition, statement, kind, start, stop, item[1], item[4])
@@ -103,7 +105,7 @@ def validate(frame, *, gold=False):
             True if financial and r.period_end_date.startswith("2026") else None
         ):
             raise ValueError("Viva preliminary/unaudited flags differ from reported evidence")
-        if r.report_date != ("2026-07-24" if r.edition == "2026Q2" else "2026-04-30"):
+        if r.report_date != profile(int(r.edition[-1]))["report_date"]:
             raise ValueError("Viva printed report date differs from edition")
         captured = pd.Timestamp(r.ingested_at)
         if captured.tzinfo is None or captured.date().isoformat() < r.report_date:
@@ -117,12 +119,12 @@ def validate(frame, *, gold=False):
             if r.period_start_date is not None:
                 raise ValueError("Viva balance/fleet/debt instants must have no duration start")
         elif r.period_start_date != r.period_end_date[:4] + (
-            "-04-01" if r.edition == "2026Q2" and r.period_type == "quarter" else "-01-01"
+            "-" + profile(int(r.edition[-1]))["quarter_start"] if r.period_type == "quarter" else "-01-01"
         ):
             raise ValueError("Viva duration start is inconsistent with report edition")
         if (r.statement in {"balance", "debt", "fleet"}) != (r.period_type == "instant"):
             raise ValueError("Viva statement and period semantics differ")
-        if gold and (r.edition != "2026Q2" or r.segment == "context_not_gold"):
+        if gold and (r.edition != period or r.segment == "context_not_gold"):
             raise ValueError("Viva support or unverified macro context cannot enter Gold")
     if "record_id" in frame:
         add_record_ids(frame, table_name=TABLE if gold else NATIVE, natural_key_columns=GRAIN)
@@ -130,12 +132,12 @@ def validate(frame, *, gold=False):
 
 
 def frames(workspace, product, period, native, details):
-    if product != "viva_financials" or period != "2026Q2":
-        raise ValueError("Viva complete reviewed 2026Q2 dossier required")
-    validate(native)
+    if product != "viva_financials" or period not in {"2026Q2", "2026Q3"}:
+        raise ValueError("Viva explicit Q2/Q3 dossier required")
+    validate(native, period=period)
     details = reconcile(native)  # Never trust a caller's success flag.
     native = add_record_ids(native.copy(), table_name=NATIVE, natural_key_columns=GRAIN)
-    validate(native)
+    validate(native, period=period)
     facts = (
         native.loc[native.edition.eq(period) & native.segment.ne("context_not_gold")]
         .drop(columns="record_id")
@@ -145,7 +147,7 @@ def frames(workspace, product, period, native, details):
     facts["native_parent_record_id"] = native.loc[facts.index, "record_id"]
     facts["normalization"] = "reported_value_times_explicit_scale_no_currency_or_distance_conversion"
     facts = add_record_ids(facts, table_name=TABLE, natural_key_columns=GRAIN)
-    validate(facts, gold=True)
+    validate(facts, gold=True, period=period)
     artifacts = validate_table(
         "dim_source_artifact",
         build_dim_source_artifact(
@@ -176,7 +178,7 @@ def frames(workspace, product, period, native, details):
             lineage_type="derived",
             artifact_ids=(by_file[r.source_file],),
             parent_record_ids=(r.native_parent_record_id,),
-            lineage_note="One true Q2-edition native parent; explicit scale only. Booked passengers, "
+            lineage_note=f"One true Q{period[-1]}-edition native parent; explicit scale only. Booked passengers, "
             "miles, scheduled LF, non-IFRS and preliminary flags preserved; "
             "no imputed Q1 or context FX.",
         )
@@ -203,9 +205,11 @@ def frames(workspace, product, period, native, details):
         "lineage": lineage,
         "gold_rows": len(facts),
         "native_rows": len(native),
-        "support_Q1_rows_not_projected": int(native.edition.eq("2026Q1").sum()),
+        f"support_Q{int(period[-1]) - 1}_rows_not_projected": int(
+            native.edition.eq(f"2026Q{int(period[-1]) - 1}").sum()
+        ),
         "primary_macro_rows_not_projected": int(
-            (native.edition.eq("2026Q2") & native.segment.eq("context_not_gold")).sum()
+            (native.edition.eq(period) & native.segment.eq("context_not_gold")).sum()
         ),
         "latest_source_availability_verified": False,
     }

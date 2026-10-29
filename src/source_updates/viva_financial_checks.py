@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from src.source_updates.viva_financial_spec import BALANCE, INCOME
+from src.source_updates.viva_financial_spec import BALANCE, INCOME, dossier_period, profile
 
 
 def numeric(row):
@@ -17,6 +17,8 @@ def half_quantum(row):
 
 
 def reconcile(native):
+    period = dossier_period(native.edition)
+    primary_q = int(period[-1])
     checks = []
 
     def compare(name, left, right):
@@ -244,7 +246,9 @@ def reconcile(native):
     # Audit differences across editions. Never emit H1-Q2 as a new validated Q1 observation.
     diagnostics = []
     selected = native.loc[native.statement.eq("income") & native.unit.eq("USD")]
-    for stop in ("2026-03-31", "2025-03-31"):
+    prior_end = "03-31" if primary_q == 2 else "06-30"
+    primary_end = profile(primary_q)["end"]
+    for stop in ("2026-" + prior_end, "2025-" + prior_end):
         year = stop[:4]
         for key in sorted(selected.metric_key.unique()):
 
@@ -260,16 +264,16 @@ def reconcile(native):
                 return next(rows.itertuples(index=False))
 
             first, second, half = (
-                get("2026Q1", "quarter", stop),
-                get("2026Q2", "quarter", year + "-06-30"),
-                get("2026Q2", "half_year", year + "-06-30"),
+                get(f"2026Q{primary_q - 1}", "quarter" if primary_q == 2 else "half_year", stop),
+                get(period, "quarter", year + "-" + primary_end),
+                get(period, profile(primary_q)["cumulative_kind"], year + "-" + primary_end),
             )
             difference = numeric(half) - numeric(second) - numeric(first)
             bound = sum(half_quantum(r) for r in (half, second, first))
             diagnostics.append(
                 dict(
                     metric_key=key,
-                    comparison_period=year + "Q1",
+                    comparison_period=year + ("Q1" if primary_q == 2 else "H1"),
                     reported_difference_USD=str(difference),
                     rounding_bound_USD=str(bound),
                     status="reported_difference_requires_review"
@@ -286,9 +290,9 @@ def reconcile(native):
                 )
             )
     return dict(
-        scope="retained_Viva_2026Q2_reported_dossier_Q1_support_only_no_historical_harmonization",
-        report_period="2026Q2",
-        quarters_validated=["2026Q2"],
+        scope=f"retained_Viva_{period}_reported_dossier_Q{primary_q - 1}_support_only_no_historical_harmonization",
+        report_period=period,
+        quarters_validated=[period],
         months_validated=[],
         accounting_and_operating_checks=checks,
         cross_edition_diagnostics=diagnostics,
@@ -296,7 +300,7 @@ def reconcile(native):
         derived_Q1_metrics_emitted=0,
         first_publication_date=None,
         release_lag_days=None,
-        printed_report_dates=["2026-04-30", "2026-07-24"],
+        printed_report_dates=[profile(primary_q - 1)["report_date"], profile(primary_q)["report_date"]],
         booked_passengers_not_transported=True,
         asm_not_ask=True,
         casm_not_cask=True,

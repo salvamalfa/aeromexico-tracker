@@ -280,7 +280,7 @@ texto accesible del índice. El texto es evidencia de navegación, nunca HTML
 original. Comprueba una sola edición aeroportuaria y sus dos enlaces PDF, URL,
 fecha real, hash, periodo y reproducción completa del libro. Mantiene separado
 el momento de importación y la observación del navegador; HTTP desconocido.
-La alternativa manual no amplía la exención de las tres ediciones retenidas.
+La alternativa manual no amplía por sí sola los contratos de edición cerrada.
 Banxico septiembre pasó; Q3 sigue no certificado frente al universo diario,
 sin inferir error del proveedor. Último periodo y primera publicación siguen
 desconocidos y la ronda global permanece bloqueada. La
@@ -301,6 +301,14 @@ novedades se registran aparte, con recibo físico, fecha y fallo/incertidumbre;
 sin consulta se declara `not_checked`. `known_new_edition` bloquea la reutilización.
 Nunca se extiende a noticias, precios ni fuentes ausentes. Siguen pasando hash,
 Bronze/Silver/Gold, unidades, conciliación y replay; no autoriza publicación.
+
+La incorporación Viva 3T26 autorizada el 29/oct añade exclusivamente su original
+inglés verificado al mismo criterio. El vínculo
+`viva_Q3_official_retained_target_v1` exige URL y hash del documento revisado,
+retención física y certificación integral `viva_financial`. Mantiene
+`latest_source_availability_verified=false` incluso en el día de su captura:
+certifica esa edición cerrada, sin consultar el índice ni correcciones nuevas.
+Ver la skill corporativa para roles y límites; no extiende el perfil a otro PDF.
 
 GAP tiene una forma histórica específica: `source_scope`, `historical`,
 `snapshot_day`, `workspace`, `submissions` y `filings`, con índice y documentos

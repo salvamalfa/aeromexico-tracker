@@ -334,6 +334,7 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
             else {}
         ),
         "latest_source_availability_verified": availability is not None
+        and availability.get("latest_source_availability_verified", True)
         and availability.get("validated_closed_edition", {}).get(
             "source_observation_current_for_round", True
         ),

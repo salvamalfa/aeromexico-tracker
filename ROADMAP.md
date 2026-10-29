@@ -12,7 +12,8 @@ calendarios por mover una tarea entre secciones.
 - **Ronda comprobada con el criterio aprobado:** 20 de 22 tareas obligatorias
   verificadas; 110 salidas de fuentes y cinco eventos editoriales. El recibo
   global se escribió y reprodujo sin red. Una tarea RSS opcional también pasa.
-  Aerocivil y Viva financiero3T26 siguen pendientes; no es una ronda completa.
+  Ese recibo precede a la incorporación candidata Viva3T26, ahora comprobada
+  por separado. No es una nueva ronda completa ni un conteo actualizado.
 - **Vista mensual comprobada de septiembre:** 15 de15 tareas obligatorias,
   86 salidas, cinco eventos editoriales y replay; lista para incorporar ese lote
   a revisión. Sigue en el mismo calendario general, sin programar ejecuciones
@@ -21,25 +22,20 @@ calendarios por mover una tarea entre secciones.
   primer hábil bancario mexicano en/después del 15; trimestral a +2 hábiles
   del último reporte financiero real de las tres aerolíneas, agrupado con la
   mensual si distan ≤7 días naturales, en la fecha posterior. Zona
-  America/Mexico_City. Falta Viva Q3 para fechar el trimestre. Cero ejecuciones
+  America/Mexico_City. El original VivaQ3 ya acredita28/oct con precisión diaria; falta enlazarlo
+  en la comprobación operacional actual del calendario. Cero ejecuciones
   programadas. Septiembre/Q3 es el corte probado, no una certificación de los
   datos que necesitarán noviembre o diciembre.
-
-**Integración PR174 detenida por revisión:** la CI de 176933ff pasó, pero al
-marcarlo listo apareció un fallo de cronología entre dos editores.
-La corrección 72bac615 separa captura del editor y primera observación del evento;
-149 pruebas afectadas y revisión independiente pasan. Los recibos del productor corregido ya se escribieron y reprodujeron: mensual
-15/15 y combinada20/22, sin cambiar cifras ni fechas; falta la nueva CI. No se integra un SHA diferente
-al autorizado; el sitio y las ejecuciones siguen intactos.
 
 ## Bloqueos y siguiente acción
 
 | Pendiente | Estado comprobado | Siguiente acción y criterio de cierre |
 | --- | --- | --- |
 | Aerocivil | Consulta registrada: radicado 2026190010175977, IdControl 2758656, 28/oct; sin diccionario ni atribución verificados | Incorporar respuesta oficial aplicable a jh8x-n6h6. El registro administrativo no responde las preguntas; no duplicar correo |
-| Viva financiero Q3 | La investigación del hilo principal encontró 1T/2T 2026; el tercer trimestre mostrado debajo corresponde a 2025. Sin fecha 2026 confirmada | Incorporar reporte oficial 3T26 y adaptar/verificar esa edición; finales de octubre es solo estimación histórica, no una fecha prometida |
+| Ronda actual con Viva Q3 | Original, extracción real, conciliación, linaje y replay Viva verificados por separado; el último recibo conjunto20/22 es anterior | Enlazar el candidato Viva y su día28/oct en la comprobación actual del calendario; no inferir cobertura7/7 ni activar horarios |
 
-La ronda completa sigue bloqueada por Aerocivil y Viva financiero3T26.
+La confirmación metodológica oficial de Aerocivil sigue pendiente. Viva3T26
+ya está comprobado como candidato; la ronda actual necesita su propio recibo.
 Noticias está dentro del mismo calendario mediante revisión editorial nativa:
 GDELT/RSS son descubrimiento opcional y sus fallos históricos permanecen.
 Un componente pendiente no cancela las tareas independientes válidas.
@@ -50,7 +46,7 @@ exhaustivos. Aerocivil conserva su obligación trimestral; Noticias, la revisió
 mensual obligatoria. Se conservan fechas reales,
 periodos, unidades, faltantes y distinción entre original y reconstrucción.
 
-**Criterio autorizado el 28/oct, 23:15 UTC, preparado en el borrador PR174:**
+**Criterio autorizado el 28/oct, 23:15 UTC, integrado en PR174:**
 reutilizar las ediciones verificadas de GAP/ASUR septiembre y Volaris financiero
 3T26 conservando sus fechas y hashes. Consultas de novedades y fallos quedan
 separados; una edición nueva conocida o un periodo distinto exige otra validación.
@@ -103,6 +99,20 @@ La CI remota del head corregido y la integración son controles distintos.
 
 ## Terminado
 
+- **Viva 3T26, candidato verificado:** original inglés336.146 bytes, captura real
+  29/oct06:37:58UTC y día documental28/oct.803 filas nativas,393 Gold candidatas,
+  dos artefactos y 1.589 vínculos;319 conciliaciones y 42 comparaciones entre
+  ediciones dentro de la precisión impresa. Replay exacto y revisión Codex de
+  extracción real favorables. Soporte2T26 intacto; no se publicaron cifras ni
+  activaron tesis. El [catálogo](docs/catalogo-fuentes-calendario.md#viva-3t26-incorporación-candidata-verificada-el-29-de-octubre)
+  conserva comandos, hashes, límites y evidencia privada.
+
+- **PR174 integrado y verificado:** merge `d8cebf69`,
+  [CI posterior 40814025862 aprobada](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40814025862),
+  5.411 pruebas públicas más 29subpruebas; nueve omisiones y106 exclusiones del
+  perfil público. Revisión independiente del head corregido favorable y cero
+  hilos abiertos. Calendario, candidatos y publicaciones permanecieron intactos.
+
 - **CI y suite, mejora acotada verificada:** preparación compartida del snapshot
   en pruebas de conversación y lifecycle/Ruff antes del perfil público, sin
   retirar casos. La [medición canónica](REPO_MAP.md#eficiencia-de-pruebas-y-ci)
@@ -111,11 +121,11 @@ La CI remota del head corregido y la integración son controles distintos.
 - **AFAC aeroportuario septiembre, verificado localmente:** descarga real desde
   Chrome local, original 705.225 bytes/SHA comprobado; 3.510 filas, nueve meses,
   65 aeropuertos y 173 cruces. Julio conserva baseline:780 altas,0 bajas,9diferencias
-  escalares registradas; no se sobrescribe el histórico publicado. PR174 en borrador.
+  escalares registradas; no se sobrescribe el histórico publicado. PR174 integrado.
 - **OTC/ICAGY, controles locales completos:** MHTML nativo oficial 28/oct23:35UTC,
   sin etiquetarlo HTTP ni reconstrucción. Cinco instrumentos:21 sesiones septiembre,
   64 trimestre,187enero–septiembre, ancla e historia previa comprobadas. Suplemento
-  vinculado al control global, sin editar los recibos antiguos. PR174 en borrador.
+  vinculado al control global, sin editar los recibos antiguos. PR174 integrado.
 
 - **Reutilización local comprobada de ediciones cerradas:** GAP/ASUR septiembre
   y Volaris financiero3T26 mantienen fechas, bytes y representación;14 candidatos
@@ -125,7 +135,7 @@ La CI remota del head corregido y la integración son controles distintos.
   seis páginas de origen y siete búsquedas. Resúmenes propios, fechas de publicación
   y hechos separadas, agrupación por evento y trazabilidad; candidatos sin aprobar.
   Una sola vista/calendario, con estados independientes y dependencias reales.
-  PR174 pendiente de CI e integración, sin publicación ni activación.
+  PR174 integrado con CI posterior aprobada, sin publicación ni activación.
 
 - **Aeroméxico mensual recuperado:** el 28/oct a las 22:09 UTC el recolector
   habitual obtuvo índice y 6-K con HTTP200. Certificación/replay: 24 observaciones
