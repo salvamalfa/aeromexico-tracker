@@ -300,7 +300,7 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
         conditions.append("publication_calendar_completeness_not_verified")
     if result.get("complete_month_certified") is False:
         conditions.append("source_does_not_certify_complete_month")
-    return {
+    checked = {
         "id": item["id"],
         "product": item["product"],
         "period": item["period"],
@@ -342,6 +342,16 @@ def check_task(item: dict, cutoff: str, round_as_of: str | None = None) -> dict:
         "activation": "none",
         "publication": "not_authorized",
     }
+    if item["product"] == "aerocivil":
+        from src.source_updates.aerocivil_operational import from_replay
+
+        checked["semantic_acceptance_verified"] = False
+        policy = from_replay(
+            result, checked["accepted_receipt_sha256"], checked["acquisition_receipt_sha256"]
+        )
+        if policy is not None:
+            checked["operational_acceptance"] = policy
+    return checked
 
 
 def execute(recipe: dict, workspace: Path, *, write=False, check=False) -> dict:

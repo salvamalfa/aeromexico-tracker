@@ -133,6 +133,7 @@ def prepare(request: dict) -> dict:
         "next_quarterly": quarter,
         "tasks": tasks,
         "active_task": None,
+        "active_tasks": {},
         "operations": {},
         "reschedules": {},
         "events": {},
@@ -171,7 +172,7 @@ def trigger(state: dict, now: str) -> dict:
         "pending_task_keys": pending_keys,
         "activation_authorized": state["activation_authorized"],
     }
-    if state["active_task"] is not None:
+    if state["active_task"] is not None or state.get("active_tasks"):
         return {**result, "payload": None, "reason": "active_writer_requires_reconciliation"}
     if date.fromisoformat(due) <= today:
         return {**result, "payload": None, "reason": "due_or_overdue_requires_reconciliation"}
@@ -180,12 +181,19 @@ def trigger(state: dict, now: str) -> dict:
         "prompt": (
             f"Procesa el evento {event_id}, claves pendientes {', '.join(pending_keys)}. "
             f"Coordinador airlines-tracker-source-calendar; estado canónico {state['workspace']}/state.json. "
-            "Lee el estado privado canónico y el contrato del coordinador. "
+            "Lee .agents/skills/airline-update-coordinator/SKILL.md y el estado privado canónico. "
+            "Sigue esa skill: materializa el manifiesto con python -m scripts.source_update_dispatch "
+            "y ejecuta jobs[].native_call mediante herramientas nativas de subagentes reales. "
+            "Si la capacidad nativa o el estado no están disponibles, "
+            "devuelve el bloqueo sin simular envíos. "
             "Comprueba autorización, ID único y bloqueo; registra intención antes de delegar. "
             "Reconcílialo por mensaje/turno/recibo antes de repetir un envío incierto. "
             "Reutiliza plan/calendar/retry, conserva resultados independientes y originales. "
-            "Noticias pertenece a esta ronda; usa búsquedas nativas y navegador autorizado, "
+            "Noticias pertenece al calendario único; ejecútala solo si figura en las claves del evento. "
+            "Usa búsquedas nativas y navegador autorizado, "
             "con originales transferidos por Library. No crees otro monitor Viva. "
+            "Aerocivil conserva sus supuestos operacionales documentados y confirmación oficial pendiente; "
+            "comprueba datos, disponibilidad y recibos requeridos sin sustituir faltantes por supuestos. "
             "No publiques ni actives datos, noticias o tesis. Actualiza este mismo ID al próximo evento."
         ),
         "schedule": (
@@ -204,13 +212,57 @@ def text_field(action: dict, field: str) -> str:
     return value
 
 
+def owner_reference(action: dict) -> str:
+    """Use an explicitly local lease when the host does not expose a native turn ID."""
+    if action.get("owner_lease_id") is not None:
+        lease = text_field(action, "owner_lease_id")
+        if not lease.startswith("local_lease:"):
+            raise ValueError("A local owner lease must be labelled local_lease:")
+        return lease
+    return text_field(action, "owner_turn_id")
+
+
+def optional_identifier(action: dict, field: str) -> str | None:
+    return None if action.get(field) is None else text_field(action, field)
+
+
 def transition(state: dict, action: dict, workspace: Path) -> None:
     """Record observed actions, never perform them. Authorization is an operator assertion."""
     kind = action["action"]
     stamp = text_field(action, "at")
     calendar.local_time(stamp)
+    active = state.setdefault("active_tasks", {})
+    if state["active_task"] is not None and not active:
+        previous = state["active_task"]
+        active[previous] = state["tasks"][previous]["dispatches"][-1]["intent_id"]
+    if any(state["tasks"][key]["dispatches"][-1]["intent_id"] != intent for key, intent in active.items()):
+        raise ValueError("Active worker references differ; reconcile before dispatch")
+    unresolved = {
+        key
+        for key, entry in state["tasks"].items()
+        if entry["status"] in {"running", "blocked_for_decision"}
+        and entry["dispatches"]
+        and entry["dispatches"][-1]["delivery"] in {"uncertain", "acknowledged"}
+    }
+    if set(active) != unresolved or (active and state["active_task"] not in active):
+        raise ValueError("Unresolved workers differ from the persistent coordinator lease")
+    if kind == "record_conditional_authorization":
+        from src.source_updates.aerocivil_operational import POLICY
+
+        if state["automation_id"] is not None or state["automation_creation"] is not None or active:
+            raise ValueError("Reconcile the existing automation before changing preparation conditions")
+        if action.get("operational_policy_id") != POLICY:
+            raise ValueError("Use the exact documented operational policy")
+        state["conditional_activation_authorization"] = {
+            "authorization_reference": text_field(action, "authorization_reference"),
+            "status": "authorized_after_verified_viva_required_data_and_native_dispatch",
+            "operational_policy_id": POLICY,
+            "recorded_at": stamp,
+            "scope": "single_calendar_candidate_updates_no_automatic_publication",
+        }
+        return
     if kind == "refresh_reports":
-        if state["active_task"] is not None:
+        if state["active_task"] is not None or active:
             raise ValueError("Cannot change dates while a task is running")
         releases = list(state["releases"])
         for release in action["releases"]:
@@ -243,14 +295,37 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
         if action.get("activation_authorized") is not True:
             raise ValueError("Explicit activation authorization is required")
         reference = text_field(action, "authorization_reference")
+        if state.get("conditional_activation_authorization"):
+            expected = {
+                "viva_financials_verified",
+                "required_round_data_verified",
+                "single_coordinator_reconciled",
+                "native_dispatch_verified",
+            }
+            verified = action.get("verified_conditions")
+            if (
+                not isinstance(verified, dict)
+                or set(verified) != expected
+                or any(value is not True for value in verified.values())
+            ):
+                raise ValueError(
+                    "Conditional activation needs Viva, required data, native dispatch and one coordinator"
+                )
+            conditions_reference = text_field(action, "conditions_verified_reference")
+        else:
+            conditions_reference = None
         if state["automation_id"] is not None or state["automation_creation"] is not None:
             raise ValueError("Existing or uncertain automation; reconcile before another create")
         state.update(activation_authorized=True, authorization_reference=reference)
         state["automation_creation"] = {
             "intent_id": action["operation_id"],
             "at": stamp,
-            "owner_turn_id": text_field(action, "owner_turn_id"),
+            "owner_turn_id": optional_identifier(action, "owner_turn_id"),
+            "owner_lease_id": owner_reference(action),
+            "native_owner_turn_id": optional_identifier(action, "native_owner_turn_id")
+            or optional_identifier(action, "owner_turn_id"),
             "outcome": "uncertain",
+            "conditions_verified_reference": conditions_reference,
         }
         return
     if kind in {"bind_authorized_automation", "activation_not_created"}:
@@ -278,8 +353,41 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
     key = text_field(action, "task_key")
     task = state["tasks"][key]
     if kind == "dispatch_intent":
-        if state["active_task"] is not None:
-            raise ValueError("Another task owns the single writer; reconcile it first")
+        owner = owner_reference(action)
+        isolated = action.get("execution_mode") == "isolated_skill_worker"
+        if action.get("execution_mode") not in {None, "serial_writer", "isolated_skill_worker"}:
+            raise ValueError("Unknown worker execution mode")
+        if not isolated and action.get("worker_workspace") is not None:
+            raise ValueError("Worker workspace requires explicit isolated skill execution")
+        for prior_key in active:
+            prior = state["tasks"][prior_key]["dispatches"][-1]
+            if (
+                not isolated
+                or prior.get("execution_mode") != "isolated_skill_worker"
+                or prior.get("owner_lease_id", prior.get("owner_turn_id")) != owner
+            ):
+                raise ValueError("Another task owns the single writer; reconcile it first")
+        worker = None
+        if isolated:
+            worker = safe_workspace(Path(text_field(action, "worker_workspace")))
+            prior_workspaces = [
+                workspace,
+                *[
+                    Path(dispatch["worker_workspace"])
+                    for old_task in state["tasks"].values()
+                    for dispatch in old_task["dispatches"]
+                    if dispatch.get("worker_workspace")
+                ],
+            ]
+            if any(
+                worker == prior or worker.is_relative_to(prior) or prior.is_relative_to(worker)
+                for prior in prior_workspaces
+            ):
+                raise ValueError(
+                    "Worker workspace overlaps the coordinator or a reserved historical candidate"
+                )
+            if worker.exists() and any(worker.iterdir()):
+                raise ValueError("A new isolated worker needs an empty candidate workspace")
         if not task["selected"] or task["status"] not in {"planned", "retry_pending"} or not task["due_date"]:
             raise ValueError("Task cannot be dispatched")
         if calendar.local_time(stamp).date() < date.fromisoformat(task["due_date"]):
@@ -291,43 +399,69 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
             or date.fromisoformat(event["date"]) > calendar.local_time(stamp).date()
         ):
             raise ValueError("Dispatch must match the next event date and members")
-        owner = text_field(action, "owner_turn_id")
         task["dispatches"].append(
             {
                 "intent_id": action["operation_id"],
-                "owner_turn_id": owner,
+                "owner_turn_id": optional_identifier(action, "owner_turn_id"),
+                "owner_lease_id": owner,
+                "native_owner_turn_id": optional_identifier(action, "native_owner_turn_id")
+                or optional_identifier(action, "owner_turn_id"),
                 "at": stamp,
                 "delivery": "uncertain",
                 "message_id": None,
                 "worker_turn_id": None,
+                "native_task_name": None,
+                "execution_mode": "isolated_skill_worker" if isolated else "serial_writer",
+                "worker_workspace": str(worker) if worker else None,
             }
         )
         task["status"] = "running"
-        state["active_task"] = key
+        active[key] = action["operation_id"]
+        state["active_task"] = next(iter(active))
     elif kind in {"acknowledge", "complete", "retry", "uncertain"}:
-        if task["status"] not in {"running", "blocked_for_decision"} or state["active_task"] != key:
+        if task["status"] not in {"running", "blocked_for_decision"} or key not in active:
             raise ValueError("Only the active running task can be reconciled")
         dispatch = task["dispatches"][-1]
-        if action.get("owner_turn_id") != dispatch["owner_turn_id"]:
+        if owner_reference(action) != dispatch.get("owner_lease_id", dispatch.get("owner_turn_id")):
             raise ValueError("Wrong writer owner; handover needs a reconciled record")
         if kind == "acknowledge":
             if dispatch["delivery"] != "uncertain":
                 raise ValueError("Delivery is already acknowledged")
-            dispatch.update(
-                delivery="acknowledged",
-                message_id=text_field(action, "message_id"),
-                worker_turn_id=text_field(action, "worker_turn_id"),
-            )
+            if action.get("native_task_name"):
+                native_name = text_field(action, "native_task_name")
+                if any(
+                    prior is not dispatch and prior.get("native_task_name") == native_name
+                    for entry in state["tasks"].values()
+                    for prior in entry["dispatches"]
+                ):
+                    raise ValueError("Native worker already belongs to another dispatch intention")
+                response_hash = text_field(action, "native_response_sha256")
+                if len(response_hash) != 64 or any(char not in "0123456789abcdef" for char in response_hash):
+                    raise ValueError("Native tool response needs its exact SHA-256")
+                dispatch.update(
+                    delivery="acknowledged",
+                    native_task_name=native_name,
+                    native_response_sha256=response_hash,
+                    message_id=optional_identifier(action, "message_id"),
+                    worker_turn_id=optional_identifier(action, "worker_turn_id"),
+                )
+            else:
+                dispatch.update(
+                    delivery="acknowledged",
+                    message_id=text_field(action, "message_id"),
+                    worker_turn_id=text_field(action, "worker_turn_id"),
+                )
             return
         if kind == "complete":
             # This is an operational receipt, never a certification of financial numbers.
             path = (workspace / text_field(action, "receipt_file")).resolve()
             if not path.is_relative_to(workspace) or not path.is_file() or path.is_symlink():
                 raise ValueError("Receipt must be a retained file inside the private workspace")
-            actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            receipt_bytes = path.read_bytes()
+            actual = hashlib.sha256(receipt_bytes).hexdigest()
             if actual != action.get("receipt_sha256"):
                 raise ValueError("Receipt hash differs")
-            receipt = load(path)
+            receipt = json.loads(receipt_bytes)
             if receipt.get("task_key") != key or receipt.get("intent_id") != dispatch["intent_id"]:
                 raise ValueError("Receipt belongs to a different task or dispatch")
             task["receipts"].append(
@@ -375,7 +509,8 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
             dispatch["reconciliation_reference"] = text_field(action, "reconciliation_reference")
             task["status"] = "blocked_for_decision"
             return  # An unacknowledged worker might still be writing. Keep the persisted owner.
-        state["active_task"] = None
+        del active[key]
+        state["active_task"] = next(iter(active), None)
     else:
         raise ValueError("Unknown coordinator transition")
 
