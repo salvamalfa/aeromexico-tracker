@@ -201,3 +201,21 @@ def test_fingerprints_cover_reusable_checks_contracts_calendar_catalogue():
         "config/gold_schema_contracts.yaml",
     ):
         assert name in files and files[name] == gate.readiness.sha(ROOT / name)
+
+def test_candidate_change_between_checker_and_release_binding_is_detected(monkeypatch):
+    item = task("am_financials", "quarterly")
+    item["adapter"] = "retained"
+    state = {"changed": False}
+
+    def inventory(_candidate):
+        return {"synthetic-file": "new" if state["changed"] else "verified"}
+
+    def checker(*_args):
+        # Model a file replaced after the checker verified its original bytes.
+        state["changed"] = True
+        return {"status": "checks_passed", "output_sha256": {}}
+
+    monkeypatch.setattr(gate.readiness, "inventory", inventory)
+    monkeypatch.setattr(gate.readiness, "check_task", checker)
+    with pytest.raises(ValueError, match="changed"):
+        gate.verify(item, gate.ROOT / "tmp/source-updates/independent-global-receipt")

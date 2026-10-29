@@ -8,8 +8,7 @@ from src.source_updates import global_readiness as global_gate
 from src.source_updates import round_tasks
 from src.source_updates.catalog import product_map
 
-MONTHLY_REQUIRED = frozenset(
-    {
+MONTHLY_REQUIRED = frozenset({
         "am_traffic_ir",
         "volaris_traffic_ir",
         "viva_traffic",
@@ -24,8 +23,7 @@ MONTHLY_REQUIRED = frozenset(
         "banxico",
         "fuel",
         "equities",
-    }
-)
+})
 QUARTERLY_REQUIRED = frozenset(
     {"am_financials", "volaris_sec", "viva_financials", "banxico", "fuel", "equities", "aerocivil"}
 )
@@ -599,22 +597,3 @@ def test_unverified_holiday_year_blocks_calendar_without_inventing_dates():
     assert not decision["ready_for_calendar_incorporation"]
     assert decision["monthly_date"] is None
     assert any("2027" in reason for reason in decision["calendar_blockers"])
-
-
-def test_candidate_change_between_checker_and_release_binding_is_detected(monkeypatch):
-    item = task("am_financials", "quarterly")
-    item["adapter"] = "retained"
-    state = {"changed": False}
-
-    def inventory(_candidate):
-        return {"synthetic-file": "new" if state["changed"] else "verified"}
-
-    def checker(*_args):
-        # Model a file replaced after the checker verified its original bytes.
-        state["changed"] = True
-        return {"status": "checks_passed", "output_sha256": {}}
-
-    monkeypatch.setattr(global_gate.readiness, "inventory", inventory)
-    monkeypatch.setattr(global_gate.readiness, "check_task", checker)
-    with pytest.raises(ValueError, match="changed"):
-        global_gate.verify(item, global_gate.ROOT / "tmp/source-updates/independent-global-receipt")

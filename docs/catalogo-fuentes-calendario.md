@@ -4233,6 +4233,17 @@ no certificada para ediciones cerradas. El recibo no afirma un censo de correcci
 
 Dos grupos afectados finales pasaron, sin solapamiento: **347 pruebas en11,66s**
 y **92 en25,79s**, cero fallos/errores/omisiones. Ruff F de `src`/`scripts` pasó.
+La primera CI del cierre (`40798714239`) detectó dos problemas de pruebas:
+una expectativa antigua aún exigía captura el mismo día para GAP y el archivo
+independiente de política llegó a620 líneas. Se actualizó la prueba al criterio
+aprobado: reutiliza la edición con fecha/HTTP originales y rechaza una corrección
+nueva conocida. La prueba TOCTOU se trasladó completa a otro módulo existente;
+no se eliminaron casos/aserciones ni se cambió el límite600. El archivo quedó
+en599 líneas. **156 pruebas afectadas** pasaron en15,94s; el control sobre773
+módulos Python versionados respeta los presupuestos originales. La nueva CI del
+head corregido ejecuta el control completo en un checkout limpio. Producción,
+contratos y los recibos reales del productor `f5ef3005` permanecen idénticos.
+
 La revisión adversarial Codex independiente del productor compilado fue favorable;
 se corrigieron tres hallazgos: RSS solo no acredita búsqueda nativa, IPs literales
 no son páginas públicas elegibles y un recibo alterado se rechaza incluso si su JSON

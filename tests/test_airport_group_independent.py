@@ -274,8 +274,15 @@ def test_manual_gap_integral_replay_keeps_http_unknown_and_date_precision(manual
     assert proof["library_version_as_reported_by_handoff"] == 0
     assert not proof["indexed_binary_identity_claimed"] and not proof["all_sites_latest_revision_census"]
     assert len(result["output_sha256"]) == 9 and before == readiness.inventory(Path(item["workspace"]))
-    with pytest.raises(ValueError, match="verification day"):
-        manual_gap.verify(item, result, "2026-10-28T19:00:00+00:00")
+    # Approved closed-edition reuse preserves the observation instead of refreshing it.
+    later = manual_gap.verify(item, result, "2026-10-28T19:00:00+00:00")
+    closed = later["validated_closed_edition"]
+    assert closed["accepted_for_requested_period"] and not closed["source_observation_current_for_round"]
+    assert closed["observed_at_or_day"] == "2026-10-27" and later["manual_source_observed_on"] == "2026-10-27"
+    assert later["source_http_status_observed"] is later["source_capture_utc"] is None
+    corrected = {**item, "availability": {**item["availability"], "known_new_edition": "official correction"}}
+    with pytest.raises(ValueError, match="new edition"):
+        manual_gap.verify(corrected, result, "2026-10-28T19:00:00+00:00")
     with pytest.raises(ValueError):
         manual_gap.verify({**item, "period": "2026M08"}, result, cutoff)
     # Same bytes cannot impersonate a different Library tuple or binary-identity assertion.

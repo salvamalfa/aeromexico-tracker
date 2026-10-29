@@ -49,7 +49,9 @@ reutilizar las ediciones verificadas de GAP/ASUR septiembre y Volaris financiero
 separados; una edición nueva conocida o un periodo distinto exige otra validación.
 No equivale a una descarga actual ni a permiso de activar o publicar. Dos grupos
 locales finales, sin casos solapados, pasaron:347 pruebas en11,66s y92 en25,79s.
-La CI remota del head final y la integración son controles distintos.
+La primera CI detectó dos pruebas desalineadas (captura diaria antigua y
+límite de líneas); quedaron corregidas, con156 pruebas afectadas aprobadas.
+La CI remota del head corregido y la integración son controles distintos.
 
 ## Backlog
 
