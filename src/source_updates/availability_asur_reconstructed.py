@@ -3,7 +3,6 @@
 import json
 import os
 import re
-from datetime import timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -12,6 +11,7 @@ from src.source_updates.asur_reconstructed import ALIAS, PERIOD, URL, read
 from src.source_updates.asur_reconstruction_inputs import FILES, OBSERVED_AT, validate_record
 from src.source_updates.calendar import local_time
 from src.source_updates.checks import verify_bronze
+from src.source_updates.closed_editions import binding_fields, evidence
 from src.source_updates.collection import safe_workspace
 from src.source_updates.retained import digest
 
@@ -22,7 +22,7 @@ FIELDS = {"source_scope", "workspace", "run_id"}
 def preflight(binding, candidate):
     if not (
         isinstance(binding, dict)
-        and set(binding) == FIELDS
+        and binding_fields(binding, FIELDS)
         and binding["source_scope"] == SCOPE
         and isinstance(binding["run_id"], str)
         and re.fullmatch(r"[a-f0-9]{32}", binding["run_id"])
@@ -47,12 +47,10 @@ def verify(item, result, cutoff):
         raise ValueError("ASUR requires its real physical reconstruction import receipt")
     receipt_sha = digest(path)
     receipt = json.loads(path.read_text())
-    day = local_time(cutoff).date()
     if not (
         item["product"] == "asur_traffic"
         and item["adapter"] == "airport_group"
         and item["period"] == PERIOD
-        and (day.replace(day=1) - timedelta(days=1)).strftime("%YM%m") == PERIOD
         and result.get("status") == "checks_passed"
         and result.get("product") == "asur_traffic"
         and result.get("period") == PERIOD
@@ -71,7 +69,6 @@ def verify(item, result, cutoff):
         and receipt.get("network_requests") == 0
         and receipt.get("activation") == "none"
         and receipt.get("publication") == "not_authorized"
-        and local_time(receipt["source_observed_at"]).date() == day
         and local_time(receipt["source_observed_at"]) <= local_time(cutoff)
         and local_time(receipt["imported_at"]) <= local_time(cutoff)
         and local_time(receipt["imported_at"]) >= local_time(receipt["source_observed_at"])
@@ -118,6 +115,9 @@ def verify(item, result, cutoff):
     ):
         raise ValueError("ASUR reconstruction import changed during verification")
     return {
+        "validated_closed_edition": evidence(
+            item, cutoff, OBSERVED_AT, precision="timestamp", source_url=URL
+        ),
         "source_scope": SCOPE,
         "source_url": URL,
         "review_period": PERIOD,
@@ -127,7 +127,7 @@ def verify(item, result, cutoff):
         "source_http_status_observed": None,
         "source_capture_utc": None,
         "source_visible_observed_at": receipt["source_observed_at"],
-        "source_observed_local_day": day.isoformat(),
+        "source_observed_local_day": local_time(OBSERVED_AT).date().isoformat(),
         "representation_imported_at": receipt["imported_at"],
         "availability_basis": (
             "authorized_visible_target_reconstruction_verified_not_original_download_or_revision_census"

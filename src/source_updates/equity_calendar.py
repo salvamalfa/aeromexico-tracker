@@ -65,16 +65,17 @@ def physical_calendars(root, cutoff):
         if len(roles) != 1 or roles[0] in selected:
             raise ValueError("Calendar URLs/roles must be exact, unique reviewed official references")
         role = roles[0]
-        extension = "pdf" if role == "NYSE_trading_days" else "html"
+        browser = role == "OTC" and row.get("download_method") == "browser_mhtml"
+        extension = "mhtml" if browser else "pdf" if role == "NYSE_trading_days" else "html"
         period = "current" if extension == "pdf" else "2026"
         if (
             row.get("source_system") != "equity_calendar_reference"
             or row.get("logical_key") != f"equity_calendar_reference|{role}|{period}|{extension}"
-            or row.get("http_status") != 200
-            or row.get("download_method") != "httpx"
+            or (row.get("http_status") is not None if browser else row.get("http_status") != 200)
+            or row.get("download_method") != ("browser_mhtml" if browser else "httpx")
             or local_time(row["downloaded_at"]) > local_time(cutoff)
         ):
-            raise ValueError("Calendar must bind actual public HTTP capture before cutoff")
+            raise ValueError("Calendar must bind a physical official HTTP/browser capture before cutoff")
         relative = Path(row["source_file"])
         path = root / relative
         if relative.is_absolute() or ".." in relative.parts or not path.resolve().is_relative_to(root):
@@ -89,6 +90,10 @@ def physical_calendars(root, cutoff):
             or json.loads(sidecar.read_text()) != row
         ):
             raise ValueError("Calendar original/sidecar/manifest integrity differs")
+        if browser:
+            from src.source_updates.otc_calendar import rendered_html
+
+            rendered_html(body, row, path, cutoff)
         selected[role] = body, row
         files[relative.as_posix()] = sha(body)
         files[sidecar.relative_to(root).as_posix()] = digest(sidecar)
@@ -108,8 +113,9 @@ def html_calendar(venue, body):
         for t in soup.find_all("table")
     ]
     if venue == "OTC":
-        # No reviewed, physically retained OTC calendar edition exists yet.
-        return None
+        from src.source_updates.otc_calendar import html_calendar as otc_calendar
+
+        return otc_calendar(body)
     header = ["Holiday", "2025", "2026", "2027"] if venue == "NYSE" else ["Holiday", "Date", "Market Status"]
     matches = [t for t in tables if t and t[0] == header]
     if len(matches) != 1:
@@ -174,7 +180,7 @@ def nyse_counts(body, closed):
     return {
         "source_label": "2026 Estimated",
         "asset_class": "US Cash Equities, US Equity Options",
-        "monthly_session_counts": counts,
+        "monthly_session_counts": {str(month): count for month, count in counts.items()},
     }
 
 
@@ -254,17 +260,52 @@ def validate_candidate_receipt(item, receipt, retention_hash, native_hash):
         raise ValueError("Native prices must bind the exact retained candidate product/period/cutoff/receipt")
 
 
-def run(recipe, calendar_root, cutoff):
+def assess_candidate(item, calendars, cutoff):
+    workspace = safe_workspace(Path(item["workspace"]))
+    if window(item["period"])[1] >= local_time(cutoff).date() or local_time(
+        item["candidate_as_of"]
+    ) > local_time(cutoff):
+        raise ValueError("Equity session proof requires a closed observation window")
+    inputs, receipt_sha = originals(workspace, "equities", item["receipt_id"], item["candidate_as_of"])
+    silver, _ = read("equities", inputs, item["period"])
+    path = workspace / "data/silver/market_prices.parquet"
+    pd.testing.assert_frame_equal(pd.read_parquet(path), silver["market_prices"], check_exact=True)
+    accepted = workspace / "receipts" / f"series-equities-{item['period']}.json"
+    receipt = json.loads(accepted.read_text())
+    validate_candidate_receipt(item, receipt, receipt_sha, digest(path))
+    native_hash, accepted_hash = digest(path), digest(accepted)
+    result = {
+        **assess(silver["market_prices"], item["period"], calendars),
+        "native_prices_sha256": native_hash,
+        "existing_product_receipt_sha256": accepted_hash,
+        "existing_product_receipt_recertified_here": False,
+    }
+    # Recheck retained bytes/sidecars and receipts after native reconstruction.
+    _, after_receipt_sha = originals(workspace, "equities", item["receipt_id"], item["candidate_as_of"])
+    if after_receipt_sha != receipt_sha or digest(path) != native_hash or digest(accepted) != accepted_hash:
+        raise ValueError("Retained candidate changed during session verification")
+    return result
+
+
+def reference_calendars(calendar_root, cutoff):
     selected, inventory = physical_calendars(calendar_root, cutoff)
     calendars, evidence = {}, {}
     for venue in ("NYSE", "NASDAQ", "OTC"):
         if venue not in selected:
             continue
         body, row = selected[venue]
+        if row.get("download_method") == "browser_mhtml":
+            from src.source_updates.otc_calendar import rendered_html
+
+            body = rendered_html(body, row, Path(calendar_root) / row["source_file"], cutoff)
         calendars[venue] = html_calendar(venue, body)
         evidence[venue] = {
             k: row[k] for k in ("source_url", "source_file", "sha256", "downloaded_at", "http_status")
         }
+        evidence[venue].update(
+            download_method=row["download_method"],
+            source_representation=row.get("source_representation", "retained_HTTP_response"),
+        )
         evidence[venue]["calendar_verified"] = calendars[venue] is not None
     if calendars.get("NYSE"):
         if "NYSE_trading_days" not in selected:
@@ -275,6 +316,11 @@ def run(recipe, calendar_root, cutoff):
             "source_url": row["source_url"],
             **nyse_counts(body, calendars["NYSE"]["closed"]),
         }
+    return calendars, evidence, inventory
+
+
+def run(recipe, calendar_root, cutoff):
+    calendars, evidence, inventory = reference_calendars(calendar_root, cutoff)
     items = [i for i in recipe["items"] if i["product"] == "equities"]
     if (
         recipe.get("version") != 1
@@ -286,33 +332,7 @@ def run(recipe, calendar_root, cutoff):
         raise ValueError("Select the exact monthly and quarterly equity candidates")
     results = {}
     for item in items:
-        workspace = safe_workspace(Path(item["workspace"]))
-        if window(item["period"])[1] >= local_time(cutoff).date() or local_time(
-            item["candidate_as_of"]
-        ) > local_time(cutoff):
-            raise ValueError("Equity session proof requires a closed observation window")
-        inputs, receipt_sha = originals(workspace, "equities", item["receipt_id"], item["candidate_as_of"])
-        silver, _ = read("equities", inputs, item["period"])
-        path = workspace / "data/silver/market_prices.parquet"
-        pd.testing.assert_frame_equal(pd.read_parquet(path), silver["market_prices"], check_exact=True)
-        accepted = workspace / "receipts" / f"series-equities-{item['period']}.json"
-        receipt = json.loads(accepted.read_text())
-        validate_candidate_receipt(item, receipt, receipt_sha, digest(path))
-        native_hash, accepted_hash = digest(path), digest(accepted)
-        results[item["id"]] = {
-            **assess(silver["market_prices"], item["period"], calendars),
-            "native_prices_sha256": native_hash,
-            "existing_product_receipt_sha256": accepted_hash,
-            "existing_product_receipt_recertified_here": False,
-        }
-        # Recheck retained bytes/sidecars and receipts after native reconstruction.
-        _, after_receipt_sha = originals(workspace, "equities", item["receipt_id"], item["candidate_as_of"])
-        if (
-            after_receipt_sha != receipt_sha
-            or digest(path) != native_hash
-            or digest(accepted) != accepted_hash
-        ):
-            raise ValueError("Retained candidate changed during session verification")
+        results[item["id"]] = assess_candidate(item, calendars, cutoff)
     _, after = physical_calendars(calendar_root, cutoff)
     if after != inventory:
         raise ValueError("Physical calendar inputs changed during read-only verification")
@@ -323,6 +343,7 @@ def run(recipe, calendar_root, cutoff):
             name: digest(Path(__file__).with_name(name))
             for name in (
                 "equity_calendar.py",
+                "otc_calendar.py",
                 "series_native.py",
                 "market.py",
                 "retained.py",
@@ -342,6 +363,27 @@ def run(recipe, calendar_root, cutoff):
         "activation": "none",
         "publication": "not_authorized",
     }
+
+
+def verify_task(item, calendar_root, cutoff):
+    if item["product"] != "equities" or item["adapter"] != "series":
+        raise ValueError("Supplemental market calendars apply only to the five-equity product")
+    calendars, evidence, before = reference_calendars(calendar_root, cutoff)
+    result = assess_candidate(item, calendars, cutoff)
+    _, after = physical_calendars(calendar_root, cutoff)
+    if before != after:
+        raise ValueError("Market calendar changed during supplemental verification")
+    return dict(
+        scope="five_equity_sessions_from_physical_official_calendars",
+        **result,
+        calendar_sources=evidence,
+        calendar_files=before,
+        as_of=cutoff,
+        original_candidate_receipt_unchanged=True,
+        network_requests=0,
+        activation="none",
+        publication="not_authorized",
+    )
 
 
 def main(argv=None):

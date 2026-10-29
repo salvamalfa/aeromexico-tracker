@@ -20,8 +20,13 @@ def verify(item, result, cutoff):
     product = item["product"]
     binding = item["availability"]
     root = physical.preflight(binding, item["workspace"])
-    if set(binding) != physical.SERIES_FIELDS or set(binding["series_items"]) != role_sets()[product]:
+    if (
+        set(binding) - {"equity_calendar_root"} != physical.SERIES_FIELDS
+        or set(binding["series_items"]) != role_sets()[product]
+    ):
         raise ValueError("Series physical roles must match this product, not another series family")
+    if "equity_calendar_root" in binding and product != "equities":
+        raise ValueError("Supplemental market calendar cannot certify another source family")
     before = physical.collection_inventory(root)
     receipt_path = root / "receipts" / f"collection-{binding['run_id']}.json"
     receipt_hash = physical.sha(receipt_path)
@@ -116,6 +121,11 @@ def verify(item, result, cutoff):
         raise ValueError("Series source coverage or unverified publication-calendar limit changed")
     if physical.sha(receipt_path) != receipt_hash or physical.collection_inventory(root) != before:
         raise ValueError("Series physical query collection changed during verification")
+    supplemental = None
+    if "equity_calendar_root" in binding:
+        from src.source_updates.equity_calendar import verify_task
+
+        supplemental = verify_task(item, binding["equity_calendar_root"], cutoff)
     return dict(
         collection_receipt_sha256=receipt_hash,
         physical_collection_files=before,
@@ -126,6 +136,7 @@ def verify(item, result, cutoff):
         first_publication_date=None,
         round_as_of=cutoff,
         calendar_completeness_certified=calendar_complete,
+        **({"supplemental_observation_calendar": supplemental} if supplemental else {}),
         **({"observation_calendar": calendar_proof} if calendar_proof else {}),
         availability_basis="current_canonical_responses_and_verified_observation_calendars"
         if calendar_complete
