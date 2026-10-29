@@ -3873,7 +3873,7 @@ No son once servicios caídos ni once parsers ausentes.
 |---|---|---|
 | Mensual AFAC aeropuertos | **Verificado localmente:** original septiembre descargado desde Chrome local,3.510 filas/nueve meses/173cruces y replay. Julio retenido como baseline,780 altas y 9 diferencias explícitas | Paquete Library con XLSX original e índice textual de navegación; fechas/método reales, HTTP desconocido. `afac_airports_browser_download_v1`, sin fingir HTML original ni borrar el 403 cloud. PR174 preparado, integración pendiente |
 | Mensual AIFA | **Cerrada e integrada:** receta corregida al índice Informes, colección actual septiembre y cadena integral verificadas | El bloqueo mezclaba Normateca con otro índice. No se relaja el contrato ni se corrige julio; integración PR171 y CI posterior conjunta aprobadas |
-| Mensual AM tráfico | **Cerrada y vigente:** índice y 6-K HTTP200 del28/oct22:09UTC, 24 observaciones, siete salidas y replay/disponibilidad aprobados | Bucle301 anterior resuelto en la nueva colección, sin código ni contratos nuevos; incorporado al global17/23. No se reetiquetó el corte27/oct |
+| Mensual AM tráfico | **Cerrada y vigente:** índice y 6-K HTTP200 del 28/oct22:09UTC, 24 observaciones, siete salidas y replay/disponibilidad aprobados | Bucle301 anterior resuelto en la nueva colección, sin código ni contratos nuevos; incorporado al global17/23. No se reetiquetó el corte27/oct |
 | Mensual ASUR | **Cadena implementada e integrada con reconstrucción autorizada:** cinco tablas verificadas, 168 observaciones proyectadas, 92 conciliaciones, nueve salidas y replay | Cuatro derivados materializados con identidad/hash comprobados; no son bytes originales SEC. CPC y total mundial YTD conservan cobertura no acreditada, Gold sigue solo México. La observación oficial sigue siendo 27/oct; rematerializar Library no la renueva. PR173 integrado/CI aprobada; la política aprobada de edición cerrada permite reutilizar el derivado para septiembre con su fecha intacta; no acredita actualidad HTTP ni última revisión |
 | Mensual GAP | **Cadena implementada e integrada:** original septiembre recuperado por descarga manual nativa, importado y certificado: 192 cifras/72 conciliaciones/nueve salidas | Disponibilidad del documento concreto observada el 27/oct, con precisión diaria; no se inventa HTTP/captura UTC ni un censo de revisiones. La observación original sigue siendo 27/oct; la edición validada se conserva para septiembre. PR173 integrado/CI aprobada; la política aprobada permite reutilizar la edición de septiembre con su fecha intacta. No falta el original ni el lector; no se afirma última revisión |
 | Mensual Noticias (antes GDELT) | **Alternativa autorizada y probada:** cinco eventos de septiembre desde seis páginas y siete búsquedas, con replay, procedencia y deduplicación | Un solo calendario. RSS/GDELT opcionales; sus fallos no se presentan como resueltos. Candidatos pendientes de revisión editorial/publicación, integración técnica de PR174 pendiente |
@@ -4276,6 +4276,34 @@ calendario oficial. Los811 archivos del sitio y803 protegidos originales siguen
 idénticos; `config/publish` y Gold sin cambios. No se recertifica el runtime
 financiero nuevo ni se sustituye autoridad de contenido con esta prueba fuente.
 
+### Corrección posterior de cronología editorial, 29/oct
+
+Al marcar PR174 listo, la revisión automática encontró un caso no cubierto:
+un artículo leído el 7/sep y un comunicado oficial publicado el 8/sep y leído
+el 28/oct eran individualmente válidos, pero el representante oficial heredaba
+la captura del artículo temprano y se rechazaba el evento. El merge de 176933ff
+se detuvo, sin ejecutarlo. [Hallazgo y caso](https://github.com/salvamalfa/aeromexico-tracker/pull/174#discussion_r4408299279).
+
+El productor corregido `72bac615` conserva `first_captured_at` de la página
+representante y registra la observación más temprana del evento por separado
+como `event_first_observed_at`. Mantiene la fecha publicada por cada editor,
+la primera publicación conocida y todas las procedencias. No relaja el contrato
+que rechaza una publicación posterior a su propia captura. La regresión positiva
+y los negativos de fechas falsas pasan; revisión Codex independiente favorable.
+**149 pruebas afectadas** pasaron en3,36s, incluyendo las20 editoriales (no sumar).
+
+La entrada real, seis observaciones y sus fechas permanecen idénticas. Se creó
+otro candidato y su replay con el código corregido, sin sobrescribir el anterior:
+cinco eventos, cero altas/bajas o cambios de contenido semántico respecto del
+baseline. Solo se corrigen los campos de captura y sus hashes. Se regeneraron
+14 productores desde originales retenidos con salidas idénticas y se verifican
+seis productores sin cambios. La escritura y reproducción conjuntas terminaron sin red: mensual 15/15 y 86
+salidas; combinada 20/22 y 110 salidas, con los dos insumos externos pendientes.
+Los recibos nuevos son `monthly-global-72bac615-replay.json`, SHA`26c47512…`,
+y `unified-global-72bac615-replay.json`, SHA`3140ca25…`.
+El nuevo head necesita su propia CI; el verde
+`40800804349` acredita176933ff, no el código corregido ni un permiso de merge.
+
 ## Pendientes
 
 - Incorporar la respuesta sustantiva de Aerocivil sobre leyenda y atribución de
@@ -4284,10 +4312,10 @@ financiero nuevo ni se sustituye autoridad de contenido con esta prueba fuente.
 - Obtener y validar el reporte financiero Viva3T26 antes de fechar la ronda
   trimestral. AM/Volaris no sustituyen el tercer insumo. No inventar fecha ni
   confundir tráfico, convocatoria, año2025 o ZIP XBRL con el release requerido.
-- Completar CI y cierre de revisión del head final de PR174. La revisión
-  independiente privada no se convierte en comentario público sin permiso;
-  la operación de publicación de esa constancia fue denegada y no se reintentó.
-  PR174 permanece en borrador; su implementación no concede permiso de merge.
+- Completar CI y revisión del nuevo head corregido de PR174. La constancia de
+ 176933ff sí se publicó tras autorización específica y el PR dejó de ser
+ borrador; el hallazgo automático posterior detuvo el merge. La autorización
+ de integrar 176933ff no se traslada a otro SHA. No eludir el hilo abierto.
 - La ronda completa permanece incompleta mientras falten sus componentes;
   conservar las tareas válidas y pendientes dentro de un solo calendario.
   No activar horarios, ingestas, noticias o tesis ni publicar candidatos.

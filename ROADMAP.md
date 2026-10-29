@@ -25,6 +25,13 @@ calendarios por mover una tarea entre secciones.
   programadas. Septiembre/Q3 es el corte probado, no una certificación de los
   datos que necesitarán noviembre o diciembre.
 
+**Integración PR174 detenida por revisión:** la CI de 176933ff pasó, pero al
+marcarlo listo apareció un fallo de cronología entre dos editores.
+La corrección 72bac615 separa captura del editor y primera observación del evento;
+149 pruebas afectadas y revisión independiente pasan. Los recibos del productor corregido ya se escribieron y reprodujeron: mensual
+15/15 y combinada20/22, sin cambiar cifras ni fechas; falta la nueva CI. No se integra un SHA diferente
+al autorizado; el sitio y las ejecuciones siguen intactos.
+
 ## Bloqueos y siguiente acción
 
 | Pendiente | Estado comprobado | Siguiente acción y criterio de cierre |
