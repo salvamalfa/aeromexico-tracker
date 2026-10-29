@@ -40,6 +40,30 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --all-extras --all-groups --locked
 
+      - name: Check task file lifecycle dispositions and documentation references
+        if: github.event_name == 'pull_request'
+        env:
+          DOC_LIFECYCLE_BASE: ${{ github.event.pull_request.base.sha }}
+          DOC_LIFECYCLE_HEAD: ${{ github.event.pull_request.head.sha }}
+          DOC_LIFECYCLE_SUMMARY: ${{ github.event.pull_request.body }}
+        run: |
+          git fetch --no-tags origin "$DOC_LIFECYCLE_BASE" "$DOC_LIFECYCLE_HEAD"
+          uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE" --head "$DOC_LIFECYCLE_HEAD"
+
+      # Pyflakes errors (unused/undefined names, dead assignments) across the
+      # code CI ships. tests/ is excluded for now: pytest fixtures imported by
+      # name read as unused imports there.
+      - name: Ruff pyflakes check on src/ and scripts/
+        run: uv run ruff check --select F src scripts
+
+      # Only these modules are ruff-formatted so far (see REPO_MAP.md);
+      # the rest of the tree is not yet covered.
+      - name: Check ruff format on migrated modules
+        run: >-
+          uv run ruff format --check
+          src/dashboard/international_routes.py
+          src/analysis_agent/lifecycle.py
+
       # data/warehouse.duckdb, data/silver, data/bronze raw captures, private
       # Gold cubes and analysis_runs/ are gitignored and local-only (see
       # AGENTS.md); this runner never has them. Tests that need them are
@@ -56,20 +80,19 @@ jobs:
           if [[ "$PUBLICATION_BASE_COMMIT" =~ ^[a-f0-9]{40}$ ]] \
             && git merge-base --is-ancestor "$PUBLICATION_BASE_COMMIT" HEAD \
             && git diff --quiet "$PUBLICATION_BASE_COMMIT" HEAD -- site; then
-            uv run pytest -m "not local_data and not browser" -q --financial-publication-base "$PUBLICATION_BASE_COMMIT"
+            uv run pytest -m "not local_data and not browser" -q --durations=30 --junitxml=test-results/public.xml --financial-publication-base "$PUBLICATION_BASE_COMMIT"
           else
-            uv run pytest -m "not local_data and not browser" -q
+            uv run pytest -m "not local_data and not browser" -q --durations=30 --junitxml=test-results/public.xml
           fi
 
-      - name: Check task file lifecycle dispositions and documentation references
-        if: github.event_name == 'pull_request'
-        env:
-          DOC_LIFECYCLE_BASE: ${{ github.event.pull_request.base.sha }}
-          DOC_LIFECYCLE_HEAD: ${{ github.event.pull_request.head.sha }}
-          DOC_LIFECYCLE_SUMMARY: ${{ github.event.pull_request.body }}
-        run: |
-          git fetch --no-tags origin "$DOC_LIFECYCLE_BASE" "$DOC_LIFECYCLE_HEAD"
-          uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE" --head "$DOC_LIFECYCLE_HEAD"
+      - name: Retain public test timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-test-results
+          path: test-results/public.xml
+          if-no-files-found: ignore
+          retention-days: 7
 
       # A second, isolated venv proves the owner-facing API can install and
       # start without the pipeline, analytics, test, or browser dependencies.
@@ -81,20 +104,6 @@ jobs:
         env:
           UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
         run: uv run --locked --only-group chat-runtime python -m scripts.check_chat_runtime
-
-      # Pyflakes errors (unused/undefined names, dead assignments) across the
-      # code CI ships. tests/ is excluded for now: pytest fixtures imported by
-      # name read as unused imports there.
-      - name: Ruff pyflakes check on src/ and scripts/
-        run: uv run ruff check --select F src scripts
-
-      # Only these modules are ruff-formatted so far (see REPO_MAP.md);
-      # the rest of the tree is not yet covered.
-      - name: Check ruff format on migrated modules
-        run: >-
-          uv run ruff format --check
-          src/dashboard/international_routes.py
-          src/analysis_agent/lifecycle.py
 
   web:
     runs-on: ubuntu-latest
@@ -132,9 +141,17 @@ jobs:
         run: uv run playwright install --with-deps chromium
       - name: Browser smoke tests against the built site
         run: >-
-          uv run pytest -m browser -q
+          uv run pytest -m browser -q --durations=30 --junitxml=test-results/browser.xml
           tests/test_web_flights_smoke.py
           tests/test_web_page_smoke.py
           tests/test_web_chat_smoke.py
           tests/test_web_review_smoke.py
           tests/test_web_financial_smoke.py
+      - name: Retain browser test timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-results
+          path: test-results/browser.xml
+          if-no-files-found: ignore
+          retention-days: 7

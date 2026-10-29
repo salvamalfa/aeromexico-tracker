@@ -19,18 +19,17 @@ from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.providers.mock import MockProvider
 
+from tests._published_snapshot_fixtures import (
+    _verified_published_snapshot as _verified_published_snapshot,
+    published_snapshot as published_snapshot,
+)
 
-ROOT = Path(__file__).resolve().parents[1]
 QUESTION = "Compara el factor de ocupación de las tres aerolíneas en 2026Q2."
 CONTEXT = {
     "tab": "economy",
     "period": "2026Q2",
     "entity": ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"],
 }
-
-
-def _snapshot() -> Snapshot:
-    return Snapshot(ROOT / "site")
 
 
 def _config(path: Path, **overrides: Any) -> ChatConfig:
@@ -115,13 +114,13 @@ def _submit(
 
 
 def test_default_mock_chat_uses_public_snapshot_and_replays_grounded_sse(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, published_snapshot: Snapshot
 ) -> None:
     """Exercise app defaults, quota admission, tools, evidence, and SSE replay offline."""
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     from src.conversational_analytics.api import create_app
 
-    snapshot = _snapshot()
+    snapshot = published_snapshot
     app = create_app(config=_config(tmp_path / "chat.sqlite3"), snapshot=snapshot)
     with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
         conversation_id = _create_conversation(client)
@@ -167,7 +166,9 @@ def test_default_mock_chat_uses_public_snapshot_and_replays_grounded_sse(
         assert len([message for message in conversation["messages"] if message["role"] == "user"]) == 1
 
 
-def test_password_users_cannot_read_each_others_conversations(tmp_path: Path) -> None:
+def test_password_users_cannot_read_each_others_conversations(
+    tmp_path: Path, published_snapshot: Snapshot
+) -> None:
     from src.conversational_analytics.api import create_app
     from src.conversational_analytics.auth import generate_password, hash_password
 
@@ -178,7 +179,7 @@ def test_password_users_cannot_read_each_others_conversations(tmp_path: Path) ->
         password_users={"user-a": hash_password(password_a), "user-b": hash_password(password_b)},
         allowed_origins=("https://dashboard.example",),
     )
-    app = create_app(config=config, snapshot=_snapshot(), start_worker=False)
+    app = create_app(config=config, snapshot=published_snapshot, start_worker=False)
     with TestClient(app, base_url="http://testserver") as client:
         session_a = client.post("/api/chat/login", json={"password": password_a}).json()["session"]
         session_b = client.post("/api/chat/login", json={"password": password_b}).json()["session"]
@@ -199,10 +200,12 @@ def test_password_users_cannot_read_each_others_conversations(tmp_path: Path) ->
         )
 
 
-def test_snapshot_change_rejects_followup_to_pending_v1_conversation(tmp_path: Path) -> None:
+def test_snapshot_change_rejects_followup_to_pending_v1_conversation(
+    tmp_path: Path, published_snapshot: Snapshot
+) -> None:
     from src.conversational_analytics.api import create_app
 
-    snapshot_v1 = _snapshot()
+    snapshot_v1 = published_snapshot
     provider = _DelayedMockProvider(snapshot_v1)
     state_path = tmp_path / "snapshot.sqlite3"
     app_v1 = create_app(config=_config(state_path), snapshot=snapshot_v1, provider=provider)
@@ -228,10 +231,12 @@ def test_snapshot_change_rejects_followup_to_pending_v1_conversation(tmp_path: P
         provider.release.set()
 
 
-def test_delayed_worker_keeps_turn_and_replay_does_not_duplicate_tool_call(tmp_path: Path) -> None:
+def test_delayed_worker_keeps_turn_and_replay_does_not_duplicate_tool_call(
+    tmp_path: Path, published_snapshot: Snapshot
+) -> None:
     from src.conversational_analytics.api import create_app
 
-    snapshot = _snapshot()
+    snapshot = published_snapshot
     provider = _DelayedMockProvider(snapshot)
     app = create_app(config=_config(tmp_path / "delayed.sqlite3"), snapshot=snapshot, provider=provider)
     with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:

@@ -1,0 +1,920 @@
+{
+  "schema_version": "ci-efficiency-v1",
+  "measurement_order": [
+    "exploratory-focal (excluded)",
+    "baseline-public",
+    "baseline-focal",
+    "after-focal",
+    "adversarial",
+    "after-public"
+  ],
+  "exploratory_focal": {
+    "label": "baseline-focal",
+    "command": [
+      "uv",
+      "run",
+      "--no-sync",
+      "pytest",
+      "-q",
+      "tests/test_chat_mock_conversation.py",
+      "tests/test_chat_integration.py",
+      "--durations=0",
+      "--durations-min=0",
+      "--junitxml=/workspace/ci-measurements/baseline-focal.xml"
+    ],
+    "cwd": "/workspace/ci-efficiency",
+    "started_epoch": 1793244515.4071503,
+    "elapsed_seconds": 104.43717384338379,
+    "exit_code": 0,
+    "user_seconds": 99.905492,
+    "system_seconds": 1.828423,
+    "max_rss_kib": 525460,
+    "pytest_summary": "9 passed in 98.67s (0:01:38)",
+    "junit": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "9",
+        "time": "98.665",
+        "timestamp": "2026-10-29T03:28:38.067320+00:00",
+        "hostname": "85b528cd8f07"
+      }
+    ],
+    "phase_totals_seconds_rounded": {
+      "call": 97.42,
+      "setup": 0.0,
+      "teardown": 0.0
+    },
+    "module_phases_seconds_rounded": {
+      "tests/test_chat_integration.py": {
+        "call": 27.68,
+        "setup": 0.0,
+        "teardown": 0.0
+      },
+      "tests/test_chat_mock_conversation.py": {
+        "call": 69.74,
+        "setup": 0.0,
+        "teardown": 0.0
+      }
+    },
+    "case_count": 9,
+    "cases_with_reported_phases": 9,
+    "skipped_cases": [],
+    "case_ids_sha256": "3686490b47f21021d2f0cb2651123f8d6256bdcccc90c295ea0dd4ed89b8c356",
+    "raw_artifacts_sha256": {
+      "log": "75e08f898b3f7fc7e9ff23900e5bcfb70f71d0cd194563b481fa4425c9ee620c",
+      "xml": "f91dd9ee5297f2eefc01933af52f971878608d039b0ca1416db5357ac2b10288",
+      "json": "205b232f4600f1643765b3ac22c32675b386eac6b99404febb66167a375ac076"
+    },
+    "excluded_from_comparison": true,
+    "reason": "The first focal ran in the working checkout while edits began after collection; replaced by one definitive focal on the frozen baseline checkout."
+  },
+  "phase_rows_note": "Null means no report for that phase, as in setup-skipped cases; durations are rounded to 0.01 s.",
+  "junit_case_rows_note": "The suite count includes passing subtests; JUnit exposes one row per main testcase. Phase rows use the maximum report per case/phase to avoid counting nested subtest duration twice.",
+  "environment": {
+    "base_sha": "62607e869d553b3ebb387404a63b726a8ce17f08",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "cpu_count": 5,
+    "uv": "uv 0.12.19 (x86_64-unknown-linux-gnu)",
+    "inputs_sha256": {
+      "uv.lock": "89ff2bbaaa226e836b0f577aedcc9c6bb07647f1c20bfd70d83ead6e1828ab11",
+      "pyproject.toml": "375d8eeca1f1d9716f7ab08ab63e640f5fc06590922ddef0e4d9a18bde268a1d",
+      "site/publication_manifest.json": "74992f7615d832df58c82b2c7fb28c7d7a79f7c95c71ad690809ea0112c865ec",
+      "config/chat/business-metrics-proposal.json": "0ee163e77214bf62d189f0236ff913b0f54c4b6576d8c9ba3d06cd19422f3d11",
+      "config/chat/metrics-candidates.json": "9a3e4afe1b888c0ea75421ce4b7eb362304ce240ef84011d3a3e6aaa4b456ad7"
+    },
+    "private_data_restored": false,
+    "approved_pins_source": "d456eb8dc05e586d7119161c710db5ff47af0da3:docs/chat/fase-2-decision-dueno.md",
+    "measurement_note": "Measured pytest profiles serialized. Lightweight administrative/static reads overlapped the baseline; no concurrent functional test suite. Full baseline in an unmodified detached worktree; same locked virtual environment, public data, approval pins and pytest options.",
+    "harness_python": "3.12.14",
+    "pytest_python": "3.13.5",
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "measurement_input_note": "Tracked public clone only; no warehouse, Silver, private Gold cubes, approval ledger or node_modules copied from the prepared main checkout.",
+    "pytest_version": "9.1.1"
+  },
+  "candidate_code_commit": "ce9e152f9663fef27464b173ede14dadcc6d92f6",
+  "caveats": [
+    "One serialized pair per profile on this cloud instance; no statistical speed guarantee or extrapolation to GitHub runners.",
+    "pytest phase durations are rounded to 0.01 s in --durations output; maximum report per case/phase avoids double-counting nested subtest reports. JUnit stores inclusive case totals and suite time. Use measured process wall time for the paired comparison.",
+    "The public profile excludes local_data and browser; it does not establish private-data or publication acceptance.",
+    "The financial-publication-base verifies the unchanged published site with its released verifier; it does not authorize candidate runtime."
+  ],
+  "focal": {
+    "before": {
+      "label": "baseline-focal",
+      "revision": "62607e869d553b3ebb387404a63b726a8ce17f08",
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "-q",
+        "tests/test_chat_mock_conversation.py",
+        "tests/test_chat_integration.py",
+        "--durations=0",
+        "--durations-min=0",
+        "--junitxml=/workspace/ci-measurements/baseline-focal.xml"
+      ],
+      "cwd": "/workspace/ci-baseline",
+      "started_epoch": 1793246739.7467117,
+      "elapsed_seconds": 124.69943952560425,
+      "exit_code": 0,
+      "user_seconds": 118.82858,
+      "system_seconds": 3.205868,
+      "max_rss_kib": 552048,
+      "pytest_summary": "9 passed in 122.52s (0:02:02)",
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "9",
+          "time": "122.517",
+          "timestamp": "2026-10-29T04:05:41.179994+00:00",
+          "hostname": "85b528cd8f07"
+        }
+      ],
+      "phase_totals_seconds_rounded": {
+        "call": 121.93,
+        "setup": 0.0,
+        "teardown": 0.0
+      },
+      "module_phases_seconds_rounded": {
+        "tests/test_chat_integration.py": {
+          "call": 30.61,
+          "teardown": 0.0,
+          "setup": 0.0
+        },
+        "tests/test_chat_mock_conversation.py": {
+          "call": 91.32,
+          "setup": 0.0,
+          "teardown": 0.0
+        }
+      },
+      "case_count": 9,
+      "cases_with_reported_phases": 9,
+      "skipped_cases": [],
+      "case_ids_sha256": "3686490b47f21021d2f0cb2651123f8d6256bdcccc90c295ea0dd4ed89b8c356",
+      "raw_artifacts_sha256": {
+        "log": "75310803f61f68c2a91cc28f067d20e12ab78c73385e23c2cbe457137e313f87",
+        "xml": "027b10374c96045eabf1be4b6e4a6b504a8ef3fd66d22592924ced69c40297b9",
+        "json": "c692c527a7d6d663f00bef8243170617c1e398d39a700bd1ddac9073f82ad865"
+      }
+    },
+    "after": {
+      "label": "after-focal",
+      "revision": "ce9e152f9663fef27464b173ede14dadcc6d92f6",
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "-q",
+        "tests/test_chat_mock_conversation.py",
+        "tests/test_chat_integration.py",
+        "--durations=0",
+        "--durations-min=0",
+        "--junitxml=/workspace/ci-measurements/after-focal.xml"
+      ],
+      "cwd": "/workspace/ci-efficiency",
+      "started_epoch": 1793246864.5155818,
+      "elapsed_seconds": 72.59873652458191,
+      "exit_code": 0,
+      "user_seconds": 67.82107,
+      "system_seconds": 2.463029,
+      "max_rss_kib": 743232,
+      "pytest_summary": "9 passed in 71.00s (0:01:10)",
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "9",
+          "time": "70.997",
+          "timestamp": "2026-10-29T04:07:45.396226+00:00",
+          "hostname": "85b528cd8f07"
+        }
+      ],
+      "phase_totals_seconds_rounded": {
+        "setup": 65.28,
+        "call": 4.31,
+        "teardown": 0.84
+      },
+      "module_phases_seconds_rounded": {
+        "tests/test_chat_integration.py": {
+          "setup": 12.13,
+          "call": 2.0,
+          "teardown": 0.35
+        },
+        "tests/test_chat_mock_conversation.py": {
+          "setup": 53.15,
+          "call": 2.31,
+          "teardown": 0.49
+        }
+      },
+      "case_count": 9,
+      "cases_with_reported_phases": 9,
+      "skipped_cases": [],
+      "case_ids_sha256": "3686490b47f21021d2f0cb2651123f8d6256bdcccc90c295ea0dd4ed89b8c356",
+      "raw_artifacts_sha256": {
+        "log": "22f5c67a40f96849fb68288a3dfbbc8ba4d96a58fd87e3ea14e37e47e7736502",
+        "xml": "f8c2a0fb87a2bb503df887fc4badbc6dc78776cc6a7c4f64ff1898e855ef6b41",
+        "json": "cea99dabef4207e856170f250396f42f53c3ab7502f830415b6a74d8951bed64"
+      }
+    },
+    "identical_case_ids_and_outcomes": true,
+    "process_seconds_saved": 52.101,
+    "process_reduction_percent": 41.781,
+    "case_comparison": {
+      "tests/test_chat_integration.py::test_default_mock_chat_uses_public_snapshot_and_replays_grounded_sse": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 7.567,
+          "phases": {
+            "call": 7.57,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 12.687,
+          "phases": {
+            "setup": 12.13,
+            "call": 0.47,
+            "teardown": 0.09
+          }
+        }
+      },
+      "tests/test_chat_integration.py::test_delayed_worker_keeps_turn_and_replay_does_not_duplicate_tool_call": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 7.854,
+          "phases": {
+            "call": 7.85,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.564,
+          "phases": {
+            "call": 0.47,
+            "teardown": 0.09,
+            "setup": 0
+          }
+        }
+      },
+      "tests/test_chat_integration.py::test_password_users_cannot_read_each_others_conversations": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 7.764,
+          "phases": {
+            "call": 7.76,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.843,
+          "phases": {
+            "call": 0.76,
+            "teardown": 0.08,
+            "setup": 0
+          }
+        }
+      },
+      "tests/test_chat_integration.py::test_snapshot_change_rejects_followup_to_pending_v1_conversation": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 7.426,
+          "phases": {
+            "call": 7.43,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.384,
+          "phases": {
+            "call": 0.3,
+            "teardown": 0.09,
+            "setup": 0
+          }
+        }
+      },
+      "tests/test_chat_mock_conversation.py::test_conversation_compare_has_stable_delta_sign_and_persists_history": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 64.978,
+          "phases": {
+            "call": 64.97,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 53.999,
+          "phases": {
+            "setup": 53.15,
+            "call": 0.75,
+            "teardown": 0.11
+          }
+        }
+      },
+      "tests/test_chat_mock_conversation.py::test_conversation_series_keeps_missing_values_null_and_uses_source_references": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 8.141,
+          "phases": {
+            "call": 8.14,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.539,
+          "phases": {
+            "call": 0.45,
+            "teardown": 0.09,
+            "setup": 0
+          }
+        }
+      },
+      "tests/test_chat_mock_conversation.py::test_explicit_entity_overrides_dashboard_context_and_all_carriers_uses_afac_denominator": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 8.54,
+          "phases": {
+            "call": 8.54,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.748,
+          "phases": {
+            "call": 0.66,
+            "teardown": 0.08,
+            "setup": 0
+          }
+        }
+      },
+      "tests/test_chat_mock_conversation.py::test_mock_display_marks_fx_converted_usd_as_calculated": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 0.0,
+          "phases": {
+            "call": 0,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.118,
+          "phases": {
+            "teardown": 0.12,
+            "setup": 0,
+            "call": 0
+          }
+        }
+      },
+      "tests/test_chat_mock_conversation.py::test_omitted_period_uses_the_current_dashboard_selection": {
+        "before": {
+          "outcome": "passed",
+          "total_seconds": 9.668,
+          "phases": {
+            "call": 9.67,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        "after": {
+          "outcome": "passed",
+          "total_seconds": 0.531,
+          "phases": {
+            "call": 0.45,
+            "teardown": 0.09,
+            "setup": 0
+          }
+        }
+      }
+    }
+  },
+  "public": {
+    "before": {
+      "label": "baseline-public",
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "-m",
+        "not local_data and not browser",
+        "-q",
+        "--financial-publication-base",
+        "62607e869d553b3ebb387404a63b726a8ce17f08",
+        "--durations=0",
+        "--durations-min=0",
+        "--junitxml=/workspace/ci-measurements/baseline-public.xml"
+      ],
+      "cwd": "/workspace/ci-baseline",
+      "started_epoch": 1793244620.1367598,
+      "elapsed_seconds": 2116.663101196289,
+      "exit_code": 0,
+      "user_seconds": 2065.086104,
+      "system_seconds": 43.840320999999996,
+      "max_rss_kib": 1209820,
+      "revision": "62607e869d553b3ebb387404a63b726a8ce17f08",
+      "pytest_summary": "5363 passed, 9 skipped, 106 deselected, 50 warnings, 29 subtests passed in 2112.54s (0:35:12)",
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "9",
+          "tests": "5401",
+          "time": "2112.428",
+          "timestamp": "2026-10-29T03:30:22.143405+00:00",
+          "hostname": "85b528cd8f07"
+        }
+      ],
+      "phase_totals_seconds_rounded": {
+        "setup": 212.25,
+        "call": 1861.13,
+        "teardown": 0.81
+      },
+      "case_count": 5372,
+      "cases_with_reported_phases": 5372,
+      "skipped_cases": [
+        {
+          "id": "tests/test_editorial_site_parity.py::test_editorial_site_preserves_every_historical_file",
+          "reason": "Financial mode has its own strict historical structure/byte preservation check"
+        },
+        {
+          "id": "tests/test_editorial_site_parity.py::test_editorial_new_payload_matches_its_full_approved_source_replay",
+          "reason": "Current editorial source record is not restored; its full source replay is required locally"
+        },
+        {
+          "id": "tests/test_financial_site_parity.py::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "reason": "Financial source record is not restored; complete replay is required"
+        },
+        {
+          "id": "tests/test_pages_preview.py::test_preview_pin_is_well_formed",
+          "reason": "no Pages preview pinned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[fx_rates.parquet-required_columns0]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[fuel_prices.parquet-required_columns1]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[market_prices.parquet-required_columns2]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[airport_traffic.parquet-required_columns3]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[news_headlines.parquet-required_columns4]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        }
+      ],
+      "case_ids_sha256": "6499ebc3cc3e5569573aec0458302e85b5fe0bebe31a4300a9bde5181b290314",
+      "raw_artifacts_sha256": {
+        "log": "98c0b88a374beaf9f00ebec9f339d56fc94b7f692a037b174ea44fd00cc53161",
+        "xml": "94da422c411b6e65187690ced1ad2e8fb32c8982eef33f75a60d18f62fccf4d5",
+        "json": "3e01e8ecb2d5c9c851dc7443bd89968b9115eac73c62d659e72101126e3a7e54"
+      },
+      "affected_module_phases_seconds_rounded": {
+        "tests/test_chat_mock_conversation.py": {
+          "call": 40.94,
+          "setup": 0.0,
+          "teardown": 0.0
+        },
+        "tests/test_chat_integration.py": {
+          "call": 52.15,
+          "setup": 0.0,
+          "teardown": 0.0
+        }
+      },
+      "slowest_main_cases": [
+        {
+          "id": "tests/test_financial_site_parity.py::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "outcome": "skipped",
+          "total_seconds": 69.327,
+          "phases": {
+            "setup": 62.91,
+            "call": 6.42,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_editorial_site_parity.py::test_editorial_site_preserves_every_historical_file",
+          "outcome": "skipped",
+          "total_seconds": 59.726,
+          "phases": {
+            "setup": 59.73,
+            "call": 0,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_runtime_smoke_scope.py::test_real_cli_still_rejects_missing_pin_while_fixture_runs_without_network",
+          "outcome": "passed",
+          "total_seconds": 58.225,
+          "phases": {
+            "call": 58.22,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_docker_context.py::test_packaged_files_load_the_public_snapshot_without_checkout_fallback",
+          "outcome": "passed",
+          "total_seconds": 52.479,
+          "phases": {
+            "call": 52.48,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_publish_verify_negative.py::test_unmodified_copy_passes",
+          "outcome": "passed",
+          "total_seconds": 51.856,
+          "phases": {
+            "call": 51.86,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_catalog_periods.py::test_real_model_catalog_fits_transport_and_preserves_full_http_catalog",
+          "outcome": "passed",
+          "total_seconds": 50.735,
+          "phases": {
+            "call": 50.73,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        {
+          "id": "tests/test_source_update_adapter_compatibility.py::test_mixed_batch_certifies_each_family_and_actual_readiness_replays_exactly[order0]",
+          "outcome": "passed",
+          "total_seconds": 40.418,
+          "phases": {
+            "call": 40.39,
+            "setup": 0.02,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_source_update_adapter_compatibility.py::test_mixed_batch_certifies_each_family_and_actual_readiness_replays_exactly[order1]",
+          "outcome": "passed",
+          "total_seconds": 39.817,
+          "phases": {
+            "call": 39.79,
+            "setup": 0.02,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_web_business_metrics_approval.py::test_site_without_financial_payload_keeps_its_existing_manifest_without_a_pin",
+          "outcome": "passed",
+          "total_seconds": 32.146,
+          "phases": {
+            "call": 32.14,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_integration.py::test_delayed_worker_keeps_turn_and_replay_does_not_duplicate_tool_call",
+          "outcome": "passed",
+          "total_seconds": 27.337,
+          "phases": {
+            "call": 27.34,
+            "setup": 0,
+            "teardown": 0
+          }
+        }
+      ]
+    },
+    "after": {
+      "label": "after-public",
+      "revision": "ce9e152f9663fef27464b173ede14dadcc6d92f6",
+      "command": [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "-m",
+        "not local_data and not browser",
+        "-q",
+        "--financial-publication-base",
+        "62607e869d553b3ebb387404a63b726a8ce17f08",
+        "--durations=0",
+        "--durations-min=0",
+        "--junitxml=/workspace/ci-measurements/after-public.xml"
+      ],
+      "cwd": "/workspace/ci-efficiency",
+      "started_epoch": 1793247044.5414743,
+      "elapsed_seconds": 2121.2538254261017,
+      "exit_code": 0,
+      "user_seconds": 2057.324146,
+      "system_seconds": 58.373507,
+      "max_rss_kib": 1190648,
+      "pytest_summary": "5363 passed, 9 skipped, 106 deselected, 50 warnings, 29 subtests passed in 2118.20s (0:35:18)",
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "9",
+          "tests": "5401",
+          "time": "2118.068",
+          "timestamp": "2026-10-29T04:10:45.662468+00:00",
+          "hostname": "85b528cd8f07"
+        }
+      ],
+      "phase_totals_seconds_rounded": {
+        "setup": 236.66,
+        "call": 1860.11,
+        "teardown": 1.15
+      },
+      "case_count": 5372,
+      "cases_with_reported_phases": 5372,
+      "skipped_cases": [
+        {
+          "id": "tests/test_editorial_site_parity.py::test_editorial_site_preserves_every_historical_file",
+          "reason": "Financial mode has its own strict historical structure/byte preservation check"
+        },
+        {
+          "id": "tests/test_editorial_site_parity.py::test_editorial_new_payload_matches_its_full_approved_source_replay",
+          "reason": "Current editorial source record is not restored; its full source replay is required locally"
+        },
+        {
+          "id": "tests/test_financial_site_parity.py::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "reason": "Financial source record is not restored; complete replay is required"
+        },
+        {
+          "id": "tests/test_pages_preview.py::test_preview_pin_is_well_formed",
+          "reason": "no Pages preview pinned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[fx_rates.parquet-required_columns0]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[fuel_prices.parquet-required_columns1]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[market_prices.parquet-required_columns2]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[airport_traffic.parquet-required_columns3]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        },
+        {
+          "id": "tests/test_stage4.py::test_stage4_silver_contracts[news_headlines.parquet-required_columns4]",
+          "reason": "Stage 4 local data artifacts are intentionally not versioned"
+        }
+      ],
+      "case_ids_sha256": "6499ebc3cc3e5569573aec0458302e85b5fe0bebe31a4300a9bde5181b290314",
+      "raw_artifacts_sha256": {
+        "log": "d0c235dbb8921d4675cf48251996ac28202cec7ac151bf7a1a817b459b25f9c0",
+        "xml": "d3c01b7a61de1255a10739fd47ee24e400364a38812a0338b7cdd4341e22a60d",
+        "json": "75ace2b49a9c838b335b6144659ae5a99d0c55dc0eead054bbf835cdf032f9e4"
+      },
+      "affected_module_phases_seconds_rounded": {
+        "tests/test_chat_mock_conversation.py": {
+          "setup": 12.27,
+          "call": 2.2,
+          "teardown": 0.52
+        },
+        "tests/test_chat_integration.py": {
+          "setup": 13.13,
+          "call": 2.0,
+          "teardown": 0.4
+        }
+      },
+      "slowest_main_cases": [
+        {
+          "id": "tests/test_chat_catalog_periods.py::test_real_model_catalog_fits_transport_and_preserves_full_http_catalog",
+          "outcome": "passed",
+          "total_seconds": 76.464,
+          "phases": {
+            "call": 76.46,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        {
+          "id": "tests/test_publish_verify_negative.py::test_unmodified_copy_passes",
+          "outcome": "passed",
+          "total_seconds": 70.352,
+          "phases": {
+            "call": 70.35,
+            "setup": 0,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_financial_site_parity.py::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "outcome": "skipped",
+          "total_seconds": 67.709,
+          "phases": {
+            "setup": 60.78,
+            "call": 6.93,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_editorial_site_parity.py::test_editorial_site_preserves_every_historical_file",
+          "outcome": "skipped",
+          "total_seconds": 61.724,
+          "phases": {
+            "setup": 61.72,
+            "call": 0,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_docker_context.py::test_packaged_files_load_the_public_snapshot_without_checkout_fallback",
+          "outcome": "passed",
+          "total_seconds": 57.985,
+          "phases": {
+            "call": 57.98,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_runtime_smoke_scope.py::test_real_cli_still_rejects_missing_pin_while_fixture_runs_without_network",
+          "outcome": "passed",
+          "total_seconds": 54.71,
+          "phases": {
+            "call": 54.71,
+            "teardown": 0,
+            "setup": 0
+          }
+        },
+        {
+          "id": "tests/test_source_update_adapter_compatibility.py::test_mixed_batch_certifies_each_family_and_actual_readiness_replays_exactly[order0]",
+          "outcome": "passed",
+          "total_seconds": 43.372,
+          "phases": {
+            "call": 43.35,
+            "setup": 0.02,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_source_update_adapter_compatibility.py::test_mixed_batch_certifies_each_family_and_actual_readiness_replays_exactly[order1]",
+          "outcome": "passed",
+          "total_seconds": 42.676,
+          "phases": {
+            "call": 42.66,
+            "setup": 0.01,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_government_traffic_candidate.py::test_full_product_and_round_replay_are_immutable[aicm_traffic]",
+          "outcome": "passed",
+          "total_seconds": 26.177,
+          "phases": {
+            "call": 26.14,
+            "setup": 0.04,
+            "teardown": 0
+          }
+        },
+        {
+          "id": "tests/test_chat_stage3_resume_report.py::test_budget_below_first_reservation_writes_empty_detail_and_resume_stays_known",
+          "outcome": "passed",
+          "total_seconds": 23.441,
+          "phases": {
+            "call": 23.44,
+            "setup": 0,
+            "teardown": 0
+          }
+        }
+      ]
+    },
+    "identical_case_ids_and_outcomes": true,
+    "process_seconds_saved": -4.591,
+    "process_reduction_percent": -0.217,
+    "affected_module_totals_seconds": {
+      "tests/test_chat_mock_conversation.py": {
+        "before": 40.947,
+        "after": 14.999
+      },
+      "tests/test_chat_integration.py": {
+        "before": 52.154,
+        "after": 15.534
+      }
+    },
+    "case_detail": {
+      "path": "docs/referencias/ci-efficiency-20261029-cases.json.gz",
+      "sha256": "092bdad66801bc91ec2792fe4f86b586d409229bfaaf323d83d439d436ca423d",
+      "case_count": 5372,
+      "compressed_bytes": 102950,
+      "uncompressed_bytes": 842765
+    }
+  },
+  "adversarial": {
+    "label": "adversarial",
+    "revision": "ce9e152f9663fef27464b173ede14dadcc6d92f6",
+    "command": [
+      "uv",
+      "run",
+      "--no-sync",
+      "pytest",
+      "-q",
+      "tests/test_chat_semantic.py",
+      "tests/test_contract_versions.py",
+      "tests/test_web_business_metrics_approval.py",
+      "--durations=0",
+      "--durations-min=0",
+      "--junitxml=/workspace/ci-measurements/adversarial.xml"
+    ],
+    "cwd": "/workspace/ci-efficiency",
+    "started_epoch": 1793246937.1830554,
+    "elapsed_seconds": 107.29737615585327,
+    "exit_code": 0,
+    "user_seconds": 106.163544,
+    "system_seconds": 1.5161769999999999,
+    "max_rss_kib": 452924,
+    "pytest_summary": "53 passed in 105.89s (0:01:45)",
+    "junit": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "53",
+        "time": "105.145",
+        "timestamp": "2026-10-29T04:08:58.202655+00:00",
+        "hostname": "85b528cd8f07"
+      }
+    ],
+    "phase_totals_seconds_rounded": {
+      "call": 104.66,
+      "setup": 0.02,
+      "teardown": 0.0
+    },
+    "module_phases_seconds_rounded": {
+      "tests/test_chat_semantic.py": {
+        "call": 0.18,
+        "setup": 0.0,
+        "teardown": 0.0
+      },
+      "tests/test_contract_versions.py": {
+        "call": 0.29,
+        "setup": 0.01,
+        "teardown": 0.0
+      },
+      "tests/test_web_business_metrics_approval.py": {
+        "call": 104.19,
+        "setup": 0.01,
+        "teardown": 0.0
+      }
+    },
+    "case_count": 53,
+    "cases_with_reported_phases": 53,
+    "skipped_cases": [],
+    "case_ids_sha256": "1978764d50ecbe09cd42df23ab37b5430cab4ff64623a4478c1c7585bb3acac1",
+    "raw_artifacts_sha256": {
+      "log": "aac63eb768a4a74dfa50953012b0d9a75ec5e52a5955fa645b904f304f153cb4",
+      "xml": "1cd33540156bb0274da5431ee19459b453e59e55beb18183e366a45bac70493d",
+      "json": "f8dcc3d6368eb29ff8d686de186117974a7086212991ec9087d58bb7f9bb3f49"
+    }
+  },
+  "implementation_checks": {
+    "snapshot_constructions_before": 8,
+    "module_fixture_setups_after": 2,
+    "guarded_consumers_after": 8,
+    "existing_cases_retained": 9,
+    "existing_assertions_retained": 82,
+    "method": "AST comparison preserves all nine cases and 82 assertions; measured module setup and original real-data adversarial readers run separately from the shared fixture."
+  }
+}
