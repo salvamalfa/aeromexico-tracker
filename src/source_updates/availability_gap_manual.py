@@ -4,13 +4,13 @@ import hashlib
 import json
 import os
 import re
-from datetime import timedelta
 from pathlib import Path
 
 import pandas as pd
 
 from src.source_updates.airport_group_native import GAP_SEPTEMBER_CAPTURE_SHA, GAP_SEPTEMBER_URL
 from src.source_updates.calendar import local_time
+from src.source_updates.closed_editions import binding_fields, evidence
 from src.source_updates.collection import safe_workspace
 from src.source_updates.retained import digest
 
@@ -25,7 +25,7 @@ FIELDS = {"source_scope", "workspace", "run_id", "artifact_item", "manual_origin
 def preflight(binding, candidate):
     if (
         not isinstance(binding, dict)
-        or set(binding) != FIELDS
+        or not binding_fields(binding, FIELDS)
         or binding["source_scope"] != SCOPE
         or not isinstance(binding["run_id"], str)
         or not re.fullmatch(r"[a-f0-9]{32}", binding["run_id"])
@@ -41,20 +41,18 @@ def preflight(binding, candidate):
 
 
 def verify(item, result, cutoff):
+    from src.source_updates.airport_group_native import GRAIN, read
     from src.source_updates.availability import collection_inventory
     from src.source_updates.checks import verify_bronze
+    from src.transform.stage9_lineage import add_record_ids
 
     binding = item["availability"]
     root = preflight(binding, item["workspace"])
     before = collection_inventory(root)
-    day = local_time(cutoff).date()
-    latest_closed = (day.replace(day=1) - timedelta(days=1)).strftime("%YM%m")
     if (
         item["product"] != "gap_traffic"
         or item["adapter"] != "airport_group"
         or item["period"] != PERIOD
-        or latest_closed != PERIOD
-        or day.isoformat() != OBSERVED_DAY
         or result.get("product") != item["product"]
         or result.get("period") != PERIOD
         or result.get("status") != "checks_passed"
@@ -132,6 +130,14 @@ def verify(item, result, cutoff):
     ):
         raise ValueError("GAP manual import changed bytes, provenance, alias, logical identity or cutoff")
     native = pd.read_parquet(Path(item["workspace"]) / "data/silver/airport_group_native.parquet")
+    expected_native, _ = read("gap_traffic", {"html": (raw, record)}, PERIOD)
+    expected_native = add_record_ids(
+        expected_native, table_name="airport_group_native", natural_key_columns=GRAIN
+    )
+    try:
+        pd.testing.assert_frame_equal(native, expected_native, check_exact=True)
+    except AssertionError as exc:
+        raise ValueError("GAP native values, units or provenance differ from the reviewed original") from exc
     if (
         len(native) != 192
         or set(native.source_hash) != {RAW_SHA}
@@ -144,6 +150,9 @@ def verify(item, result, cutoff):
     if digest(receipt_path) != receipt_sha or collection_inventory(root) != before:
         raise ValueError("GAP manual source collection changed during verification")
     return dict(
+        validated_closed_edition=evidence(
+            item, cutoff, OBSERVED_DAY, precision="day", source_url=GAP_SEPTEMBER_URL, original_sha=RAW_SHA
+        ),
         source_scope=SCOPE,
         collection_receipt_sha256=receipt_sha,
         physical_collection_files=before,

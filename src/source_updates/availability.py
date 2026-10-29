@@ -49,6 +49,24 @@ def sha(path):
 
 
 def preflight(binding, candidate):
+    if isinstance(binding, dict) and binding.get("source_scope") == "afac_airports_browser_download_v1":
+        from src.source_updates.availability_afac_manual import preflight as afac_manual_preflight
+
+        return afac_manual_preflight(binding, candidate)
+    if isinstance(binding, dict) and "equity_calendar_root" in binding:
+        from src.source_updates.availability_series import role_sets
+
+        if (
+            set(binding) != SERIES_FIELDS | {"equity_calendar_root"}
+            or set(binding["series_items"]) != role_sets()["equities"]
+        ):
+            raise ValueError("Supplemental calendars require the exact five-equity availability roles")
+        root = preflight({k: v for k, v in binding.items() if k != "equity_calendar_root"}, candidate)
+        calendar = safe_workspace(Path(binding["equity_calendar_root"]))
+        for other in (root, safe_workspace(Path(candidate))):
+            if calendar == other or calendar.is_relative_to(other) or other.is_relative_to(calendar):
+                raise ValueError("Supplemental calendars must be disjoint from collection and candidate")
+        return root
     if (
         isinstance(binding, dict)
         and binding.get("source_scope") == "volaris_Q3_visible_reconstruction_target_v1"
@@ -262,6 +280,10 @@ def verify(item, result, cutoff):
 
         return verify_oma_newsroom(item, result, cutoff)
     if item["product"] == "afac_airports" and item["adapter"] == "retained":
+        if item["availability"].get("source_scope") == "afac_airports_browser_download_v1":
+            from src.source_updates.availability_afac_manual import verify as verify_afac_manual
+
+            return verify_afac_manual(item, result, cutoff)
         from src.source_updates.availability_afac_airports import verify as verify_afac_airports
 
         return verify_afac_airports(item, result, cutoff)

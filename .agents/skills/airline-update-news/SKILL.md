@@ -6,7 +6,10 @@ description: "Actualizar candidatos de la familia noticias mensuales de Airline 
 # Noticias mensuales
 
 Leer y aplicar [el contrato común](../source-updates-common.md).
-Familia ejecutable: `news`. Alcance: Google News RSS y GDELT; news_http_error conserva fallos y permanece inactivo.
+Familia ejecutable: `news`. Vía principal aprobada el 29/oct: búsqueda editorial
+web y lectura de editores/comunicados. RSS complementa descubrimiento; GDELT
+es opcional. Sus fallos históricos siguen siendo fallos, no noticias validadas.
+`news_http_error` permanece inactivo.
 
 Una revisión mensual, también cuando se combina con una ronda trimestral.
 Capturar solo metadatos autorizados (título, URL, emisor, fecha y consulta);
@@ -25,7 +28,63 @@ local, y verifica su propio archivo/hash Bronze. Los valores y revisiones de
 GDELT no se toman del representante RSS ni viceversa. Esto no certifica que el
 mes esté completo.
 
-## Ejecución
+## Flujo editorial del calendario
+
+Existe **un único calendario**. Noticias es una tarea mensual de esa ronda,
+también cuando se combina con el trimestre. No crear otro horario ni una
+cadencia diaria/semanal. El estado es propio de cada tarea: una noticia o
+búsqueda fallida no elimina candidatos válidos de datos; una ronda con un
+componente obligatorio pendiente no se declara completa.
+
+1. Obtener el mes objetivo del plan común; no usar noticias de octubre para
+   completar septiembre. Mostrar `editorial_news --period <YYYYMmm> --as-of
+   <corte-con-zona>`: propone consultas, no busca ni simula adquisición.
+2. Ejecutar la búsqueda con las herramientas nativas web o navegador. Leer la
+   página del editor/comunicado; un snippet, RSS o fecha GDELT de primera
+   observación no acredita el artículo. Verificar enlaces vigentes desde el
+   portal oficial y usar el fallback del contrato común sin esperar instrucciones
+   del usuario. Respetar denegaciones, accesos y servicios no autorizados.
+3. Priorizar resultados, alianzas, regulación, flota y capacidad; después rutas,
+   frecuencias, aeropuertos, lealtad/co-brand. Macro solo con efecto explícito.
+   Excluir rumores, promociones rutinarias y repeticiones. No hay cuota fija.
+   Consultar los eventos ya preparados/aprobados para no repetir un anuncio.
+4. Registrar consultas y resultados reales (`completed`/`access_failed`), URL,
+   editor, día publicado, fecha del hecho si se conoce y lectura real con zona.
+   Conservar precisión diaria sin inventar una hora UTC. Redactar resúmenes
+   propios (hasta 320 caracteres), razón de relevancia y clave estable del evento.
+   Agrupar publicaciones del mismo hecho y conservar cada procedencia. Diferentes
+   hechos o contradicciones no se fusionan solo por parecido del titular.
+5. Preparar el JSON del [contrato](../../../contracts/source_updates/editorial-news-review.schema.json).
+   Son observaciones revisadas, no bytes originales de las páginas. Sus hashes
+   identifican esa evidencia derivada; `original_page_sha256` es nulo. No guardar
+   artículos completos ni fabricar descargas/HTTP. Lo no verificable queda
+   pendiente o excluido con motivo; todas las consultas fallidas no son éxito
+   ni ausencia de noticias. Un mes sin selección requiere revisión acotada y
+   motivo explícito, sin prometer exhaustividad.
+6. Usar los comandos de abajo: vista previa, candidato nuevo y replay. El programa
+   verifica lo registrado y sus archivos; no ejecuta la búsqueda ni vuelve a
+   descargar al editor. El agente debe haber realizado la adquisición nativa.
+   La entrada, candidatos y recibo son inmutables. Para otra versión usar otra
+   carpeta; `--baseline <anterior>/candidates.json` compara eventos del mismo mes.
+7. Vincular al recibo global `editorial_news={"workspace":"<carpeta>",
+   "receipt_sha256":"<SHA real de receipt.json>"}`. Aparece en `calendar_tasks`
+   con las demás fuentes, sin otro calendario. El replay verifica mes, corte,
+   fuentes registradas y hashes. Los candidatos siguen `candidate_unapproved`,
+   con aprobación editorial/publicación separadas; no se activa el índice público.
+
+```bash
+python -m src.source_updates.editorial_news --period 2026M09 --as-of 2026-10-29T00:31:52Z
+python -m src.source_updates.editorial_news --input <revision-nativa.json> --workspace tmp/source-updates/editorial-nuevo
+# Tras revisar: mismo comando con --execute; después:
+python -m src.source_updates.editorial_news --workspace tmp/source-updates/editorial-nuevo --check
+```
+
+Las cifras oficiales financieras conservan sus fuentes y gates propios. Un
+resumen informativo no actualiza sus tarjetas ni autoriza una tesis. La salida
+pública existente sigue mostrando solo noticias aprobadas; estos archivos son
+candidatos para ese circuito, sin autoaprobación.
+
+## Proveedores opcionales y lectores anteriores
 
 ```bash
 python -m src.source_updates plan --round monthly --as-of 2026-10-18T12:00:00-06:00 --family news
@@ -209,5 +268,5 @@ El vínculo prueba respuestas actuales a esas dos consultas. Mantiene
 cobertura del medio no verificada y `agent_eligible=false`. Conservar todos los
 items en Silver y el subconjunto mensual con sus contribuciones y días no
 observados. No hay noticia validada desde un titular ni un archivo completo de
-Google News. GDELT conserva su requisito y sus fallos, sin nuevas consultas o
-sustitución. No comparar como revisiones dos snapshots de consultas distintas.
+Google News. GDELT conserva sus fallos históricos y su lector opcional; no es un
+prerrequisito de la tarea editorial ni se declara validado por RSS. No comparar como revisiones dos snapshots de consultas distintas.

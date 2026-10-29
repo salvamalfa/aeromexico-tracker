@@ -21,7 +21,11 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
 2. Ejecutar `python -m src.source_updates plan --round monthly --as-of <ISO-con-zona>
    --family <familia>` (para trimestral añadir `--quarter YYYYQn`). El plan
    muestra cobertura y brechas; no descarga ni comprueba frescura Gold.
-3. Seleccionar catálogos y documentos con URLs reales del dominio permitido.
+3. Verificar la ruta vigente desde HOME/menús de la fuente oficial y su
+   documentación, además del catálogo: un enlace fallido puede estar obsoleto.
+   Hacer esa búsqueda y las alternativas permitidas de forma autónoma, sin
+   esperar a que el usuario dirija clics o consiga archivos resolubles.
+   Seleccionar catálogos y documentos con URLs reales del dominio permitido.
    Consultar primero `recipe --product <producto>`: resuelve la entrada canónica,
    formato, procedimiento y limitaciones de `config/source_update_acquisition.json`.
    Para `fuel`, `banxico`, `h10` y `equities`, `recipe --output round --period <periodo>
@@ -73,6 +77,24 @@ sustituye una validación; una dependencia no disponible bloquea la construcció
 
 - 403, TLS, desafío, timeout o archivo inválido = fallo de acceso/contenido.
   Conservar último dato aceptado. No declarar ausencia de reporte ni cero.
+- Si falla la adquisición programática, usar el navegador soportado para abrir
+  la página oficial y descargar mediante su interfaz normal. Si el entorno de
+  código no dispone de navegador, entregar el enlace, documento/periodo y recibo
+  fallido a dot para su navegador cloud o local autorizado y conectado; la
+  integración sigue en este entorno. Comprobar capacidades reales, no asumir
+  ausencia de navegador. Escalar solo un bloqueo concreto o decisión necesaria,
+  sin trasladar al usuario verificaciones que el agente puede realizar.
+  `collect` conserva ese handoff pendiente en `manual_recovery`, sin fingir que
+  ya hizo clics o descargó. Antes de declarar vías agotadas, intentar esa vía o
+  registrar el bloqueo concreto de herramienta/acceso. No evadir denegaciones,
+  autenticación, CAPTCHA ni avisos de seguridad. Conservar el fallo anterior.
+- Verificar bytes legibles, tipo, identidad, periodo, cobertura, unidades y SHA
+  del archivo descargado. Conservar URL, método y fecha reales; transferir por
+  Library soportado y verificar de nuevo en el consumidor antes de importar.
+  Una ruta del navegador no implica acceso desde el ejecutor. La importación
+  manual no es una nueva respuesta HTTP; su fecha tampoco es la observación
+  del editor. Una reconstrucción requiere su modo autorizado y nunca se llama
+  original. Un error también en el navegador sigue siendo un bloqueo real.
 - Fecha futura oficial: propuesta a +2 hábiles. Fallo técnico: siguiente hábil.
   Fecha desconocida: un intento dentro de 7 días o siguiente ronda mensual.
   `retry` produce propuestas, no tareas; a las dos reprogramaciones bloquea.
@@ -231,14 +253,44 @@ esperado de observaciones por sí solo. Banxico admite el cuarto original
 `fix_methodology` en su retención: el resultado se calcula y reproduce desde
 los cuatro cuerpos y el calendario bancario, no desde un flag del usuario.
 Tres roles antiguos, EIA y mercado mantienen calendario no certificado.
+Mercado puede añadir al binding `equity_calendar_root` con las cuatro referencias
+físicas NYSE, Nasdaq, OTC y días NYSE. La captura OTC MHTML nativa se importa
+como `browser_mhtml`, con `http_status=null` y fecha de su encabezado; no como
+HTML HTTP ni reconstrucción. Se verifica únicamente su documento raíz oficial,
+sin ejecutar scripts/frames. El suplemento reconstruye las cinco series desde
+sus originales y compara sesiones, ancla anual e historia para treinta retornos.
+Solo esa prueba completa puede despejar el control de calendario de septiembre
+y trimestre; no cambia el recibo antiguo ni sus cifras. Los parciales son
+sesiones y OTC conserva sus14:00, sin tomar el calendario de NYSE prestado.
+La prueba se limita a2026 y no acredita festivos2027.
+
+AFAC aeropuertos admite el handoff `afac_airports_browser_download_v1`: paquete
+Library con el XLSX original descargado por UI, manifiesto de adquisición y
+texto accesible del índice. El texto es evidencia de navegación, nunca HTML
+original. Comprueba una sola edición aeroportuaria y sus dos enlaces PDF, URL,
+fecha real, hash, periodo y reproducción completa del libro. Mantiene separado
+el momento de importación y la observación del navegador; HTTP desconocido.
+La alternativa manual no amplía la exención de las tres ediciones retenidas.
 Banxico septiembre pasó; Q3 sigue no certificado frente al universo diario,
 sin inferir error del proveedor. Último periodo y primera publicación siguen
 desconocidos y la ronda global permanece bloqueada. La
 identidad SEC de mercado sigue siendo original retenido, sin nueva captura.
-La disponibilidad se limita a la fecha local de captura y corte real de la
+La disponibilidad HTTP se limita a la fecha local de captura y corte real de la
 ronda; no acredita primera publicación, rezago ni activación. El vínculo
 inválido bloquea; no hay fallback ni booleano manual. Sin vínculo, o para una
 familia aún sin contrato, la disponibilidad permanece sin verificar.
+
+La excepción aprobada el 28/oct a las 23:15 UTC acepta ediciones cerradas ya
+validadas de GAP septiembre, ASUR septiembre y Volaris financiero 3T26 con sus
+contratos específicos. Conserva las fechas originales y reconstrucciones como
+tales. `validated_closed_edition` acredita el periodo solicitado, separado de
+`latest_source_availability_verified`: no exige recaptura del mismo día ni
+afirma última edición. No tiene un vencimiento diario artificial; un periodo
+distinto o una edición nueva conocida exige validación nueva. Las consultas de
+novedades se registran aparte, con recibo físico, fecha y fallo/incertidumbre;
+sin consulta se declara `not_checked`. `known_new_edition` bloquea la reutilización.
+Nunca se extiende a noticias, precios ni fuentes ausentes. Siguen pasando hash,
+Bronze/Silver/Gold, unidades, conciliación y replay; no autoriza publicación.
 
 GAP tiene una forma histórica específica: `source_scope`, `historical`,
 `snapshot_day`, `workspace`, `submissions` y `filings`, con índice y documentos
@@ -262,3 +314,13 @@ como advertencia global; para retornos/volatilidad bursátiles sigue bloqueando.
 Todos los meses, entradas, fuentes, cifras y linaje requeridos siguen pasando
 sus controles. Un aviso de reporte confirmado tampoco espera esa ronda global:
 separar detección, comprobación primaria, aviso, incorporación y autorización.
+
+## Noticias y el calendario unico
+
+La autorización del 29/oct reemplaza GDELT obligatorio por una tarea editorial
+mensual en el mismo calendario. Web nativa y lectura del editor son la vía
+principal; RSS es complemento y GDELT opcional. Aplicar la skill de Noticias y
+el contrato editorial, sin renombrar esos metadatos como originales HTTP.
+Cada tarea conserva su resultado y las independientes avanzan; la ronda con
+componentes obligatorios pendientes no se declara completa. Se conservan
+los gates de publicación y los fallos históricos. No hay un segundo calendario.

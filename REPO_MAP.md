@@ -13,6 +13,8 @@ El catálogo incluye la guía de skills y del coordinador candidato
 (`src/source_updates/`, `python -m src.source_updates --help`). Hay planificación,
 captura aislada, pasos offline y controles explícitos. Sus ejemplos están en seco;
 no hay activación nueva, y los contratos y gates existentes siguen vigentes.
+El [contrato de ejecución y recuperación](docs/calendario-ejecucion.md) añade
+estado privado y un próximo disparo declarativo, preparado para activación.
 
 ## Qué vive dónde
 

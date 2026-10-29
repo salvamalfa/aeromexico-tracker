@@ -243,6 +243,7 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                 url = item["url"]
                 response_url = None
                 if item.get("mode") == "manual":
+                    status = 0  # Unknown source HTTP status; this is a local import, not a GET.
                     content = (workspace / "imports" / item["local_file"]).read_bytes()
                     if hashlib.sha256(content).hexdigest() != item["sha256"]:
                         raise ValueError("Manual input hash mismatch")
@@ -337,6 +338,12 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                     source_file=path.relative_to(workspace / "data/bronze").as_posix(),
                     bytes=len(content),
                 )
+                if item.get("mode") == "manual":
+                    result.update(
+                        source_http_status_observed=None,
+                        source_capture_utc=None,
+                        timestamp_semantics="local_manual_import_not_source_HTTP_capture",
+                    )
                 if item["purpose"] == "catalog" and item["extension"] in {"html", "htm"}:
                     from bs4 import BeautifulSoup
 
@@ -378,6 +385,10 @@ def collect(selection: dict, workspace: Path, *, execute: bool = False, client_f
                         "content_type": failed.headers.get("content-type"),
                         "eligible_as_source_data": False,
                     }
+                if item.get("mode") != "manual":
+                    from src.source_updates.manual_recovery import plan as manual_recovery_plan
+
+                    result["manual_recovery"] = manual_recovery_plan(item, result, receipt["run_id"])
             receipt["items"].append(result)
         receipt["status"] = (
             "collected_unvalidated"

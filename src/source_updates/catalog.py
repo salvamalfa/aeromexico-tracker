@@ -330,7 +330,11 @@ def plan(round_kind: str, as_of: str, quarter: str | None = None, family: str | 
                 "plan_item_id": f"{product['id']}-{target}",
                 "target_cadence": target_cadence,
                 "target_period": target,
-                "status": "selection_required" if source["artifact_expected"] else "offline_or_curated",
+                "status": "optional_editorial_discovery"
+                if product["id"] in {"rss", "gdelt"}
+                else "selection_required"
+                if source["artifact_expected"]
+                else "offline_or_curated",
                 "discovery_url": source["official_page_url"],
                 "latest_available_period": None,
                 "latest_validated_period": None,
@@ -340,7 +344,14 @@ def plan(round_kind: str, as_of: str, quarter: str | None = None, family: str | 
             }
             for target_cadence, target in targets
         )
+    from src.source_updates.editorial_news import plan as editorial_plan
+
+    news_task = editorial_plan(previous.strftime("%YM%m"), as_of)
+    if round_kind == "quarterly":
+        news_task["status"] = "not_due_this_round"
     return {
+        "calendar_tasks": [*products, *([news_task] if family in {None, "news"} else [])],
+        "calendar_count": 1,
         "version": 1,
         "mode": "dry_run",
         "round": round_kind,
