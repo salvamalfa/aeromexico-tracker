@@ -102,6 +102,38 @@ def test_event_dedup_preserves_different_publisher_days_and_chronological_observ
     assert row["review_status"] == "candidate_unapproved" and not result["ready_for_publication"]
 
 
+def test_earlier_journalism_capture_does_not_become_the_later_official_publisher_capture():
+    value = payload()
+    early = copy.deepcopy(value["events"][0]["sources"][0])
+    early.update(
+        url="https://news.example/early-report",
+        source_kind="journalism",
+        published_on="2026-09-07",
+        observed_at="2026-09-07T19:00:00Z",
+    )
+    value["events"][0]["sources"].append(early)
+    before = copy.deepcopy(value)
+    candidates, result = subject.prepare(value)
+    assert value == before and result["events"] == 1 and result["source_observations"] == 2
+    row = candidates["records"][0]
+    assert row["published_at"] == "2026-09-08" and row["first_reported_on"] == "2026-09-07"
+    assert row["first_captured_at"] == "2026-10-28T23:00:00Z"
+    assert row["event_first_observed_at"] == "2026-09-07T19:00:00Z"
+    assert row["verified_at"] == "2026-10-28T23:00:00Z"
+    assert row["publisher_observations"][0]["source_kind"] == "official"
+    # The existing contract still rejects attributing the earlier reading to this publisher.
+    row["first_captured_at"] = early["observed_at"]
+    row["candidate_content_sha256"] = subject.candidate_content_sha256(
+        {k: v for k, v in row.items() if k != "candidate_content_sha256"}
+    )
+    with pytest.raises(ValueError, match="Candidate date order invalid"):
+        subject.candidate_cut(candidates)
+    invalid = copy.deepcopy(value)
+    invalid["events"][0]["sources"][0]["observed_at"] = early["observed_at"]
+    with pytest.raises(ValueError, match="publication is later"):
+        subject.prepare(invalid)
+
+
 @pytest.mark.parametrize(
     "attack",
     [
