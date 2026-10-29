@@ -4299,8 +4299,9 @@ baseline. Solo se corrigen los campos de captura y sus hashes. Se regeneraron
 14 productores desde originales retenidos con salidas idénticas y se verifican
 seis productores sin cambios. La escritura y reproducción conjuntas terminaron sin red: mensual 15/15 y 86
 salidas; combinada 20/22 y 110 salidas, con los dos insumos externos pendientes.
-Los recibos nuevos son `monthly-global-72bac615-replay.json`, SHA`26c47512…`,
-y `unified-global-72bac615-replay.json`, SHA`3140ca25…`.
+Los replays `monthly-global-72bac615-replay.json` y
+`unified-global-72bac615-replay.json` verifican los recibos SHA`26c47512…` y
+SHA`3140ca25…`, respectivamente; no son los hashes de los archivos de replay.
 El nuevo head necesita su propia CI; el verde
 `40800804349` acredita176933ff, no el código corregido ni un permiso de merge.
 
