@@ -18,7 +18,10 @@ from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.providers.mock import MockProvider
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests._published_snapshot_fixtures import (
+    _verified_published_snapshot as _verified_published_snapshot,
+    published_snapshot as published_snapshot,
+)
 
 
 class _RecordingMockProvider:
@@ -87,8 +90,10 @@ def _app(tmp_path: Path, snapshot: Snapshot, provider: _RecordingMockProvider):
     )
 
 
-def test_conversation_compare_has_stable_delta_sign_and_persists_history(tmp_path: Path) -> None:
-    snapshot = Snapshot(ROOT / "site")
+def test_conversation_compare_has_stable_delta_sign_and_persists_history(
+    tmp_path: Path, published_snapshot: Snapshot
+) -> None:
+    snapshot = published_snapshot
     provider = _RecordingMockProvider(snapshot)
     app = _app(tmp_path, snapshot, provider)
     context = {"tab": "economy", "period": "2026Q2", "entity": "AEROMEXICO"}
@@ -140,8 +145,10 @@ def test_conversation_compare_has_stable_delta_sign_and_persists_history(tmp_pat
         assert len(conversation_state["turns"]) == 2
 
 
-def test_omitted_period_uses_the_current_dashboard_selection(tmp_path: Path) -> None:
-    snapshot = Snapshot(ROOT / "site")
+def test_omitted_period_uses_the_current_dashboard_selection(
+    tmp_path: Path, published_snapshot: Snapshot
+) -> None:
+    snapshot = published_snapshot
     provider = _RecordingMockProvider(snapshot)
     app = _app(tmp_path, snapshot, provider)
     context = {
@@ -171,8 +178,9 @@ def test_omitted_period_uses_the_current_dashboard_selection(tmp_path: Path) -> 
 
 def test_conversation_series_keeps_missing_values_null_and_uses_source_references(
     tmp_path: Path,
+    published_snapshot: Snapshot,
 ) -> None:
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     provider = _RecordingMockProvider(snapshot)
     app = _app(tmp_path, snapshot, provider)
     context = {
@@ -213,8 +221,9 @@ def test_conversation_series_keeps_missing_values_null_and_uses_source_reference
 
 def test_explicit_entity_overrides_dashboard_context_and_all_carriers_uses_afac_denominator(
     tmp_path: Path,
+    published_snapshot: Snapshot,
 ) -> None:
-    snapshot = Snapshot(ROOT / "site")
+    snapshot = published_snapshot
     provider = _RecordingMockProvider(snapshot)
     app = _app(tmp_path, snapshot, provider)
     context = {
