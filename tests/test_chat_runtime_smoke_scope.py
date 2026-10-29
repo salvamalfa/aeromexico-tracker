@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 @pytest.mark.parametrize("fixture_only", [False, True])
 def test_snapshot_selection_is_explicit_and_failure_does_not_fallback(monkeypatch, fixture_only):
     calls = []
+    monkeypatch.setattr(smoke, "_preflight_missing_approval_pin", lambda _path: None)
 
     def refuse(path):
         calls.append(path)
@@ -81,3 +82,68 @@ runpy.run_module('scripts.check_chat_runtime',run_name='__main__')
             assert "must pin the approved receipt SHA-256" in result.stderr
             assert "chat runtime smoke: ok" not in result.stdout
     assert (ROOT / "site/publication_manifest.json").read_bytes() == original
+
+
+@pytest.mark.parametrize("pin", [None, " \t "])
+def test_missing_financial_pin_rejects_before_snapshot_construction(monkeypatch, pin):
+    name = "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256"
+    if pin is None:
+        monkeypatch.delenv(name, raising=False)
+    else:
+        monkeypatch.setenv(name, pin)
+
+    def unexpected(_path):
+        raise AssertionError("missing configuration must reject before reader construction")
+
+    monkeypatch.setattr(smoke, "Snapshot", unexpected)
+    with pytest.raises(ValueError, match="must pin the approved receipt SHA-256"):
+        asyncio.run(smoke._check())
+
+
+def test_nonblank_pin_still_requires_the_complete_snapshot(monkeypatch):
+    monkeypatch.setenv("CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256", "not-an-approval")
+    calls = []
+
+    def refuse(path):
+        calls.append(path)
+        raise ValueError("snapshot rejected")
+
+    monkeypatch.setattr(smoke, "Snapshot", refuse)
+    with pytest.raises(ValueError, match="snapshot rejected"):
+        asyncio.run(smoke._check())
+    assert calls == [ROOT / "site"]
+
+
+def test_fixture_mode_does_not_preflight_the_published_receipt(monkeypatch, tmp_path):
+    monkeypatch.setattr(smoke, "ROOT", tmp_path)
+    monkeypatch.delenv("CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256", raising=False)
+    receipt = tmp_path / "site/data/v1/business_metrics.approval.json"
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text("invalid published receipt", encoding="utf-8")
+    calls = []
+
+    def refuse(path):
+        calls.append(path)
+        raise ValueError("fixture snapshot rejected")
+
+    monkeypatch.setattr(smoke, "Snapshot", refuse)
+    with pytest.raises(ValueError, match="fixture snapshot rejected"):
+        asyncio.run(smoke._check(fixture_only=True))
+    assert calls == [tmp_path / "tests/fixtures/chat/site"]
+
+
+def test_preflight_leaves_paths_outside_the_snapshot_to_its_verifier(monkeypatch, tmp_path):
+    monkeypatch.delenv("CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256", raising=False)
+    root = tmp_path / "site"
+    root.mkdir()
+    receipt = root / "data/v1/business_metrics.approval.json"
+    outside = tmp_path / "outside.json"
+    outside.write_text("must not read", encoding="utf-8")
+    resolve = Path.resolve
+
+    def resolved(path, *args, **kwargs):
+        return outside if path == receipt else resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolved)
+    # Reading the outside file would fail JSON parsing, so this must return.
+    smoke._preflight_missing_approval_pin(root)

@@ -163,6 +163,30 @@ publicación existente con su verificador liberado, sin aprobar el runtime nuevo
 Registra también el tiempo total del subproceso, CPU y pico de memoria; no
 incluyas instalaciones en un lado y las excluyas del otro.
 
+El ensayo de paralelismo compara el perfil público completo con cero y dos
+workers de pytest-xdist, en ese orden y en el mismo job de CI. Se conservan
+los casos de cada archivo juntos (`--dist=loadfile`) y no se reinician workers
+que fallen. Los dos modos usan el mismo checkout, intérprete, dependencias,
+pins y filtros. La [distribución oficial](https://pytest-xdist.readthedocs.io/en/stable/distribution.html)
+describe esa agrupación; el ahorro global sigue pendiente de esta comparación.
+
+Las dos herramientas de CI están fijadas con hashes en
+[`.github/ci-test-tools.txt`](.github/ci-test-tools.txt), separadas del lock de
+runtime. Se instalan sin dependencias implícitas y se exige `uv pip check`.
+El [medidor temporal](.github/ci/profile_pytest.py) conserva CPU, RSS del mayor
+hijo y una suma muestreada del RSS simultáneo de su árbol de procesos.
+Esta suma puede contar páginas compartidas más de una vez. La
+[colección y los reportes por proceso](.github/ci/ci_pytest_inventory.py)
+permiten comparar IDs, resultados, exclusiones y subpruebas sin usar un
+resultado anterior para omitir o aprobar pruebas. Los artefactos del job
+conservan esa evidencia durante siete días.
+
+El smoke de runtime rechaza antes el pin financiero ausente o vacío cuando
+el recibo existe en el sitio elegido. Las entradas admisibles siguen pasando
+por el `Snapshot` completo. El modo `--fixture-only` conserva su raíz propia;
+no acredita el sitio publicado. Los límites de 90 y 120 segundos de las
+pruebas y del verificador histórico se conservan.
+
 
 ## Recetas
 
