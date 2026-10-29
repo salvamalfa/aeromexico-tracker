@@ -1,6 +1,6 @@
 # Roadmap
 
-Revisión: 28 de octubre de 2026. Pendientes, trabajo en curso y backlog arriba;
+Revisión: 29 de octubre de 2026 (UTC). Pendientes, trabajo en curso y backlog arriba;
 trabajos terminados al final, como pidió el dueño. No se activan fuentes ni
 calendarios por mover una tarea entre secciones.
 
@@ -9,9 +9,14 @@ calendarios por mover una tarea entre secciones.
 - **Prioridad: evidencia de fuentes y calendario operativo.** Las ocho familias
   de skills y el coordinador están implementados e integrados. Falta completar
   la evidencia obligatoria de una ronda; no falta volver a aprobar el calendario.
-- **Ronda comprobada con el criterio aprobado:** 19 de 23 productos aceptados,
-  106 salidas y replay global escrito/reproducido; 17 observaciones del corte y
-  dos ediciones retenidas, sin renovar sus fechas. No es una ronda completa.
+- **Ronda comprobada con el criterio aprobado:** 20 de 22 tareas obligatorias
+  verificadas; 110 salidas de fuentes y cinco eventos editoriales. El recibo
+  global se escribió y reprodujo sin red. Una tarea RSS opcional también pasa.
+  Aerocivil y Viva financiero3T26 siguen pendientes; no es una ronda completa.
+- **Vista mensual comprobada de septiembre:** 15 de15 tareas obligatorias,
+  86 salidas, cinco eventos editoriales y replay; lista para incorporar ese lote
+  a revisión. Sigue en el mismo calendario general, sin programar ejecuciones
+  ni aprobar publicación. No acredita todavía los meses futuros.
 - **Calendario preparado, sin activar:** mensual 17/nov y 15/dic de 2026,
   primer hábil bancario mexicano en/después del 15; trimestral a +2 hábiles
   del último reporte financiero real de las tres aerolíneas, agrupado con la
@@ -24,24 +29,27 @@ calendarios por mover una tarea entre secciones.
 
 | Pendiente | Estado comprobado | Siguiente acción y criterio de cierre |
 | --- | --- | --- |
-| AFAC aeropuertos | El índice y libro conocido respondieron403; navegador oficial también Access Denied en estadísticas y HOME23:25UTC; el lector histórico julio existe y está separado de AFAC por aerolínea | Obtener una edición aeroportuaria oficial acreditada dentro del rezago permitido. No llamar septiembre a julio ni probar actualidad con el original histórico |
-| GDELT | Consulta mensual septiembre del 28/oct, 22:08 UTC respondió 503; ninguna extracción nueva acreditada | Una respuesta válida del mes, certificación y replay. No seguir reintentos idénticos ni sustituir por RSS |
 | Aerocivil | Consulta registrada: radicado 2026190010175977, IdControl 2758656, 28/oct; sin diccionario ni atribución verificados | Incorporar respuesta oficial aplicable a jh8x-n6h6. El registro administrativo no responde las preguntas; no duplicar correo |
 | Viva financiero Q3 | La investigación del hilo principal encontró 1T/2T 2026; el tercer trimestre mostrado debajo corresponde a 2025. Sin fecha 2026 confirmada | Incorporar reporte oficial 3T26 y adaptar/verificar esa edición; finales de octubre es solo estimación histórica, no una fecha prometida |
-| ICAGY/OTC | Calendarios/precios de cuatro instrumentos verificados; faltan dos controles de sesiones para el quinto. Página oficial del 28/oct HTTP200 es una shell JavaScript sin tabla | Acreditar calendario OTC 2026 y su lector con material interpretable. No sustituir por NYSE, ni aceptar el 200 como calendario completo |
 
-La ronda sigue bloqueada: cuatro productos ausentes y dos controles bursátiles.
+La ronda completa sigue bloqueada por Aerocivil y Viva financiero3T26.
+Noticias está dentro del mismo calendario mediante revisión editorial nativa:
+GDELT/RSS son descubrimiento opcional y sus fallos históricos permanecen.
+Un componente pendiente no cancela las tareas independientes válidas.
+Los controles de sesiones de septiembre y trimestre ya pasan para los cinco instrumentos.
 GAP/ASUR septiembre pasan por edición validada; sus novedades quedan sin comprobar. Banxico/EIA
 mantienen tres advertencias de cobertura observada, sin afirmar calendarios
-exhaustivos. Aerocivil y GDELT siguen obligatorios. Se conservan fechas reales,
+exhaustivos. Aerocivil conserva su obligación trimestral; Noticias, la revisión
+mensual obligatoria. Se conservan fechas reales,
 periodos, unidades, faltantes y distinción entre original y reconstrucción.
 
 **Criterio autorizado el 28/oct, 23:15 UTC, preparado en el borrador PR174:**
 reutilizar las ediciones verificadas de GAP/ASUR septiembre y Volaris financiero
 3T26 conservando sus fechas y hashes. Consultas de novedades y fallos quedan
 separados; una edición nueva conocida o un periodo distinto exige otra validación.
-No equivale a una descarga actual ni a permiso de activar o publicar. 196 pruebas focales y 165 de integración afectadas aprobaron. La nueva CI del
-head final y la integración siguen separadas de ese resultado local.
+No equivale a una descarga actual ni a permiso de activar o publicar. Dos grupos
+locales finales, sin casos solapados, pasaron:347 pruebas en11,66s y92 en25,79s.
+La CI remota del head final y la integración son controles distintos.
 
 ## Backlog
 
@@ -86,11 +94,24 @@ head final y la integración siguen separadas de ese resultado local.
 
 ## Terminado
 
+- **AFAC aeroportuario septiembre, verificado localmente:** descarga real desde
+  Chrome local, original 705.225 bytes/SHA comprobado; 3.510 filas, nueve meses,
+  65 aeropuertos y 173 cruces. Julio conserva baseline:780 altas,0 bajas,9diferencias
+  escalares registradas; no se sobrescribe el histórico publicado. PR174 en borrador.
+- **OTC/ICAGY, controles locales completos:** MHTML nativo oficial 28/oct23:35UTC,
+  sin etiquetarlo HTTP ni reconstrucción. Cinco instrumentos:21 sesiones septiembre,
+  64 trimestre,187enero–septiembre, ancla e historia previa comprobadas. Suplemento
+  vinculado al control global, sin editar los recibos antiguos. PR174 en borrador.
+
 - **Reutilización local comprobada de ediciones cerradas:** GAP/ASUR septiembre
-  y Volaris financiero 3T26 conservan fechas, bytes y representación; 14
-  candidatos regenerados con salidas idénticas y cinco productores sin cambios.
-  Global19/23 y106salidas reproducidos sin red. PR174 pendiente de CI e integración;
-  calendario y publicación siguen sin autorizar.
+  y Volaris financiero3T26 mantienen fechas, bytes y representación;14 candidatos
+  regenerados con salidas idénticas y seis productores reproducidos sin cambios.
+  El recibo combinado y su replay verifican110 salidas. No acredita última edición.
+- **Noticias, implementación local verificada:** cinco eventos de septiembre,
+  seis páginas de origen y siete búsquedas. Resúmenes propios, fechas de publicación
+  y hechos separadas, agrupación por evento y trazabilidad; candidatos sin aprobar.
+  Una sola vista/calendario, con estados independientes y dependencias reales.
+  PR174 pendiente de CI e integración, sin publicación ni activación.
 
 - **Aeroméxico mensual recuperado:** el 28/oct a las 22:09 UTC el recolector
   habitual obtuvo índice y 6-K con HTTP200. Certificación/replay: 24 observaciones
