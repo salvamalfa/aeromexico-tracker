@@ -181,7 +181,10 @@ def trigger(state: dict, now: str) -> dict:
         "prompt": (
             f"Procesa el evento {event_id}, claves pendientes {', '.join(pending_keys)}. "
             f"Coordinador airlines-tracker-source-calendar; estado canónico {state['workspace']}/state.json. "
-            "Lee el estado privado canónico y el contrato del coordinador. "
+            "Lee .agents/skills/airline-update-coordinator/SKILL.md y el estado privado canónico. "
+            "Sigue esa skill: materializa el manifiesto con python -m scripts.source_update_dispatch "
+            "y ejecuta jobs[].native_call mediante herramientas nativas de subagentes reales. "
+            "Si la capacidad nativa o el estado no están disponibles, devuelve el bloqueo sin simular envíos. "
             "Comprueba autorización, ID único y bloqueo; registra intención antes de delegar. "
             "Reconcílialo por mensaje/turno/recibo antes de repetir un envío incierto. "
             "Reutiliza plan/calendar/retry, conserva resultados independientes y originales. "

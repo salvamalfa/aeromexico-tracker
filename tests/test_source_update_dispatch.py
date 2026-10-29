@@ -75,6 +75,41 @@ def test_map_covers_every_product_and_eight_real_skills_without_source_requests(
     assert result["network_requests"] == 0 and result["writes"] == []
 
 
+def test_source_map_resolves_all_configured_product_entries_without_network(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Source mapping must not acquire or verify remote sources")
+
+    monkeypatch.setattr(socket.socket, "connect", forbidden)
+    products = {row["product"]: row for row in dispatch.source_map()["products"]}
+    recipes = dispatch.acquisition_config()["products"]
+    catalogue = dispatch.load_catalog()
+    for product, recipe in recipes.items():
+        row = products[product]
+        assert row["source_catalogue_discovery_page"] == catalogue[row["source_key"]]["official_page_url"]
+        assert row["acquisition_entry_url"] == dispatch.resolve_entry(recipe["entry_ref"])
+        assert row["discovery_page"] == dispatch.resolve_entry(
+            recipe.get("discovery_ref", recipe["entry_ref"])
+        )
+    assert products["bts_segments"]["discovery_page"] != products["bts_segments"]["acquisition_entry_url"]
+    for product in ("peer_profiles", "curated_context", "derived", "editorial_news"):
+        assert products[product]["acquisition_entry_url"] is None
+        assert products[product]["discovery_page"] is None
+
+
+def test_aerocivil_product_points_to_colombian_primary_entry_not_generic_caa_catalogue():
+    from src.ingest.international_routes import CO_URL
+
+    products = {row["product"]: row for row in dispatch.source_map()["products"]}
+    aerocivil = products["aerocivil"]
+    assert aerocivil["entry_reference"] == "constant:src.ingest.international_routes:CO_URL"
+    assert aerocivil["acquisition_entry_url"] == CO_URL == "https://www.datos.gov.co/resource/jh8x-n6h6.json"
+    assert aerocivil["discovery_page"] == CO_URL
+    assert aerocivil["source_catalogue_discovery_page"] == "https://www.caa.co.uk/data-and-analysis/"
+    assert products["caa"]["discovery_page"].startswith("https://www.caa.co.uk/")
+    assert products["anac"]["acquisition_entry_url"].startswith("https://sistemas.anac.gov.br/")
+    assert products["aena"]["acquisition_entry_url"].startswith("https://www.aena.es/")
+
+
 def test_manifest_is_byte_stable_read_only_and_has_fifteen_native_handoffs(prepared):
     state, workers = prepared
     before = copy.deepcopy(state)

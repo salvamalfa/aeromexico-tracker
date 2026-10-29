@@ -90,8 +90,10 @@ descarga, candidato validado, incorporación y aprobación/publicación.
 Aerocivil utiliza la aceptación operacional vigente con supuestos documentados,
 sin volver verdadero su estado de confirmación oficial. La respuesta pendiente
 ya no bloquea por sí sola. Datos faltantes o fallos de disponibilidad sí conservan
-sus controles. El financiero Viva publicado el 28/oct sigue sujeto a verificación
-real; solo entonces fechar/actualizar el evento, sin inventar su publicación.
+sus controles. Viva 3T26 está verificado e incorporado en PR177, con publicación
+documental del 28/oct. Cotejar sus recibos físicos y vincularlos al estado antes
+de fechar el evento; después verificar la ronda conjunta, sin repetir su ingesta
+ni inferir que la incorporación individual acredita todos los productos.
 
 Antes de adquirir, `round` valida receta, pasos y dependencias, productos y
 controles; no debe generar red ni Bronze para descubrir un error estático.

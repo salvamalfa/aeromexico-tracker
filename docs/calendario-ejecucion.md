@@ -27,11 +27,12 @@ La mañana se representa a las 08:00 en `America/Mexico_City`, con
 `timing_mode=flexible_schedule`: no es una hora de publicación de fuente.
 No se genera una regla diaria o semanal ni se extrapola 2027.
 
-Viva 3T26 tiene publicación reportada el 28/oct; su verificación está en curso,
-no se trata como un reporte aún no publicado. El estado conserva fecha nula
-hasta comprobar el documento y su día oficial junto con Aeroméxico y Volaris.
-Si el último día confirmado es el 28/oct, la fecha calculada será **30/oct,
-provisional hasta esa comprobación**. La fecha depende de la publicación real,
+Viva 3T26 está incorporado y verificado en [PR177](https://github.com/salvamalfa/aeromexico-tracker/pull/177),
+con publicación documental del 28/oct. Falta trasladar y cotejar sus recibos
+físicos en el estado canónico, junto con los de Aeroméxico y Volaris; esa
+vinculación no equivale a repetir la ingesta ni a confirmar la ronda conjunta.
+Hasta entonces, la fecha propuesta es **30/oct**, condicionada a que el último
+día confirmado entre los tres siga siendo el 28/oct. La fecha depende de la publicación real,
 no del día en que termine la revisión. `refresh_reports` reutiliza el cálculo
 de dos hábiles y agrupa a siete días naturales o menos. Una fecha ya fijada
 o una ronda empezada no se cambia silenciosamente. El 30/oct dista 18 días del
@@ -174,11 +175,11 @@ el payload es nulo y exige reconciliación. No se mueve a mañana por defecto.
 ### Activación futura y recuperación de su creación
 
 La capacidad nativa conocida crea tareas habilitadas y no admite crearlas
-apagadas. Por eso no se invoca durante esta preparación. Tras la autorización
-específica del dueño, el coordinador realiza estos pasos una sola vez:
+apagadas. Por eso no se invoca durante esta preparación. Una vez verificadas las condiciones de la autorización
+ya recibida, el coordinador realiza estos pasos una sola vez:
 
 1. Comprobar el estado canónico y las tareas nativas existentes. Conservar la
-   referencia exacta de la autorización condicional. Verificar Viva y sus fechas,
+   referencia exacta de la autorización condicional. Cotejar los recibos de Viva y sus fechas,
    los datos requeridos con replay/global de la cadencia real y la capacidad nativa
    de despacho. Aerocivil requiere su prueba operacional positiva, no respuesta
    oficial; las fuentes faltantes no pasan por tener supuestos. Registrar
@@ -271,7 +272,8 @@ de originales, Gold, sitio, aprobaciones, Noticias o workflows.
 
 - Completar la entrega de la política operacional/despacho con revisión y CI
   del head final y serializar su integración con el hilo principal.
-- Terminar la verificación de Viva 3T26 y los datos requeridos de la ronda;
+- Vincular los recibos verificados de Viva 3T26 al estado y comprobar los datos
+  requeridos de la ronda con la política vigente;
   entonces el coordinador puede ejecutar la autorización condicional ya recibida,
   con una sola automatización. Este hilo de preparación no la crea.
 - Conservar Aerocivil como seguimiento de confirmación oficial, sin bloquear

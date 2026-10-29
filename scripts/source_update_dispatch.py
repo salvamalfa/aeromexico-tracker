@@ -19,7 +19,7 @@ from src.source_updates.calendar import local_time, report_day
 from src.source_updates.catalog import FAMILIES, ROOT, load_catalog, product_map
 from src.source_updates.checks import period_end
 from src.source_updates.collection import safe_workspace
-from src.source_updates.recipes import acquisition_config
+from src.source_updates.recipes import acquisition_config, resolve_entry
 
 SKILLS = {
     "corporate": "airline-update-corporate",
@@ -58,6 +58,8 @@ def source_map() -> dict:
     for key, product in sorted(product_map().items()):
         source = sources[product["source_key"]]
         recipe = acquisition[key]
+        entry_url = resolve_entry(recipe["entry_ref"])
+        discovery_url = resolve_entry(recipe["discovery_ref"]) if recipe.get("discovery_ref") else entry_url
         mapped.append(
             {
                 "product": key,
@@ -77,7 +79,9 @@ def source_map() -> dict:
                         "no instalar sondeo por publicación."
                     )
                 ),
-                "discovery_page": source["official_page_url"],
+                "source_catalogue_discovery_page": source["official_page_url"],
+                "acquisition_entry_url": entry_url,
+                "discovery_page": discovery_url,
                 "acquisition_reference": "config/source_update_acquisition.json",
                 "entry_reference": recipe["entry_ref"],
                 "procedure": recipe["procedure"],
@@ -101,6 +105,8 @@ def source_map() -> dict:
             "official_publication_date": None,
             "publication_trigger": "Revisión editorial del mes objetivo en la misma ronda mensual de datos.",
             "discovery_page": None,
+            "source_catalogue_discovery_page": None,
+            "acquisition_entry_url": None,
             "acquisition_reference": "src/source_updates/editorial_news.py",
             "entry_reference": "native_search_and_publisher_reading",
             "procedure": (
