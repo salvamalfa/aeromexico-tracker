@@ -224,3 +224,72 @@ def test_revision_support_transition_is_diagnostic_and_cannot_use_future_baselin
             "viva_financials",
             {"silver/viva_financial_native": previous},
         )
+
+
+def test_q3_closed_edition_binding_requires_exact_original_and_keeps_revision_uncertainty(
+    q3_native, monkeypatch
+):
+    from src.source_updates import availability_viva_financials as proof
+    from src.source_updates.closed_editions import accepted
+
+    item = dict(
+        product="viva_financials",
+        adapter="viva_financial",
+        period="2026Q3",
+        workspace=str(ROOT / "tmp/source-updates/synthetic-no-files"),
+        receipt_id="a" * 32,
+        candidate_as_of="2026-10-29T08:00:00Z",
+        availability={"source_scope": proof.SCOPE},
+    )
+    result = dict(
+        status="checks_passed",
+        report_period="2026Q3",
+        effective_as_of=item["candidate_as_of"],
+        retention_receipt_sha256="b" * 64,
+    )
+    row = dict(
+        source_url=proof.URL,
+        sha256=proof.SHA,
+        source_file="SYNTHETIC-q3.pdf",
+        http_status=200,
+        download_method="httpx",
+        bytes=336146,
+        downloaded_at="2026-10-29T06:37:58.284944+00:00",
+    )
+    frame = q3_native.copy()
+    frame.loc[frame.edition.eq("2026Q3"), "source_hash"] = proof.SHA
+    monkeypatch.setattr(proof, "originals", lambda *_args: ({"pdf": (b"SYNTHETIC", row)}, "b" * 64))
+    monkeypatch.setattr(proof.pd, "read_parquet", lambda *_args: frame)
+    cutoff = "2026-11-17T18:00:00Z"
+    value = proof.verify(item, result, cutoff)
+    assert value["latest_available_period"] is None
+    assert value["validated_closed_edition"]["revision_check"]["status"] == "not_checked"
+    assert not value["validated_closed_edition"]["source_observation_current_for_round"]
+    assert accepted(
+        item,
+        dict(
+            status="checks_passed",
+            latest_source_availability_verified=False,
+            source_availability_evidence=value,
+        ),
+    )
+    for key, bad in (
+        ("sha256", "c" * 64),
+        ("source_url", proof.URL.replace("3T26", "2T26")),
+        ("download_method", "manual"),
+        ("http_status", 403),
+    ):
+        saved = row[key]
+        row[key] = bad
+        with pytest.raises(ValueError):
+            proof.verify(item, result, cutoff)
+        row[key] = saved
+    for changed in (
+        {**item, "period": "2026Q2"},
+        {**item, "availability": {"source_scope": proof.SCOPE, "known_new_edition": True}},
+    ):
+        with pytest.raises(ValueError):
+            proof.verify(changed, result, cutoff)
+    frame.loc[frame.edition.eq("2026Q3"), "source_hash"] = "c" * 64
+    with pytest.raises(ValueError):
+        proof.verify(item, result, cutoff)

@@ -1,4 +1,4 @@
-"""Reuse three reviewed closed editions; observation and revision checks stay separate."""
+"""Reuse reviewed closed editions; observation and revision checks stay separate."""
 
 import json
 import re
@@ -14,6 +14,7 @@ SCOPES = {
     "gap_official_manual_target_v1": ("gap_traffic", "airport_group", "2026M09"),
     "asur_visible_reconstruction_target_v1": ("asur_traffic", "airport_group", "2026M09"),
     "volaris_Q3_visible_reconstruction_target_v1": ("volaris_sec", "carrier_source", "2026Q3"),
+    "viva_Q3_official_retained_target_v1": ("viva_financials", "viva_financial", "2026Q3"),
 }
 
 
@@ -113,7 +114,7 @@ def evidence(item, cutoff, observed, *, precision, source_url, original_sha=None
     scope = item["availability"]["source_scope"]
     identity = (item["product"], item["adapter"], item["period"])
     if SCOPES.get(scope) != identity:
-        raise ValueError("Closed-edition policy is limited to its three reviewed product/period bindings")
+        raise ValueError("Closed-edition policy is limited to its reviewed product/period bindings")
     if precision not in {"day", "timestamp"} or "known_new_edition" in item["availability"]:
         raise ValueError("Unknown observation precision or known new edition requires validation")
     if precision == "timestamp" and local_time(observed) > local_time(cutoff):
