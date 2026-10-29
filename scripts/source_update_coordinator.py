@@ -408,8 +408,13 @@ def run(workspace: Path, *, request: dict | None = None, action: dict | None = N
                     if previous["sha256"] != digest(action):
                         raise ValueError("Operation ID reused with different arguments")
                 else:
+                    if calendar.local_time(action["at"]) < calendar.local_time(
+                        state.get("last_recorded_at", state["prepared_as_of"])
+                    ):
+                        raise ValueError("Action predates the last recorded transition")
                     transition(state, action, workspace)
                     state["operations"][operation] = {"sha256": digest(action), "action": action}
+                    state["last_recorded_at"] = action["at"]
                     persist(workspace, state)
     else:
         state = load(workspace / "state.json")

@@ -389,3 +389,23 @@ def test_changed_holidays_fail_before_mutation_and_future_action_is_rejected(led
     with pytest.raises(ValueError, match="holiday inputs changed"):
         bind(workspace)
     assert (workspace / "state.json").read_bytes() == before
+
+
+def test_reconciliation_cannot_predate_dispatch_and_jump_over_retry_delay(ledger):
+    workspace, _, output = ledger
+    key = output["next_trigger"]["pending_task_keys"][0]
+    bind(workspace)
+    dispatch(workspace, key)
+    action = {
+        "at": "2026-11-10T08:00:00-06:00",
+        **finish_action(
+            key,
+            "retry",
+            "retroactive-retry",
+            reason="technical",
+            confirmed_stopped_or_not_sent=True,
+            reconciliation_reference="synthetic-stop",
+        ),
+    }
+    with pytest.raises(ValueError, match="predates the last recorded"):
+        coordinator.run(workspace, action=action, now=DUE)
