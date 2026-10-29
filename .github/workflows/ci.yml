@@ -53,8 +53,8 @@ jobs:
       # Pyflakes errors (unused/undefined names, dead assignments) across the
       # code CI ships. tests/ is excluded for now: pytest fixtures imported by
       # name read as unused imports there.
-      - name: Ruff pyflakes check on src/, scripts/ and CI measurement tools
-        run: uv run ruff check --select F src scripts .github/ci
+      - name: Ruff pyflakes check on src/ and scripts/
+        run: uv run ruff check --select F src scripts
 
       # Only these modules are ruff-formatted so far (see REPO_MAP.md);
       # the rest of the tree is not yet covered.
@@ -63,13 +63,12 @@ jobs:
           uv run ruff format --check
           src/dashboard/international_routes.py
           src/analysis_agent/lifecycle.py
-          .github/ci/profile_pytest.py
-          .github/ci/ci_pytest_inventory.py
 
       # These two hashed tools are separate from the approved runtime lock.
       - name: Install and check the pinned CI test tools
         run: |
-          uv --no-config pip install --python .venv/bin/python --only-binary :all: --no-deps --require-hashes -r .github/ci-test-tools.txt
+          uv --no-config pip install --python .venv/bin/python \
+            --only-binary :all: --no-deps --require-hashes -r .github/ci-test-tools.txt
           uv pip check --python .venv/bin/python
 
       # data/warehouse.duckdb, data/silver, data/bronze raw captures, private
@@ -91,19 +90,15 @@ jobs:
             && git diff --quiet "$PUBLICATION_BASE_COMMIT" HEAD -- site; then
             pytest_args+=(--financial-publication-base "$PUBLICATION_BASE_COMMIT")
           fi
-          mkdir -p test-results
-          # One draft measurement: warm imports, then compare both modes on
-          # this exact runner, checkout, interpreter and installed tool set.
-          uv run --no-sync pytest --collect-only "${pytest_args[@]}" > test-results/collection-warmup.txt
-          uv run --no-sync python .github/ci/profile_pytest.py --label public-serial --workers 0 -- "${pytest_args[@]}"
-          uv run --no-sync python .github/ci/profile_pytest.py --label public-parallel --workers 2 -- "${pytest_args[@]}"
+          uv run --no-sync pytest -n 2 --dist=loadfile --max-worker-restart=0 \
+            "${pytest_args[@]}" --junitxml=test-results/public.xml
 
       - name: Retain public test timings
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: public-test-results
-          path: test-results/
+          path: test-results/public.xml
           if-no-files-found: ignore
           retention-days: 7
 

@@ -113,10 +113,13 @@ La CI remota del head corregido y la integración son controles distintos.
   perfil público. Revisión independiente del head corregido favorable y cero
   hilos abiertos. Calendario, candidatos y publicaciones permanecieron intactos.
 
-- **CI y suite, mejora acotada verificada:** preparación compartida del snapshot
-  en pruebas de conversación y lifecycle/Ruff antes del perfil público, sin
-  retirar casos. La [medición canónica](REPO_MAP.md#eficiencia-de-pruebas-y-ci)
-  distingue ahorro focal, memoria y perfil completo sin ahorro observado.
+- **CI y suite, mejora global medida:** dos procesos por archivo conservan todos
+  los casos del perfil público. Una pareja en el mismo runner pasó de 993,75 a
+  536,64 s (46,0 % observado), con 5.451 casos y 29 subpruebas aprobados e IDs y
+  resultados iguales. CPU +5,7 % y RSS agregado +97,2 %: el coste se documenta
+  en la [medición canónica](REPO_MAP.md#eficiencia-de-pruebas-y-ci). El ensayo
+  adicional de fixtures fue descartado. Lifecycle/Ruff, validaciones y límites
+  90/120 s se conservan; ninguna cifra garantiza tiempos futuros.
 
 - **AFAC aeroportuario septiembre, verificado localmente:** descarga real desde
   Chrome local, original 705.225 bytes/SHA comprobado; 3.510 filas, nueve meses,

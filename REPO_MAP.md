@@ -163,30 +163,61 @@ publicación existente con su verificador liberado, sin aprobar el runtime nuevo
 Registra también el tiempo total del subproceso, CPU y pico de memoria; no
 incluyas instalaciones en un lado y las excluyas del otro.
 
-El ensayo de paralelismo compara el perfil público completo con cero y dos
-workers de pytest-xdist, en ese orden y en el mismo job de CI. Se conservan
-los casos de cada archivo juntos (`--dist=loadfile`) y no se reinician workers
-que fallen. Los dos modos usan el mismo checkout, intérprete, dependencias,
-pins y filtros. La [distribución oficial](https://pytest-xdist.readthedocs.io/en/stable/distribution.html)
-describe esa agrupación; el ahorro global sigue pendiente de esta comparación.
+CI ejecuta el perfil público con dos procesos de pytest-xdist y
+`--dist=loadfile`: cada archivo conserva juntos sus casos y fixtures. Un
+worker que falle no se reinicia. Las dos herramientas están fijadas con
+versiones y hashes en [`.github/ci-test-tools.txt`](.github/ci-test-tools.txt).
+La instalación separada conserva el lock de runtime y exige `uv pip check`;
+`--no-sync` mantiene esa instalación durante pytest.
 
-Las dos herramientas de CI están fijadas con hashes en
-[`.github/ci-test-tools.txt`](.github/ci-test-tools.txt), separadas del lock de
-runtime. Se instalan sin dependencias implícitas y se exige `uv pip check`.
-El [medidor temporal](.github/ci/profile_pytest.py) conserva CPU, RSS del mayor
-hijo y una suma muestreada del RSS simultáneo de su árbol de procesos.
-Esta suma puede contar páginas compartidas más de una vez. La
-[colección y los reportes por proceso](.github/ci/ci_pytest_inventory.py)
-permiten comparar IDs, resultados, exclusiones y subpruebas sin usar un
-resultado anterior para omitir o aprobar pruebas. Los artefactos del job
-conservan esa evidencia durante siete días.
+La [pareja completa en CI40902930996](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40902930996)
+corrió primero secuencial y después con dos procesos en el mismo job y runner
+`runnervm48cm3`, de cuatro CPU. Usó el mismo árbol del commit `ab940a0`, Python 3.13.18,
+pytest 9.1.1, xdist 3.8.0, dependencias, datos, pins y filtros. Ambos modos
+aprobaron **5.451 casos y 29 subpruebas**, con nueve omisiones y 106 exclusiones.
+Coinciden los 5.460 IDs principales, 16.380 reportes de fase y las 29 identidades y
+resultados de subpruebas. Las exclusiones se verifican en los inventarios de
+cada proceso; xdist puede omitir su cuenta en el texto terminal.
+
+| Perfil público completo | Secuencial | Dos procesos | Cambio observado |
+|---|---:|---:|---:|
+| Tiempo del subproceso pytest | 993,75 s | 536,64 s | −46,0 % |
+| CPU acumulada, incluido el medidor | 996,80 s | 1.054,00 s | +5,7 % |
+| RSS agregado muestreado | 1.489,7 MiB | 2.937,0 MiB | +97,2 % |
+
+Se acepta el intercambio de CPU y memoria por 457,11 s menos de espera en la
+capacidad ya asignada. Es una sola pareja; no garantiza esos tiempos futuros
+ni describe el job entero, los datos privados o el navegador. El RSS es la
+suma simultánea muestreada de los procesos cada 0,2 s: puede duplicar páginas
+compartidas o perder picos breves. El máximo del mayor hijo es otra métrica y
+se conserva por separado. La [distribución oficial](https://pytest-xdist.readthedocs.io/en/stable/distribution.html)
+explica la agrupación utilizada.
+
+El [registro canónico](docs/referencias/ci-efficiency-20261029.json) conserva
+comandos, hashes, entorno, CPU, memoria y límites; el
+[detalle comprimido](docs/referencias/ci-global-efficiency-20261029-cases.json.gz)
+conserva IDs, resultados y fases de todos los casos. La instrumentación fue
+temporal y no queda en el CI recurrente. Sus fuentes se recuperan en el
+[medidor del commit fijo](https://github.com/salvamalfa/aeromexico-tracker/blob/ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5/.github/ci/profile_pytest.py)
+y su [registro por proceso](https://github.com/salvamalfa/aeromexico-tracker/blob/ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5/.github/ci/ci_pytest_inventory.py).
+Para reproducir el protocolo, usa ese checkout, instala las dependencias
+bloqueadas y las herramientas con hashes, conserva los pins externos ya
+aprobados y ejecuta los modos 0 y 2 con el mismo entorno. No mezcles esta pareja
+remota con tiempos de otro head o del cloud local.
+
+Se descartó el ensayo adicional de lector compartido en tres módulos:
+bajó el focal de 206,67 a 131,22 s, pero el completo pasó de 3.209,43 a 3.463,51 s y
+terminó con un fallo del CLI a 90 s y un error del verificador histórico a 120 s.
+El focal subió de 447,1 a 700,5 MiB de máximo del mayor hijo. El cambio fue
+revertido; sus datos y los dos resultados distintos permanecen en la evidencia.
+No se atribuye causalidad de los timeouts a la fixture ni se declara ahorro
+global de ese ensayo.
 
 El smoke de runtime rechaza antes el pin financiero ausente o vacío cuando
-el recibo existe en el sitio elegido. Las entradas admisibles siguen pasando
-por el `Snapshot` completo. El modo `--fixture-only` conserva su raíz propia;
-no acredita el sitio publicado. Los límites de 90 y 120 segundos de las
-pruebas y del verificador histórico se conservan.
-
+el recibo existe dentro del sitio elegido. Las entradas admisibles siguen
+pasando por el `Snapshot` completo. El modo `--fixture-only` conserva su raíz
+propia y no acredita el sitio publicado. Los límites de 90/120 s y las verificaciones
+históricas se conservan.
 
 ## Recetas
 
