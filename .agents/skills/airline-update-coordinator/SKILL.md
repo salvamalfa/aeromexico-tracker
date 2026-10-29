@@ -37,6 +37,64 @@ y su apéndice en `docs/catalogo-fuentes-calendario.md`.
 8. Entregar resumen y pendientes en español claro. Adjuntar evidencia técnica.
    Aprobación de calendario no aprueba contenido ni concede activación.
 
+## Despacho nativo por fuente y skill
+
+El agente coordinador ejecuta los handoffs nativos; el CLI no crea subagentes.
+Antes de operar, comprobar que el host expone `collaboration.spawn_agent` y
+sus herramientas de seguimiento o un mecanismo nativo equivalente comprobado.
+Si falta esa capacidad, conservar el bloqueo y no afirmar que hubo despacho.
+Usar `python -m scripts.source_update_dispatch --help` y el mapa generado por
+`source_map()` para resolver cada producto a una de las ocho skills reales.
+El manifiesto del evento liga ruta y SHA de la skill, producto, periodo, corte,
+publicación confirmada conocida o nula, fecha consolidada y candidato aislado.
+
+1. Cargar el estado canónico. La autorización recibida es condicional a Viva
+   verificado, datos requeridos comprobados y delegación nativa verificada.
+   Comprobar los recibos reales antes de registrar que esas condiciones se
+   cumplieron. No son una aprobación de publicación o tesis.
+2. Generar el manifiesto exacto del evento. En ejecución, registrar
+   `dispatch_intent` ANTES de cada envío con `execution_mode=isolated_skill_worker`,
+   su `worker_workspace` disjunto y un único token de dueño para ese lote.
+   Si no hay ID nativo del turno, usar `owner_lease_id=local_lease:<token-local>`
+   y mantener los IDs nativos desconocidos nulos; el token no es un ID del servicio.
+   Consultar capacidad real y despachar por tandas si no hay ranuras libres;
+   esperar capacidad no crea un reintento de fuente ni cambia la fecha de la ronda.
+   No enviar un producto derivado antes de disponer de sus padres verificados.
+3. Invocar realmente los envelopes `jobs[].native_call` con la herramienta
+   nativa. Cada subagente lee la skill y ejecuta los pasos pertinentes; los
+   productos independientes pueden correr en paralelo en workspaces disjuntos
+   bajo el mismo dueño. No compartir Bronze ni permitir que un worker escriba
+   el ledger, Gold activo o el workspace de otro.
+4. Retener la respuesta real y registrar `acknowledge` con los IDs observados.
+   Si solo se recibe `native_task_name`, conservarlo con `native_response_sha256`;
+   mensaje/turno desconocidos permanecen nulos. Un acuse no es finalización.
+   Resultado incierto: consultar el worker existente por su identificador y
+   mantener la intención; nunca crear otro para resolver ausencia de respuesta.
+5. Cada skill hace colección/retención y pasos Bronze→Silver→Gold/linaje cuando
+   su adaptador los admite. Noticias tiene su evidencia editorial y candidato
+   propio. El coordinador verifica y consolida resultados; no vuelve a transformar
+   todo con un rebuild universal ni inventa capas a partir de directorios vacíos.
+6. Retener el recibo del worker sin reescribirlo y crear un wrapper operativo
+   local que ligue `task_key`, el `intent_id` real y un `receipt_id` local rotulado
+   como tal, más las rutas/hashes reales del worker. Solo el coordinador escribe
+   ese wrapper y el estado común. Ejecutar los comprobadores dedicados y el global
+   antes de cerrar la ronda; conservar resultados independientes y pendientes.
+   Esa consolidación acredita candidatos y controles; no vuelca por sí sola sus
+   Gold al dataset activo ni concede aprobación de una publicación nueva.
+
+El ensayo `rehearsal_plan_only` comprueba delegación/lectura de skill y vistas
+previas reales, con recibos de herramienta nativa; no verifica datos futuros,
+no usa autorización falsa ni mueve el calendario para ensayar. Separar ensayo,
+descarga, candidato validado, incorporación y aprobación/publicación.
+
+Aerocivil utiliza la aceptación operacional vigente con supuestos documentados,
+sin volver verdadero su estado de confirmación oficial. La respuesta pendiente
+ya no bloquea por sí sola. Datos faltantes o fallos de disponibilidad sí conservan
+sus controles. Viva 3T26 está verificado e incorporado en PR177, con publicación
+documental del 28/oct. Cotejar sus recibos físicos y vincularlos al estado antes
+de fechar el evento; después verificar la ronda conjunta, sin repetir su ingesta
+ni inferir que la incorporación individual acredita todos los productos.
+
 Antes de adquirir, `round` valida receta, pasos y dependencias, productos y
 controles; no debe generar red ni Bronze para descubrir un error estático.
 La fecha de un reporte central debe ser posterior al cierre del trimestre y

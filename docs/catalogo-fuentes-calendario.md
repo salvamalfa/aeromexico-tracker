@@ -637,6 +637,26 @@ habitual; por ejemplo, un código aeroportuario nuevo requiere una referencia
 válida aunque aparezca durante la ronda mensual. No se admiten resultados sin
 sus dependencias para evitar un bloqueo.
 
+**Decisión vigente del dueño, 29 de octubre: Aerocivil utilizable con supuestos.**
+La respuesta oficial deja de bloquear por sí sola el calendario. Se mantienen
+la selección literal `TIPO_VUELO=S` y `TRAFICO=I`, su interpretación operativa
+provisional como regular/internacional y las etiquetas AMX/SLI derivadas de la
+fuente. No se presentan como leyenda o atribución jurídica confirmadas. La
+política `aerocivil_operational_assumptions_20261029_v1` solo se adjunta después
+del replay real: exige observaciones no vacías, conteos conciliados, periodo,
+originales, hashes, referencia y linaje válidos, y las huellas de descripción
+y definiciones ya revisadas. No hace opcional el producto ni suple datos
+faltantes, otra edición semántica o disponibilidad desconocida.
+
+`semantic_acceptance_verified` y `agent_eligible` permanecen falsos. El estado
+es **utilizable con supuestos pendientes de confirmación oficial**; la advertencia
+y los códigos originales se conservan. Una modificación de las definiciones o
+descripción no hereda esta aceptación. Cuando llegue la respuesta, cotejarla y,
+si contradice los supuestos, versionar y recalcular solo los resultados
+afectados, conservando originales y cálculos anteriores. No repetir la consulta
+ya enviada. Esto sustituye el bloqueo por falta de leyenda de las notas
+anteriores; no cambia sus hechos históricos ni autoriza publicaciones o tesis.
+
 Mensual: 14 productos de datos R y una tarea editorial R en el calendario común.
 RSS/GDELT son descubrimiento opcional; los C conservan sus dependencias al utilizarse.
 
@@ -660,7 +680,7 @@ Trimestral: siete productos R, diez C y diez O en el plan actual de 27 tareas.
 |---|---|---|
 | `am_financials`, `volaris_sec`, `viva_financials` | R | Expediente financiero/operativo primario de las tres entidades para el trimestre solicitado: magnitudes ya definidas, monedas, escalas, balances y flujos separados, y notas de preliminar/no auditado. Un parser de una edición anterior no acredita otra nueva. |
 | `banxico`, `fuel`, `equities` | R | Contexto y agregados trimestrales de las mismas series mensuales, con días cubiertos. No fuerza que una serie de inflación o tasa tenga observación diaria. |
-| `aerocivil` | R | Movimientos y atribución del alcance colombiano declarado, con leyenda oficial del conjunto exacto. No pasajeros, red completa ni cobertura trimestral inferida de un mes. Sigue bloqueado. |
+| `aerocivil` | R | Movimientos del alcance colombiano declarado, utilizables con los supuestos operacionales documentados arriba y datos realmente verificados. La leyenda y atribución oficiales siguen pendientes como seguimiento; no pasajeros, red completa ni cobertura trimestral inferida de un mes. |
 | `am_sec`, `bmv_xbrl` | C | Si aportan una partida, una definición o una revisión necesaria para las métricas del expediente. Prioridad de fuente no es equivalencia. Sin prueba de la métrica faltante, el resultado afectado sigue bloqueado. |
 | `h10` | C | Referencia cambiaria separada ante falta de FIX; no cierre contable sustitutivo. |
 | `aicm_slots`, `airports_reference` | C | Si se incorpora programación o se necesita un código/cruce de aeropuertos. Los slots no acreditan vuelos realizados. Una versión histórica válida puede sustentar un dato histórico, sin probar actualidad. |

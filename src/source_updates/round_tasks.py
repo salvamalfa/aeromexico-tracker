@@ -3,6 +3,7 @@
 import re
 from pathlib import Path
 
+from src.source_updates.aerocivil_operational import accepted as aerocivil_accepted
 from src.source_updates.calendar import local_time
 from src.source_updates.collection import safe_workspace
 from src.source_updates.editorial_news import run, sha
@@ -82,13 +83,7 @@ def calendar_guards(guards, cadences, indexed, outcomes):
             not item
             or not item["used"]
             or result.get("status") != "checks_passed"
-            or (
-                key[1] == "aerocivil"
-                and (
-                    result.get("semantic_acceptance_verified") is not True
-                    or "official_service_code_legend_pending" in result.get("source_conditions", [])
-                )
-            )
+            or (key[1] == "aerocivil" and (not aerocivil_accepted(result)))
         ):
             failures.append(f"{key[0]}:{key[1]}:required_calendar_prerequisite_not_verified")
     return failures
@@ -119,6 +114,16 @@ def calendar_tasks(recipe, outcomes, required):
             status=outcomes.get(i["id"], {}).get("status", "not_verified"),
             prepared_for_review=outcomes.get(i["id"], {}).get("status") == "checks_passed",
             kind="optional_discovery" if i["product"] in NEWS_PROVIDERS else "source_update",
+            **(
+                {
+                    "operational_acceptance": outcomes[i["id"]]["operational_acceptance"],
+                    "official_confirmation": False,
+                }
+                if i["product"] == "aerocivil"
+                and aerocivil_accepted(outcomes.get(i["id"], {}))
+                and outcomes[i["id"]].get("operational_acceptance")
+                else {}
+            ),
         )
         for i in recipe["items"]
         if i["used"]

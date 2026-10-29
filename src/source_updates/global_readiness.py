@@ -13,6 +13,7 @@ from pathlib import Path
 
 from src.pipeline.offline import block_network
 from src.source_updates import readiness, round_tasks
+from src.source_updates.aerocivil_operational import accepted as aerocivil_accepted
 from src.source_updates.calendar import (
     business_day,
     local_time,
@@ -277,11 +278,10 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
         reason = None
         if result.get("status") != "checks_passed":
             reason = "not_verified"
-        elif item["product"] == "aerocivil" and (
-            result.get("semantic_acceptance_verified") is not True
-            or "official_service_code_legend_pending" in result.get("source_conditions", [])
-        ):
+        elif item["product"] == "aerocivil" and not aerocivil_accepted(result):
             reason = "official_service_code_legend_pending"
+        elif item["product"] == "aerocivil" and result.get("operational_acceptance"):
+            coverage_warnings.append(f"{item['id']}:usable_with_assumptions_pending_official_confirmation")
         if reason:
             message = f"{item['cadence']}:{item['product']}:{reason}"
             blockers.append(message)
@@ -302,19 +302,13 @@ def evaluate(recipe: dict, outcomes: dict) -> dict:
             calendar_blockers.append(f"{item['id']}:current_source_availability_not_verified")
     by_id = {i["id"]: i for i in all_items}
     dependency_cache = {}
+
     def dependencies_verified(item):
         if item["id"] in dependency_cache:
             return dependency_cache[item["id"]]
         valid = all(
             outcomes.get(key, {}).get("status") == "checks_passed"
-            and (
-                by_id[key]["product"] != "aerocivil"
-                or (
-                    outcomes[key].get("semantic_acceptance_verified") is True
-                    and "official_service_code_legend_pending"
-                    not in outcomes[key].get("source_conditions", [])
-                )
-            )
+            and (by_id[key]["product"] != "aerocivil" or (aerocivil_accepted(outcomes[key])))
             and dependencies_verified(by_id[key])
             for key in item["depends_on"]
         )
