@@ -29,7 +29,15 @@ def editorial_site(request):
         anchor as financial_anchor,
     )
 
-    if not (SITE / "publication_manifest.json").is_file():
+    manifest_path = SITE / "publication_manifest.json"
+    if not manifest_path.is_file():
+        from scripts.check_pages_publication import VERIFIERS
+
+        proof_present = any((SITE / name).exists() or (SITE / name).is_symlink() for name, _ in VERIFIERS)
+        if manifest_path.exists() or manifest_path.is_symlink() or proof_present:
+            raise AssertionError(
+                "Publication receipt requires its manifest; existing proof/manifest is incomplete"
+            )
         _unavailable(request, "Editorial candidate has not been assembled")
     try:
         profile = verifier_for(SITE, ROOT)
