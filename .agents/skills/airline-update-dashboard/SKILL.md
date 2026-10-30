@@ -190,6 +190,37 @@ no dividirlos entre dos ni convertir un faltante en cero.
    desarrollo y no publica un expediente incompleto. Nunca usar `--ui-only` para
    introducir datos nuevos.
 
+## Publicar la corrección de movimientos Aerocivil
+
+Para un handoff `release_kind=movements`, usar exclusivamente
+`src.publish.movements_update`. Preparar una solicitud privada
+`aerocivil_movements_request_v1`: perfil de fuente con ruta/SHA físicos, siete
+registros publicados exactos y autorización con ruta/SHA. El perfil reproduce
+originales, metadatos y certificación nativa de julio. Mantener `period=2026Q3`
+del job y `period=2026M07` del binding; no sustituirlos ni mover la captura.
+
+1. Ejecutar `python -m src.publish.movements_update --inspect <solicitud>` con
+   `authorization: null` si falta retener el consentimiento. Revisar la proyección
+   y `authority_scope`. Retener únicamente consentimiento auténtico del dueño,
+   con ese scope exacto, en la ruta canónica privada por SHA descrita en
+   `src/publish/README.md`; completar su referencia en la solicitud.
+2. Ejecutar `--prepare <solicitud>`, revisar y confirmar el ancla
+   `config/publish/aerocivil-movements-release.json`. No crear eventos de aprobación
+   de tesis ni cambiar cohortes históricas. Los pins no autorizan por sí solos.
+3. Con código y ancla confirmados, ejecutar
+   `python -m src.publish.movements_update --request <solicitud> --out site/`
+   y `python -m src.publish.movements_scope site/`. El gate verifica el baseline
+   liberado completo, todas las cohortes y el replay físico antes/después del
+   build, preserva finanzas y siete tesis y realiza el intercambio atómico.
+4. Verificar la red internacional por periodos y entidades afectados: movimientos
+   provisionales, fuente/captura, cobertura mensual real, salidas N/D cuando
+   corresponda. No dividir movimientos entre dos ni llamarlos vuelos regulares.
+   Conservar todas las cifras ajenas al alcance y recursos históricos. Un fallo
+   del perfil específico bloquea; no usar UI-only ni otro verificador como salida.
+5. Continuar integración y QA servido del siguiente apartado. Un build no acredita
+   despliegue; conservar job, data_version, source_binding y hashes exactos para
+   cerrar el mismo handoff sin una tesis financiera o un monitor adicional.
+
 ## Integración, despliegue y resultado real
 
 1. Validar esquema/privacidad, identidades, hashes, cobertura y diferencias respecto
