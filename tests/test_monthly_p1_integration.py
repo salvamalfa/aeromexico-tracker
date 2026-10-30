@@ -151,3 +151,30 @@ def test_recovery_rejects_a_redirected_scratch_directory(tmp_path):
         with frozen_target_baseline(repo, release_spec("f" * 40)):
             pytest.fail("Redirected scratch cannot receive a recovered baseline")
     assert not list(external.iterdir())
+
+
+@pytest.mark.parametrize(
+    "name,digest",
+    [
+        ("market.schema.json", "3ac4a80fbeadea2b6c4eea6ee6d906acf24b1cf1202b295bde0b86b32b2d0008"),
+        ("market_demand.schema.json", "420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf"),
+    ],
+)
+def test_monthly_schema_changes_preserve_exact_historical_contracts(name, digest, tmp_path):
+    import hashlib
+    from pathlib import Path
+    from src.web_export.contract_versions import resolve_contract
+
+    root = Path(__file__).resolve().parents[1]
+    archived = resolve_contract(root / "contracts/web", name, digest)
+    assert hashlib.sha256(archived.read_bytes()).hexdigest() == digest
+    assert archived.parent.name == digest
+    copied = tmp_path / "contracts/web"
+    target = copied / "versions" / digest / name
+    target.parent.mkdir(parents=True)
+    target.write_bytes(archived.read_bytes())
+    (copied / name).write_bytes(b"{}")
+    assert resolve_contract(copied, name, digest) == target
+    target.write_bytes(b"{}")
+    with pytest.raises(ValueError, match="exact version unavailable"):
+        resolve_contract(copied, name, digest)
