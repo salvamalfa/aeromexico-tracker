@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-30 · Handoffs por producto y publicación por aerolínea
+
+- Cola privada por fuente, periodo y versión, con intenciones anteriores a
+  cada despacho nativo, deduplicación por contenido y resultados independientes.
+- Perfil de análisis 3T26 de Viva y Volaris con replay de originales, cifras
+  vinculadas a Python, atribuciones y pauta ejecutiva de 200–300 palabras.
+  Las publicaciones anteriores conservan sus contratos y versiones.
+- Skill de dashboard y publicación acotada por emisor: datos validados y
+  texto aprobado recorren controles separados; cada actualización preserva
+  históricos y las otras aerolíneas y comprueba baseline, fuentes y sitio servido.
+- El replay de una cohorte materializa sus candidatos en un espacio temporal
+  físico, con inventario y hashes, para repetir sus comprobaciones completas.
+  Las candidatas y los expedientes privados permanecen fuera del PR público.
+
 ## Actualización financiera Aeroméxico 3T26
 
 - Modalidad explícita para actualizar las cuatro tarjetas existentes, series y
