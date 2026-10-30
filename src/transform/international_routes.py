@@ -22,6 +22,7 @@ from src.transform.stage9_lineage import (_make_artifact_id, make_record_id, bui
 
 TABLE = 'fact_international_route_observations'
 VERSION = 'international_routes_v3'
+AEROCIVIL_VERSION = 'international_routes_aerocivil_movements_v4'
 
 AENA_MONTHS = {
     'ENERO': 1, 'FEBRERO': 2, 'MARZO': 3, 'ABRIL': 4,
@@ -68,9 +69,11 @@ def aena_airport(value, mapping):
         if fragment in label: return codes
     return None
 
-def normalize(source, rows, artifact, airports):
-    """Accept only regular, identified operators, keeping unsupported metrics null."""
+def normalize(source, rows, artifact, airports, *, aerocivil_operators=('AMX','SLI')):
+    """Keep each source's selected scope; Aerocivil S/I meaning remains provisional."""
     result=[]
+    if not set(aerocivil_operators) <= {'AMX','SLI','VIV','VOI'}:
+        raise ValueError('Unreviewed Aerocivil operator selection')
     for index,r in enumerate(rows,1):
         passengers=seats=departures=operations=None
         observation_scope='carrier_route';airport_iata=None;metric_key='combined'
@@ -111,15 +114,19 @@ def normalize(source, rows, artifact, airports):
             marketer=None
         elif source=='aerocivil':
             operator=r['explotador']
-            if operator not in ('AMX','SLI') or r['tipo_vuelo']!='S' or r['trafico']!='I': continue
+            if operator not in aerocivil_operators or r['tipo_vuelo']!='S' or r['trafico']!='I': continue
             year,month=int(r['anio']),int(r['mes']);origin,dest=r['origen'],r['destino']
             # The Colombian endpoint must be the recording airport. This excludes duplicated remote observations.
             local=origin if origin.startswith('SK') else dest
             if r['aeropuerto_operacion']!=local: raise ValueError('Unexpected reporting airport')
             expected='SALIDA' if local==origin else 'LLEGADA'
             if r['tipo_operacion']!=expected: raise ValueError('Direction/reporting mismatch')
-            departures=number(r['totaloperaciones']);marketer=r.get('empresa')
-            definition='recorded regular international operations; passengers/seats unavailable'
+            operations=number(r['totaloperaciones']);marketer=None;metric_key='operations'
+            if operations is None or operations > 2**53 - 1 or not operations.is_integer():
+                raise ValueError('Aerocivil movements require an explicit integer; missing is not zero')
+            definition=('Recorded airport movements at the Colombian reporting airport under literal '
+                        'tipo_vuelo=S and trafico=I codes; legend pending. Commercial/AOC labels are '
+                        'source-derived. Not passenger, seat or departure counts')
         elif source=='caa':
             if r['airline_name']!='AEROMEXICO' or r['scheduled_charter']!='S': continue
             if (r['reporting_airport'],r['origin_destination'])!=('HEATHROW','MEXICO CITY'):
@@ -138,10 +145,11 @@ def normalize(source, rows, artifact, airports):
             if origin not in airports or dest not in airports: raise ValueError(f'Unmapped airport {origin}/{dest}')
             a,b=airports[origin],airports[dest]
             origin_iata,dest_iata=a['airport_iata'],b['airport_iata']
-            if departures is None or departures<=0: continue
+            if source!='aerocivil' and (departures is None or departures<=0): continue
         elif observation_scope=='carrier_airport':
             origin_iata=dest_iata=None;origin=dest=None
         record_source='aena' if source.startswith('aena_') else source
+        parser_version=AEROCIVIL_VERSION if source=='aerocivil' else VERSION
         row=dict(source_system=record_source,observation_scope=observation_scope,metric_key=metric_key,
                  operator_icao=operator,marketing_carrier=marketer,period_id=f'{year}M{month:02}',
                  origin_iata=origin_iata,dest_iata=dest_iata,origin_icao=origin,dest_icao=dest,
@@ -149,8 +157,11 @@ def normalize(source, rows, artifact, airports):
                  passengers=passengers,seats=seats,departures=departures,operations=operations,load_factor=None,
                  metric_definition=definition,source_file=artifact['file'],source_hash=artifact['sha256'],
                  source_url=artifact['url'],downloaded_at=artifact['downloaded_at'],published_at=None,
-                 source_locator=f'record:{index}',parser_version=VERSION,agent_eligible=False)
-        row['record_id']=make_record_id(TABLE,dict(source=source,sha256=artifact['sha256'],locator=index,parser=VERSION))
+                 source_locator=f'record:{index}',parser_version=parser_version,agent_eligible=False)
+        if source=='aerocivil':
+            row.update(commercial_designator_as_reported=r.get('empresa') or None,
+                       source_flight_type_code=r['tipo_vuelo'],source_traffic_code=r['trafico'])
+        row['record_id']=make_record_id(TABLE,dict(source=source,sha256=artifact['sha256'],locator=index,parser=parser_version))
         row['artifact_id']=_make_artifact_id(artifact['file'],artifact['sha256'])
         result.append(row)
     return result
@@ -160,8 +171,16 @@ def validate(frame):
     if frame.record_id.duplicated().any(): raise ValueError('Duplicate original locator')
     keys=['source_system','observation_scope','metric_key','operator_icao','marketing_carrier','period_id','origin_iata','dest_iata','airport_iata']
     # Aerocivil partitions operations by empresa and explotador. Preserve that
-    # native grain; missing/misspelled empresa never replaces the known AOC.
-    if frame.duplicated(keys).any(): raise ValueError('Duplicate route-month requires reconciliation')
+    # native grain; empresa never replaces the source-derived explotador label.
+    grain=frame.copy()
+    if 'commercial_designator_as_reported' in grain:
+        mask=grain.source_system.eq('aerocivil')
+        grain.loc[mask,'marketing_carrier']=grain.loc[mask,'commercial_designator_as_reported']
+    if grain.duplicated(keys).any(): raise ValueError('Duplicate route-month requires reconciliation')
+    co=frame[frame.source_system.eq('aerocivil')]
+    if not co.empty and (not co.metric_key.eq('operations').all() or co.departures.notna().any()
+                         or co.operations.isna().any() or not co.operations.mod(1).eq(0).all()):
+        raise ValueError('Aerocivil requires recorded movements, never departures')
     for key in ('passengers','seats','departures','operations'):
         if (frame[key].dropna()<0).any(): raise ValueError('Negative metric')
     if frame.agent_eligible.any(): raise ValueError('Historical eligibility not established')
@@ -207,7 +226,8 @@ def run():
             'periods':{s:sorted(g.period_id.unique()) for s,g in gold.groupby('source_system')},
             'silver':str(silver/'observations.parquet'),'gold':str(PATHS.gold/f'{TABLE}.parquet'),
             'checks':['hashes','locators','native-grain uniqueness','nonnegative metrics','operator identity','direction','carrier-airport kept separate from market-route','null unsupported metrics'],
-            'historical_agent_eligible':False,'parser_version':VERSION}
+            'historical_agent_eligible':False,'parser_version':VERSION,
+            'parser_versions_by_source':{s:sorted(g.parser_version.unique()) for s,g in gold.groupby('source_system')}}
     PATHS.quality.mkdir(parents=True,exist_ok=True)
     (PATHS.quality/'international_routes.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps(report,indent=2))

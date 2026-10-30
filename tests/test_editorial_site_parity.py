@@ -32,14 +32,16 @@ def editorial_site(request):
     manifest_path = SITE / "publication_manifest.json"
     assert not manifest_path.is_symlink(), "Publication manifest cannot be a symlink"
     if not manifest_path.is_file():
+        from scripts.check_pages_publication import VERIFIERS
+
         assert not manifest_path.exists(), "Publication manifest must be a regular file"
         assert not any(
             (SITE / name).exists() or (SITE / name).is_symlink()
-            for name in (PROOF, FINANCIAL_PROOF, "issuer-publication.json")
+            for name, _ in VERIFIERS
         ), "An existing publication receipt requires its manifest"
         _unavailable(request, "Editorial candidate has not been assembled")
     try:
-        profile = verifier_for(SITE)
+        profile = verifier_for(SITE, ROOT)
     except (ValueError, OSError, KeyError, TypeError) as error:
         raise AssertionError(f"Invalid publication verification selection: {error}") from error
     assert profile in {
@@ -47,8 +49,9 @@ def editorial_site(request):
         "src.publish.editorial",
         "src.publish.financial_scope",
         "src.publish.issuer_scope",
+        "src.publish.movements_scope",
     }, f"Unsupported publication verifier: {profile}"
-    if profile == "src.publish.issuer_scope":
+    if profile in {"src.publish.issuer_scope", "src.publish.movements_scope"}:
         checker = request.getfixturevalue("verify_financial_publication")
         verify_current_publication(SITE, ROOT, checker)
         spec = anchor(ROOT)
@@ -87,11 +90,12 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
     from scripts.check_pages_publication import verifier_for
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
 
-    if verifier_for(SITE) == "src.publish.issuer_scope":
-        from src.publish.issuer_scope import anchor as issuer_anchor
-        from src.publish.issuer_scope import preserved_files as issuer_preserved
+    module = verifier_for(SITE, ROOT)
+    if module in {"src.publish.issuer_scope", "src.publish.movements_scope"}:
+        from importlib import import_module
 
-        inherited = issuer_preserved(SITE, ROOT, issuer_anchor(ROOT))
+        scope = import_module(module)
+        inherited = scope.preserved_files(SITE, ROOT, scope.anchor(ROOT))
         assert ANALYSIS in inherited
         assert "data/v1/news.json" in inherited
         assert any(p.startswith("data/v1/flights/") for p in inherited)

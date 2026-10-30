@@ -28,9 +28,9 @@ def test_extension_survives_warehouse_rebuild(tmp_path,monkeypatch):
 
 def test_actual_operator_and_unsupported_metrics():
     row=normalize('aerocivil',[CO],ARTIFACT,AIRPORTS)[0]
-    assert row['operator_icao']=='AMX' and row['marketing_carrier']=='DIFFERENT'
+    assert row['operator_icao']=='AMX' and row['marketing_carrier'] is None and row['commercial_designator_as_reported']=='DIFFERENT'
     assert row['passengers'] is None and row['seats'] is None and row['load_factor'] is None
-    assert row['departures']==30 and row['source_locator']=='record:1'
+    assert row['departures'] is None and row['operations']==30 and row['source_locator']=='record:1'
     other={**CO,'empresa':'AMX','explotador':'OTHER'}
     assert normalize('aerocivil',[other],ARTIFACT,AIRPORTS)==[]
     assert normalize('aerocivil',[{**CO,'tipo_vuelo':'N'}],ARTIFACT,AIRPORTS)==[]
@@ -53,7 +53,7 @@ def test_gold_consumption_and_month_windows(flight_payload):
     network=payload['international_networks']['2026Q2']
     assert network['totals']==dict(passengers=None,seats=None,departures=None)
     assert network['agent_eligible'] is False
-    sources={'Brasil · ANAC','Colombia · Aerocivil','Reino Unido · CAA'}
+    sources={'Brasil · ANAC','Reino Unido · CAA'}
     additions=[r for r in network['routes'] if any(c['kind']=='observed' and c['source_label'] in sources for c in r.get('flight_components',[]))]
     assert {c['source_label'] for r in additions for c in r['flight_components'] if c['kind']=='observed'}==sources
     for route in additions:

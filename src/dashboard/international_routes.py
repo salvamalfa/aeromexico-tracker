@@ -9,6 +9,7 @@ from src.dashboard.map_periods import refresh_network_availability
 from src.dashboard.flight_cells import admitted_estimates, apply_flight_cells, international_cells
 from src.dashboard.aicm_map import add_aicm_schedules
 from src.dashboard.map_layers import supported_estimate_items
+from src.dashboard.recorded_movements import LABEL as MOVEMENT_LABEL, movement_payload
 
 LABELS = {"anac": "Brasil · ANAC", "aerocivil": "Colombia · Aerocivil", "caa": "Reino Unido · CAA"}
 OMA_LABEL = "OMA · rutas documentadas"
@@ -392,8 +393,13 @@ def extend_networks(
                     ),
                     source_hashes=sorted(group.source_hash.unique()),
                     record_ids=sorted(group.record_id.unique()),
-                    operation_status="operated_observed",
-                    carrier_role="operator_reporting_carrier",
+                    **({"recorded_movements": movement_payload(group)} if source == "aerocivil" else {}),
+                    operation_status="recorded_movements_provisional"
+                    if source == "aerocivil"
+                    else "operated_observed",
+                    carrier_role="source_derived_operator_label_unconfirmed_AOC"
+                    if source == "aerocivil"
+                    else "operator_reporting_carrier",
                     marketing_carrier=None,
                     agent_eligible=False,
                 )
@@ -568,6 +574,13 @@ def extend_networks(
                 authorities=route_frame,
             ),
         )
+        for route in network["routes"]:
+            if movement := route.get("recorded_movements"):
+                route["coverage_note"] += " · " + movement["definition"]
+                network["coverage_by_source"][MOVEMENT_LABEL] = sorted(
+                    set(network["coverage_by_source"].get(MOVEMENT_LABEL, []) + movement["observed_months"])
+                )
+        network["coverage_by_source"].pop(LABELS["aerocivil"], None)
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.
         activity = []

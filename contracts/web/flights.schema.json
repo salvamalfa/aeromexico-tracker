@@ -483,10 +483,109 @@
         "directions": { "type": "array", "items": { "$ref": "#/$defs/direction" } },
         "monthly": { "type": "array", "items": { "$ref": "#/$defs/monthly_item" } },
         "flight_components": { "type": "array", "items": { "$ref": "#/$defs/flight_component" } },
+        "recorded_movements": { "$ref": "#/$defs/recorded_movements" },
         "carrier_breakdown": {
           "type": "object",
           "description": "Industria only: passengers of each airline (dashboard entity key) on this route.",
           "additionalProperties": { "type": "number" }
+        }
+      }
+    },
+
+    "recorded_movements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "source_label",
+        "observed_months",
+        "definition",
+        "provisional",
+        "official_classification_confirmed",
+        "agent_eligible",
+        "flight_type_code",
+        "traffic_code",
+        "components"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_label": {
+          "type": "string"
+        },
+        "observed_months": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definition": {
+          "type": "string"
+        },
+        "provisional": {
+          "const": true
+        },
+        "official_classification_confirmed": {
+          "const": false
+        },
+        "agent_eligible": {
+          "const": false
+        },
+        "flight_type_code": {
+          "const": "S"
+        },
+        "traffic_code": {
+          "const": "I"
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operator_icao",
+              "origin_iata",
+              "destination_iata",
+              "period_id",
+              "source_hash",
+              "source_locator",
+              "commercial_designator_as_reported",
+              "operations"
+            ],
+            "properties": {
+              "operator_icao": {
+                "type": "string"
+              },
+              "origin_iata": {
+                "type": "string"
+              },
+              "destination_iata": {
+                "type": "string"
+              },
+              "period_id": {
+                "type": "string"
+              },
+              "source_hash": {
+                "type": "string"
+              },
+              "source_locator": {
+                "type": "string"
+              },
+              "commercial_designator_as_reported": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "operations": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
         }
       }
     },

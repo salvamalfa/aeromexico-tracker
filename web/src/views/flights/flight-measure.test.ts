@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Route } from "../../types/domain";
-import { flightBreakdown, flightKind, flightTotals, flightScheduleNote } from "./flight-measure";
+import { flightBreakdown, flightKind, flightTotals, flightScheduleNote, movementNote } from "./flight-measure";
 
 const route = {
   market_key: "JFK<>MEX", origin: { iata: "MEX", city: "MEX", lat: 1, lon: 1 }, destination: { iata: "JFK", city: "JFK", lat: 2, lon: 2 },
@@ -51,4 +51,20 @@ describe("schedule headline boundary", () => {
     expect(flightBreakdown(actual)).toBe("143 observados");
     expect(flightScheduleNote(actual)).toBe("147 programados · AICM · JFK → MEX (fuera del total)");
   });
+});
+
+const movement: NonNullable<Route["recorded_movements"]> = {
+  count: 347, source_label: "Aerocivil", observed_months: ["2026M07"],
+  definition: "Movimientos en el aeropuerto colombiano; no salidas", provisional: true,
+  official_classification_confirmed: false, agent_eligible: false,
+  flight_type_code: "S", traffic_code: "I", components: [],
+};
+it("keeps July movements outside flight classification, totals and comparison", () => {
+  const only = { ...route, departures: null, flight_components: [], recorded_movements: movement };
+  expect(flightKind(only)).toBe("missing");
+  expect(flightTotals(only)).toEqual({});
+  expect(movementNote(only)).toContain("347 movimientos registrados");
+  expect(movementNote(only)).toContain("2026M07");
+  expect(movementNote(only)).toContain("no son salidas");
+  expect(flightTotals({ ...only, departures: 12, operation_status: "estimated_from_retained_frequencies" })).toEqual({ estimated: 12 });
 });

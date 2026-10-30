@@ -96,7 +96,7 @@ def _audit(tmp_path, cell, system="bts_t100"):
 
 
 @pytest.mark.parametrize(
-    "system,regular", [("bts_t100", 80), ("aerocivil", 80), ("anac", None), ("caa", None)]
+    "system,regular", [("bts_t100", 80), ("anac", None), ("caa", None)]
 )
 def test_authoritative_counts_pass_without_promoting_unknown_regularity(tmp_path, system, regular):
     cell = _component(system)

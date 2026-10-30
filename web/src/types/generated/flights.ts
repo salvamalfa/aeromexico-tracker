@@ -180,6 +180,7 @@ export interface Route {
   directions: Direction[];
   monthly: MonthlyItem[];
   flight_components?: FlightComponent[];
+  recorded_movements?: RecordedMovements;
   /**
    * Industria only: passengers of each airline (dashboard entity key) on this route.
    */
@@ -241,6 +242,42 @@ export interface FlightComponent {
   service_class_departures?: {
     [k: string]: number;
   };
+}
+export interface RecordedMovements {
+  count: number;
+  source_label: string;
+  observed_months: string[];
+  definition: string;
+  provisional: true;
+  official_classification_confirmed: false;
+  agent_eligible: false;
+  flight_type_code: "S";
+  traffic_code: "I";
+  /**
+   * @minItems 1
+   */
+  components: [
+    {
+      operator_icao: string;
+      origin_iata: string;
+      destination_iata: string;
+      period_id: string;
+      source_hash: string;
+      source_locator: string;
+      commercial_designator_as_reported: string | null;
+      operations: number;
+    },
+    ...{
+      operator_icao: string;
+      origin_iata: string;
+      destination_iata: string;
+      period_id: string;
+      source_hash: string;
+      source_locator: string;
+      commercial_designator_as_reported: string | null;
+      operations: number;
+    }[]
+  ];
 }
 export interface AenaAirportActivity {
   airport_iata: string;

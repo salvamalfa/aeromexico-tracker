@@ -70,10 +70,10 @@ export function renderRouteMode(): void {
   const previousLabel = periodId
     ? mapPeriodLabel(`${Number(periodId.slice(0, 4)) - 1}${periodId.slice(4)}`) : "el año anterior";
   $("map-route-title")!.textContent = state.routeView === "change"
-    ? "Rutas con mayores cambios" : "Rutas con vuelos en el histórico";
+    ? "Rutas con mayores cambios" : "Rutas con cifras en el histórico";
   $("map-route-summary")!.textContent = state.routeView === "change"
     ? `${visible.filter((route) => routeChangePercent(route)! > 0).length} aumentos · ${visible.filter((route) => routeChangePercent(route)! < 0).length} caídas vs. ${previousLabel} · mismos meses disponibles`
-    : `${visible.length} de ${all.length} rutas con cifra de vuelos${presence}`;
+    : `${visible.length} de ${all.length} rutas · vuelos y movimientos identificados por separado${presence}`;
   for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
     $(id)!.setAttribute("aria-pressed", String(state.routeView === view));
   }
@@ -167,7 +167,8 @@ export async function renderNetworkPeriod(periodId: string): Promise<boolean> {
   if (state.networkMode !== "international") state.selectedRegion = null;
   // Sin vuelos propios no hay registro que mostrar: son rutas donde la fuente
   // solo confirma presencia de Aeromexico, sin volumen atribuible.
-  const quantified = (state.network.routes || []).filter((route) => finite(route.departures));
+  const quantified = (state.network.routes || []).filter((route) =>
+    finite(route.departures) || finite(route.recorded_movements?.count));
   // Una región elegida en otro periodo puede no existir en este (p. ej.
   // Europa antes de 2T26): sin normalizar, el mapa y la tabla quedarían
   // vacíos y el botón activo ni siquiera se mostraría.

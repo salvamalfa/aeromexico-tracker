@@ -33,6 +33,7 @@ export function flightSource(route: Route): string {
 }
 
 export function flightSources(route: Route): string[] {
+  if (!finite(route.departures)) return [];
   if (route.flight_components?.length) {
     return [...new Set(route.flight_components.map(c => c.source_label))].filter(Boolean).sort();
   }
@@ -40,6 +41,12 @@ export function flightSources(route: Route): string[] {
     return ["AeroDataBox · frecuencias históricas estimadas"];
   }
   return [route.source_label ?? "Fuente no detallada"];
+}
+
+export function movementNote(route: Route): string {
+  const measure = route.recorded_movements;
+  if (!measure) return "";
+  return `${new Intl.NumberFormat("es-MX").format(measure.count)} movimientos registrados · Aerocivil · ${measure.observed_months.join(", ")} · clasificación provisional; no son salidas`;
 }
 
 // Components, rather than a market-wide status, drive sums and labels.

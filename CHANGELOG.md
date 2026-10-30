@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-10-30 · Revisiones semánticas del handoff
+
+- La comparación incluye contexto primario financiero verificado: una revisión
+  de perspectiva puede disparar análisis aunque las cifras no cambien. Conserva
+  precisión íntegra y distingue texto del reporte de metadatos de descarga.
+- Aerocivil excluye fecha de captura, identificador de artefacto y URL del
+  criterio de cambio; conserva operador, códigos, definición y elegibilidad.
+- Los trabajos existentes conservan IDs, versiones, intentos y recibos tras
+  reproducir su expediente físico previo. La nueva identidad no fuerza una
+  nueva tesis ni amplía los perfiles de periodos admitidos.
+- Código y pruebas de comparación no acreditan nuevas capturas, aprobaciones,
+  publicación de datos o tesis ni verificación de un despliegue.
+
+## 2026-10-30 · Movimientos de Aerocivil separados de salidas
+
+- El normalizador histórico conserva `totaloperaciones` como movimientos y
+  deja salidas, pasajeros y asientos nulos. Empresa/explotador y los códigos
+  S/I conservan su carácter provisional; no se certifica la leyenda oficial.
+- Vuelos conserva un campo de movimientos con meses, sentidos y procedencia,
+  separado de vuelos observados, estimados, programación y sus agregados.
+  Las auditorías rechazan atribuir esos movimientos a vuelos regulares.
+- Replay acotado de tres ediciones originales: 38 mapas existentes y el
+  agregado de cobertura, con igualdad por operador, mes, sentido y hash.
+  Conserva componentes estimados y solo retira comparativos previos cuando
+  su origen Aerocivil está demostrado.
+- La corrección requiere regenerar Gold y payloads desde originales retenidos;
+  código preparado y pruebas no equivalen a publicación ni a activar evidencia.
+- El despacho distingue la corrección de los 39 archivos de vuelos existentes,
+  incluido el agregado de Industria, de una publicación editorial. Conserva las
+  siete tesis y no autoriza periodos ni valores de fuente nuevos.
+
 ## 2026-10-30 · Volaris 3T26: tesis e indicadores por emisor
 
 - Entrega combinada del análisis aprobado de Volaris y su proyección financiera,

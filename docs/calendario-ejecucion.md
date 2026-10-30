@@ -106,12 +106,31 @@ cruzada material necesita una decisión analítica explícita con fuentes y moti
 Los productos sin ruta ejecutable quedan fuera del handoff hasta implementarla;
 esa limitación no acredita que el flujo completo esté terminado.
 
-`data_version` identifica las filas de negocio de las tablas fact Gold candidatas.
-Conserva campos de significado y precisión numérica, excluye IDs de linaje y
-metadatos de captura. Cambiar sólo descarga, ruta o fecha no genera otra tesis.
-Una revisión numérica, de unidad, cobertura o definición sí cambia la versión.
-Una reversión posterior también se registra como una llegada nueva. Se conserva
-la versión previa y su motivo; nunca se sobreescribe el histórico para deduplicar.
+`data_version` usa `source_semantic_identity_v2`: filas de negocio de las tablas
+fact Gold candidatas y contexto primario financiero normalizado, leído de los
+originales retenidos con hash verificado. Conserva cada bit numérico, unidades,
+definiciones, operador, códigos literales y elegibilidad. Excluye linaje y datos
+de transporte (`downloaded_at`, `artifact_id`, `source_url`). En AM 3T26 compara
+sólo el cuerpo financiero del Exhibit 99.1; en Viva, texto de los PDF admitidos;
+en Volaris 3T26, tablas y notas de la reconstrucción autorizada y fijada por hash.
+No representa esa reconstrucción como bytes SEC originales. Los comentarios
+HTML, espacios y metadatos del contenedor no son una revisión de negocio.
+Un cambio material de explicación o perspectiva puede crear análisis aunque
+Gold numérico sea idéntico. El trabajo de datos conserva su comprobación propia
+y puede cerrar con `no_visual_change`; no publica por un cambio de hash solamente.
+
+Al observar una fuente posterior, el outbox reproduce también el expediente
+físico de la cabeza anterior. Una cabeza legacy conserva `data_version`, IDs,
+recibos e intentos existentes: sólo añade la identidad v2 comprobada mediante
+la escritura normal de `observe` si ambas ediciones son equivalentes. `claim`
+acepta un trabajo legacy sólo si su digest v1 y hashes de salidas originales
+siguen coincidiendo con su propio replay, incluso sin observación intermedia.
+No se crea trabajo por cambiar el algoritmo; no se migra usando la edición
+nueva como si fuera la anterior. Un expediente primario faltante o no verificable
+bloquea, sin volver a comparación sólo numérica. Una revisión real o reversión
+conserva versión, evidencia y motivo anteriores. Estos controles no amplían las
+ediciones admitidas: los perfiles actuales siguen limitados a Q2/Q3 de 2026 y
+Aerocivil a su binding Q3 con mes nativo julio; un periodo nuevo exige su perfil.
 
 1. Registrar una acción privada `observe`, con `operation_id` estable y `at`
    real, mediante `python -m scripts.source_update_handoffs --workspace
@@ -204,6 +223,17 @@ filas financieras. Es un handoff de una llegada conocida, no otro monitor.
 La incorporación debe conservar la publicación y el corte comprobados; el
 evento consolidado y sus disparos existentes permanecen intactos.
 
+Aerocivil tiene un handoff de dashboard propio: trabajo `2026Q3` y dato nativo
+`source_period=2026M07`. El adaptador sólo valida ese mes con su comprobador
+dedicado y la política operacional provisional; no convierte el código S/I en
+una leyenda oficial ni acredita cobertura trimestral. Una captura idéntica no
+duplica el trabajo. Una revisión real conserva una versión nueva e historial.
+El outbox encola `release_kind=movements`, sin análisis financiero y con
+`dependency=null`; el sitio conserva las tesis y usa su gate de movimientos.
+El binding que ese gate coteja identifica el mes nativo, retención/colección,
+corte y salidas exactos. Si cambió el productor, hace falta certificación nueva
+offline en otro workspace; el fallo de fingerprint nunca se ignora.
+
 ```mermaid
 flowchart LR
   C[Calendario único / disponibilidad conocida] --> F[Agente de fuentes: producto y periodo]
@@ -214,6 +244,7 @@ flowchart LR
   A --> G{Citas, auditoría y aprobación exacta}
   G -->|pasa| D[Agente dashboard y su skill]
   O -->|datos del financiero: gráficas propias| D
+  O -->|movimientos Aerocivil provisionales| D
   O -->|sin consumidor visible| N[no_public_impact y evidencia]
   D --> P[Gate, build, PR, revisión, CI y Pages]
   P --> Q{HTTP200 y hashes servidos}
@@ -438,3 +469,36 @@ recibos separados de sus skills. No se retiran documentos ni se duplican guías.
   por esa espera; corregir los cálculos si la respuesta contradice los supuestos.
   El mes nuevo exige evidencia propia; septiembre no certifica octubre.
 - Verificar el calendario bancario 2027 antes de fechar ese año.
+
+### Corrección operacional Aerocivil en Vuelos
+
+Aerocivil tiene una ruta directa al agente de dashboard, sin exigir una tesis
+financiera. La tarea conserva `period=2026Q3` y `source_period=2026M07`; el
+adaptador valida el mes nativo y sus supuestos operativos. `release_kind=movements`
+exige el [gate específico](../src/publish/movements_scope.py) y el recibo
+`aerocivil-movements-publication.json`. Un fallo de este gate no puede caer en
+el verificador financiero ni acreditar publicación por un build válido ajeno.
+
+El perfil corrige únicamente 38 redes internacionales ya publicadas: 19 meses
+de enero de 2025 a julio de 2026 y siete trimestres de 1T25 a 3T26 de
+Aeroméxico, más abril, mayo, junio y 2T26 de Viva, Volaris e Industria.
+Corrige también la cobertura de vuelos derivada de esos componentes.
+Reproduce los tres originales retenidos de septiembre y octubre, preserva sus
+conteos por operador, sentido y mes, y los muestra como movimientos registrados
+provisionales, con salidas nulas. Julio conserva ocho observaciones y 347
+movimientos: Bogotá 187, Cali 36, Cartagena 62 y Medellín 62. No son cobertura
+trimestral completa ni confirmación oficial de servicio regular.
+
+Las estimaciones independientes de pasajeros, asientos, ocupación y frecuencia
+mensual conservan sus bytes. Las siete tesis y el resto del sitio conservan
+su baseline verificado con el productor publicado y las cohortes de aprobación
+originales. Una discrepancia de conteos detiene la corrección correspondiente;
+no se resuelve repartiendo movimientos o copiando Gold mal tipado.
+
+La [skill del coordinador](../.agents/skills/airline-update-coordinator/SKILL.md#aerocivil-hacia-vuelos-sin-análisis-financiero-intermedio)
+y la [receta del gate](../src/publish/README.md) describen el replay físico,
+certificación offline si cambia el productor, preparación de pins revisables,
+integración y QA servido. La corrección histórica no añade meses, monitor,
+frecuencia ni otra automatización. La certificación nueva conserva el corte y
+los originales anteriores; una recuperación explícita no se declara ejecución
+programada automática de extremo a extremo.

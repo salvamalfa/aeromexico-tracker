@@ -14,6 +14,8 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
+from scripts import source_update_handoff_routing as routing
+from scripts import source_update_semantic_identity as semantic
 from scripts.source_update_coordinator import digest, load, persist
 from src.source_updates import readiness
 from src.source_updates.calendar import local_time
@@ -25,26 +27,19 @@ ENTITIES = {"am_financials": "AEROMEXICO", "volaris_sec": "VOLARIS", "viva_finan
 IMPACTS = {
     **{k: [v] for k, v in ENTITIES.items()},
     **{k: [] for k in ("banxico", "fuel", "equities")},
+    "aerocivil": ["AEROMEXICO"],
 }
 CONSUMERS = [
     "src/dashboard/executive_summary.py",
     "src/dashboard/market.py",
     "src/web_export/executive.py",
     "src/web_export/market.py",
+    "src/dashboard/international_routes.py",
+    "src/dashboard/recorded_movements.py",
+    "src/web_export/flights.py",
 ]
-PROVENANCE = {
-    "record_id",
-    "source_file",
-    "source_hash",
-    "ingested_at",
-    "parser_version",
-    "source_locator",
-    "source_row_number",
-    "source_column",
-    "source_table",
-    "native_parent_record_ids",
-    "native_parent_record_id",
-}
+PROVENANCE = semantic.LEGACY_PROVENANCE
+
 SKILLS = {
     "analysis": ".agents/skills/aeromexico-tracker-analysis/SKILL.md",
     "dashboard": ".agents/skills/airline-update-dashboard/SKILL.md",
@@ -160,12 +155,14 @@ def verify_source(observation: dict, workspace: Path) -> dict:
 
 
 def verify_candidate(observation: dict, workspace: Path) -> dict:
-    item, cutoff = observation["item"], observation["as_of"]
+    item, cutoff = routing.native_item(observation["item"]), observation["as_of"]
     recipe = {"version": 1, "as_of": cutoff, "required_items": [item["id"]], "items": [item]}
     selected = readiness.preflight(recipe, workspace)[0]
     checked = readiness.check_task(selected, item["candidate_as_of"], cutoff)
     if not source_evidence_accepted(selected, checked):
         raise ValueError("This product needs its own verified availability or exact closed edition")
+    if item["product"] == "aerocivil":
+        routing.verify_movement_acceptance(checked)
     if observation.get("mode") == "validated_publication_arrival":
         import pandas as pd
 
@@ -178,8 +175,12 @@ def verify_candidate(observation: dict, workspace: Path) -> dict:
                     source_hashes.update(frame["source_hash"].dropna().tolist())
         if file_hash(original) not in source_hashes:
             raise ValueError("Publication document is not the original used by the verified financial rows")
-    identity = meaningful_data(item, checked)
-    return {"checked": checked, "data_version": digest(identity), "source_binding": observation}
+    identity = meaningful_data(observation["item"], checked)
+    return {
+        "checked": checked,
+        **semantic.versions(observation["item"], identity),
+        "source_binding": observation,
+    }
 
 
 def enqueue(
@@ -221,7 +222,9 @@ def observe(state: dict, observation: dict, workspace: Path):
     key = f"{item['product']}:{item['period']}"
     previous_id = state["heads"].get(key)
     prior = state["sources"].get(previous_id)
-    if prior and prior["data_version"] == verified["data_version"]:
+    if prior and semantic.same_observation(
+        prior, verified, lambda binding: verify_candidate(binding, workspace)
+    ):
         # New availability/capture evidence is retained without creating another thesis.
         if observation not in prior["observations"]:
             prior["observations"].append(observation)
@@ -241,9 +244,7 @@ def observe(state: dict, observation: dict, workspace: Path):
         "observations": [observation],
         "previous_source_id": state["heads"].get(key),
         "public_impact": {
-            "status": "existing_issuer_executive_projection"
-            if item["product"] in ENTITIES
-            else "no_public_impact",
+            "status": routing.impact_status(item["product"]),
             "consumer_code": {name: file_hash(ROOT / name) for name in CONSUMERS},
         },
     }
@@ -251,6 +252,8 @@ def observe(state: dict, observation: dict, workspace: Path):
     if item["product"] in ENTITIES:
         enqueue(state, "analysis", source_id, ENTITIES[item["product"]])
         enqueue(state, "dashboard", source_id, ENTITIES[item["product"]], release_kind="data")
+    elif item["product"] == "aerocivil":
+        enqueue(state, "dashboard", source_id, "AEROMEXICO", release_kind="movements")
     # Macro inputs currently have no public chart consumer. Preserve the result
     # without inventing a dashboard job or forcing an unrelated thesis rewrite.
 
@@ -270,7 +273,13 @@ def envelope(state: dict, job: dict) -> dict:
         "skill": skill,
         "ledger": str(Path(state["workspace"]) / "state.json"),
         "scope": IMPACTS[source["product"]],
-        "publication_scope": "AEROMEXICO,VIVA_AEROBUS,VOLARIS; exclude Industria and unrelated products",
+        "publication_scope": (
+            "Aerocivil correction of 39 existing flight-data payloads for AEROMEXICO, "
+            "VIVA_AEROBUS, VOLARIS and the existing INDUSTRY aggregate; preserve seven theses; "
+            "no new periods, source values, Industry editorial or unrelated products"
+            if source["product"] == "aerocivil"
+            else "AEROMEXICO,VIVA_AEROBUS,VOLARIS; exclude Industria and unrelated products"
+        ),
         "dependency_result": state["jobs"][job["dependency"]]["result"] if job["dependency"] else None,
     }
     return {
@@ -295,7 +304,7 @@ def envelope(state: dict, job: dict) -> dict:
 
 
 def expected_binding(source: dict) -> dict:
-    item = source["source_binding"]["item"]
+    item = routing.native_item(source["source_binding"]["item"])
     return {
         "product": item["product"],
         "period": item["period"],
@@ -324,45 +333,18 @@ def verify_analysis(job: dict, source: dict, result: dict) -> dict:
 
 
 def verify_release_binding(job: dict, source: dict):
-    from src.publish.issuer_scope import anchor
-
-    # verify_dashboard already checked the complete site against this committed anchor.
-    spec = anchor()
-    allowed = {"data_only"} if job["release_kind"] == "data" else {"editorial_only", "combined"}
-    if (
-        spec.get("source_binding") != expected_binding(source)
-        or spec.get("entity_key") != job["entity"]
-        or spec.get("period_id") != job["period"]
-        or spec.get("stage") not in allowed
-    ):
-        raise ValueError("Dashboard publication does not consume this exact source and release stage")
+    routing.verify_release(job, source, expected_binding(source))
 
 
 def verify_dashboard(result: dict) -> None:
-    from src.publish.verify import verify_site
-
     site = Path(result["site_path"])
     if site != (ROOT / "site").absolute():
         raise ValueError("Dashboard result must identify this checkout's generated site")
     manifest = checked_ref(result["manifest"])
     if manifest != site / "publication_manifest.json":
         raise ValueError("Publication manifest is not inside the verified site")
-    # Explicit, reviewed publication modes keep their own strict proof verifier.
-    # Never catch a failed scope verification and retry with a looser mode.
-    if (site / "issuer-publication.json").exists():
-        from src.publish.issuer_scope import verify_issuer
-
-        errors = verify_issuer(site)
-    elif (site / "financial-publication.json").exists():
-        from src.publish.financial_scope import verify_financial
-
-        errors = verify_financial(site)
-    elif (site / "editorial-publication.json").exists():
-        from src.publish.editorial import verify_editorial
-
-        errors = verify_editorial(site)
-    else:
-        errors = verify_site(site)
+    # Select one current, witnessed publication; a failed strong gate never falls back.
+    errors = routing.verify_site(site, ROOT)
     if errors:
         raise ValueError(f"Generated site failed its canonical verification: {errors}")
 
@@ -412,7 +394,7 @@ def transition(state: dict, action: dict, workspace: Path):
             raise ValueError("Only a current planned job can be sent; reconcile existing intent")
         source = state["sources"][job["source_id"]]
         fresh = verify_candidate(source["source_binding"], workspace)
-        if fresh["data_version"] != source["data_version"]:
+        if not semantic.bound_matches(source, fresh):
             raise ValueError("Source candidate changed before dispatch")
         owner = action["owner_lease_id"]
         if not isinstance(owner, str) or not owner.startswith("local_lease:") or not owner[12:]:
@@ -503,9 +485,15 @@ def transition(state: dict, action: dict, workspace: Path):
         # This is an operator assertion backed by retained evidence, not automatic proof of absence.
         job.update(status="blocked", reconciliation=action["positive_nonexecution_evidence"])
     elif kind == "continue_existing_worker":
-        if job["status"] != "blocked" or job["native_response"] is None or not is_current(state, job):
-            raise ValueError("Continue only the acknowledged blocked worker; never create a duplicate")
+        if (
+            not (job["status"] == "blocked" or (job["stage"] == "dashboard" and job["status"] == "completed"))
+            or job["native_response"] is None
+            or not is_current(state, job)
+        ):
+            raise ValueError("Continue only the current acknowledged blocked worker or completed dashboard")
         checked_ref(action["reconciliation"])
+        if job["status"] == "completed":
+            checked_ref(job["result"])
         job.update(status="running", reconciliation=action["reconciliation"])
     elif kind == "served":
         if job["stage"] != "dashboard" or job["status"] != "completed":

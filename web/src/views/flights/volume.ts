@@ -24,6 +24,14 @@ export function renderNetworkVolume(): void {
       kind === "attributed" ? "Total de mercado atribuido; operador sin confirmación exhaustiva" :
       "Operaciones reportadas por la fuente; cobertura parcial")];
   });
+  const movements = routes.filter((route) => route.recorded_movements);
+  if (movements.length) {
+    const count = movements.reduce((sum, route) => sum + route.recorded_movements!.count, 0);
+    const months = [...new Set(movements.flatMap((route) => route.recorded_movements!.observed_months))].sort();
+    cards.push(miniCard("Movimientos registrados · Aerocivil", integer.format(count),
+      `Provisional · ${months.join(", ")} · fuera de vuelos`,
+      "Códigos S/I pendientes de confirmación oficial; movimientos en el aeropuerto colombiano, no salidas. No se suman a vuelos ni acreditan cobertura trimestral completa."));
+  }
   host.innerHTML = `<div class="network-mini-kpi-grid">${cards.length ? cards.join("") : miniCard("Vuelos", "N/D", "Sin cifra publicada", "Un faltante no se convierte en cero")}</div>
     <span>Histórico conservado · tipos de cifra separados · faltantes N/D${state.presenceOnlyRouteCount ? ` · ${state.presenceOnlyRouteCount} rutas sin número de vuelos` : ""}</span>`;
 }

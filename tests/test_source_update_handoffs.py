@@ -45,8 +45,11 @@ def env(tmp_path, monkeypatch):
 
     def verify(value, workspace):
         handoffs.checked_ref(original)
+        version = value.get("synthetic_version", "a" * 64)
         return {
-            "data_version": value.get("synthetic_version", "a" * 64),
+            "data_version": version,
+            "legacy_data_version": version,
+            "meaningful_identity": {"schema_version": handoffs.semantic.SCHEMA, "sha256": version},
             "checked": {"output_sha256": {"gold/fact_test": "b" * 64}},
             "source_binding": value,
         }
@@ -430,6 +433,7 @@ def test_publication_arrival_needs_its_original_but_no_other_report_or_round_bar
         "mode": "validated_publication_arrival",
         "publication_evidence": original,
     }
+    monkeypatch.setattr(handoffs.semantic, "primary_context", lambda value: {"synthetic": "context"})
     verified = handoffs.verify_source(observation, workspace)
     assert verified["checked"] == checked
     snapshot = handoffs.checked_ref(verified["calendar_snapshot"])
@@ -515,6 +519,11 @@ def test_invalid_scoped_proof_cannot_fall_back_to_generic_site_verification(env,
     module.verify_issuer = lambda path: ["invalid strict proof"]
     monkeypatch.setitem(sys.modules, "src.publish.issuer_scope", module)
     monkeypatch.setattr(verify, "verify_site", lambda path: [])
+    from scripts import check_pages_publication
+
+    monkeypatch.setattr(
+        check_pages_publication, "verifier_for", lambda site, repo: "src.publish.issuer_scope"
+    )
     with pytest.raises(ValueError, match="invalid strict proof"):
         handoffs.verify_dashboard({"site_path": str(site), "manifest": manifest})
 

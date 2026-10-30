@@ -135,9 +135,10 @@ def international_cells(
         current = authorities[authorities.period_id.isin(months)]
         for keys, group in current.groupby(["source_system", "origin_iata", "dest_iata", "period_id"]):
             source, origin, dest, period = map(str, keys)
+            if source == "aerocivil":
+                continue  # Recorded Colombian airport movements do not establish departures.
             labels = {
                 "anac": "Brasil · ANAC",
-                "aerocivil": "Colombia · Aerocivil",
                 "caa": "Reino Unido · CAA",
             }
             cells.append(

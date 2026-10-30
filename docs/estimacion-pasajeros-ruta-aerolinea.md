@@ -938,7 +938,16 @@ Payload vigente `prototypes/vuelos/vuelos_revision.html`
 (CAA)— no son un artefacto de la regla de completitud bidireccional de
 `src/dashboard/international_routes.py`. Son un hueco de fuente: en
 `data/gold/fact_international_route_observations.parquet`, **las 147 filas de
-Aerocivil y las 2 de CAA tienen `passengers` nulo**; solo traen `departures`.
+Aerocivil y las 2 de CAA tienen `passengers` nulo**. El generador de esa
+edición asignaba incorrectamente `totaloperaciones` de Aerocivil a
+`departures`; CAA sí conserva su conteo de vuelos. La corrección vigente
+conserva Aerocivil en `operations`, con `departures` nulo, y exporta
+`recorded_movements` separado de los componentes y totales de vuelos. Los
+códigos S/I y las etiquetas empresa/explotador mantienen interpretación
+operacional provisional; no acreditan clasificación oficial ni cobertura
+trimestral completa. Una frecuencia estimada independiente puede convivir
+con esos movimientos, identificada como estimación. El consumidor rechaza
+Gold antiguo mal tipado hasta regenerarlo desde los originales retenidos.
 ANAC sí trae pasajeros (148 de 149 filas). El reporte del 2026-09-21 afirmaba
 lo contrario y queda corregido aquí.
 
@@ -1439,7 +1448,7 @@ Vuelos por el mismo camino que la nacional:
      observación y no recibe estimación;
    - todo mercado con extremo en Estados Unidos se deja a T-100, incluso si
      la estimación lo cubre;
-   - un mercado con vuelos pero sin pasajeros (slots AICM, Aerocivil, CAA,
+   - un mercado con vuelos o movimientos pero sin pasajeros (slots AICM, Aerocivil, CAA,
      OMA) recibe pasajeros estimados **solo para los meses que su propia
      fuente cubre** (CAA reporta junio: solo junio), por sentido, de modo
      que los sentidos suman el total;
@@ -1536,7 +1545,7 @@ sentidos que cubre la cifra de pasajeros mostrada; si falta uno, esa cifra
 Lima con 113–121 % en 2T26) también se oculta con
 `load_factor_status = "inconsistent_inputs"`, igual que hace nacional; no hay
 una cota inferior de 30 % en el nacional existente, así que tampoco se agregó
-aquí. La ruta con pasajeros observados por T-100, ANAC o Aerocivil que ya
+aquí. La ruta con pasajeros observados por T-100 o ANAC que ya
 trae asientos propios (T-100, o el "assentos" de ANAC) nunca se sobrescribe:
 la capacidad estimada solo llena una ruta o una dirección que ya recibía
 pasajeros estimados. `flights.js` no necesitó cambios: ya interpreta

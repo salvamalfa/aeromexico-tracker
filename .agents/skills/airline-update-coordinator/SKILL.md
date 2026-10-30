@@ -58,8 +58,17 @@ global como inventario de la ronda; no sustituye la validación individual.
    acredita el sitio servido. El build por sí solo no confirma publicación.
 7. Repetir acciones/lecturas con sus mismos IDs. Ante envío incierto consultar
    el task real antes de reenviar; el outbox no vuelve una intención a pendiente.
-   Los cambios de captura sin cambios de negocio conservan evidencia sin nueva
-   tesis. Las revisiones verdaderas preservan versiones y motivo; una revisión
+   La identidad semántica incluye hechos Gold con precisión íntegra y texto
+   primario financiero normalizado, siempre desde originales verificados. Una
+   explicación o perspectiva material nueva puede requerir análisis con cifras
+   iguales. Capturas, comentarios HTML y metadatos de contenedor no lo disparan.
+   Antes de comparar una cabeza legacy, reproducir SU expediente previo; conservar
+   sus IDs, `data_version`, recibos e intentos. `observe` sólo anota el metadato v2
+   equivalente con el escritor normal; no migrar a mano el ledger. `claim` conserva
+   la compatibilidad con el digest v1 y salidas exactas del propio trabajo. Si no
+   se verifica el primario previo, bloquear en vez de asumir equivalencia numérica.
+   Los perfiles Q2/Q3 y el ZIP Volaris admitido siguen acotados; no afirmar soporte
+   automático de un trimestre futuro. Las revisiones preservan versiones y motivo; una revisión
    cruzada necesita relevancia material documentada, no reescritura universal.
    Un bloqueo resuelto puede continuar el mismo worker nativo: retener la
    respuesta real de seguimiento y registrar `continue_existing_worker` con
@@ -262,3 +271,34 @@ prerrequisito exclusivo trimestral. Todo producto realmente utilizado y sus
 dependencias transitivas siguen verificándose, incluso si son de otra cadencia;
 no se omiten por esa separación. Las pruebas de política con resultados
 sintéticos no acreditan disponibilidad de una fuente real.
+
+## Aerocivil hacia Vuelos, sin análisis financiero intermedio
+
+La observación de Aerocivil conserva la tarea trimestral `2026Q3` y declara
+`source_period=2026M07`: el verificador recibe el mes nativo. El outbox genera
+sólo un envelope de dashboard `release_kind=movements`, independiente de las
+tesis financieras. Invocar realmente su `native_call`, retener respuesta/recibo
+y completar el mismo trabajo; el CLI no envía el envelope por sí solo.
+
+El [gate de movimientos](../../../src/publish/movements_scope.py) exige su propio
+recibo `aerocivil-movements-publication.json`; el selector de Pages y `finish`
+lo verifican sin recurrir al gate financiero si falla. Los recibos históricos
+se conservan; el selector común exige pins y una precedencia Git única para
+elegir el perfil vigente, también en los baselines archivados. Un perfil
+desconocido o una precedencia ambigua bloquean. El perfil de corrección
+cubre los 19 meses `2025M01`–`2026M07` y siete trimestres
+`2025Q1`–`2026Q3` de Aeroméxico, doce redes de Viva, Volaris e Industria
+(`2026M04`–`2026M06` y `2026Q2`) y su resumen de cobertura, ya publicados. Reproduce los originales retenidos con sus
+hashes y capturas, conserva los conteos y elimina su atribución a salidas.
+No divide movimientos, no convierte faltantes en cero, no certifica códigos
+oficiales ni activa `flight_evidence_v1`. Todas las tesis y los datos ajenos
+se preservan bajo sus cohortes publicadas.
+
+Si cambió el productor del candidato nativo, certificar de nuevo offline en
+un workspace aislado desde los mismos originales y recibos, con su corte
+original. No modificar la certificación histórica ni renovar captura/hash.
+Una recuperación fuera del workspace del trabajador original usa
+`recovery_from_validated_result`, con su evidencia y autorización; no atribuirla
+al disparo programado. Disponibilidad retenida acredita únicamente su propio
+corte. Seguir la [receta del gate](../../../src/publish/README.md) y verificar
+las 38 redes y su resumen de cobertura servidos después del despliegue; build no equivale a servido.
