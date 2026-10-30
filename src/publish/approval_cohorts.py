@@ -100,6 +100,30 @@ def _ancestor(repo, code, commit):
         raise ValueError("Cohort implementation is outside trusted publication history")
 
 
+def replacement_cohort(pending, trusted_cohorts, baseline):
+    """Resolve one explicit previous slot; never infer replacement from its date."""
+    previous = pending.get("replaces") if pending else None
+    if previous is None:
+        return None
+    if set(previous) != {"entry", "file"}:
+        raise ValueError("Replacement requires the exact prior approval and file")
+    old, new = previous["entry"], pending["entry"]
+    if (
+        manifests.analysis_identity(old) != manifests.analysis_identity(new)
+        or old["version"] == new["version"]
+        or old not in baseline["analysis_manifest"]
+        or previous["file"] not in baseline["files"]
+        or previous["file"]["path"] != pending["file"]["path"]
+    ):
+        raise ValueError("Replacement does not identify the exact previous entity/quarter/version")
+    matches = [
+        c for c in trusted_cohorts if c["analysis_manifest"] == [old] and c["files"] == [previous["file"]]
+    ]
+    if len(matches) != 1:
+        raise ValueError("Replacement cannot alter the historical anchor or a shared cohort")
+    return matches[0]
+
+
 def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=None):
     """Partition an exact trusted publication, optionally adding one reviewed pin.
 
@@ -113,6 +137,7 @@ def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=No
         raise ValueError("Cohort baseline differs from trusted publication")
     trusted_raw = _optional_config(repo, trusted_commit)
     trusted_cohorts = _cohorts(trusted_raw)
+    replaced = replacement_cohort(pending, trusted_cohorts, baseline)
     if pending is None:
         _require_working(repo, CONFIG, trusted_raw)
         configured = trusted_cohorts
@@ -122,7 +147,8 @@ def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=No
         raw = _optional_config(repo, pin_commit)
         _require_working(repo, CONFIG, raw)
         configured = _cohorts(raw)
-        if len(configured) != len(trusted_cohorts) + 1 or configured[:-1] != trusted_cohorts:
+        retained = [c for c in trusted_cohorts if c != replaced]
+        if len(configured) != len(retained) + 1 or configured[:-1] != retained:
             raise ValueError("Quarterly publication requires exactly one new cohort pin")
         expected = {"analysis_manifest": [pending["entry"]], "files": [pending["file"]]}
         if any(configured[-1][key] != value for key, value in expected.items()):
@@ -132,6 +158,9 @@ def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=No
     entries = list(baseline["analysis_manifest"])
     files = list(baseline["files"])
     if pending is not None:
+        if replaced:
+            entries.remove(pending["replaces"]["entry"])
+            files.remove(pending["replaces"]["file"])
         entries.append(pending["entry"])
         files.append(pending["file"])
     by_identity = {}
@@ -163,8 +192,8 @@ def approval_plan(repo: Path, trusted_commit: str, baseline: dict, *, pending=No
         }
     )
     covered = {manifests.analysis_identity(e) for e in historical}
-    for index, cohort in enumerate(configured):
-        history = trusted_commit if index < len(trusted_cohorts) else pin_commit
+    for cohort in configured:
+        history = trusted_commit if cohort in trusted_cohorts else pin_commit
         _ancestor(repo, cohort["implementation_commit"], history)
         for entry in cohort["analysis_manifest"]:
             identity = manifests.analysis_identity(entry)
@@ -198,6 +227,32 @@ def verify_approval_cohorts(record_paths, repo, trusted_commit, baseline, ledger
     from .frozen_data import verify_baseline_approvals
 
     groups, payloads = approval_plan(repo, trusted_commit, baseline, pending=pending)
+    if pending and pending.get("replaces"):
+        previous = pending["replaces"]
+        old = previous["entry"]
+        prior_cohort = replacement_cohort(pending, _cohorts(_optional_config(repo, trusted_commit)), baseline)
+        # Preserve and revalidate the previous ledger record; explicit selection
+        # of the new version neither revokes nor mutates its historical approval.
+        old_path = Path(ledger_root).parent / "drafts"
+        if "entity_key" in old:
+            old_path /= old["entity_key"]
+        old_path = old_path / old["period_id"] / (old["version"] + ".json")
+        prior = verify_baseline_approvals(
+            [old_path],
+            prior_cohort["implementation_commit"],
+            ledger_root,
+            include_public_payloads=True,
+        )
+        if [_analysis_manifest_entry(a) for a in prior["authorized"]] != [old] or len(prior["payloads"]) != 1:
+            raise ValueError("Prior issuer approval changed or was revoked")
+        original = _git_bytes(repo, trusted_commit, "site/" + previous["file"]["path"])
+        if (
+            len(original) != previous["file"]["bytes"]
+            or hashlib.sha256(original).hexdigest() != previous["file"]["sha256"]
+        ):
+            raise ValueError("Prior issuer file differs from its pinned publication")
+        if prior["payloads"][0] != json.loads(original):
+            raise ValueError("Prior issuer payload no longer matches its preserved publication")
     records = load_records(record_paths)
     selected = {
         (*manifests.analysis_identity(r["draft"]), r["version"]): path

@@ -44,6 +44,12 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   La lectura tiene un selector independiente. La modalidad financiera acotada añade solo los indicadores y gráficas existentes de Aeroméxico 3T26; Industria y las otras aerolíneas conservan sus cortes.
   Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
   conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
+- **Actualización por producto:** el único coordinador de fuentes conserva el
+  calendario activado y sus recibos privados. Los handoffs distinguen datos
+  validados, análisis y dashboard por aerolínea, periodo y versión; conservan
+  resultados independientes. La incorporación a gráficas y la publicación de
+  una tesis tienen controles separados. Procedimiento y límites en el
+  [contrato de ejecución](docs/calendario-ejecucion.md).
 - **Chat:** fase 2 implementada; Stage 3 completó 30 casos/34 mensajes y la
   revisión privada recibió 16 correctos y 14 problemas. El dueño autorizó el
   ajuste final de R2 sin otra evaluación pagada. R2/Sol low y las capacidades

@@ -9,12 +9,18 @@ comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 Para diseñar los siguientes lotes de datos, ver el
 [catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
 y el [cierre de las capturas AeroDataBox con histórico conservado](docs/etapas/cierre-aerodatabox-20261014.md).
-El catálogo incluye la guía de skills y del coordinador candidato
+El catálogo incluye la guía de skills y del coordinador
 (`src/source_updates/`, `python -m src.source_updates --help`). Hay planificación,
-captura aislada, pasos offline y controles explícitos. Sus ejemplos están en seco;
-no hay activación nueva, y los contratos y gates existentes siguen vigentes.
+captura aislada, pasos offline y controles explícitos. Los ejemplos siguen
+siendo vistas previas; el estado privado conserva la activación real del único calendario.
 El [contrato de ejecución y recuperación](docs/calendario-ejecucion.md) añade
-estado privado y un próximo disparo declarativo, preparado para activación.
+estado privado, despacho nativo y handoffs por producto y versión mediante
+`scripts/source_update_handoffs.py`. Los datos financieros validados pueden
+actualizar sus gráficas mientras una tesis recorre su auditoría independiente.
+La [skill de análisis](.agents/skills/aeromexico-tracker-analysis/SKILL.md) y
+la [skill de dashboard](.agents/skills/airline-update-dashboard/SKILL.md)
+describen los comandos, los recibos y la recuperación. Una fuente sin cambio
+real o sin consumidor visible conserva su comprobación sin generar otra publicación.
 
 ## Qué vive dónde
 
@@ -28,7 +34,7 @@ estado privado y un próximo disparo declarativo, preparado para activación.
 | Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–17). |
 | Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual lo consume `web/` (Vuelos, ejecutivo y análisis) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
 | Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. `flights/quarters.json` incluye además `available_periods`: el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` exporta, para cada periodo que el ledger local (`analysis_runs/`) tiene actualmente aprobado o publicado (`discover_approved_manifest`), exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
-| Gate de publicación (`site/`) | `src/publish/` | El único objeto firmado y publicado: dado uno o más registros de `analysis_runs/drafts/` ya aprobados, re-verifica cada uno con las funciones de `lifecycle.py`, exporta el payload v1 (Vuelos/ejecutivo completos, análisis solo de los periodos dados), compila `web/` con Vite y ensambla+firma `site/` (`publication_manifest.json`: commit, hash de cada contrato, SHA-256/tamaño de cada archivo, entradas del `analysis-manifest`). `src/publish/verify.py` revisa ese manifiesto sin datos privados (lo ejecuta `.github/workflows/pages.yml` antes de desplegar). Recibo intent/published en `analysis_runs/publications/` (local). Ver `src/publish/README.md` y §4.2 punto 5/Fase 5 de la auditoría. |
+| Gate de publicación (`site/`) | `src/publish/` | Publicación firmada con aprobación, fuentes, compilación y verificación. `issuer_update` separa datos y texto por emisor: conserva el baseline y reproduce la fuente exacta; datos requieren su autorización y revisión, tesis requieren el lifecycle. Pages elige el verificador del alcance publicado. Recibos en `analysis_runs/publications/` (local). Ver `src/publish/README.md`. |
 | Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript), **única** implementación publicada de las tres vistas (Lectura ejecutiva, Economía unitaria, Vuelos): HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`). Ver `web/README.md`. |
 | Chat | `src/conversational_analytics/`, `scripts/start_chat_runtime.py`, `scripts/chat/`, `Dockerfile.chat`, `railway.toml` | Backend FastAPI del chat, desplegado en Railway: capa semántica sobre el snapshot publicado (`site/data/v1/`), 13 herramientas de solo lectura con R2 (7 base y 2 por cada capacidad de rutas, métricas financieras y evidencia), proveedor OpenAI Agents API y estado en SQLite en el volumen `/data`. El panel vive en `web/src/views/chat/`. Railway solo redespliega cuando cambia un archivo de la imagen; la lista está en la configuración del servicio y versionada en `railway.toml` (ver `docs/chat/railway.md`). Ver `docs/chat/README.md`. |
 | Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |

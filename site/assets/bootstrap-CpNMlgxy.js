@@ -1,5 +1,5 @@
 const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./bootstrap-DWdhZXXN.js","./bootstrap-Bon95OId.css"])))=>i.map(i=>d[i]);
-import{o as Z,a as fe,r as me,c as P,_ as re}from"./dashboard-BvhmRDIJ.js";import{s as x}from"./state-DRn_zMGU.js";import{s as ce,a as ee,r as ve,b as ge,m as be}from"./markdown-CX2IkwMA.js";import{P as ye}from"./plotly-ZECNwRsR.js";import"./modulepreload-polyfill-B5Qt9EMX.js";const q=4e3,we=`
+import{q as Z,a as fe,k as me,c as P,_ as re}from"./dashboard-DqYEj9vX.js";import{s as x}from"./state-D9WzYKm_.js";import{s as ce,a as ee,r as ve,b as ge,m as be}from"./markdown-CX2IkwMA.js";import{P as ye}from"./plotly-ZECNwRsR.js";import"./modulepreload-polyfill-B5Qt9EMX.js";const q=4e3,we=`
     <div class="chat-resizer" role="separator" tabindex="0" aria-label="Ajustar ancho del panel de chat" aria-orientation="vertical" aria-valuemin="340" aria-valuemax="620"></div>
     <header class="chat-header">
       <div><p class="chat-kicker">Airline Tracker</p><h2>Chat analítico</h2><p class="chat-context" data-chat-context>Contexto: vista actual</p></div>

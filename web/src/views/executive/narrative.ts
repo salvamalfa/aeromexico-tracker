@@ -89,15 +89,20 @@ function validDate(value: unknown): value is string {
 // Runtime boundary: a missing entity is compatible only with the historical
 // Aeroméxico endpoint. Never use that document as another entity's fallback.
 export function validAnalysis(payload: unknown, entityKey: string, periodId: string): payload is AnalysisDocument {
+  if (!isEntityKey(entityKey) || !/^\d{4}Q[1-4]$/.test(periodId)) return false;
   if (!payload || typeof payload !== "object") return false;
   const p = payload as Record<string, unknown>;
   if (p.period_id !== periodId || typeof p.version !== "string" || !p.version.trim()) return false;
   if ((p.entity_key === undefined ? "AEROMEXICO" : p.entity_key) !== entityKey) return false;
-  if (entityKey !== "AEROMEXICO" && (
-    typeof p.period_label !== "string" || !p.period_label.trim() ||
-    !validDate(p.cutoff_date) ||
-    p.selection_mode !== "retrospective" || p.guidance_as_of !== "report_date"
-  )) return false;
+  if (entityKey !== "AEROMEXICO") {
+    if (typeof p.period_label !== "string" || !p.period_label.trim() || !validDate(p.cutoff_date)) return false;
+    const historical = p.selection_mode === "retrospective" && p.guidance_as_of === "report_date";
+    const issuerDate = entityKey === "VIVA_AEROBUS" ? "2026-10-28" : entityKey === "VOLARIS" ? "2026-10-26" : null;
+    const issuer = periodId === "2026Q3" && p.period_label === "3T26" && issuerDate !== null &&
+      p.selection_mode === "retrospective_source_edition" && p.guidance_as_of === issuerDate &&
+      validDate(p.guidance_as_of) && p.guidance_as_of <= p.cutoff_date;
+    if (!historical && !issuer) return false;
+  }
   const strings = (v: unknown): v is string[] => Array.isArray(v) && v.every((s) => typeof s === "string");
   if (typeof p.thesis !== "string" || !strings(p.context)) return false;
   if (!Array.isArray(p.summary_items) || !p.summary_items.every((s) => s &&
@@ -155,12 +160,13 @@ function escapeHtml(value: string): string {
 }
 
 function temporalNotice(analysis: AnalysisDocument): string {
-  if (!analysis.cutoff_date || analysis.selection_mode !== "retrospective") return "";
+  if (!analysis.cutoff_date || !["retrospective", "retrospective_source_edition"].includes(analysis.selection_mode ?? "")) return "";
   const parsed = new Date(`${analysis.cutoff_date}T00:00:00Z`);
   const date = Number.isNaN(parsed.getTime()) ? analysis.cutoff_date : new Intl.DateTimeFormat("es-MX", {
     day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
   }).format(parsed);
-  return `Corte de información: ${date} · Análisis retrospectivo. Las expectativas corresponden a la fecha del reporte.`;
+  const report = analysis.selection_mode === "retrospective_source_edition" ? ` (${analysis.guidance_as_of})` : "";
+  return `Corte de información: ${date} · Análisis retrospectivo. Las expectativas corresponden a la fecha del reporte${report}.`;
 }
 
 function renderDialog(analysis: AnalysisDocument, periodLabel: string, entityKey: string, entityName: string): void {

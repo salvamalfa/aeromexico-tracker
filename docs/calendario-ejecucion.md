@@ -1,12 +1,14 @@
-# Preparación operativa del calendario único
+# Calendario único y actualización independiente por producto
 
 ## Resumen
 
-**Preparado para activación**, con estado privado y disparo puntual calculado.
-No hay una automatización operativa. El dueño autorizó condicionalmente activar
-el único calendario después de comprobar Viva, los datos requeridos y el
-despacho nativo. No se pide otra vez esa decisión: se comprueban sus condiciones.
-La preparación inicial de PR175 ya está integrada y tiene CI posterior aprobada.
+El calendario privado quedó activado el **29/oct/2026**, con un único disparo
+flexible para la mañana del **30/oct**, zona `America/Mexico_City`. El acuse
+de creación y el ID vinculado están en su estado privado recuperable. Una tarea
+habilitada no demuestra ejecución: el recibo de cada fuente acredita ese tramo.
+La autorización del 30/oct amplía el alcance a los datos y las tesis validados
+de Aeroméxico, Viva y Volaris. Industria y otros productos editoriales conservan
+sus límites. El calendario, el análisis y la publicación tienen estados distintos.
 Las reglas y las dependencias de fuentes siguen en el
 [catálogo canónico](catalogo-fuentes-calendario.md).
 
@@ -28,15 +30,12 @@ La mañana se representa a las 08:00 en `America/Mexico_City`, con
 No se genera una regla diaria o semanal ni se extrapola 2027.
 
 Viva 3T26 está incorporado y verificado en [PR177](https://github.com/salvamalfa/aeromexico-tracker/pull/177),
-con publicación documental del 28/oct. Falta trasladar y cotejar sus recibos
-físicos en el estado canónico, junto con los de Aeroméxico y Volaris; esa
-vinculación no equivale a repetir la ingesta ni a confirmar la ronda conjunta.
-Hasta entonces, la fecha propuesta es **30/oct**, condicionada a que el último
-día confirmado entre los tres siga siendo el 28/oct. La fecha depende de la publicación real,
-no del día en que termine la revisión. `refresh_reports` reutiliza el cálculo
-de dos hábiles y agrupa a siete días naturales o menos. Una fecha ya fijada
-o una ronda empezada no se cambia silenciosamente. El 30/oct dista 18 días del
-17/nov, por lo que serían dos eventos dentro del mismo calendario.
+con publicación documental del 28/oct. Los siete candidatos trimestrales y sus
+32 salidas se reprodujeron al corte congelado del 29/oct en el expediente privado.
+Eso acredita candidatos, no publicación de sus datos o tesis. El último financiero
+confirmado del 28/oct fijó el evento **30/oct** con dos hábiles posteriores.
+No se cambia ese disparo ni se adelanta para probar los nuevos tramos.
+El siguiente evento mensual sigue siendo 17/nov dentro del mismo calendario.
 
 Aerocivil queda **utilizable con supuestos operacionales documentados** tras
 verificar sus datos reales; la respuesta oficial ya no bloquea por sí sola.
@@ -63,9 +62,9 @@ control global existentes deben validar ese producto y sus dependencias.
 
 | Evento del calendario único | Periodo | Estado de la fecha |
 |---|---|---|
-| Finanzas, macro/mercado y alcance colombiano trimestral | 3T26 | 30/oct propuesto si se verifica el último financiero del 28/oct; aún no activado |
-| Datos mensuales y Noticias, juntos | Octubre 2026 | 17/nov calculado con festivos verificados; aún no activado |
-| Datos mensuales y Noticias, juntos | Noviembre 2026 | 15/dic calculado con festivos verificados; aún no activado |
+| Finanzas, macro/mercado y alcance colombiano trimestral | 3T26 | 30/oct activado; ejecución se acredita con recibos |
+| Datos mensuales y Noticias, juntos | Octubre 2026 | 17/nov calculado; reprogramar el mismo ID tras reconciliar el evento anterior |
+| Datos mensuales y Noticias, juntos | Noviembre 2026 | 15/dic calculado; conservar el mismo ID |
 
 Una publicación es un hecho de la fuente, distinto del evento de ejecución.
 Un financiero primario confirmado permite avisar y preparar su paquete
@@ -74,6 +73,152 @@ la ronda consolidada; no se inventa un día 13 ni se instala un sondeo por fuent
 Los periodos propios y rezagos de AFAC/BTS se conservan.
 
 ## Apéndice técnico
+
+### Handoff por fuente, producto y periodo
+
+El [outbox por producto](../scripts/source_update_handoffs.py) conecta los
+resultados con las skills de [análisis](../.agents/skills/aeromexico-tracker-analysis/SKILL.md)
+y [dashboard](../.agents/skills/airline-update-dashboard/SKILL.md). El coordinador
+invoca sus envelopes mediante herramientas nativas del host. El CLI conserva
+intención, respuesta y recibo; no puede ejecutar herramientas del host ni
+atribuirse una publicación. Los recibos separan recuperación, ejecución
+programada, build validado y datos efectivamente servidos.
+
+La unidad es el producto validado, no el cierre de la ronda. El outbox vive en
+otro directorio privado bajo `tmp/source-updates/`, ligado al calendario canónico
+por referencia física y SHA. Una copia inmutable de los bytes observados vive
+en `evidence/calendar-<sha>.json` sólo como evidencia; no se opera como ledger.
+El progreso legítimo del calendario no invalida esa prueba. El outbox no sustituye
+el ledger canónico ni cambia horarios. Una
+observación declara su tarea, autorización, motivo, corte original y un `item`
+de readiness. `verify_source` coteja el calendario y ejecuta el verificador
+dedicado real del producto, con disponibilidad propia o edición cerrada aceptada.
+No recibe booleanos de aprobación como sustituto del replay.
+
+Después de cada fuente completada, el coordinador registra `observe` y procesa
+`ready_jobs` antes de esperar otras fuentes. Los financieros de Aeroméxico,
+Viva y Volaris generan análisis de su entidad y un trabajo independiente de
+datos para sus gráficas existentes. El segundo no espera una tesis nueva.
+Banxico, combustible y cotizaciones no alimentan actualmente las gráficas
+servidas: quedan como `no_public_impact`, con hashes de los consumidores
+auditados, sin inventar un panel ni una actualización visible. Una revisión
+cruzada material necesita una decisión analítica explícita con fuentes y motivo.
+Los productos sin ruta ejecutable quedan fuera del handoff hasta implementarla;
+esa limitación no acredita que el flujo completo esté terminado.
+
+`data_version` identifica las filas de negocio de las tablas fact Gold candidatas.
+Conserva campos de significado y precisión numérica, excluye IDs de linaje y
+metadatos de captura. Cambiar sólo descarga, ruta o fecha no genera otra tesis.
+Una revisión numérica, de unidad, cobertura o definición sí cambia la versión.
+Una reversión posterior también se registra como una llegada nueva. Se conserva
+la versión previa y su motivo; nunca se sobreescribe el histórico para deduplicar.
+
+1. Registrar una acción privada `observe`, con `operation_id` estable y `at`
+   real, mediante `python -m scripts.source_update_handoffs --workspace
+   tmp/source-updates/<outbox> --record <acción.json>`.
+2. Para cada trabajo listo, registrar `claim` con `job_id` y dueño
+   `owner_lease_id=local_lease:<token>`. El estado fija el envelope exacto antes
+   del envío. Invocar `attempt.native_call` con la herramienta nativa del host.
+3. Retener la respuesta de herramienta en un JSON físico con `native_task_name`
+   real y registrar `acknowledge` con `native_response={path,sha256}`. Los IDs
+   nativos desconocidos siguen nulos. Sin respuesta, consultar el trabajo
+   existente: una intención incierta no vuelve a `planned` ni se reenvía.
+4. Retener el recibo del trabajador y registrar `finish` con `receipt={path,sha256}`.
+   El recibo liga `job_id`, `data_version`, `entity`, `period` y estado. Un fallo
+   de Viva no impide que un trabajo de Volaris continúe. Un resultado superado
+   por datos más nuevos se conserva como `superseded` y no dispara publicación.
+5. `analysis_approved` necesita un registro físico exacto y pasa el lifecycle
+   canónico: replay, citas, auditoría y aprobación vigente. Su cápsula contiene
+   `source_binding` con producto, periodo, retención, corte y salidas/hash del
+   candidato. Otra tesis del mismo trimestre no acredita este consumo.
+   Sólo entonces se encola su trabajo editorial de dashboard. El trabajo de
+   datos validado se había encolado por separado, con `release_kind=data`;
+   ambos se serializan al escribir el sitio. El editorial usa `release_kind=editorial`.
+   Un resultado `no_material_analysis_change` mantiene la aprobación anterior
+   sólo tras la prueba física de equivalencia de Aeroméxico; no encola una
+   nueva publicación editorial. El outbox conserva ese recibo como `no_change`.
+6. `site_built_verified` pasa el gate y verificador del sitio; aún no es despliegue.
+   Tras PR, revisión, CI, merge y Pages, registrar `served` con las rutas afectadas.
+   El comando realiza GET a la URL canónica y exige HTTP200 y los mismos hashes
+   del manifiesto y payloads/páginas elegidos. Sólo entonces conserva
+   `served_verified`. Si la red falla, conservar el build y reconciliar el despliegue.
+   Un build `completed` conserva la exclusión del escritor del dashboard hasta
+   esa QA: otro trabajo no puede reemplazar `site/` ni su manifiesto mientras
+   queda pendiente verificarlo. Un fallo HTTP o de hash mantiene el bloqueo.
+   Si entretanto llega otra revisión de la misma fuente, la QA del build ya
+   completado acredita sus propios bytes y registra `is_current_source=false`.
+   No lo presenta como la versión nueva ni cambia la cabeza de datos. Tras
+   esa comprobación puede continuar el trabajo pendiente de la nueva versión.
+   `no_visual_change` también exige replay: para Viva/Volaris se reconstruye
+   la proyección de la cápsula y se compara con el sitio de referencia; para
+   Aeroméxico se ejecuta la prueba de equivalencia aprobada. El recibo conserva
+   `equivalence_proof={path,sha256}` y el verificador lo reproduce. Un texto que
+   diga «sin cambios» no sustituye esa comprobación ni acredita un despliegue.
+
+La frontera sigue siendo candidato aislado antes del gate. Ni `observe` ni
+`analysis_approved` copian tablas a Gold activo. La skill del dashboard incorpora
+únicamente los datos aprobados que utiliza, mantiene las versiones publicadas
+ajenas y genera sus gráficas antes de validar el artefacto. El gate conserva
+las comprobaciones de privacidad y aprobación. El outbox no concede
+aprobaciones ni activa evidencia candidata de Vuelos.
+
+Los registros `mode=scheduled_result` requieren tarea completada y candidato
+dentro del worker reconciliado. Si el nuevo tramo continúa resultados
+anteriores, usar `mode=recovery_from_validated_result`: conserva ese origen,
+el corte de la evidencia y la autorización actual; no se presenta como una
+ejecución automática anterior. Aplica también al 30/oct si el código de los
+nuevos tramos termina después de su actualización de fuentes.
+
+Si una corrección del código invalida una aprobación técnica **todavía no
+publicada**, la operación `refresh_analysis_approval` permite conservar el
+trabajo editorial y revisar su nueva identidad técnica. Es una recuperación
+acotada: requiere el mismo texto completo, `content_hash`, paquete, cálculos,
+producto, periodo y `data_version`; debe cambiar de verdad el código o la skill
+ligados al registro. No permite cambios de prosa o datos, revocaciones previas,
+análisis superados ni descendientes de dashboard en envío incierto, ejecutándose,
+construidos o servidos. Un worker activo debe reconciliarse antes de esta operación.
+
+El agente conserva el mismo worker y registra su nueva versión mediante el
+lifecycle normal: importación, auditoría y aprobación vigente. Después presenta
+al outbox un JSON con `action=refresh_analysis_approval`, `operation_id`, `at`,
+`job_id`, `owner_lease_id` original, `previous_result={path,sha256}` exacto,
+`receipt={path,sha256}` del nuevo `analysis_approved`,
+`review_report={path,sha256}` y `reason` concreto. El informe físico se compara
+con el audit registrado y su hash canónico; su SHA de archivo es otra identidad.
+El CLI no fabrica una aprobación. Conserva ambos recibos en `receipt_history`
+y añade referencias, motivo y aprobaciones en `technical_review_history`.
+No crea trabajos o envíos, ni cambia cabezas, fuentes o versiones de datos.
+
+Si un dashboard dependiente ya estaba trabajando, retener su recibo real de
+bloqueo y continuar ese mismo worker con `continue_existing_worker` y un
+follow-up nativo después de registrar la revisión. No reescribir su intención
+original ni volver a despacharlo. Repetir la misma operación y argumentos
+es idempotente; reutilizar su ID con otros argumentos se rechaza.
+
+`mode=validated_publication_arrival` permite procesar un financiero individual
+confirmado antes de la fecha consolidada y sin que existan los otros reportes.
+No exige que el periodo ya esté en las tareas preplanificadas. Sí exige el
+calendario único vinculado, autorización vigente, replay completo propio y
+`publication_evidence={path,sha256}` del original realmente usado por las
+filas financieras. Es un handoff de una llegada conocida, no otro monitor.
+La incorporación debe conservar la publicación y el corte comprobados; el
+evento consolidado y sus disparos existentes permanecen intactos.
+
+```mermaid
+flowchart LR
+  C[Calendario único / disponibilidad conocida] --> F[Agente de fuentes: producto y periodo]
+  F --> V{Replay, cobertura y linaje propios}
+  V -->|válido| O[Outbox: versión y destino por impacto]
+  V -->|fallo| B[Recibo y bloqueo sólo del producto]
+  O -->|financiero de una aerolínea| A[Agente de análisis y su skill]
+  A --> G{Citas, auditoría y aprobación exacta}
+  G -->|pasa| D[Agente dashboard y su skill]
+  O -->|datos del financiero: gráficas propias| D
+  O -->|sin consumidor visible| N[no_public_impact y evidencia]
+  D --> P[Gate, build, PR, revisión, CI y Pages]
+  P --> Q{HTTP200 y hashes servidos}
+  Q -->|coinciden| R[served_verified]
+```
 
 ### Un estado privado y un coordinador
 
@@ -182,11 +327,12 @@ prompt, `schedule` VEVENT sin RRULE, zona y modo flexible. **Mostrarlo no lo
 crea ni autoriza ejecutarlo.** Si está vencido o hay un escritor sin resolver,
 el payload es nulo y exige reconciliación. No se mueve a mañana por defecto.
 
-### Activación futura y recuperación de su creación
+### Activación realizada y recuperación de su creación
 
 La capacidad nativa conocida crea tareas habilitadas y no admite crearlas
-apagadas. Por eso no se invoca durante esta preparación. Una vez verificadas las condiciones de la autorización
-ya recibida, el coordinador realiza estos pasos una sola vez:
+apagadas. La creación del 29/oct ya está confirmada y vinculada; no ejecutar
+`create` otra vez. Los siguientes pasos documentan el historial y la recuperación
+de una creación incierta; su aplicación inicial ya se completó:
 
 1. Comprobar el estado canónico y las tareas nativas existentes. Conservar la
    referencia exacta de la autorización condicional. Cotejar los recibos de Viva y sus fechas,
@@ -275,17 +421,19 @@ python -m pytest tests/test_source_update_coordinator_state.py tests/test_source
 Cierre documental: conservar el script y sus regresiones como contrato de
 operación; conservar esta guía como referencia única del estado/recuperación;
 actualizar solo su enlace en `REPO_MAP.md`. Los JSON privados y sus recibos se
-conservan fuera del diff y no se suben al repositorio. No hay retiros ni cambios
-de originales, Gold, sitio, aprobaciones, Noticias o workflows.
+conservan fuera del diff y no se suben al repositorio. Estos CLI no modifican
+originales, Gold activo, sitio o aprobaciones; esos cambios tienen los gates y
+recibos separados de sus skills. No se retiran documentos ni se duplican guías.
 
 ## Pendientes
 
-- Completar la entrega de la política operacional/despacho con revisión y CI
-  del head final y serializar su integración con el hilo principal.
-- Vincular los recibos verificados de Viva 3T26 al estado y comprobar los datos
-  requeridos de la ronda con la política vigente;
-  entonces el coordinador puede ejecutar la autorización condicional ya recibida,
-  con una sola automatización. Este hilo de preparación no la crea.
+- Integrar y ejecutar los nuevos handoffs con revisión y CI del head final.
+  Conservar recibos por fuente, análisis, datos y publicación servida; distinguir
+  continuación de evidencia previa y ejecución automática real.
+- Reconciliar cada envío nativo antes de reenviar. `reconcile_not_sent` conserva
+  un bloqueo con evidencia positiva de no ejecución. No tiene reenvío automático;
+  si no existe worker, la siguiente decisión corresponde al operador autorizado,
+  con evidencia nueva cuando proceda. No editar el ledger para eludir ese bloqueo.
 - Conservar Aerocivil como seguimiento de confirmación oficial, sin bloquear
   por esa espera; corregir los cálculos si la respuesta contradice los supuestos.
   El mes nuevo exige evidencia propia; septiembre no certifica octubre.

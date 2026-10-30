@@ -50,13 +50,7 @@ jobs:
         run: uv sync --locked --no-group dev
       - name: Verify site/ (no private data, no rebuild)
         run: |
-          if test -f site/financial-publication.json; then
-            uv run python -m src.publish.financial_scope site/
-          elif test -f site/editorial-publication.json; then
-            uv run python -m src.publish.editorial site/
-          else
-            uv run python -m src.publish.verify site/
-          fi
+          uv run python scripts/check_pages_publication.py site/
 
   # Deploying site/ should never ship ahead of the same checks a PR into
   # master already had to pass: this reuses ci.yml itself (as a
@@ -136,13 +130,7 @@ jobs:
         working-directory: _preview
         run: |
           uv sync --locked --no-group dev
-          if test -f site/financial-publication.json; then
-            uv run python -m src.publish.financial_scope site/
-          elif test -f site/editorial-publication.json; then
-            uv run python -m src.publish.editorial site/
-          else
-            uv run python -m src.publish.verify site/
-          fi
+          uv run python ../scripts/check_pages_publication.py site/
 
   deploy:
     needs: [verify, preview, ci]

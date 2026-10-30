@@ -1,9 +1,74 @@
 ---
 name: airline-update-coordinator
-description: "Preparar rondas mensuales y trimestrales de Airline Tracker, agrupar fechas y ejecutar recetas candidatas con escritor único, sin activar horarios ni publicar."
+description: "Coordinar el calendario único, verificar candidatos y despachar análisis y dashboard por producto con autorización vigente y controles separados."
 ---
 
 # Coordinador mensual y trimestral
+
+## Continuación por producto después de una fuente válida
+
+La autorización del 30/oct/2026 cubre publicación validada de datos y tesis de
+Aeroméxico, Viva y Volaris; no cubre Industria ni otros productos editoriales.
+El calendario ya tiene un ID vinculado en su estado privado: no crearlo otra
+vez, adelantar la corrida del 30/oct ni cambiar su cadencia. Cargar siempre el
+último checkpoint privado y conciliar intenciones nativas antes de operar.
+
+Aplicar el [contrato ejecutable por producto](../../../docs/calendario-ejecucion.md#handoff-por-fuente-producto-y-periodo)
+y `python -m scripts.source_update_handoffs --help`. El agente coordinador debe
+ejecutar este ciclo después de cada resultado válido, aunque otras fuentes
+sigan trabajando. No esperar el `core_ready` global para la tesis independiente
+de una aerolínea. Se mantienen los prerrequisitos mínimos propios y el control
+global como inventario de la ronda; no sustituye la validación individual.
+
+1. Conservar el recibo nativo de la fuente y cerrar su tarea como corresponde.
+   Crear una observación con el `item` exacto de readiness, corte original,
+   `source_task_key`, referencia SHA del ledger canónico, autorización y motivo.
+   Usar `scheduled_result` sólo para su worker completado/reconciliado;
+   `recovery_from_validated_result` identifica una continuación de evidencia
+   previa. No inventar que el análisis ya estaba conectado a una corrida pasada.
+   Para un reporte individual confirmado antes del lote, registrar
+   `validated_publication_arrival` con referencia física al original utilizado;
+   no esperar los tres financieros ni crear un segundo monitor. Adquirir sólo
+   el producto/periodo autorizado con su skill de fuentes y sus controles propios.
+2. Registrar `observe` en el outbox privado. El CLI reproduce el candidato y
+   coteja su disponibilidad/edición aceptada. Si falla, conservar ese bloqueo;
+   continuar productos independientes. No renovar fechas ni hashes originales.
+3. Procesar inmediatamente sus `ready_jobs`: `claim` primero, invocación real
+   de `attempt.native_call` después, retención de la respuesta nativa y
+   `acknowledge`. Cada producto financiero tiene su propia entidad/periodo;
+   el trabajo de datos del financiero actualiza sus gráficas existentes sin esperar
+   la tesis. Banxico/EIA/cotizaciones quedan `no_public_impact`: actualmente no
+   tienen un consumidor visible; conservar el análisis de consumidores, sin
+   inventar una gráfica ni afirmar una actualización.
+4. El agente de análisis lee la [skill existente](../aeromexico-tracker-analysis/SKILL.md),
+   verifica el paquete cerrado y su `source_binding`, redacta y sigue los
+   controles de citas, auditoría y aprobación vigentes. Registrar su recibo con
+   `finish`. `analysis_approved` se verifica con el lifecycle canónico; no crear
+   aprobaciones por cambiar un flag. Su propia tesis habilita su handoff editorial; el handoff de datos
+   validado es independiente y no espera esa tesis.
+5. Invocar el siguiente envelope real con la [skill de dashboard](../airline-update-dashboard/SKILL.md).
+   Tiene versión, entidad, periodo y datos exactos. `release_kind=data`
+   necesita validación y aprobación de datos; `release_kind=editorial` recibe
+   además el registro aprobado de análisis. No intercambiar los gates.
+   No permitir escrituras simultáneas de dos workers en Gold activo o `site/`:
+   preparan por separado y un integrador serializa gate, PR y despliegue.
+6. Registrar su build validado y seguir PR/revisión/CI/Pages hasta terminar.
+   Después ejecutar la acción explícita `served` con las rutas cambiadas;
+   hace HTTP real y compara hashes con el manifiesto. Sólo esa evidencia
+   acredita el sitio servido. El build por sí solo no confirma publicación.
+7. Repetir acciones/lecturas con sus mismos IDs. Ante envío incierto consultar
+   el task real antes de reenviar; el outbox no vuelve una intención a pendiente.
+   Los cambios de captura sin cambios de negocio conservan evidencia sin nueva
+   tesis. Las revisiones verdaderas preservan versiones y motivo; una revisión
+   cruzada necesita relevancia material documentada, no reescritura universal.
+   Un bloqueo resuelto puede continuar el mismo worker nativo: retener la
+   respuesta real de seguimiento y registrar `continue_existing_worker` con
+   su referencia `reconciliation`. No usarlo para crear un trabajador duplicado.
+
+Las instrucciones históricas de preparación de abajo describen el límite del
+CLI de fuentes. La autorización editorial de este apartado se ejecuta mediante
+el handoff y los gates propios; no cambia `publication_authorized=false` del
+ledger de fuentes ni `ready_for_automatic_execution=false` de readiness.
 
 Aplicar [el contrato común](../source-updates-common.md). Leer la guía para Salva
 y su apéndice en `docs/catalogo-fuentes-calendario.md`.

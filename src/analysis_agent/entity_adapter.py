@@ -338,6 +338,9 @@ def validate(draft, package, calculations):
 
 
 def verified_inputs(record):
+    if record["draft"].get("source_profile") == "issuer_quarter_v1":
+        from .issuer_quarter import verified_inputs as verify_issuer
+        return verify_issuer(record)
     draft = record["draft"]
     entity, period = draft.get("entity_key"), draft.get("period_id")
     if entity not in ENTITIES or not isinstance(period, str) or not re.fullmatch(r"\d{4}Q[1-4]", period):

@@ -94,3 +94,22 @@ para las citas del comunicado primario distribuido en GlobeNewswire. Los
 contratos históricos permanecen intactos. El manifiesto fija los contratos
 exactos y la aprobación correspondiente; la aprobación por sí sola no acredita
 un despliegue. El flujo y sus pruebas están en `src/publish/README.md`.
+
+
+### Handoff independiente de Viva y Volaris 3T26
+
+`issuer_quarter.py` añade `issuer_quarter_v1` para las dos ediciones revisadas de
+3T26, sin ampliar los perfiles históricos. Reproduce los extractores dedicados
+desde los originales retenidos y compara exactamente las cuatro salidas de cada
+candidato. Su paquete liga la entidad, periodo, corte original, retención y hashes
+de salidas (`source_binding`); los cálculos y la prosa conservan esa identidad.
+Viva usa su PDF oficial. Volaris conserva el aviso de reconstrucción visible
+autorizada, sin equivalencia binaria con el original SEC. No se cambian flags de
+las capturas ni se convierte una reconstrucción en un original.
+
+Cada tesis puede avanzar con su fuente propia validada. La nueva pauta de
+200–300 palabras vive en la skill existente y no reescribe versiones históricas.
+`prepare` solo congela evidencia/cálculos; `import-draft` solo crea un borrador
+inmutable. El lifecycle conserva petición auténtica, auditoría independiente y
+aprobación exacta antes del handoff al agente de dashboard. No hay aprobación,
+activación de Gold ni publicación implícita por generar este contexto.

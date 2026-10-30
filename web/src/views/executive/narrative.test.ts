@@ -154,6 +154,39 @@ describe("entity narratives", () => {
   });
   afterEach(() => { vi.unstubAllGlobals(); });
 
+  it.each([
+    ["VIVA_AEROBUS", "Viva", "2026-10-28"], ["VOLARIS", "Volaris", "2026-10-26"],
+  ])("renders an approved %s source-edition payload returned with HTTP 200", async (entity, label, reportDate) => {
+    const payload = { ...analysis(entity, "2026Q3"), period_label: "3T26", cutoff_date: "2026-10-29",
+      selection_mode: "retrospective_source_edition", guidance_as_of: reportDate };
+    vi.stubGlobal("fetch", vi.fn(async () => response(payload)));
+    const { validAnalysis, renderNarrative } = await import("./narrative");
+    expect(validAnalysis(payload, entity, "2026Q3")).toBe(true);
+    await renderNarrative(view("2026Q3"), entity, label);
+    expect(document.getElementById("narrative-copy")?.textContent).toContain(`Tesis ${entity} 2026Q3`);
+    expect(document.getElementById("narrative-copy")?.textContent).not.toContain("pendiente");
+    document.getElementById("analysis-open-full")!.click();
+    expect(document.querySelector(".modal-content")?.textContent).toContain(reportDate);
+    expect(document.querySelector(".modal-content")?.textContent).toContain(`Detalle ${entity}`);
+  });
+
+  it("rejects unknown source-edition entities, periods and dates without weakening historical headers", async () => {
+    const { validAnalysis } = await import("./narrative");
+    const payload = { ...analysis("VIVA_AEROBUS", "2026Q3"), period_label: "3T26", cutoff_date: "2026-10-29",
+      selection_mode: "retrospective_source_edition", guidance_as_of: "2026-10-28" };
+    for (const invalid of [
+      { ...payload, guidance_as_of: "2026-10-27" }, { ...payload, guidance_as_of: "2026-02-31" },
+      { ...payload, cutoff_date: "2026-10-27" }, { ...payload, cutoff_date: "2026-02-31" },
+      { ...payload, selection_mode: "unknown" }, { ...payload, period_label: "2T26" },
+    ]) expect(validAnalysis(invalid, "VIVA_AEROBUS", "2026Q3")).toBe(false);
+    expect(validAnalysis({ ...payload, entity_key: "INDUSTRY" }, "INDUSTRY", "2026Q3")).toBe(false);
+    expect(validAnalysis({ ...payload, entity_key: "UNKNOWN" }, "UNKNOWN", "2026Q3")).toBe(false);
+    expect(validAnalysis({ ...payload, period_id: "2027Q1" }, "VIVA_AEROBUS", "2027Q1")).toBe(false);
+    expect(validAnalysis(analysis("VIVA_AEROBUS"), "VIVA_AEROBUS", "2026Q2")).toBe(true);
+    expect(validAnalysis(analysis("VOLARIS"), "VOLARIS", "2026Q2")).toBe(true);
+    expect(validAnalysis(analysis("INDUSTRY"), "INDUSTRY", "2026Q2")).toBe(true);
+  });
+
   it("switches all four entities, isolates caches and preserves the legacy Aero path", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       const entity = /analysis\/(INDUSTRY|VOLARIS|VIVA_AEROBUS)\//.exec(url)?.[1] ?? "AEROMEXICO";
