@@ -85,3 +85,14 @@ def test_nonfinite_projection_never_reaches_browser_json(field, value):
     candidate["records"][0][field] = value
     with pytest.raises(ValueError):
         projection.apply({}, candidate)
+
+
+def test_another_corporate_edition_cannot_silently_delete_prior_months():
+    previous = series()
+    previous["records"][0]["period_id"] = "2026M08"
+    previous["records"][0]["date"] = "2026-08-01"
+    retained = {"corporate_monthly_passengers": previous}
+    before = deepcopy(retained)
+    with pytest.raises(ValueError, match="Preserve prior corporate months"):
+        projection.apply(retained, series())
+    assert retained == before

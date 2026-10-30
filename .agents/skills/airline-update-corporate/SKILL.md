@@ -382,3 +382,17 @@ porcentaje automático. Unidades, periodos, faltantes, identidad o integridad
 incorrectos bloquean. El original real pasa sin advertencias de5%; conserva
 cuatro diferencias de redondeo declaradas. Sin baseline mensual explícito,
 revisiones quedan no comparadas; Q2 financiero no es un baseline sustituto.
+
+
+## Handoff de tráfico mensual al dashboard
+
+El recibo de fuente validada alimenta un trabajo `source_data` independiente,
+sin esperar los financieros ni redactar otra tesis. El agente dashboard usa
+`am_monthly_projection` o `peer_monthly_projection` con el gate selectivo existente.
+Mantener unidad y definición: Viva y Volaris son tramos reservados en miles
+(la proyección convierte a conteos por 1.000), no pasajeros observados AFAC.
+Conservar la atribución Viva como marca, los flags del documento y el comparativo
+anual de esa misma edición. No importar acumulados ni sumar un trimestre desde
+septiembre. Los originales conservan sus fechas/hash; una nueva versión no
+puede borrar meses previos ni reasignarles otra procedencia. Si el contenedor no
+puede preservar esa historia, bloquear la proyección y preparar la adaptación.

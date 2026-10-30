@@ -72,6 +72,11 @@ def apply(quarters: dict, series: dict) -> dict:
     schema = {"$defs": FLIGHTS_SCHEMA["$defs"], "$ref": "#/$defs/corporate_monthly_passengers"}
     json.dumps(series, allow_nan=False)
     Draft202012Validator(schema).validate(series)
+    previous = quarters.get("corporate_monthly_passengers")
+    if previous and {p["period_id"] for p in previous["records"]} - {
+        p["period_id"] for p in series["records"]
+    }:
+        raise ValueError("Preserve prior corporate months and their source provenance before another edition")
     result = deepcopy(quarters)
     result["corporate_monthly_passengers"] = deepcopy(series)
     return result
