@@ -94,6 +94,7 @@ def already_built(request_path, request, profile, records, spec, repo):
         value, outputs = replay(request, profile, site, repo)
         if (
             value["source_binding"] != spec["source_binding"]
+            or value.get("additional_sources", []) != spec.get("additional_sources", [])
             or value["projection"] != spec["projection"]
             or pins(outputs) != spec["data_files"]
         ):

@@ -14,6 +14,7 @@ from src.config import PATHS
 
 from . import editorial as transport
 from . import manifest as manifests
+from . import source_data_members as members
 from .approval_cohorts import verify_approval_cohorts
 from .issuer_authority import input_snapshot
 from .issuer_update import _write_pins
@@ -59,11 +60,24 @@ def request_inputs(path, repo):
     request = json.loads(path.read_bytes())
     if (
         set(request)
-        != {"schema_version", "product", "period", "source_profile", "record_paths", "authorization"}
+        not in (
+            {"schema_version", "product", "period", "source_profile", "record_paths", "authorization"},
+            {
+                "schema_version",
+                "product",
+                "period",
+                "source_profile",
+                "record_paths",
+                "authorization",
+                "additional_sources",
+            },
+        )
         or request["schema_version"] != "source_data_request_v1"
     ):
         raise ValueError("Unsupported selective source request")
-    adapter(request["product"])
+    for unit in members.selections(request):
+        adapter(unit["product"])
+        file_ref(unit["source_profile"], repo)
     profile = file_ref(request["source_profile"], repo)
     records = [physical_path(p, repo) for p in request["record_paths"]]
     if not records or len(set(records)) != len(records):
@@ -71,7 +85,7 @@ def request_inputs(path, repo):
     return path, request, profile, records
 
 
-def replay(request, profile, baseline, repo):
+def _replay_one(request, profile, baseline, repo):
     module = adapter(request["product"])
     value = module.replay(json.loads(profile.read_bytes()), baseline)
     if set(value) != {"source_binding", "projection", "input_files"} or not value["input_files"]:
@@ -89,6 +103,35 @@ def replay(request, profile, baseline, repo):
         p = Path(raw_path)
         p = p if p.is_absolute() else repo / p
         file_ref({"path": str(p), "sha256": sha(p.read_bytes())}, repo)
+    return value, outputs
+
+
+def replay(request, profile, baseline, repo):
+    selections = (
+        members.selections(request)
+        if "source_profile" in request
+        else [{"product": request["product"], "period": request["period"], "source_profile": None}]
+    )
+    units, files = [], set()
+    for index, selection in enumerate(selections):
+        path = profile if index == 0 else file_ref(selection["source_profile"], repo)
+        value, _ = _replay_one(selection, path, baseline, repo)
+        units.append(
+            {
+                "product": selection["product"],
+                "period": selection["period"],
+                "source_binding": value["source_binding"],
+                "projection": value["projection"],
+            }
+        )
+        files.update(value["input_files"])
+        files.add(str(path))
+    before = {name: (baseline / name).read_bytes() for name in members.target_names(units, adapter)}
+    outputs = members.compose(before, units, adapter)
+    value = {k: units[0][k] for k in ("source_binding", "projection")}
+    value["input_files"] = sorted(files)
+    if len(units) > 1:
+        value["additional_sources"] = units[1:]
     return value, outputs
 
 
@@ -172,7 +215,8 @@ def inspect_source(path):
         "producer_code_version": code_version(),
         "authorization_sha256": request["authorization"]["sha256"] if request["authorization"] else None,
         "contract_changes": {
-            n: sha((repo / "contracts/web" / n).read_bytes()) for n in adapter(request["product"]).CONTRACTS
+            n: sha((repo / "contracts/web" / n).read_bytes())
+            for n in members.contract_names(members.selections(request), adapter)
         },
     }
     old = verify_historical_baseline(repo, spec, baseline)
@@ -185,6 +229,8 @@ def inspect_source(path):
             projection=first[0]["projection"],
             data_files=pins(first[1]),
         )
+        if "additional_sources" in first[0]:
+            spec["additional_sources"] = first[0]["additional_sources"]
         initial = snapshot(path, request, profile, records, first[0], repo)
         cohorts = verify_approval_cohorts(records, repo, baseline_commit, old, gate.flow.ROOT)
     spec["frontend_files"] = transport.frontend_entries(export(baseline, first[1]))
@@ -243,6 +289,7 @@ def publish_source(path, out):
         value, outputs = replay(request, profile, baseline, repo)
         if (
             value["source_binding"] != spec["source_binding"]
+            or value.get("additional_sources", []) != spec.get("additional_sources", [])
             or value["projection"] != spec["projection"]
             or pins(outputs) != spec["data_files"]
         ):

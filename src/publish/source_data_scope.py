@@ -11,6 +11,7 @@ from src.config import PATHS
 
 from . import editorial as transport
 from . import manifest as manifests
+from . import source_data_members as members
 from .issuer_scope import sha, verify_historical_baseline
 
 ANCHOR = "config/publish/source-data-release.json"
@@ -25,7 +26,11 @@ def encoded(value):
 def adapter(product):
     if product == "am_traffic_ir":
         from . import am_monthly_projection as module
-    elif product in {"aicm_traffic", "aifa_traffic", "asur_traffic", "gap_traffic"}:
+    elif product == "afac_carriers":
+        from . import afac_carrier_projection as module
+    elif product == "afac_airports":
+        from . import afac_airports_demand_projection as module
+    elif product in {"aicm_traffic", "aifa_traffic", "asur_traffic", "gap_traffic", "oma_traffic"}:
         from . import airport_demand_projection as module
     else:
         raise ValueError("Source has no reviewed selective publication adapter")
@@ -33,11 +38,16 @@ def adapter(product):
 
 
 def pins(outputs):
+    def reject_constant(value):
+        raise ValueError(f"Nonfinite JSON output is not browser-readable: {value}")
+
+    for raw in outputs.values():
+        json.loads(raw, parse_constant=reject_constant)
     return [{"path": p, "sha256": sha(b), "bytes": len(b)} for p, b in sorted(outputs.items())]
 
 
 def scope(spec):
-    return {
+    result = {
         k: spec[k]
         for k in (
             "product",
@@ -50,6 +60,9 @@ def scope(spec):
             "contract_changes",
         )
     }
+    if spec.get("additional_sources"):
+        result["additional_source_bindings"] = [u["source_binding"] for u in members.members(spec)[1:]]
+    return result
 
 
 def anchor(repo=PATHS.root):
@@ -71,9 +84,14 @@ def anchor(repo=PATHS.root):
         "contract_changes",
         "authorization_sha256",
     }
-    if set(spec) != fields or spec["schema_version"] != "source_data_release_v1":
+    if (
+        set(spec) not in (fields, fields | {"additional_sources"})
+        or spec["schema_version"] != "source_data_release_v1"
+    ):
         raise ValueError("Unsupported selective source release")
-    module = adapter(spec["product"])
+    units = members.members(spec)
+    for unit in units:
+        adapter(unit["product"])
     if not re.fullmatch(r"\d{4}M(?:0[1-9]|1[0-2])", spec["period_id"]):
         raise ValueError("Select one real monthly source period")
     if not re.fullmatch("[a-f0-9]{40}", spec["baseline_commit"]):
@@ -88,12 +106,12 @@ def anchor(repo=PATHS.root):
         binding["period"],
     ) != (spec["product"], spec["period_id"]):
         raise ValueError("Source release binding names another product/period")
-    if set(spec["contract_changes"]) != set(module.CONTRACTS):
+    if set(spec["contract_changes"]) != members.contract_names(units, adapter):
         raise ValueError("Unexpected source contract change")
     for name, digest in spec["contract_changes"].items():
         if sha((repo / "contracts/web" / name).read_bytes()) != digest:
             raise ValueError("Source contract differs from its committed release pin")
-    for field, allowed in (("data_files", set(module.TARGETS)), ("frontend_files", None)):
+    for field, allowed in (("data_files", members.target_names(units, adapter)), ("frontend_files", None)):
         seen = []
         for item in spec[field]:
             name = item["path"]
@@ -142,10 +160,11 @@ def preserved_files(site: Path, repo: Path, spec: dict):
         raise ValueError("Source data update must preserve every released thesis version")
     if current["contracts"] != {**old["contracts"], **spec["contract_changes"]}:
         raise ValueError("Source data update changed an unrelated contract")
-    module = adapter(spec["product"])
-    before = {p: transport._git(repo, "show", f"{spec['baseline_commit']}:site/{p}") for p in module.TARGETS}
-    outputs = module.public_outputs(before, spec["projection"])
-    if pins(outputs) != spec["data_files"] or set(outputs) != set(module.TARGETS):
+    units = members.members(spec)
+    targets = members.target_names(units, adapter)
+    before = {p: transport._git(repo, "show", f"{spec['baseline_commit']}:site/{p}") for p in targets}
+    outputs = members.compose(before, units, adapter)
+    if pins(outputs) != spec["data_files"] or set(outputs) != targets:
         raise ValueError("Source projection differs from its reviewed exact data pins")
     old_names = {p["path"] for p in old["files"]}
     names = {p["path"] for p in current["files"]}
@@ -166,7 +185,7 @@ def preserved_files(site: Path, repo: Path, spec: dict):
     preserved = set()
     for pin in old["files"]:
         name = pin["path"]
-        if name in set(module.TARGETS) | frontend | {PROOF}:
+        if name in targets | frontend | {PROOF}:
             continue
         raw = (site / name).read_bytes()
         if sha(raw) != pin["sha256"] or len(raw) != pin["bytes"]:

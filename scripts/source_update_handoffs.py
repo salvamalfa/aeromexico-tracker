@@ -157,7 +157,7 @@ def verify_source(observation: dict, workspace: Path) -> dict:
 
 
 def verify_candidate(observation: dict, workspace: Path) -> dict:
-    item, cutoff = routing.native_item(observation["item"]), observation["as_of"]
+    item, cutoff = routing.native_item(monthly.native_item(observation["item"])), observation["as_of"]
     recipe = {"version": 1, "as_of": cutoff, "required_items": [item["id"]], "items": [item]}
     selected = readiness.preflight(recipe, workspace)[0]
     checked = readiness.check_task(selected, item["candidate_as_of"], cutoff)
@@ -259,7 +259,10 @@ def observe(state: dict, observation: dict, workspace: Path):
     elif item["product"] == "aerocivil":
         enqueue(state, "dashboard", source_id, "AEROMEXICO", release_kind="movements")
     elif item["product"] in monthly.IMPACTS:
-        enqueue(state, "dashboard", source_id, monthly.entity(item["product"]), release_kind="source_data")
+        enqueue(
+            state, "dashboard", source_id, monthly.entity(item["product"]),
+            release_kind=monthly.release_kind(item["product"]),
+        )
     # Macro inputs currently have no public chart consumer. Preserve the result
     # without inventing a dashboard job or forcing an unrelated thesis rewrite.
 
@@ -310,7 +313,7 @@ def envelope(state: dict, job: dict) -> dict:
 
 
 def expected_binding(source: dict) -> dict:
-    item = routing.native_item(source["source_binding"]["item"])
+    item = routing.native_item(monthly.native_item(source["source_binding"]["item"]))
     return {
         "product": item["product"],
         "period": item["period"],

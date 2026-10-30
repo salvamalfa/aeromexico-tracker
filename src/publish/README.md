@@ -573,3 +573,21 @@ revalida fuente, autoridad vigente, aprobaciones, manifiesto y pins; devuelve
 `already_built_verified` sin otro intercambio ni recibos de publicación duplicados.
 Eso no acredita el despliegue ni sustituye la verificación servida.
 Los payloads nuevos se serializan como JSON estricto: NaN e infinitos bloquean.
+
+
+El request puede añadir `additional_sources`, una lista opcional de unidades
+`{product, period, source_profile: {path, sha256}}` ya listas. No existe una lista
+global obligatoria: una sola fuente sigue siendo una entrega válida. Cada unidad
+se reproduce por separado; las proyecciones se componen preservando lo que la
+anterior cambió. El alcance de autorización contiene los bindings individuales
+y los pins finales. Esto permite reunir fuentes listas que comparten payload en
+un build y PR, sin esperar otra fuente. Un miembro inválido no autoriza publicar
+el lote; se conserva su evidencia y se puede entregar cualquier unidad válida
+mediante la modalidad individual. Los jobs restantes pueden comprobar la versión
+ya servida con su equivalencia física, sin otro build ni publicación.
+
+En fuentes con rezago admitido por el calendario, el ledger conserva el mes
+solicitado y `source_period` nativo. Readiness y el binding usan el mes real del
+original. Por ejemplo, una tarea de septiembre puede entregar AFAC agosto o BTS
+julio; no se etiqueta el contenido como septiembre. El publisher usa ese mes
+nativo en su request y la verificación del handoff coteja ambos contextos.
