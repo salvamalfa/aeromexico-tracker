@@ -137,11 +137,12 @@ def input_snapshot(record_paths, spec, package_path=None, repo=PATHS.root):
                     add(path)
         else:
             for source in package["sources"]:
-                path = repo / "data/bronze" / source["source_file"]
-                add(path)
-                sidecar = Path(str(path) + ".meta.json")
-                if sidecar.exists() or sidecar.is_symlink():
-                    add(sidecar)
+                for artifact in [source, *source.get("proofs", [])]:
+                    path = repo / "data/bronze" / artifact["source_file"]
+                    add(path)
+                    sidecar = Path(str(path) + ".meta.json")
+                    if sidecar.exists() or sidecar.is_symlink():
+                        add(sidecar)
             if package.get("capsule_fingerprint"):
                 capsule = repo / "analysis_runs/entity_review_bundles" / package["capsule_fingerprint"]
                 for name in package["capsule_files"]:
