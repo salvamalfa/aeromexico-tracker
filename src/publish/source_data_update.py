@@ -320,7 +320,7 @@ def main(argv=None):
         )
         print(json.dumps(result, ensure_ascii=False))
         return 0
-    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+    except (ValueError, RuntimeError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         print(f"Selective source publication refused: {exc}")
         return 1
 
