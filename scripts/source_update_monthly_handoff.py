@@ -23,7 +23,7 @@ def entity(product):
     }.get(product)
 
 
-def publication_scope(product):
+def _single_publication_scope(product):
     if product == "am_traffic_ir":
         return (
             "Only the separately labelled Aeromexico company-reported monthly passenger series; "
@@ -59,6 +59,18 @@ def publication_scope(product):
             "data payload; no Industry editorial"
         )
     raise ValueError("No selective monthly publication scope")
+
+
+def publication_scope(product):
+    scope = _single_publication_scope(product)
+    if product == "bts_segments":
+        return scope
+    return (
+        "Default single-source scope: " + scope + ". "
+        "Only an explicitly authorized request with additional_sources may extend that scope "
+        "to the exact union of its individually ready, pinned members. Do not select extra sources "
+        "automatically or wait for other sources; preserve all data outside that authorized union."
+    )
 
 
 def verify_release(job, source, binding):
@@ -164,3 +176,38 @@ def native_item(item):
         raise ValueError("Native month is not admitted by the existing lagged-source calendar policy")
     result = {k: v for k, v in item.items() if k not in {"source_period", "cadence", "used", "depends_on"}}
     return {**result, "period": source_period, "required": True}
+
+
+def publication_source_hashes(item, checked):
+    """Bind a publication after readiness replay; BTS keeps literal ZIP hashes in Silver."""
+    import hashlib
+    import io
+    from pathlib import Path
+
+    import pandas as pd
+
+    outputs = checked["output_sha256"]
+    if item["product"] == "bts_segments":
+        key = "silver/bts_t100_segment"
+        if (
+            checked.get("status") != "checks_passed"
+            or not {key, "gold/fact_route_traffic", "gold/bridge_record_lineage"} <= outputs.keys()
+        ):
+            raise ValueError("BTS arrival requires replay-verified Gold, lineage and pinned native Silver")
+        path = Path(item["workspace"]) / "data" / (key + ".parquet")
+        if not path.is_file() or path.is_symlink() or path.resolve() != path:
+            raise ValueError("BTS arrival requires the regular pinned native Silver path")
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != outputs[key]:
+            raise ValueError("BTS native Silver changed after its verified replay")
+        frame = pd.read_parquet(io.BytesIO(raw))
+        if "source_hash" not in frame:
+            raise ValueError("BTS native Silver has no literal original source hashes")
+        return set(frame["source_hash"].dropna().tolist())
+    hashes = set()
+    for name in outputs:
+        if name.startswith("gold/fact_"):
+            frame = pd.read_parquet(Path(item["workspace"]) / "data" / (name + ".parquet"))
+            if "source_hash" in frame:
+                hashes.update(frame["source_hash"].dropna().tolist())
+    return hashes

@@ -166,17 +166,9 @@ def verify_candidate(observation: dict, workspace: Path) -> dict:
     if item["product"] == "aerocivil":
         routing.verify_movement_acceptance(checked)
     if observation.get("mode") == "validated_publication_arrival":
-        import pandas as pd
-
         original = checked_ref(observation["publication_evidence"])
-        source_hashes = set()
-        for name in checked["output_sha256"]:
-            if name.startswith("gold/fact_"):
-                frame = pd.read_parquet(Path(item["workspace"]) / "data" / (name + ".parquet"))
-                if "source_hash" in frame:
-                    source_hashes.update(frame["source_hash"].dropna().tolist())
-        if file_hash(original) not in source_hashes:
-            raise ValueError("Publication document is not the original used by the verified financial rows")
+        if file_hash(original) not in monthly.publication_source_hashes(item, checked):
+            raise ValueError("Publication document is not the original used by the verified source rows")
     identity = meaningful_data(observation["item"], checked)
     return {
         "checked": checked,

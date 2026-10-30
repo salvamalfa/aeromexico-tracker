@@ -597,6 +597,12 @@ original. Por ejemplo, una tarea de septiembre puede entregar AFAC agosto o BTS
 julio; no se etiqueta el contenido como septiembre. El publisher usa ese mes
 nativo en su request y la verificación del handoff coteja ambos contextos.
 
+La llegada BTS liga el ZIP original al `source_hash` literal de
+`silver/bts_t100_segment`, sólo después del replay completo de Gold y linaje.
+Silver debe figurar en los hashes de salida comprobados y sus bytes deben
+coincidir: el `source_hash` de Gold es un agregado, no el SHA literal del ZIP.
+Las demás llegadas conservan su comprobación del original contra Gold.
+
 
 La proyección corporativa mensual de Viva y Volaris es independiente de la de
 AM y de AFAC. Guarda cada emisor en `corporate_peer_monthly_passengers` sin tocar
