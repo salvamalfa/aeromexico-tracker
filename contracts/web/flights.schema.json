@@ -256,20 +256,40 @@
       "additionalProperties": false,
       "properties": {
         "VIVA_AEROBUS": {
-          "$ref": "#/$defs/corporate_peer_monthly_series",
-          "properties": {
-            "entity": {
-              "const": "VIVA_AEROBUS"
+          "allOf": [
+            {
+              "$ref": "#/$defs/corporate_peer_monthly_series"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "const": "VIVA_AEROBUS"
+                }
+              },
+              "required": [
+                "entity"
+              ]
             }
-          }
+          ]
         },
         "VOLARIS": {
-          "$ref": "#/$defs/corporate_peer_monthly_series",
-          "properties": {
-            "entity": {
-              "const": "VOLARIS"
+          "allOf": [
+            {
+              "$ref": "#/$defs/corporate_peer_monthly_series"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "const": "VOLARIS"
+                }
+              },
+              "required": [
+                "entity"
+              ]
             }
-          }
+          ]
         }
       }
     },

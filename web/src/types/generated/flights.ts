@@ -160,14 +160,45 @@ export interface CorporateMonthlyPassengers {
   ];
 }
 export interface CorporatePeerMonthlyPassengers {
-  VIVA_AEROBUS?: CorporatePeerMonthlySeries;
-  VOLARIS?: CorporatePeerMonthlySeries1;
+  VIVA_AEROBUS?: CorporatePeerMonthlySeries & {
+    entity: "VIVA_AEROBUS";
+  };
+  VOLARIS?: CorporatePeerMonthlySeries & {
+    entity: "VOLARIS";
+  };
 }
 export interface CorporatePeerMonthlySeries {
-  entity: "VIVA_AEROBUS";
-}
-export interface CorporatePeerMonthlySeries1 {
-  entity: "VOLARIS";
+  entity: "VIVA_AEROBUS" | "VOLARIS";
+  source_url: string;
+  source_sha256: string;
+  captured_at: string;
+  documentary_date: string;
+  scope: "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter";
+  /**
+   * @minItems 1
+   */
+  records: [
+    {
+      period_id: string;
+      date: string;
+      domestic: number;
+      international: number;
+      reported_total: number;
+      total_segment_sum: number;
+      reconciliation_delta: number;
+    },
+    ...{
+      period_id: string;
+      date: string;
+      domestic: number;
+      international: number;
+      reported_total: number;
+      total_segment_sum: number;
+      reconciliation_delta: number;
+    }[]
+  ];
+  reporting_status: string;
+  entity_attribution: string;
 }
 export interface WorldGeometry {
   geojson: {};
