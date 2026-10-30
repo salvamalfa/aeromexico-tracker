@@ -262,3 +262,31 @@ prerrequisito exclusivo trimestral. Todo producto realmente utilizado y sus
 dependencias transitivas siguen verificándose, incluso si son de otra cadencia;
 no se omiten por esa separación. Las pruebas de política con resultados
 sintéticos no acreditan disponibilidad de una fuente real.
+
+## Aerocivil hacia Vuelos, sin análisis financiero intermedio
+
+La observación de Aerocivil conserva la tarea trimestral `2026Q3` y declara
+`source_period=2026M07`: el verificador recibe el mes nativo. El outbox genera
+sólo un envelope de dashboard `release_kind=movements`, independiente de las
+tesis financieras. Invocar realmente su `native_call`, retener respuesta/recibo
+y completar el mismo trabajo; el CLI no envía el envelope por sí solo.
+
+El [gate de movimientos](../../../src/publish/movements_scope.py) exige su propio
+recibo `aerocivil-movements-publication.json`; el selector de Pages y `finish`
+lo verifican sin recurrir al gate financiero si falla. El perfil de corrección
+cubre los 19 meses `2025M01`–`2026M07` y siete trimestres
+`2025Q1`–`2026Q3` de Aeroméxico, doce redes de Viva, Volaris e Industria
+(`2026M04`–`2026M06` y `2026Q2`) y su resumen de cobertura, ya publicados. Reproduce los originales retenidos con sus
+hashes y capturas, conserva los conteos y elimina su atribución a salidas.
+No divide movimientos, no convierte faltantes en cero, no certifica códigos
+oficiales ni activa `flight_evidence_v1`. Todas las tesis y los datos ajenos
+se preservan bajo sus cohortes publicadas.
+
+Si cambió el productor del candidato nativo, certificar de nuevo offline en
+un workspace aislado desde los mismos originales y recibos, con su corte
+original. No modificar la certificación histórica ni renovar captura/hash.
+Una recuperación fuera del workspace del trabajador original usa
+`recovery_from_validated_result`, con su evidencia y autorización; no atribuirla
+al disparo programado. Disponibilidad retenida acredita únicamente su propio
+corte. Seguir la [receta del gate](../../../src/publish/README.md) y verificar
+las 38 redes y su resumen de cobertura servidos después del despliegue; build no equivale a servido.

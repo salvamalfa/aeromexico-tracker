@@ -450,3 +450,36 @@ recibos separados de sus skills. No se retiran documentos ni se duplican guías.
   por esa espera; corregir los cálculos si la respuesta contradice los supuestos.
   El mes nuevo exige evidencia propia; septiembre no certifica octubre.
 - Verificar el calendario bancario 2027 antes de fechar ese año.
+
+### Corrección operacional Aerocivil en Vuelos
+
+Aerocivil tiene una ruta directa al agente de dashboard, sin exigir una tesis
+financiera. La tarea conserva `period=2026Q3` y `source_period=2026M07`; el
+adaptador valida el mes nativo y sus supuestos operativos. `release_kind=movements`
+exige el [gate específico](../src/publish/movements_scope.py) y el recibo
+`aerocivil-movements-publication.json`. Un fallo de este gate no puede caer en
+el verificador financiero ni acreditar publicación por un build válido ajeno.
+
+El perfil corrige únicamente 38 redes internacionales ya publicadas: 19 meses
+de enero de 2025 a julio de 2026 y siete trimestres de 1T25 a 3T26 de
+Aeroméxico, más abril, mayo, junio y 2T26 de Viva, Volaris e Industria.
+Corrige también la cobertura de vuelos derivada de esos componentes.
+Reproduce los tres originales retenidos de septiembre y octubre, preserva sus
+conteos por operador, sentido y mes, y los muestra como movimientos registrados
+provisionales, con salidas nulas. Julio conserva ocho observaciones y 347
+movimientos: Bogotá 187, Cali 36, Cartagena 62 y Medellín 62. No son cobertura
+trimestral completa ni confirmación oficial de servicio regular.
+
+Las estimaciones independientes de pasajeros, asientos, ocupación y frecuencia
+mensual conservan sus bytes. Las siete tesis y el resto del sitio conservan
+su baseline verificado con el productor publicado y las cohortes de aprobación
+originales. Una discrepancia de conteos detiene la corrección correspondiente;
+no se resuelve repartiendo movimientos o copiando Gold mal tipado.
+
+La [skill del coordinador](../.agents/skills/airline-update-coordinator/SKILL.md#aerocivil-hacia-vuelos-sin-análisis-financiero-intermedio)
+y la [receta del gate](../src/publish/README.md) describen el replay físico,
+certificación offline si cambia el productor, preparación de pins revisables,
+integración y QA servido. La corrección histórica no añade meses, monitor,
+frecuencia ni otra automatización. La certificación nueva conserva el corte y
+los originales anteriores; una recuperación explícita no se declara ejecución
+programada automática de extremo a extremo.
