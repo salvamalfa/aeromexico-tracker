@@ -94,6 +94,11 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `contracts/web/*.schema.json` sub-schema and `contracts/web/privacy.yaml`,
   and that every `analysis_manifest` entry is well-formed. This is exactly
   what `.github/workflows/pages.yml` runs before deploying.
+  El validador y el lector `Snapshot` usan los bytes del contrato exacto
+  declarado por el manifiesto, también para Mercado y demanda aeroportuaria.
+  Un campo incorporado en una edición nueva no se admite bajo el hash de una
+  edición histórica. Los archivos históricos conservan sus bytes y hashes;
+  privacidad y aprobación siguen exigiendo sus contratos vigentes.
 - `site/` itself is *not* gitignored: an approved run's output is committed
   like any other file, then deployed as-is by CI (`.github/workflows/
   pages.yml` never rebuilds it, never touches `analysis_runs/`).

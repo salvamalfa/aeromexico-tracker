@@ -193,3 +193,68 @@ def test_future_manifest_still_uses_current_hashes(isolated_site) -> None:
         contracts / "flights.schema.json"
     )
     assert manifest["contracts"]["flights.schema.json"] != OLD_SHA
+
+
+MARKET_ARCHIVES = [
+    (
+        "market.schema.json",
+        "data/v1/market.json",
+        "3ac4a80fbeadea2b6c4eea6ee6d906acf24b1cf1202b295bde0b86b32b2d0008",
+        "method_breaks",
+    ),
+    (
+        "market_demand.schema.json",
+        "data/v1/market-demand.json",
+        "420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf",
+        "afac_airports",
+    ),
+]
+
+
+def _market_contract_payload(site, name, rel, digest, field, *, new_field):
+    path = site / rel
+    if not path.exists():
+        shutil.copyfile(ROOT / "site" / rel, path)
+    payload = json.loads(path.read_bytes())
+    target = payload["metadata"] if field == "method_breaks" else payload
+    target.pop(field, None)
+    if field == "method_breaks":
+        target.pop("source_editions", None)
+    if new_field:
+        target[field] = ["2026M08"] if field == "method_breaks" else []
+    path.write_text(json.dumps(payload))
+    manifest = manifest_mod.load_manifest(site)
+    manifest["contracts"][name] = digest
+    manifest["files"] = manifest_mod.file_entries(site)
+    manifest_mod.write_manifest(site, manifest)
+
+
+@pytest.mark.parametrize("name,rel,digest,field", MARKET_ARCHIVES)
+@pytest.mark.parametrize("current", [False, True])
+def test_market_readers_use_the_exact_declared_contract(isolated_site, name, rel, digest, field, current):
+    site, contracts = isolated_site
+    declared = manifest_mod.sha256_file(contracts / name) if current else digest
+    _market_contract_payload(site, name, rel, declared, field, new_field=current)
+    assert verify_site(site) == []
+    assert Snapshot(site).payload(rel)
+
+
+@pytest.mark.parametrize("name,rel,digest,field", MARKET_ARCHIVES)
+def test_new_market_fields_cannot_use_the_old_declared_contract(isolated_site, name, rel, digest, field):
+    site, _ = isolated_site
+    _market_contract_payload(site, name, rel, digest, field, new_field=True)
+    assert any(rel in problem and field in problem for problem in verify_site(site))
+    with pytest.raises(SnapshotError, match=field):
+        Snapshot(site)
+
+
+@pytest.mark.parametrize("name,rel,digest,field", MARKET_ARCHIVES)
+def test_snapshot_requires_the_declared_market_contract(isolated_site, name, rel, digest, field):
+    site, _ = isolated_site
+    _market_contract_payload(site, name, rel, digest, field, new_field=False)
+    manifest = manifest_mod.load_manifest(site)
+    del manifest["contracts"][name]
+    manifest_mod.write_manifest(site, manifest)
+    assert verify_site(site)
+    with pytest.raises(SnapshotError, match="contrato exacto"):
+        Snapshot(site)
