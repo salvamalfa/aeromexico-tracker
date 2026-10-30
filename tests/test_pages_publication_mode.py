@@ -3,10 +3,10 @@
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 import yaml
@@ -17,7 +17,7 @@ STEPS = [
     step["run"]
     for job in ("verify", "preview")
     for step in WORKFLOW["jobs"][job]["steps"]
-    if "run" in step and "python -m src.publish.editorial" in step["run"]
+    if "run" in step and "check_pages_publication.py" in step["run"]
 ]
 
 
@@ -41,6 +41,9 @@ def run_step(script, cwd):
     # environment installer/launcher is replaced by this test's interpreter.
     script = "\n".join(line for line in script.splitlines() if "uv sync " not in line)
     script = script.replace("uv run python ", f'"{sys.executable}" ')
+    helper = ROOT / "scripts/check_pages_publication.py"
+    script = script.replace("../scripts/check_pages_publication.py", str(helper))
+    script = script.replace(" scripts/check_pages_publication.py", f" {helper}")
     return subprocess.run(
         ["bash", "-e", "-c", script],
         cwd=cwd,
