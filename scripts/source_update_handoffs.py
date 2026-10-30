@@ -14,6 +14,7 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
+from scripts import source_update_handoff_routing as routing
 from scripts.source_update_coordinator import digest, load, persist
 from src.source_updates import readiness
 from src.source_updates.calendar import local_time
@@ -25,12 +26,16 @@ ENTITIES = {"am_financials": "AEROMEXICO", "volaris_sec": "VOLARIS", "viva_finan
 IMPACTS = {
     **{k: [v] for k, v in ENTITIES.items()},
     **{k: [] for k in ("banxico", "fuel", "equities")},
+    "aerocivil": ["AEROMEXICO"],
 }
 CONSUMERS = [
     "src/dashboard/executive_summary.py",
     "src/dashboard/market.py",
     "src/web_export/executive.py",
     "src/web_export/market.py",
+    "src/dashboard/international_routes.py",
+    "src/dashboard/recorded_movements.py",
+    "src/web_export/flights.py",
 ]
 PROVENANCE = {
     "record_id",
@@ -160,12 +165,14 @@ def verify_source(observation: dict, workspace: Path) -> dict:
 
 
 def verify_candidate(observation: dict, workspace: Path) -> dict:
-    item, cutoff = observation["item"], observation["as_of"]
+    item, cutoff = routing.native_item(observation["item"]), observation["as_of"]
     recipe = {"version": 1, "as_of": cutoff, "required_items": [item["id"]], "items": [item]}
     selected = readiness.preflight(recipe, workspace)[0]
     checked = readiness.check_task(selected, item["candidate_as_of"], cutoff)
     if not source_evidence_accepted(selected, checked):
         raise ValueError("This product needs its own verified availability or exact closed edition")
+    if item["product"] == "aerocivil":
+        routing.verify_movement_acceptance(checked)
     if observation.get("mode") == "validated_publication_arrival":
         import pandas as pd
 
@@ -178,7 +185,7 @@ def verify_candidate(observation: dict, workspace: Path) -> dict:
                     source_hashes.update(frame["source_hash"].dropna().tolist())
         if file_hash(original) not in source_hashes:
             raise ValueError("Publication document is not the original used by the verified financial rows")
-    identity = meaningful_data(item, checked)
+    identity = meaningful_data(observation["item"], checked)
     return {"checked": checked, "data_version": digest(identity), "source_binding": observation}
 
 
@@ -241,9 +248,7 @@ def observe(state: dict, observation: dict, workspace: Path):
         "observations": [observation],
         "previous_source_id": state["heads"].get(key),
         "public_impact": {
-            "status": "existing_issuer_executive_projection"
-            if item["product"] in ENTITIES
-            else "no_public_impact",
+            "status": routing.impact_status(item["product"]),
             "consumer_code": {name: file_hash(ROOT / name) for name in CONSUMERS},
         },
     }
@@ -251,6 +256,8 @@ def observe(state: dict, observation: dict, workspace: Path):
     if item["product"] in ENTITIES:
         enqueue(state, "analysis", source_id, ENTITIES[item["product"]])
         enqueue(state, "dashboard", source_id, ENTITIES[item["product"]], release_kind="data")
+    elif item["product"] == "aerocivil":
+        enqueue(state, "dashboard", source_id, "AEROMEXICO", release_kind="movements")
     # Macro inputs currently have no public chart consumer. Preserve the result
     # without inventing a dashboard job or forcing an unrelated thesis rewrite.
 
@@ -295,7 +302,7 @@ def envelope(state: dict, job: dict) -> dict:
 
 
 def expected_binding(source: dict) -> dict:
-    item = source["source_binding"]["item"]
+    item = routing.native_item(source["source_binding"]["item"])
     return {
         "product": item["product"],
         "period": item["period"],
@@ -324,18 +331,7 @@ def verify_analysis(job: dict, source: dict, result: dict) -> dict:
 
 
 def verify_release_binding(job: dict, source: dict):
-    from src.publish.issuer_scope import anchor
-
-    # verify_dashboard already checked the complete site against this committed anchor.
-    spec = anchor()
-    allowed = {"data_only"} if job["release_kind"] == "data" else {"editorial_only", "combined"}
-    if (
-        spec.get("source_binding") != expected_binding(source)
-        or spec.get("entity_key") != job["entity"]
-        or spec.get("period_id") != job["period"]
-        or spec.get("stage") not in allowed
-    ):
-        raise ValueError("Dashboard publication does not consume this exact source and release stage")
+    routing.verify_release(job, source, expected_binding(source))
 
 
 def verify_dashboard(result: dict) -> None:
@@ -349,7 +345,11 @@ def verify_dashboard(result: dict) -> None:
         raise ValueError("Publication manifest is not inside the verified site")
     # Explicit, reviewed publication modes keep their own strict proof verifier.
     # Never catch a failed scope verification and retry with a looser mode.
-    if (site / "issuer-publication.json").exists():
+    if (site / "aerocivil-movements-publication.json").exists():
+        from src.publish.movements_scope import verify_movements
+
+        errors = verify_movements(site)
+    elif (site / "issuer-publication.json").exists():
         from src.publish.issuer_scope import verify_issuer
 
         errors = verify_issuer(site)

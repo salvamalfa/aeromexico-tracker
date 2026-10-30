@@ -204,6 +204,17 @@ filas financieras. Es un handoff de una llegada conocida, no otro monitor.
 La incorporación debe conservar la publicación y el corte comprobados; el
 evento consolidado y sus disparos existentes permanecen intactos.
 
+Aerocivil tiene un handoff de dashboard propio: trabajo `2026Q3` y dato nativo
+`source_period=2026M07`. El adaptador sólo valida ese mes con su comprobador
+dedicado y la política operacional provisional; no convierte el código S/I en
+una leyenda oficial ni acredita cobertura trimestral. Una captura idéntica no
+duplica el trabajo. Una revisión real conserva una versión nueva e historial.
+El outbox encola `release_kind=movements`, sin análisis financiero y con
+`dependency=null`; el sitio conserva las tesis y usa su gate de movimientos.
+El binding que ese gate coteja identifica el mes nativo, retención/colección,
+corte y salidas exactos. Si cambió el productor, hace falta certificación nueva
+offline en otro workspace; el fallo de fingerprint nunca se ignora.
+
 ```mermaid
 flowchart LR
   C[Calendario único / disponibilidad conocida] --> F[Agente de fuentes: producto y periodo]
@@ -214,6 +225,7 @@ flowchart LR
   A --> G{Citas, auditoría y aprobación exacta}
   G -->|pasa| D[Agente dashboard y su skill]
   O -->|datos del financiero: gráficas propias| D
+  O -->|movimientos Aerocivil provisionales| D
   O -->|sin consumidor visible| N[no_public_impact y evidencia]
   D --> P[Gate, build, PR, revisión, CI y Pages]
   P --> Q{HTTP200 y hashes servidos}

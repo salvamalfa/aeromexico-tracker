@@ -76,6 +76,37 @@ justifica otra tesis por estilo ni una recompilación idéntica.
 
 ## Generación reproducible
 
+### Aerocivil: movimientos provisionales en Vuelos
+
+El handoff `product=aerocivil`, `period=2026Q3`, `source_period=2026M07` y
+`release_kind=movements` va directamente a este agente; no pide una tesis ni
+espera un financiero. Su `data_version` conserva el periodo de trabajo y los
+hechos nativos de julio. El binding de publicación utiliza `period=2026M07`.
+No presentar ese mes como trimestre completo. Los 347 movimientos de las ocho
+observaciones originales se mantienen separados de salidas, pasajeros y asientos;
+no dividirlos entre dos ni convertir un faltante en cero.
+
+1. Reproducir el candidato dedicado con su propio corte y confirmar la política
+   operacional provisional ligada físicamente a sus recibos/filas/hashes. El
+   verificador no permite cambiar la confirmación oficial a verdadera ni omitir
+   la disponibilidad. Si el cambio de normalizador invalida el fingerprint del
+   certificado anterior, conservarlo y certificar offline en otro workspace a
+   partir de los mismos originales y metadatos. No renovar captura, copiar el
+   Gold mal tipado ni modificar el recibo histórico para eludir ese control.
+2. Usar exclusivamente el gate `src.publish.movements_scope`, con proof
+   `aerocivil-movements-publication.json`, contra el baseline financiero final
+   de siete tesis y su productor liberado. UI-only y flights-only de 2T26 no
+   autorizan este cambio de datos. No activar `flight_evidence_v1`.
+3. Confirmar en el anchor `product=aerocivil`, `stage=movements`, periodo 3T26 y
+   `source_binding` exacto del candidato mensual. El outbox verifica ese gate,
+   distinto del financiero; una falla no permite fallback a otro verificador.
+4. Retener el recibo `site_built_verified`, seguir la integración y Pages, y
+   registrar `served` sólo tras HTTP200 y hashes exactos de las rutas afectadas.
+   El escritor sigue reservado hasta esa QA. La recepción del envelope no es
+   ejecución: el coordinador registra intención y llama al worker nativo real.
+
+### Generación común
+
 1. Trabajar en rama/worktree aislado desde `origin/master` vigente. Conservar cambios
    ajenos. Registrar intención del handoff antes de efectos externos; un integrador
    serializa cambios de `site/` para evitar que dos aerolíneas se sobrescriban.
