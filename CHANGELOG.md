@@ -31,6 +31,19 @@
   incluido el agregado de Industria, de una publicación editorial. Conserva las
   siete tesis y no autoriza periodos ni valores de fuente nuevos.
 
+## 2026-10-30 · Volaris 3T26: tesis e indicadores por emisor
+
+- Entrega combinada del análisis aprobado de Volaris y su proyección financiera,
+  desde el candidato validado, sin repetir adquisición ni análisis.
+- Actualiza tarjetas, tres gráficas y tabla trimestral; conserva las seis
+  lecturas anteriores, los históricos, Viva, Aeroméxico e Industria.
+- Distingue pasajeros con boleto, ocupación reportada, trimestre y acumulado;
+  convierte explícitamente las unidades por asiento-milla a asiento-kilómetro.
+- Conserva la advertencia de reconstrucción visible autorizada de la fuente:
+  no acredita bytes originales SEC ni una comprobación de revisiones posteriores.
+- El gate verifica el baseline servido completo y las aprobaciones antes y
+  después del build. La integración y el QA servido son etapas posteriores.
+
 ## 2026-10-30 · Viva 3T26: tesis e indicadores por emisor
 
 - Entrega combinada de la tesis aprobada y los indicadores financieros de Viva,
