@@ -25,10 +25,6 @@ import { mountExecutive } from "./views/executive/bootstrap";
 import { $ } from "./views/flights/dom";
 
 let flightsMount: Promise<void> | null = null;
-function ensureDemandMounted(dataRoot: string): Promise<void> {
-  return import("./views/market/demand").then(({ mountDemand }) => mountDemand(dataRoot));
-}
-
 function ensureNewsMounted(dataRoot: string): Promise<void> {
   // mountNews guards concurrent mounts and permits retry after a fetch error.
   return import("./views/news/bootstrap").then(({ mountNews }) => mountNews(dataRoot));
@@ -50,7 +46,6 @@ export async function mount(dataRoot = "data/v1"): Promise<void> {
   }
   window.addEventListener("reader-tab-visible", (event) => {
     const panelId = (event as CustomEvent<{ panelId: string }>).detail?.panelId;
-    if (panelId === "panel-market") void ensureDemandMounted(dataRoot);
     if (panelId === "panel-news") void ensureNewsMounted(dataRoot);
     if (panelId === "panel-flights") void ensureFlightsMounted(dataRoot);
   });
@@ -59,8 +54,6 @@ export async function mount(dataRoot = "data/v1"): Promise<void> {
   // load — but if that default ever changed, Vuelos must still mount.
   const newsPanel = $("panel-news");
   if (newsPanel && !newsPanel.hidden) await ensureNewsMounted(dataRoot);
-  const marketPanel = $("panel-market");
-  if (marketPanel && !marketPanel.hidden) await ensureDemandMounted(dataRoot);
   const panel = $("panel-flights");
   if (panel && !panel.hidden) await ensureFlightsMounted(dataRoot);
 }

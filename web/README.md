@@ -342,17 +342,9 @@ solo porque pasen las pruebas locales.
 Mercado usa exclusivamente el trimestre global superior: indicadores y tabla
 comparan ese trimestre con el mismo del año anterior; la serie mensual termina
 al final del corte seleccionado. Segmento y aerolíneas conservan ese corte. El
-botón de información reúne universo, fuente y salvedades. Decisiones de revisión
-del corte anterior: `docs/etapas/mercado-ajustes-ui-20261018.md`.
-
-La entrega mensual monta `views/market/demand.ts` al abrir Mercado mediante
-`main.ts`, usando `market-demand.json`. La tabla de demanda aeroportuaria tiene
-su propio mes: conserva reportes directos de aeropuertos/grupos y ofrece AFAC
-como base alternativa de los aeropuertos expresamente seleccionados. Cambiar
-esa base no cambia los grupos, el trimestre financiero ni la tesis. Las fuentes,
-capturas y salvedades se mantienen visibles; los faltantes son N/D. La vista
-usa controles locales y no alimenta el chat. Un fallo de carga permite reintentar
-al volver a abrir Mercado, sin duplicar controles después de una carga válida.
+botón de información reúne universo, fuente y salvedades. La demanda por
+aeropuerto conserva su exportación y controles, pero ya no tiene sección en
+esta pestaña. Decisiones de revisión: `docs/etapas/mercado-ajustes-ui-20261018.md`.
 
 ### Noticias · candidato del PR #136
 

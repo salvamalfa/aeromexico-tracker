@@ -537,11 +537,6 @@ productores históricos y cambia solo el payload de su adaptador revisado.
 Aeroméxico IR añade una serie corporativa mensual separada en
 `flights/quarters.json`; no sustituye AFAC ni agrega un trimestre desde un mes.
 Los adaptadores aeroportuarios usan su propio universo de demanda.
-La tabla en Mercado se monta al abrir esa pestaña desde `web/src/main.ts` y
-reutiliza `views/market/demand.ts`: mes independiente, reportes directos por
-defecto y base AFAC alternativa sin alterar los grupos. La captura y salvedades
-de las fuentes permanecen visibles. El contexto aeroportuario no se atribuye a
-una aerolínea ni añade una herramienta al chat.
 
 El request privado `source_data_request_v1` declara `product`, `period`,
 `source_profile: {path, sha256}`, `record_paths` con todos los registros exactos
