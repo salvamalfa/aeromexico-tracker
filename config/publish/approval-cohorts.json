@@ -20,6 +20,27 @@
           "bytes": 46691
         }
       ]
+    },
+    {
+      "implementation_commit": "b9e920ab225f3e89301b9859ead8e49e9f8c77b9",
+      "analysis_manifest": [
+        {
+          "period_id": "2026Q3",
+          "version": "df5678b61bfeb02435ecd83d03b0680940515cd06c27cfc34cc243d7a1400746",
+          "content_hash": "a83b123b638b1d52c2706e74de5ddc0c07e262fcf240e158a3f030313b785146",
+          "evidence_fingerprint": "6751fa65130d8e580066553dfd3fa6ac605ed29d0faa5fcd516caaf9dae6e641",
+          "approval_event": "af137de7c9fae5981486d7eddf329b41be831954412bb1e2adf71664dbeca327",
+          "audit_hash": "1cb4784597e61457a483339e64c83748b592c5cf5ef5ef3f464f0834a75e11fe",
+          "entity_key": "VIVA_AEROBUS"
+        }
+      ],
+      "files": [
+        {
+          "path": "data/v1/analysis/VIVA_AEROBUS/2026Q3.json",
+          "sha256": "327fd5b46c0f09f4f8a0fa92871bce7fbca9578fad9d4148c841b28542dd48a2",
+          "bytes": 7571
+        }
+      ]
     }
   ]
 }
