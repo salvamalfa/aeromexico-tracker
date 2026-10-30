@@ -1,0 +1,1465 @@
+{
+  "schema_version": "source_data_release_v1",
+  "product": "am_traffic_ir",
+  "period_id": "2026M09",
+  "baseline_commit": "17fc9ca96dc5b665f9c85b2f3d9ec18f96a8dea9",
+  "baseline_manifest_sha256": "ec1e182251aafd5938be10696712e05371a2788f72059858e62925d7860e1149",
+  "producer_code_version": "48ef9da4f3fd12c6a22f586da2bccdac0c578e8bd71bf5d488a6fd5a03e51719",
+  "authorization_sha256": "c3b035126070020825edb9709d3ac6ea0f3eac753360dc34eaad26ef432abdf3",
+  "contract_changes": {
+    "market_demand.schema.json": "c399520ba220496cbbde7914e6bc7bf95d7ebc9beae31594e4ca8a375f08a925",
+    "flights.schema.json": "645c58aee902552588aca3c42539f0ac784d19ee00277c1222b18ef5e7ce747e",
+    "market.schema.json": "7ca75f192cfd25e97e8749915f3a4253f201ef0d4c41e815ec267b5ecf75b5db"
+  },
+  "source_binding": {
+    "product": "am_traffic_ir",
+    "period": "2026M09",
+    "receipt_id": "bd8933a289c74b77993c3605c4fb6d55",
+    "candidate_as_of": "2026-10-28T22:09:43.676392+00:00",
+    "output_sha256": {
+      "silver/aeromexico_ir_monthly_metrics": "b47c02e5d4ce6d7c26e242a62f196060e9deaf3f065db56fc2127fd00683fb03",
+      "gold/fact_carrier_metrics": "004e4814af1d65634d587a8a24117fb1090e618d975cc75730505a4a4d258af7",
+      "gold/dim_period": "7c779066ccb0c57bbb904c7b2e69f63cc0f76065954205b6ff5f63d40588408a",
+      "gold/dim_carrier": "92bd9585ffb22c98df7db7bf63ed3af9d3e1a911133bf60e6e7adc09b7ca821b",
+      "gold/dim_metric": "f74dfd65dbb3ef353f3189948059628513194fc62c4e353a438c05210fdf430f",
+      "gold/dim_source_artifact": "7a9e6c5b5577d9959c0189677d77d85c9c1e42e2ed1cb2892fa31cad7fc67179",
+      "gold/bridge_record_lineage": "cb3ea9ac7b8132df73cd2614f5b875f072b783a9e63cf1d46adb56b6d93d295b"
+    }
+  },
+  "projection": {
+    "entity": "AEROMEXICO",
+    "source_url": "https://ir.aeromexico.com/node/9131/html",
+    "source_sha256": "d8014d7fc379aa17893a3ca9618da1bd1317b4e1082d0133b9cf78e981f5993b",
+    "captured_at": "2026-10-28T22:09:43.664263+00:00",
+    "documentary_date": "2026-10-06",
+    "scope": "company_reported_month_including_charter_and_its_prior_year_comparative_not_AFAC",
+    "records": [
+      {
+        "period_id": "2025M09",
+        "date": "2025-09-01",
+        "domestic": 1276000.0,
+        "international": 617000.0,
+        "reported_total": 1892000.0,
+        "total_segment_sum": 1893000.0,
+        "reconciliation_delta": -1000.0
+      },
+      {
+        "period_id": "2026M09",
+        "date": "2026-09-01",
+        "domestic": 1226000.0,
+        "international": 627000.0,
+        "reported_total": 1853000.0,
+        "total_segment_sum": 1853000.0,
+        "reconciliation_delta": 0.0
+      }
+    ]
+  },
+  "data_files": [
+    {
+      "path": "data/v1/flights/quarters.json",
+      "sha256": "74b9a3e5d585bc5eb024b34ed680d34ca444d9606069940abb642a55f821addf",
+      "bytes": 648872
+    },
+    {
+      "path": "data/v1/market-demand.json",
+      "sha256": "96aad356e44e9ae26280cea439b76cc5c176cc55a70bd0610e3028140db38dd7",
+      "bytes": 138924
+    },
+    {
+      "path": "data/v1/market.json",
+      "sha256": "e036b23e9beaaa270f58bf257aa72f1be04dc034ba9e37885243a0d359b5e8e6",
+      "bytes": 150516
+    }
+  ],
+  "additional_sources": [
+    {
+      "product": "aicm_traffic",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "aicm_traffic",
+        "period": "2026M09",
+        "receipt_id": "fbad697d0de14592b1a1c9a78f4865b6",
+        "candidate_as_of": "2026-10-28T15:04:51.040811+00:00",
+        "output_sha256": {
+          "silver/government_native": "321e6c788404be5b805b665db2bd453e5b8995c33593b9a8de3eca858bfaa194",
+          "silver/airport_traffic": "0407d5fb228edb08fc40f1b32f7cc69902f062429fe3037b193989a7f6ed4dbd",
+          "gold/fact_airport_traffic": "2320a3fc073b0785cc094597174f3fa2c4a6d0593d168743c54bd4b5a8a7f28a",
+          "gold/dim_airport": "598ccfcdb6d8a6126833bb6e749c5e77770adfeae547797ec076ddc360ed8fbb",
+          "gold/dim_period": "48c76102aeeb73b63f74f6b294cbec8effccbdcb71e78e5c3360f1395325862d",
+          "gold/dim_source_artifact": "19f9acaef350e9663790c522cae3756e3874987f4d16496c8cad79289d380026",
+          "gold/bridge_record_lineage": "f18853d11ae8e18a3030029f4c687681a8b2e6f69f73bab45a448db298b75454"
+        }
+      },
+      "projection": {
+        "product": "aicm_traffic",
+        "period": "2026M09",
+        "airports": [
+          {
+            "key": "MEX",
+            "group": "GOVERNMENT",
+            "period_id": "2026M09",
+            "passengers": 3616607,
+            "previous_period": "2025M09",
+            "previous_passengers": 3550554,
+            "yoy_pct": 1.8603575667346606,
+            "source_system": "aicm",
+            "source_hash": "77a5fe8eb9761394c866374fad90e07b38bfd68453dfb6e1320816876cffed8e",
+            "source_url": "https://www.aicm.com.mx/acercadelaicm/archivos/files/Estadisticas/EstadisticasSep2026.pdf",
+            "captured_at": "2026-10-28 15:02:13.890115"
+          }
+        ],
+        "groups": [],
+        "quality_note": "AICM: pasajeros comerciales; total aeroportuario de todas las compañías."
+      }
+    },
+    {
+      "product": "aifa_traffic",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "aifa_traffic",
+        "period": "2026M09",
+        "receipt_id": "669a3daff89d460894d54475b03ae3f4",
+        "candidate_as_of": "2026-10-28T14:46:01.109353+00:00",
+        "output_sha256": {
+          "silver/government_native": "8d2d13075c6d523745767abc675b560de5eeb96b523ee96dcc7729ec4807d973",
+          "silver/airport_traffic": "f5145155e5113e781947b38c957f16ed1a268b3b00014215c9731b3b9d72d395",
+          "gold/fact_airport_traffic": "df0d10e5223266b81fe7a9e1f66f8bf0d0186b2b98f974f17d1cf88cefca7f28",
+          "gold/dim_airport": "ceb4edabb1008a1db40200334552a150e620af55a471c8ed2f4867735f890ef2",
+          "gold/dim_period": "007a1d894e006e4d2795ddcda68c9ca29b16de06663935a54b426703302b1b51",
+          "gold/dim_source_artifact": "d06ab6553daf723f0febb5f2b0a437a390de928425237eaf4570984c4ccfb5a0",
+          "gold/bridge_record_lineage": "62958df31cb2eafd775ed21ca0647df45c1ca515708771e54c4da6cacb192d3e"
+        }
+      },
+      "projection": {
+        "product": "aifa_traffic",
+        "period": "2026M09",
+        "airports": [
+          {
+            "key": "NLU",
+            "group": "GOVERNMENT",
+            "period_id": "2026M09",
+            "passengers": 596283,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "aifa",
+            "source_hash": "a26a3d21ad767c5ded2bb450845795abdea16c62408845c263650390ad9668d3",
+            "source_url": "https://aifa-repositorio.s3.us-east-1.amazonaws.com/PyE/Numeralia-Aeroportuaria-Sep-2026.xlsx",
+            "captured_at": "2026-10-28 14:44:51.735110"
+          }
+        ],
+        "groups": [],
+        "quality_note": "AIFA: pasajeros comerciales y de aviación general; total aeroportuario de todas las compañías."
+      }
+    },
+    {
+      "product": "asur_traffic",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "asur_traffic",
+        "period": "2026M09",
+        "receipt_id": "2d45fa3d5a2842aaa262621f5815939e",
+        "candidate_as_of": "2026-10-28T02:14:22.022689+00:00",
+        "output_sha256": {
+          "silver/airport_group_native": "a82f17eae1b3fcceee584476bbc725baa9790f4deb901632a6f2112a9796595f",
+          "silver/airport_traffic": "3630bb293043d2e340d35d1514eb5d8ffd077b0d108a44521cde810475553f1f",
+          "gold/fact_airport_traffic": "9283d97b9c9ca71a9fd66becad7b8bd504525203337f1134196cdc93fbc2ecb9",
+          "gold/fact_airport_group_traffic": "130e87b97500c49b7a85670a80a42aa0101d6ed0ad7b9d4da6a21d26c6f908c7",
+          "gold/dim_airport_group": "14d09a21e04863909fae30a6b568ee270e3f732aad30992799501d97e2ad80a6",
+          "gold/dim_airport": "0f2081e5d7ca666096755ebba8d08de9ba60269ca1f0c92dc8803cda3d063fb1",
+          "gold/dim_period": "05e7d19acaefb75d4284ea4a081efe2c7ec2f7aa4582064c611a3ddaed10c911",
+          "gold/dim_source_artifact": "e6d93200a95695802f57dbb0f3dac26aa56d5f0a8bffa1632f8036882f718b39",
+          "gold/bridge_record_lineage": "4ce008050e7aac8140afacc2123b7ffea84168964da7627ad1678c7e95593e76"
+        }
+      },
+      "projection": {
+        "product": "asur_traffic",
+        "period": "2026M09",
+        "airports": [
+          {
+            "key": "CUN",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 1607088,
+            "previous_period": "2025M09",
+            "previous_passengers": 1758719,
+            "yoy_pct": -8.62167293353856,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "CZM",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 35657,
+            "previous_period": "2025M09",
+            "previous_passengers": 33841,
+            "yoy_pct": 5.3662716822789,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "HUX",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 49003,
+            "previous_period": "2025M09",
+            "previous_passengers": 48720,
+            "yoy_pct": 0.5808702791461506,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "MID",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 311242,
+            "previous_period": "2025M09",
+            "previous_passengers": 314119,
+            "yoy_pct": -0.9158949315386855,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "MTT",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 10574,
+            "previous_period": "2025M09",
+            "previous_passengers": 11861,
+            "yoy_pct": -10.850687125874714,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "OAX",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 121878,
+            "previous_period": "2025M09",
+            "previous_passengers": 137355,
+            "yoy_pct": -11.26788249426668,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "TAP",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 40721,
+            "previous_period": "2025M09",
+            "previous_passengers": 37829,
+            "yoy_pct": 7.644928494012526,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "VER",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 147969,
+            "previous_period": "2025M09",
+            "previous_passengers": 151512,
+            "yoy_pct": -2.338428639315693,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          },
+          {
+            "key": "VSA",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 122267,
+            "previous_period": "2025M09",
+            "previous_passengers": 111761,
+            "yoy_pct": 9.40041696119398,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          }
+        ],
+        "groups": [
+          {
+            "key": "ASUR",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 2446399,
+            "previous_period": "2025M09",
+            "previous_passengers": 2605717,
+            "yoy_pct": -6.114171262650547,
+            "source_system": "asur_visible_reconstruction",
+            "source_hash": "b6254c5108ed4128f0d3d7eae4418e342843bcbb893ef0d0abcc5e555b056835",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1123452/000110465926114381/tm2627227d1_99-1.htm",
+            "captured_at": "2026-10-28 02:06:32.519290"
+          }
+        ],
+        "quality_note": "ASUR: sólo sus nueve aeropuertos mexicanos; pasajeros enteros reportados, sin tránsito ni aviación general. Reconstrucción visible autorizada; no se certifican los bytes originales del emisor ni revisiones posteriores."
+      }
+    },
+    {
+      "product": "gap_traffic",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "gap_traffic",
+        "period": "2026M09",
+        "receipt_id": "5ca1ca8682a14ae38b04658ad37c7bbc",
+        "candidate_as_of": "2026-10-28T02:20:52.672779+00:00",
+        "output_sha256": {
+          "silver/airport_group_native": "2ccd566f7daf03a5849093bbe79da847c76fb15143a8b0be189af280bf974387",
+          "silver/airport_traffic": "f9c7b620a1ab03163d526d0511bb45d0f1af376a1db2026168ee8c9ee4f01cc2",
+          "gold/fact_airport_traffic": "d3c21717437ba2a5596e446c41d3d0abe3fbd00c7f32db7518004b69e04ebb38",
+          "gold/fact_airport_group_traffic": "0dba1040401fb48f7d5decbc46c320ee0a620d01e91b2b697ea4aa84bff5e426",
+          "gold/dim_airport_group": "64258fa9b4457cf56ed2a3ae9631146b32ee3852b61a5c3d7f857b59b308e623",
+          "gold/dim_airport": "1c01a32695999f079edf919a8704ebec037dac0b9072fdb664a3268c1c9edc96",
+          "gold/dim_period": "05e7d19acaefb75d4284ea4a081efe2c7ec2f7aa4582064c611a3ddaed10c911",
+          "gold/dim_source_artifact": "ab1c2075b6d0b46887685caa859e89fbb2fc93e7f18cefbbfa0d970645399567",
+          "gold/bridge_record_lineage": "e067297eb43167a17494a01ec8c973551219184a69fd70d4ac3d8d4801b6995f"
+        }
+      },
+      "projection": {
+        "product": "gap_traffic",
+        "period": "2026M09",
+        "airports": [
+          {
+            "key": "AGU",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 79700,
+            "previous_period": "2025M09",
+            "previous_passengers": 75800,
+            "yoy_pct": 5.145118733509224,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "BJX",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 230100,
+            "previous_period": "2025M09",
+            "previous_passengers": 249400,
+            "yoy_pct": -7.7385725741780265,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "GDL",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 1399300,
+            "previous_period": "2025M09",
+            "previous_passengers": 1412200,
+            "yoy_pct": -0.9134683472595939,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "HMO",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 160300,
+            "previous_period": "2025M09",
+            "previous_passengers": 170300,
+            "yoy_pct": -5.871990604815036,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "LAP",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 96100,
+            "previous_period": "2025M09",
+            "previous_passengers": 101500,
+            "yoy_pct": -5.320197044334973,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "LMM",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 49300,
+            "previous_period": "2025M09",
+            "previous_passengers": 54300,
+            "yoy_pct": -9.208103130755063,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "MLM",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 99200,
+            "previous_period": "2025M09",
+            "previous_passengers": 116900,
+            "yoy_pct": -15.141146278870831,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "MXL",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 72400,
+            "previous_period": "2025M09",
+            "previous_passengers": 95100,
+            "yoy_pct": -23.86961093585699,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "PVR",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 307100,
+            "previous_period": "2025M09",
+            "previous_passengers": 342600,
+            "yoy_pct": -10.361938120256864,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "SJD",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 374900,
+            "previous_period": "2025M09",
+            "previous_passengers": 405500,
+            "yoy_pct": -7.5462392108508025,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "TIJ",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 830100,
+            "previous_period": "2025M09",
+            "previous_passengers": 944100,
+            "yoy_pct": -12.07499205592628,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          },
+          {
+            "key": "ZLO",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 12700,
+            "previous_period": "2025M09",
+            "previous_passengers": 11100,
+            "yoy_pct": 14.414414414414424,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          }
+        ],
+        "groups": [
+          {
+            "key": "GAP",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 3711200,
+            "previous_period": "2025M09",
+            "previous_passengers": 3978800,
+            "yoy_pct": -6.725645923393985,
+            "source_system": "sec_edgar",
+            "source_hash": "4f351f91815d35686516d948123ad202723fc9fa8ece56d01345e3eeaac24f5d",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/1347557/000117184326006475/f6k_100626.htm",
+            "captured_at": "2026-10-27 19:51:12.677852"
+          }
+        ],
+        "quality_note": "GAP: sólo sus doce aeropuertos mexicanos; datos preliminares redondeados a cien pasajeros (cota de redondeo ±50 por aeropuerto y ±600 para el grupo). Jamaica excluida; CBX está incluido en Tijuana y no se suma de nuevo."
+      }
+    },
+    {
+      "product": "oma_traffic",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "oma_traffic",
+        "period": "2026M09",
+        "receipt_id": "01b79e38289d4cd4ae6f82226ccd84a3",
+        "candidate_as_of": "2026-10-28T15:06:10.602220+00:00",
+        "output_sha256": {
+          "silver/source_products/oma_traffic": "02719d8d3fc605ae2b932617dbbd31b3405b7767cf9ac009b8c3c65e7d624fb3",
+          "gold/fact_oma_retained_terminal_traffic": "02719d8d3fc605ae2b932617dbbd31b3405b7767cf9ac009b8c3c65e7d624fb3",
+          "gold/dim_source_artifact": "f046cf52d0eaa04e52d31769bc42ed9d5c765237c86552e6ad1b49c334bdee41",
+          "gold/bridge_record_lineage": "180dc3e2df0a677a39914fafbeb813ade643cf275d11470f7a882ae381547ba8"
+        }
+      },
+      "projection": {
+        "product": "oma_traffic",
+        "period": "2026M09",
+        "airports": [
+          {
+            "key": "ACA",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 48061,
+            "previous_period": "2025M09",
+            "previous_passengers": 45348,
+            "yoy_pct": 5.982623268942411,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "CJS",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 151823,
+            "previous_period": "2025M09",
+            "previous_passengers": 172757,
+            "yoy_pct": -12.117598708011833,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "CUL",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 150393,
+            "previous_period": "2025M09",
+            "previous_passengers": 157169,
+            "yoy_pct": -4.311282759322765,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "CUU",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 165518,
+            "previous_period": "2025M09",
+            "previous_passengers": 168795,
+            "yoy_pct": -1.9414082170680413,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "DGO",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 51414,
+            "previous_period": "2025M09",
+            "previous_passengers": 42419,
+            "yoy_pct": 21.205120347014315,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "MTY",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 1174667,
+            "previous_period": "2025M09",
+            "previous_passengers": 1270582,
+            "yoy_pct": -7.548902786282197,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "MZT",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 108826,
+            "previous_period": "2025M09",
+            "previous_passengers": 115909,
+            "yoy_pct": -6.110828322218287,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "REX",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 34576,
+            "previous_period": "2025M09",
+            "previous_passengers": 33189,
+            "yoy_pct": 4.179095483443307,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "SLP",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 80343,
+            "previous_period": "2025M09",
+            "previous_passengers": 67893,
+            "yoy_pct": 18.337678405726663,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "TAM",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 48486,
+            "previous_period": "2025M09",
+            "previous_passengers": 49206,
+            "yoy_pct": -1.4632361907084501,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "TRC",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 71947,
+            "previous_period": "2025M09",
+            "previous_passengers": 69680,
+            "yoy_pct": 3.253444316877152,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "ZCL",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 37631,
+            "previous_period": "2025M09",
+            "previous_passengers": 35819,
+            "yoy_pct": 5.058767693123767,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          },
+          {
+            "key": "ZIH",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 36940,
+            "previous_period": "2025M09",
+            "previous_passengers": 40248,
+            "yoy_pct": -8.219041939972172,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          }
+        ],
+        "groups": [
+          {
+            "key": "OMA",
+            "group": "OMA",
+            "period_id": "2026M09",
+            "passengers": 2160625,
+            "previous_period": "2025M09",
+            "previous_passengers": 2269014,
+            "yoy_pct": -4.7769207241559535,
+            "source_system": "oma_ir",
+            "source_hash": "929ecd3c88b3f3205f42a53c8c649ec18078c0c7016214a551ba58029f1429b4",
+            "source_url": "https://news.oma.aero/assets/oma-september-2026-traffic-report-vf-pdf-7687c-f8d04.html?dl=1",
+            "captured_at": "2026-10-28 15:02:57.616244+00:00"
+          }
+        ],
+        "quality_note": "OMA: pasajeros terminales de trece aeropuertos mexicanos; incluye aviación comercial, chárter y general, excluye tránsito. El mes y el acumulado anual se mantienen separados. Se incorpora sólo el mes comprobado; las exclusiones del detalle histórico siguen vigentes."
+      }
+    },
+    {
+      "product": "afac_airports",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "afac_airports",
+        "period": "2026M09",
+        "receipt_id": "5b89eb201ba84c7aa14743c24c12872c",
+        "candidate_as_of": "2026-10-28T23:49:53.503793+00:00",
+        "output_sha256": {
+          "silver/source_products/afac_airports": "0f5d27de78fd5fbe0c249bbee4b1d02fe02426b8769dc387722a31d76c4c643e",
+          "gold/fact_afac_airport_observations": "0f5d27de78fd5fbe0c249bbee4b1d02fe02426b8769dc387722a31d76c4c643e",
+          "gold/dim_source_artifact": "3341a05acd236abca139755f5d34eb346bf30a6b4b2aebd831429096a1664373",
+          "gold/bridge_record_lineage": "f28df07055c772188cd924163a2f7c25689c7d107cb97fb39b370bb0fac5185f"
+        }
+      },
+      "projection": {
+        "product": "afac_airports",
+        "period": "2026M09",
+        "airports": [
+          {
+            "key": "AGU",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 80232,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "BJX",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 231413,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "CUN",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 1618165,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "CZM",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 36469,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "GDL",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 1404140,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "HMO",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 160434,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "HUX",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 49331,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "LAP",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 97728,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "LMM",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 49773,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "MEX",
+            "group": "AICM",
+            "period_id": "2026M09",
+            "passengers": 3616607,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "MID",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 312778,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "MLM",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 99613,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "MTT",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 10649,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "MXL",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 71948,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "NLU",
+            "group": "AIFA",
+            "period_id": "2026M09",
+            "passengers": 596256,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "OAX",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 122035,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "PVR",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 315265,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "SJD",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 375989,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "TAP",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 41423,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "TIJ",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 843102,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "VER",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 149400,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "VSA",
+            "group": "ASUR",
+            "period_id": "2026M09",
+            "passengers": 123288,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          },
+          {
+            "key": "ZLO",
+            "group": "GAP",
+            "period_id": "2026M09",
+            "passengers": 12557,
+            "previous_period": "2025M09",
+            "previous_passengers": null,
+            "yoy_pct": null,
+            "source_system": "afac",
+            "source_hash": "156b4d72a90cc4fd932936d0e308a54c4bf89e7d10ae9d5cabb43a2ef324e729",
+            "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112825/producto-aeropuertos-2006-2026-sep-27102026.xlsx",
+            "captured_at": "2026-10-28 23:49:53.139260+00:00"
+          }
+        ],
+        "baseline_airport_keys": [
+          "AGU",
+          "BJX",
+          "CUN",
+          "CZM",
+          "GDL",
+          "HMO",
+          "HUX",
+          "LAP",
+          "LMM",
+          "MEX",
+          "MID",
+          "MLM",
+          "MTT",
+          "MXL",
+          "NLU",
+          "OAX",
+          "PVR",
+          "SJD",
+          "TAP",
+          "TIJ",
+          "VER",
+          "VSA",
+          "ZLO"
+        ],
+        "unmapped_existing_airports": []
+      }
+    },
+    {
+      "product": "afac_carriers",
+      "period": "2026M08",
+      "source_binding": {
+        "product": "afac_carriers",
+        "period": "2026M08",
+        "receipt_id": "26a7d4660eb6408db4239a94171b7824",
+        "candidate_as_of": "2026-10-28T15:05:04.799921+00:00",
+        "output_sha256": {
+          "silver/afac_carriers_source_native": "ed3cefa5d80e6992f2f68dcf6331aaac121e6610ff21a9f487be7264d3193e86",
+          "gold/fact_afac_carrier_source": "5f82812805c5ad7accc29e76c32ea104accf0391d8c146c13fb18bebf9d19ce1",
+          "gold/dim_source_artifact": "f8c5a581589125501611e8e3bc6d06277210fc2ab8430a29ac4d4f536b85c749",
+          "gold/bridge_record_lineage": "552f5fecd83c642f2e2c279ee0aa85bab50a02e29a0e045c256788540d2e4565"
+        }
+      },
+      "projection": {
+        "product": "afac_carriers",
+        "edition": "2026M08",
+        "previous_period": "2026M06",
+        "periods": [
+          "2026M07",
+          "2026M08"
+        ],
+        "records": [
+          {
+            "period_id": "2026M07",
+            "date": "2026-07-01",
+            "period_type": "month",
+            "domestic": 1305350.0,
+            "international": 820048.0,
+            "total_segment_sum": 2125398.0,
+            "reported_total": 2125398.0,
+            "reconciliation_delta": 0.0,
+            "source_id": "afac-retained-database-2026M08",
+            "source_hash": "4c47c52a4ec05af37d8bc488fb2985f74a4fc47cbaf5a91c9b1589f0aa9425f2",
+            "cutoff_date": null,
+            "agent_eligible": false,
+            "availability": "reported_operator_cells_group_sum"
+          },
+          {
+            "period_id": "2026M08",
+            "date": "2026-08-01",
+            "period_type": "month",
+            "domestic": 1351678.0,
+            "international": 764980.0,
+            "total_segment_sum": 2116658.0,
+            "reported_total": 2116658.0,
+            "reconciliation_delta": 0.0,
+            "source_id": "afac-retained-database-2026M08",
+            "source_hash": "4c47c52a4ec05af37d8bc488fb2985f74a4fc47cbaf5a91c9b1589f0aa9425f2",
+            "cutoff_date": null,
+            "agent_eligible": false,
+            "availability": "reported_operator_cells_group_sum"
+          }
+        ],
+        "months": [
+          {
+            "period_id": "2026M07",
+            "period_label": "jul 26",
+            "segments": {
+              "domestic": {
+                "mexican_carriers_passengers": 6057864.0,
+                "carriers": {
+                  "AEROMEXICO": {
+                    "passengers": 1305350.0,
+                    "share": 0.21548024188063647
+                  },
+                  "VOLARIS": {
+                    "passengers": 2340362.0,
+                    "share": 0.38633452319167283
+                  },
+                  "VIVA_AEROBUS": {
+                    "passengers": 2325891.0,
+                    "share": 0.38394572740490707
+                  }
+                },
+                "industry": {
+                  "passengers": 5971603.0,
+                  "share": 0.9857604924772164
+                }
+              },
+              "international": {
+                "mexican_carriers_passengers": 1878931.0,
+                "carriers": {
+                  "AEROMEXICO": {
+                    "passengers": 820048.0,
+                    "share": 0.4364439141192519
+                  },
+                  "VOLARIS": {
+                    "passengers": 754226.0,
+                    "share": 0.4014122924152084
+                  },
+                  "VIVA_AEROBUS": {
+                    "passengers": 304264.0,
+                    "share": 0.16193463197956712
+                  }
+                },
+                "industry": {
+                  "passengers": 1878538.0,
+                  "share": 0.9997908385140274
+                }
+              },
+              "total": {
+                "mexican_carriers_passengers": 7936795.0,
+                "carriers": {
+                  "AEROMEXICO": {
+                    "passengers": 2125398.0,
+                    "share": 0.26779046201898876
+                  },
+                  "VOLARIS": {
+                    "passengers": 3094588.0,
+                    "share": 0.3899039851728563
+                  },
+                  "VIVA_AEROBUS": {
+                    "passengers": 2630155.0,
+                    "share": 0.3313875437125439
+                  }
+                },
+                "industry": {
+                  "passengers": 7850141.0,
+                  "share": 0.989081990904389
+                }
+              }
+            }
+          },
+          {
+            "period_id": "2026M08",
+            "period_label": "ago 26",
+            "segments": {
+              "domestic": {
+                "mexican_carriers_passengers": 5965443.0,
+                "carriers": {
+                  "AEROMEXICO": {
+                    "passengers": 1351678.0,
+                    "share": 0.22658468113767913
+                  },
+                  "VOLARIS": {
+                    "passengers": 2268646.0,
+                    "share": 0.3802979929571031
+                  },
+                  "VIVA_AEROBUS": {
+                    "passengers": 2255957.0,
+                    "share": 0.3781709086818867
+                  }
+                },
+                "industry": {
+                  "passengers": 5876281.0,
+                  "share": 0.9850535827766689
+                }
+              },
+              "international": {
+                "mexican_carriers_passengers": 1748227.0,
+                "carriers": {
+                  "AEROMEXICO": {
+                    "passengers": 764980.0,
+                    "share": 0.437574754308222
+                  },
+                  "VOLARIS": {
+                    "passengers": 710211.0,
+                    "share": 0.4062464428246446
+                  },
+                  "VIVA_AEROBUS": {
+                    "passengers": 272523.0,
+                    "share": 0.15588536271319456
+                  }
+                },
+                "industry": {
+                  "passengers": 1747714.0,
+                  "share": 0.9997065598460612
+                }
+              },
+              "total": {
+                "mexican_carriers_passengers": 7713670.0,
+                "carriers": {
+                  "AEROMEXICO": {
+                    "passengers": 2116658.0,
+                    "share": 0.27440349405665526
+                  },
+                  "VOLARIS": {
+                    "passengers": 2978857.0,
+                    "share": 0.3861789524312033
+                  },
+                  "VIVA_AEROBUS": {
+                    "passengers": 2528480.0,
+                    "share": 0.3277920885907746
+                  }
+                },
+                "industry": {
+                  "passengers": 7623995.0,
+                  "share": 0.9883745350786332
+                }
+              }
+            }
+          }
+        ],
+        "unmapped_operators": {
+          "2026M07": {
+            "domestic": [
+              "Eurus Aviation",
+              "Servicios Integrales de Aviación",
+              "Señor Air"
+            ],
+            "international": [
+              "Eurus Aviation",
+              "Servicios Integrales de Aviación"
+            ]
+          },
+          "2026M08": {
+            "domestic": [
+              "Eurus Aviation",
+              "Servicios Integrales de Aviación",
+              "Señor Air"
+            ],
+            "international": [
+              "Eurus Aviation",
+              "Servicios Integrales de Aviación"
+            ]
+          }
+        },
+        "source": {
+          "database_sha256": "4c47c52a4ec05af37d8bc488fb2985f74a4fc47cbaf5a91c9b1589f0aa9425f2",
+          "pdf_sha256": "750cf336fd3acdabac3dbb3eea052fb892cbea41883f90d2918a79e5d03c1fda",
+          "source_url": "https://datatur.sectur.gob.mx/Documentoscompartidos/afac/DB_AFAC.zip",
+          "captured_at": "2026-10-28T15:02:22.412194+00:00",
+          "scope": "reported_Mexican_carrier_passengers_scheduled_and_charter_not_foreign_or_route_estimates"
+        },
+        "quality_note": "Ediciones AFAC retenidas: los puntos nuevos suman servicio regular y fletamento de las empresas mexicanas reportadas, incluidos nombres de chárter sin mapeo. El grupo Aeroméxico es una suma calculada de Aerovías y Connect, separados en la fuente. Son cifras preliminares; la advertencia internacional del boletín permanece en la evidencia. No certifican la totalidad observacional ni generan un trimestre incompleto. Los puntos históricos publicados no se recalculan. La cobertura del denominador nuevo incluye fletamento mexicano sin mapeo que podía faltar en el histórico; no atribuir la diferencia de cobertura a un cambio del negocio."
+      }
+    },
+    {
+      "product": "viva_traffic",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "viva_traffic",
+        "period": "2026M09",
+        "receipt_id": "84a0683f0baa4f59aa2bed5bc51712ca",
+        "candidate_as_of": "2026-10-28T15:06:06.670989+00:00",
+        "output_sha256": {
+          "silver/source_products/viva_traffic": "84092e6d3e6dcfbbaff2f76a5d1ab7f18b015ffef4ed9b4ae00698116939b2d4",
+          "gold/fact_viva_monthly_source_metrics": "84092e6d3e6dcfbbaff2f76a5d1ab7f18b015ffef4ed9b4ae00698116939b2d4",
+          "gold/dim_source_artifact": "5365aae5f7055408d65ce97f4c3fcf645b5d123f98047f7b8d5d1906806a50b4",
+          "gold/bridge_record_lineage": "5f3b46f1bd156e22569bf7b7a7aaaa4cbed02dc176f92ec4ba501c34f1364764"
+        }
+      },
+      "projection": {
+        "product": "viva_traffic",
+        "period": "2026M09",
+        "series": {
+          "entity": "VIVA_AEROBUS",
+          "source_url": "https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1594478_1.pdf",
+          "source_sha256": "b0acad4f5131220a58c7ee41f25af581d75ff1a7ec8756d3f65869f8f1d636c2",
+          "captured_at": "2026-10-28T15:02:51.629268+00:00",
+          "documentary_date": "2026-10-09",
+          "scope": "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter",
+          "reporting_status": "preliminary",
+          "entity_attribution": "Viva brand; legal issuer/operator not established by this release",
+          "records": [
+            {
+              "period_id": "2025M09",
+              "date": "2025-09-01",
+              "domestic": 2131000,
+              "international": 234000,
+              "reported_total": 2364000,
+              "total_segment_sum": 2365000,
+              "reconciliation_delta": 1000
+            },
+            {
+              "period_id": "2026M09",
+              "date": "2026-09-01",
+              "domestic": 1969000,
+              "international": 228000,
+              "reported_total": 2197000,
+              "total_segment_sum": 2197000,
+              "reconciliation_delta": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "product": "volaris_traffic_ir",
+      "period": "2026M09",
+      "source_binding": {
+        "product": "volaris_traffic_ir",
+        "period": "2026M09",
+        "receipt_id": "88544d90851e4a469b48f7e2afc55d7f",
+        "candidate_as_of": "2026-10-28T15:06:12.612945+00:00",
+        "output_sha256": {
+          "silver/source_products/volaris_traffic_ir": "23938e3588cd1f812dc2ad42f1311833e8656c8a9b77ee9353e216a8d75fec31",
+          "gold/fact_volaris_ir_monthly_traffic": "23938e3588cd1f812dc2ad42f1311833e8656c8a9b77ee9353e216a8d75fec31",
+          "gold/dim_source_artifact": "0453a451eb3deeedaee55878f7a4d9fba933b74769b0f4052ee28993acfc4520",
+          "gold/bridge_record_lineage": "cb4f552d467fe7f945a60d64c48f6220ca317749624d672a22e3031af07c348a"
+        }
+      },
+      "projection": {
+        "product": "volaris_traffic_ir",
+        "period": "2026M09",
+        "series": {
+          "entity": "VOLARIS",
+          "source_url": "https://filemanager-cdn.mziq.com/published/ea52c1bb-e8e2-457e-820a-98ca17753a37/d13b9b6b-4e2e-471f-a6db-60f23a9f2262",
+          "source_sha256": "a6c88c056dcfc590a47e4698a11c722a4a5988e3646a517a2c6a071f15349f63",
+          "captured_at": "2026-10-28T15:03:10.817533+00:00",
+          "documentary_date": "2026-10-06",
+          "scope": "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter",
+          "reporting_status": "preliminary_unaudited",
+          "entity_attribution": "Controladora Vuela Compañía de Aviación, S.A.B. de C.V.",
+          "records": [
+            {
+              "period_id": "2025M09",
+              "date": "2025-09-01",
+              "domestic": 1762000,
+              "international": 614000,
+              "reported_total": 2376000,
+              "total_segment_sum": 2376000,
+              "reconciliation_delta": 0
+            },
+            {
+              "period_id": "2026M09",
+              "date": "2026-09-01",
+              "domestic": 1786000,
+              "international": 689000,
+              "reported_total": 2475000,
+              "total_segment_sum": 2475000,
+              "reconciliation_delta": 0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "frontend_files": [
+    {
+      "path": "assets/bootstrap-BiWJYpS_.js",
+      "sha256": "dc0c05b3c382144d9670b7fa4096f4b0407ed56c571bbf75fee30f34fe243ca6",
+      "bytes": 33336
+    },
+    {
+      "path": "assets/bootstrap-Bon95OId.css",
+      "sha256": "8520629920ae52d6a96539c9edc1eef010ad7334b998fac2a985ec9050350f51",
+      "bytes": 2616
+    },
+    {
+      "path": "assets/bootstrap-CG5UWcPn.css",
+      "sha256": "4c926c7b55614a1a6c9aac6a28a70c9c8e201bc6d1b45f2a193f559b2566c183",
+      "bytes": 6649
+    },
+    {
+      "path": "assets/bootstrap-DWdhZXXN.js",
+      "sha256": "153b3cea971d86e120e1305006877a08ea84af0d14cda4f410e6b7f82ea7c191",
+      "bytes": 5459
+    },
+    {
+      "path": "assets/bootstrap-gFMzakFd.js",
+      "sha256": "025d15691874d6d4e2fa45ea2bef24f9e2a07c846f4e7778c6a8c437bb8f69fe",
+      "bytes": 47986
+    },
+    {
+      "path": "assets/dashboard-C1ii5yMB.css",
+      "sha256": "63b6f325986de738447cda3c18d1169955765ca02808f10c80215cb7087c81ae",
+      "bytes": 42033
+    },
+    {
+      "path": "assets/dashboard-CCrgrjTj.js",
+      "sha256": "ad91896478b631739ce7afd445d25e92f7edb67140149dbf76b61c0c4c8949f3",
+      "bytes": 40727
+    },
+    {
+      "path": "assets/markdown-CX2IkwMA.js",
+      "sha256": "9eca7935cc1aaa08476adbd9fad16bb27a568cd542b983f85a3064354e9b0af1",
+      "bytes": 12698
+    },
+    {
+      "path": "assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0",
+      "bytes": 711
+    },
+    {
+      "path": "assets/plotly-DFvSk16B.css",
+      "sha256": "216055fb2084a35acbc0d20ab5d2a31b342c57dab212e7c685e87164aa69d700",
+      "bytes": 83132
+    },
+    {
+      "path": "assets/plotly-ZECNwRsR.js",
+      "sha256": "72f200ccd356fa6925abebce61e184a8d67fb09fac2095d7692abc11917bac98",
+      "bytes": 1396673
+    },
+    {
+      "path": "assets/state-C0C9NmV1.js",
+      "sha256": "b20e7196601d52e2251523333af542a107a8925ff7b9832a055a82492ba1a420",
+      "bytes": 7977
+    },
+    {
+      "path": "index.html",
+      "sha256": "e5e04f73b4d766f959f9625166d85a754d4347b81f969a00c8c4277daa6e235a",
+      "bytes": 21921
+    }
+  ]
+}
