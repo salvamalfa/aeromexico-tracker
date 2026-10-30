@@ -236,3 +236,152 @@ def test_unknown_strict_verifier_is_not_replaced_by_generic(tmp_path, monkeypatc
     monkeypatch.setattr(parity, "verifier_for", lambda site, repo: "src.publish.future_gate")
     with pytest.raises(AssertionError, match="Unsupported strict publication verifier"):
         parity.verify_current_publication(tmp_path, tmp_path, lambda *args: pytest.fail("fallback"))
+
+
+def source_data_chain(tmp_path, monkeypatch, layers=1):
+    from src.publish import movements_scope, source_data_scope
+
+    site, financial, original, docs, _, movement, movement_spec, _ = movement_chain(
+        tmp_path, monkeypatch
+    )
+    previous_git = parity._git
+    objects = {}
+    previous = copy.deepcopy(movement)
+    specs = []
+    for index in range(layers):
+        commit = str(index + 3) * 40
+        objects[f"{commit}:site/publication_manifest.json"] = previous
+        objects[f"{commit}:site/{issuer_scope.EXECUTIVE}"] = raw(docs[-1])
+        objects[f"{commit}:{movements_scope.ANCHOR}"] = movement_spec
+        for pin in previous["files"]:
+            if pin["path"].startswith("data/v1/analysis/"):
+                objects[f"{commit}:site/{pin['path']}"] = (site / pin["path"]).read_bytes()
+        if specs:
+            objects[f"{commit}:{source_data_scope.ANCHOR}"] = specs[-1]
+        spec = {
+            "baseline_commit": commit,
+            "baseline_manifest_sha256": parity.sha(raw(previous)),
+        }
+        specs.append(spec)
+        current = copy.deepcopy(previous)
+        if not any(pin["path"] == source_data_scope.PROOF for pin in current["files"]):
+            current["files"].append({"path": source_data_scope.PROOF})
+        previous = current
+    anchor = tmp_path / source_data_scope.ANCHOR
+    anchor.write_bytes(raw(specs[-1]))
+    (site / "publication_manifest.json").write_bytes(raw(current))
+
+    def read(repo, action, obj):
+        if obj in objects:
+            value = objects[obj]
+            return value if isinstance(value, bytes) else raw(value)
+        return previous_git(repo, action, obj)
+
+    monkeypatch.setattr(parity, "_git", read)
+    def active(site, repo, manifest, at):
+        if at is None or at in {str(i + 3) * 40 for i in range(1, layers)}:
+            return "src.publish.source_data_scope"
+        if at == "3" * 40:
+            return "src.publish.movements_scope"
+        return "src.publish.issuer_scope"
+
+    monkeypatch.setattr(parity, "_active_module", active)
+    return site, financial, original, docs, objects, current, specs[-1], anchor
+
+
+@pytest.mark.parametrize("layers", [1, 2])
+def test_source_data_replays_movement_and_issuer_history_without_changing_financials(
+    tmp_path, monkeypatch, layers
+):
+    site, financial, original, *_ = source_data_chain(tmp_path, monkeypatch, layers)
+    assert parity.preserved_financial_projection(site, tmp_path, financial) == original
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "executive",
+        "approval",
+        "thesis",
+        "missing_thesis",
+        "baseline_pin",
+        "missing_receipt",
+        "cycle",
+        "unknown_profile",
+        "historical_thesis",
+    ],
+)
+def test_source_data_parity_never_hides_financial_or_historical_damage(
+    tmp_path, monkeypatch, mutation
+):
+    from src.publish import source_data_scope
+
+    site, financial, _, docs, objects, current, spec, anchor = source_data_chain(tmp_path, monkeypatch)
+    before = objects["3" * 40 + ":site/publication_manifest.json"]
+    thesis = next(pin for pin in before["files"] if pin["path"].startswith("data/v1/analysis/"))
+    if mutation == "executive":
+        changed = copy.deepcopy(docs[-1])
+        changed["records"][0]["value"] += 1
+        (site / issuer_scope.EXECUTIVE).write_bytes(raw(changed))
+    elif mutation == "approval":
+        current["analysis_manifest"][0]["version"] = "forged"
+        (site / "publication_manifest.json").write_bytes(raw(current))
+    elif mutation == "thesis":
+        (site / thesis["path"]).write_bytes(b"changed")
+    elif mutation == "historical_thesis":
+        objects["3" * 40 + ":site/" + thesis["path"]] = b"changed in movement history"
+    elif mutation == "missing_thesis":
+        before["files"].remove(thesis)
+        spec["baseline_manifest_sha256"] = parity.sha(raw(before))
+        anchor.write_bytes(raw(spec))
+    elif mutation == "baseline_pin":
+        spec["baseline_manifest_sha256"] = "0" * 64
+        anchor.write_bytes(raw(spec))
+    elif mutation == "missing_receipt":
+        current["files"] = [pin for pin in current["files"] if pin["path"] != source_data_scope.PROOF]
+        (site / "publication_manifest.json").write_bytes(raw(current))
+    elif mutation == "cycle":
+        monkeypatch.setattr(parity, "_active_module", lambda *args: "src.publish.source_data_scope")
+    else:
+        monkeypatch.setattr(parity, "_active_module", lambda *args: "src.publish.unknown")
+    with pytest.raises(AssertionError):
+        parity.preserved_financial_projection(site, tmp_path, financial)
+
+
+def test_source_data_receipt_still_requires_preservation_when_executive_pin_already_matches(
+    tmp_path, monkeypatch
+):
+    site, _, _, docs, objects, _, _, _ = source_data_chain(tmp_path, monkeypatch)
+    expected = {"executive_sha256": parity.sha(raw(docs[-1])), "executive_bytes": len(raw(docs[-1]))}
+    thesis = next(
+        pin for pin in objects["3" * 40 + ":site/publication_manifest.json"]["files"]
+        if pin["path"].startswith("data/v1/analysis/")
+    )
+    (site / thesis["path"]).write_bytes(b"changed despite equal executive")
+    with pytest.raises(AssertionError, match="entity0"):
+        parity.preserved_financial_projection(site, tmp_path, expected)
+
+
+@pytest.mark.parametrize("failure", [None, "source changed", "missing receipt", "baseline changed"])
+def test_strict_source_data_verifier_is_required_without_generic_or_issuer_fallback(
+    tmp_path, monkeypatch, failure
+):
+    from src.publish import source_data_scope, verify
+
+    monkeypatch.setattr(parity, "verifier_for", lambda *args: "src.publish.source_data_scope")
+    calls = []
+    monkeypatch.setattr(
+        source_data_scope,
+        "verify_source_data",
+        lambda *args: calls.append(args) or ([] if failure is None else [failure]),
+    )
+    monkeypatch.setattr(issuer_scope, "verify_issuer", lambda *args: pytest.fail("issuer fallback"))
+    monkeypatch.setattr(verify, "verify_site", lambda *args: pytest.fail("generic fallback"))
+    if failure is None:
+        parity.verify_current_publication(tmp_path, tmp_path, lambda *args: pytest.fail("financial fallback"))
+    else:
+        with pytest.raises(AssertionError, match=failure):
+            parity.verify_current_publication(
+                tmp_path, tmp_path, lambda *args: pytest.fail("financial fallback")
+            )
+    assert calls == [(tmp_path, tmp_path)]

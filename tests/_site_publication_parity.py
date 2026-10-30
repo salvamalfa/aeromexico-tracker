@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 from scripts.check_pages_publication import VERIFIERS, verifier_for
-from src.publish import issuer_scope, movements_scope
+from src.publish import issuer_scope, movements_scope, source_data_scope
 from src.publish.editorial import _git
 from src.publish.financial_scope import encoded, sha
 from src.publish.issuer_projection import require_scope
@@ -13,7 +13,9 @@ from src.publish.issuer_projection import require_scope
 
 def verify_current_publication(site, repo, financial_checker):
     module = verifier_for(site, repo)
-    if module == "src.publish.movements_scope":
+    if module == "src.publish.source_data_scope":
+        problems = source_data_scope.verify_source_data(site, repo)
+    elif module == "src.publish.movements_scope":
         problems = movements_scope.verify_movements(site, repo)
     elif module == "src.publish.issuer_scope":
         problems = issuer_scope.verify_issuer(site, repo)
@@ -47,17 +49,17 @@ def _active_module(site, repo, manifest, commit):
         return verifier_for(archive, repo)
 
 
-def _preserved_movement_financials(site, repo, manifest, commit, spec):
+def _preserved_nonfinancial_financials(site, repo, manifest, commit, spec, label):
     previous = spec["baseline_commit"]
     raw = _git(repo, "show", f"{previous}:site/publication_manifest.json")
     assert sha(raw) == spec["baseline_manifest_sha256"]
     before = json.loads(raw)
     assert len(before["analysis_manifest"]) == 7
     assert manifest["analysis_manifest"] == before["analysis_manifest"], (
-        "Movement correction changed approvals"
+        f"{label} changed approvals"
     )
     readings = [item for item in before["files"] if item["path"].startswith("data/v1/analysis/")]
-    assert len(readings) == 7, "Movement baseline is missing a financial thesis"
+    assert len(readings) == 7, f"{label} baseline is missing a financial thesis"
     for item in readings:
         actual = (
             (site / item["path"]).read_bytes()
@@ -81,22 +83,35 @@ def preserved_financial_projection(site, repo, financial_spec):
     manifest = json.loads((site / "publication_manifest.json").read_bytes())
     commit = None
     seen = set()
-    while sha(encoded(current)) != financial_spec["executive_sha256"] or movements_scope.PROOF in {
+    nonfinancial = {
+        "src.publish.movements_scope": (movements_scope, "Movement correction"),
+        "src.publish.source_data_scope": (source_data_scope, "Source data update"),
+    }
+    while sha(encoded(current)) != financial_spec["executive_sha256"] or {
+        movements_scope.PROOF,
+        source_data_scope.PROOF,
+    } & {
         item["path"] for item in manifest["files"]
     }:
         module = _active_module(site, repo, manifest, commit)
-        if module == "src.publish.movements_scope":
+        if module in nonfinancial:
+            scope, label = nonfinancial[module]
+            assert scope.PROOF in {item["path"] for item in manifest["files"]}, (
+                f"Unreviewed {label.lower()} without its own receipt"
+            )
             spec = json.loads(
-                (repo / movements_scope.ANCHOR).read_bytes()
+                (repo / scope.ANCHOR).read_bytes()
                 if commit is None
-                else _git(repo, "show", f"{commit}:{movements_scope.ANCHOR}")
+                else _git(repo, "show", f"{commit}:{scope.ANCHOR}")
             )
             previous = spec["baseline_commit"]
             assert previous not in seen, "Cyclic publication baseline"
             seen.add(previous)
             before_raw = _git(repo, "show", f"{previous}:site/{issuer_scope.EXECUTIVE}")
-            assert current_raw == before_raw, "Movement correction changed financial bytes"
-            manifest = _preserved_movement_financials(site, repo, manifest, commit, spec)
+            assert current_raw == before_raw, f"{label} changed financial bytes"
+            manifest = _preserved_nonfinancial_financials(
+                site, repo, manifest, commit, spec, label
+            )
             current_raw, current, commit = before_raw, json.loads(before_raw), previous
             continue
         assert module == "src.publish.issuer_scope", "Unreviewed financial publication profile"

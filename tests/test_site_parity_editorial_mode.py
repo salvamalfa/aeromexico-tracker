@@ -268,6 +268,7 @@ def test_editorial_unknown_verifier_never_falls_back_to_a_general_check(tmp_path
         "dangling_manifest",
         "regular_manifest_symlink",
         "movement_receipt",
+        "source_data_receipt",
     ],
 )
 def test_incomplete_publication_artifacts_never_become_optional_missing_data(tmp_path, strict, artifact):
@@ -286,8 +287,80 @@ def test_incomplete_publication_artifacts_never_become_optional_missing_data(tmp
         (module.SITE / "publication_manifest.json").symlink_to(target)
     elif artifact == "movement_receipt":
         (module.SITE / "aerocivil-movements-publication.json").write_text("{}")
+    elif artifact == "source_data_receipt":
+        (module.SITE / "source-data-publication.json").write_text("{}")
     else:
         (module.SITE / "publication_manifest.json").symlink_to(module.SITE / "absent-manifest-target")
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     with pytest.raises(AssertionError, match="manifest"):
         module.editorial_site.__wrapped__(request)
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize("failure", [None, "source projection changed", "missing source receipt"])
+def test_editorial_fixture_uses_the_strict_source_data_verifier(tmp_path, monkeypatch, strict, failure):
+    import hashlib
+    from types import SimpleNamespace
+
+    from scripts import check_pages_publication
+    from src.publish import issuer_scope, source_data_scope, verify
+    from tests import _site_publication_parity as parity
+
+    module = editorial_parity_module()
+    module.ROOT = tmp_path
+    module.SITE = tmp_path / "site"
+    payload = b"approved original editorial payload"
+    target = module.SITE / editorial.ANALYSIS
+    target.parent.mkdir(parents=True)
+    target.write_bytes(payload)
+    (module.SITE / "publication_manifest.json").write_text("{}")
+    spec = {"analysis_bytes": len(payload), "analysis_sha256": hashlib.sha256(payload).hexdigest()}
+    monkeypatch.setattr(module, "anchor", lambda root: spec)
+    monkeypatch.setattr(check_pages_publication, "verifier_for", lambda *args: "src.publish.source_data_scope")
+    monkeypatch.setattr(parity, "verifier_for", lambda *args: "src.publish.source_data_scope")
+    calls = []
+    monkeypatch.setattr(
+        source_data_scope,
+        "verify_source_data",
+        lambda *args: calls.append(args) or ([] if failure is None else [failure]),
+    )
+    monkeypatch.setattr(issuer_scope, "verify_issuer", lambda *args: pytest.fail("issuer fallback"))
+    monkeypatch.setattr(verify, "verify_site", lambda *args: pytest.fail("generic fallback"))
+    request = SimpleNamespace(
+        config=SimpleNamespace(getoption=lambda name: strict),
+        getfixturevalue=lambda name: lambda *args: pytest.fail("financial fallback"),
+    )
+    if failure is None:
+        assert module.editorial_site.__wrapped__(request) == spec
+    else:
+        with pytest.raises(AssertionError, match=failure):
+            module.editorial_site.__wrapped__(request)
+    assert calls == [(module.SITE, tmp_path)]
+
+
+@pytest.mark.parametrize("failure", [None, "source baseline changed"])
+def test_editorial_history_is_checked_by_source_data_preservation(tmp_path, monkeypatch, failure):
+    from scripts import check_pages_publication
+    from src.publish import source_data_scope
+
+    module = editorial_parity_module()
+    module.ROOT = tmp_path
+    module.SITE = tmp_path / "site"
+    monkeypatch.setattr(check_pages_publication, "verifier_for", lambda *args: "src.publish.source_data_scope")
+    spec = {"baseline_commit": "a" * 40}
+    monkeypatch.setattr(source_data_scope, "anchor", lambda root: spec)
+    calls = []
+
+    def preserved(*args):
+        calls.append(args)
+        if failure:
+            raise ValueError(failure)
+        return {editorial.ANALYSIS, "data/v1/news.json", "data/v1/flights/quarters.json"}
+
+    monkeypatch.setattr(source_data_scope, "preserved_files", preserved)
+    if failure is None:
+        module.test_editorial_site_preserves_every_historical_file(spec)
+    else:
+        with pytest.raises(ValueError, match=failure):
+            module.test_editorial_site_preserves_every_historical_file(spec)
+    assert calls == [(module.SITE, tmp_path, spec)]
