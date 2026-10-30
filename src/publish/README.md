@@ -153,6 +153,14 @@ historia. Usa las gráficas existentes y mantiene separados pasajeros con boleto
 ocupación regular y medidas totales. El comparativo anual del reporte afecta solo
 la vista nueva; no reemplaza una cifra histórica de distinta precisión/edición.
 
+Las etapas son independientes. `data_only` recibe el paquete técnico validado,
+auditoría independiente de la fuente/proyección y autorización específica de
+datos; verifica los registros históricos, sin exigir una tesis nueva ni modificar
+su ledger. `editorial_only` añade después una tesis aprobada y conserva el
+ejecutivo idéntico. `combined` permite una entrega con ambas partes ya listas.
+El ancla liga `stage`, `package_id`, `evidence_fingerprint`, `source_binding`
+exacto y las salidas revisadas. No hereda autorización de otra fuente o periodo.
+
 El baseline debe coincidir con Git remoto y Pages/HTTPS. Su verificador original
 liberado comprueba íntegramente sus bytes; fallar con un runtime posterior no
 autoriza ignorar un error histórico. Los registros anteriores se reproducen por
@@ -160,6 +168,18 @@ sus cohortes y el registro nuevo con el productor actual, antes y después del
 build. Solo cambian la tesis nueva, el bloque ejecutivo de esa entidad y el recibo
 `issuer-publication.json`. Industria, las otras entidades, frontend y todos los
 demás datasets se conservan. No hay una barrera que espere otras aerolíneas.
+
+```bash
+python -m src.publish.issuer_update --inspect-data <paquete-tecnico.json>
+# Retener auditoría y autorización auténticas ligadas al binding exacto mostrado.
+python -m src.publish.issuer_update --prepare-data <paquete.json> --data-authorization <autorizacion-por-hash.json>
+# Confirmar el ancla; solo se conservan las cohortes anteriores.
+python -m src.publish.issuer_update --record <cada-registro-anterior> --package <paquete.json> --out site/
+# Después del despliegue de datos, añadir la tesis de forma independiente:
+python -m src.publish.issuer_update --prepare-record <registro-nuevo-aprobado> --editorial-only
+```
+
+Para la entrega combinada, cuando ambas partes ya estén aprobadas:
 
 ```bash
 python -m src.publish.issuer_update --prepare-record <registro-nuevo-aprobado>
@@ -174,6 +194,15 @@ registro idéntico ya servido se reconcilia sin otra publicación. Una edición
 distinta del mismo periodo se detiene para una revisión explícita, conservando
 la anterior. El modo está limitado a las primeras ediciones Viva/Volaris 3T26;
 un trimestre nuevo requiere extender y revisar su adaptador, no cambiar una fecha.
+
+`issuer_authority` verifica los JSON privados retenidos por SHA-256 bajo
+`analysis_runs/dashboard_updates/authorizations/` y `audits/`: estado vigente,
+consentimiento auténtico, auditoría independiente sin hallazgos pendientes y el
+binding exacto de fuente, paquete, baseline, productor y salida. Solo data-only
+usa esa autoridad: nunca crea eventos de aprobación editorial. Una actualización
+sin efecto visible se reproduce con `issuer_update.verify_no_visual_change`;
+una etiqueta del worker no sustituye esa comprobación. Macro/cotizaciones no
+alimentan las gráficas servidas actuales: Mercado usa pasajeros AFAC.
 
 Pages selecciona el verificador de issuer cuando existe su recibo, sin fallback.
 Los recibos financieros/editoriales anteriores siguen como evidencia histórica;

@@ -47,19 +47,43 @@ def anchor(repo=PATHS.root):
         "executive_sha256",
         "executive_bytes",
         "producer_code_version",
+        "stage",
+        "package_id",
+        "evidence_fingerprint",
+        "source_binding",
+        "authorization_sha256",
     }
     if set(spec) != fields or spec["schema_version"] != "issuer_release_v1":
         raise ValueError("Invalid issuer release anchor")
     if spec["entity_key"] not in ENTITIES or spec["period_id"] != "2026Q3":
         raise ValueError("Issuer release has an unsupported entity/quarter")
-    if manifests.analysis_identity(spec["analysis_entry"]) != (spec["entity_key"], spec["period_id"]):
+    if spec["stage"] not in {"data_only", "editorial_only", "combined"}:
+        raise ValueError("Invalid issuer stage")
+    if spec["stage"] == "data_only":
+        if (
+            spec["analysis_entry"] is not None
+            or spec["analysis_sha256"] is not None
+            or spec["analysis_bytes"] != 0
+        ):
+            raise ValueError("Data-only release cannot introduce a thesis")
+        if not re.fullmatch("[a-f0-9]{64}", spec["authorization_sha256"] or ""):
+            raise ValueError("Data-only release requires exact data exposure authority")
+    elif manifests.analysis_identity(spec["analysis_entry"]) != (spec["entity_key"], spec["period_id"]):
         raise ValueError("Issuer release and approved thesis identities disagree")
-    for key in ("baseline_manifest_sha256", "analysis_sha256", "executive_sha256", "producer_code_version"):
+    for key in (
+        "baseline_manifest_sha256",
+        "executive_sha256",
+        "producer_code_version",
+        "evidence_fingerprint",
+    ):
         if not isinstance(spec[key], str) or not re.fullmatch("[a-f0-9]{64}", spec[key]):
             raise ValueError("Invalid issuer digest")
     if not re.fullmatch("[a-f0-9]{40}", spec["baseline_commit"]):
         raise ValueError("Invalid issuer baseline commit")
-    for key in ("analysis_bytes", "executive_bytes"):
+    if spec["stage"] != "data_only" and not re.fullmatch("[a-f0-9]{64}", spec["analysis_sha256"] or ""):
+        raise ValueError("Invalid issuer analysis digest")
+    sizes = ("executive_bytes",) if spec["stage"] == "data_only" else ("analysis_bytes", "executive_bytes")
+    for key in sizes:
         if type(spec[key]) is not int or spec[key] <= 0:
             raise ValueError("Invalid issuer payload size")
     transport._git(repo, "merge-base", "--is-ancestor", spec["baseline_commit"], "HEAD")
@@ -153,15 +177,20 @@ def preserved_files(site: Path, repo: Path, spec: dict):
         repo, "diff", "--name-only", witness["deployment_commit"], spec["baseline_commit"], "--", "site"
     ):
         raise ValueError("Issuer witness has a different site tree")
-    name = "data/v1/" + manifests.analysis_relative_path(spec["analysis_entry"]).as_posix()
-    expected_entries = sorted(
-        [*old["analysis_manifest"], spec["analysis_entry"]], key=manifests.analysis_sort_key
+    name = (
+        "data/v1/" + manifests.analysis_relative_path(spec["analysis_entry"]).as_posix()
+        if spec["analysis_entry"] is not None
+        else None
     )
+    additions = [spec["analysis_entry"]] if name else []
+    expected_entries = sorted([*old["analysis_manifest"], *additions], key=manifests.analysis_sort_key)
     if current["analysis_manifest"] != expected_entries or current["contracts"] != old["contracts"]:
         raise ValueError("Issuer release changed another approval or a contract")
     old_names = {r["path"] for r in old["files"]}
     new_names = {r["path"] for r in current["files"]}
-    if name in old_names or new_names != old_names | {name, PROOF}:
+    if (name is not None and name in old_names) or new_names != old_names | ({name} if name else set()) | {
+        PROOF
+    }:
         raise ValueError("Issuer release added/removed an unrelated surface")
     allowed = {EXECUTIVE, name, PROOF}
     preserved = set()
@@ -174,12 +203,18 @@ def preserved_files(site: Path, repo: Path, spec: dict):
         if sha(raw) != item["sha256"] or len(raw) != item["bytes"]:
             raise ValueError(f"Issuer release changed historical bytes: {item['path']}")
         preserved.add(item["path"])
-    for path, prefix in ((name, "analysis"), (EXECUTIVE, "executive")):
+    outputs = [(EXECUTIVE, "executive")] + ([(name, "analysis")] if name else [])
+    for path, prefix in outputs:
         raw = (site / path).read_bytes()
         if sha(raw) != spec[prefix + "_sha256"] or len(raw) != spec[prefix + "_bytes"]:
             raise ValueError("Issuer output differs from independently reviewed pins")
     before = json.loads(transport._git(repo, "show", f"{spec['baseline_commit']}:site/{EXECUTIVE}"))
-    require_scope(before, json.loads((site / EXECUTIVE).read_bytes()), spec["entity_key"], spec["period_id"])
+    after = json.loads((site / EXECUTIVE).read_bytes())
+    if spec["stage"] == "editorial_only":
+        if after != before:
+            raise ValueError("Editorial stage cannot alter any financial data")
+    else:
+        require_scope(before, after, spec["entity_key"], spec["period_id"])
     return frozenset(preserved)
 
 
