@@ -69,9 +69,11 @@ def aena_airport(value, mapping):
         if fragment in label: return codes
     return None
 
-def normalize(source, rows, artifact, airports):
+def normalize(source, rows, artifact, airports, *, aerocivil_operators=('AMX','SLI')):
     """Keep each source's selected scope; Aerocivil S/I meaning remains provisional."""
     result=[]
+    if not set(aerocivil_operators) <= {'AMX','SLI','VIV','VOI'}:
+        raise ValueError('Unreviewed Aerocivil operator selection')
     for index,r in enumerate(rows,1):
         passengers=seats=departures=operations=None
         observation_scope='carrier_route';airport_iata=None;metric_key='combined'
@@ -112,7 +114,7 @@ def normalize(source, rows, artifact, airports):
             marketer=None
         elif source=='aerocivil':
             operator=r['explotador']
-            if operator not in ('AMX','SLI') or r['tipo_vuelo']!='S' or r['trafico']!='I': continue
+            if operator not in aerocivil_operators or r['tipo_vuelo']!='S' or r['trafico']!='I': continue
             year,month=int(r['anio']),int(r['mes']);origin,dest=r['origen'],r['destino']
             # The Colombian endpoint must be the recording airport. This excludes duplicated remote observations.
             local=origin if origin.startswith('SK') else dest

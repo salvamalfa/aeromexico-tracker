@@ -79,6 +79,23 @@ leyenda ni activar `flight_evidence_v1`. Esta corrección no integra por sí
 sola un candidato nuevo ni autoriza publicación: se requiere regeneración,
 gate de datos aplicable, revisión y verificación del sitio servido.
 
+Para corregir el histórico servido, `src.publish.movements_history` reproduce
+por separado las tres ediciones retenidas (8 de septiembre, 19 de octubre y
+21 de octubre). Su perfil privado fija originales, sidecars, referencia de
+aeropuertos, candidato de julio y corte original de la ronda. Repite el
+checker nativo y la política operacional con disponibilidad; no concede
+confirmación oficial ni renueva fechas. La proyección pública revisada contiene
+219 filas de ediciones separadas; nunca se suman como un solo periodo.
+`src.publish.movements_projection` exige igualdad exacta por hash original,
+operador, mes y sentido frente al baseline: corrige 38 mapas existentes y
+su agregado de cobertura en `quarters.json`, conservando estimaciones y las
+lecturas financieras. Cualquier diferencia numérica exige revisión. Los
+comparativos previos solo se retiran tras acreditar su origen Aerocivil;
+los componentes independientes conservan su evidencia. El parser mantiene
+AMX/SLI por defecto; el perfil histórico acotado elige explícitamente también
+VIV/VOI para reproducir la edición de 2T26 ya servida. Esto no habilita nuevas
+ingestas, otros periodos ni publicación por sí solo.
+
 ## Candidato Aerocivil por mes
 
 `python -m src.source_updates.aerocivil recipe --period YYYYMmm` produce tres GET públicos: conteo, filas y conteo posterior. Un solo mes, operadores de fuente AMX/SLI, hasta 1.000 filas y 15 solicitudes contando redirecciones; sin paginación implícita. La misma receta con `--metadata` emite el diccionario oficial. Capturar ambas selecciones mediante `collect` y conservar sus recibos. El conteo debe coincidir antes/después y con todas las filas. Esto no demuestra aislamiento transaccional de versiones del proveedor.
