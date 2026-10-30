@@ -15,6 +15,15 @@ from src.publish import issuer_scope as scope
 @pytest.fixture
 def projected(monkeypatch):
     baseline = json.loads((Path(__file__).parents[1] / "site/data/v1/executive.json").read_bytes())
+    # First-edition tests use a pre-release snapshot even after production has
+    # published this quarter. Never depend on a moving served edition's length.
+    for entity in projection.ENTITIES:
+        block = baseline["entities"][entity]
+        block["records"] = [r for r in block["records"] if r["period_id"] != "2026Q3"]
+        block["views"].pop("2026Q3", None)
+        block["first_period"] = block["records"][0]["period_id"]
+        block["last_period"] = block["records"][-1]["period_id"]
+        block["quarter_count"] = len(block["records"])
     package = {"entity_key": "VIVA_AEROBUS", "period_id": "2026Q3"}
     numbers = {
         "2026Q3": dict(passengers=8_000_000, asm=10e9, rpm=8.5e9, load=0.86, trasm=7.5, casm=7, casm_ex=4),
@@ -203,3 +212,17 @@ def test_runtime_verifier_rejection_cannot_fall_back(tmp_path, monkeypatch):
     result = scope.verify_issuer(tmp_path)
     assert len(result) == 1
     assert "runtime differs" in result[0]
+
+
+def test_revision_replaces_only_existing_current_quarter(projected):
+    baseline, package, nodes, _ = projected
+    first = projection.executive_projection(baseline, package)
+    previous = copy.deepcopy(first)
+    next(n for n in nodes if n["period_id"] == "2026Q3" and n["key"] == "passengers")["value"] += 1
+    revised = projection.executive_projection(first, package)
+    projection.require_scope(previous, revised, package["entity_key"], package["period_id"])
+    assert first == previous
+    old, new = previous["entities"][package["entity_key"]], revised["entities"][package["entity_key"]]
+    assert new["quarter_count"] == old["quarter_count"]
+    assert new["records"][:-1] == old["records"][:-1]
+    assert new["records"][-1]["passengers"] == old["records"][-1]["passengers"] + 1
