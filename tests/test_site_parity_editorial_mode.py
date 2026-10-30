@@ -222,3 +222,22 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
         )
         with pytest.raises(expected):
             module.editorial_site.__wrapped__(request)
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize("artifact", ["dangling_receipt", "manifest_directory", "dangling_manifest"])
+def test_incomplete_publication_artifacts_never_become_optional_missing_data(tmp_path, strict, artifact):
+    from types import SimpleNamespace
+
+    module = editorial_parity_module()
+    module.SITE = tmp_path / "site"
+    module.SITE.mkdir()
+    if artifact == "dangling_receipt":
+        (module.SITE / editorial.PROOF).symlink_to(module.SITE / "absent-proof-target")
+    elif artifact == "manifest_directory":
+        (module.SITE / "publication_manifest.json").mkdir()
+    else:
+        (module.SITE / "publication_manifest.json").symlink_to(module.SITE / "absent-manifest-target")
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
+    with pytest.raises(AssertionError, match="receipt requires its manifest"):
+        module.editorial_site.__wrapped__(request)
