@@ -149,3 +149,41 @@ def test_missing_existing_mapping_is_explicit_and_not_zero(tmp_path):
     result = module.project_rows(item, checked, before, reference)
     assert result["unmapped_existing_airports"] == ["AAA"]
     assert all(row["key"] != "AAA" for row in result["airports"])
+
+
+def test_another_source_can_add_a_primary_airport_without_expanding_afac_selection(tmp_path):
+    value = projection(tmp_path)
+    before = baseline()
+    added = copy.deepcopy(before["airports"][0])
+    added["key"] = "CUN"
+    added["group"] = "ASUR"
+    before["airports"].append(added)
+    after = json.loads(
+        module.public_outputs({module.TARGETS[0]: json.dumps(before).encode()}, value)[module.TARGETS[0]]
+    )
+    assert after["airports"] == before["airports"]
+    assert [row["key"] for row in after["afac_airports"]] == ["MEX"]
+    assert "1 de 1 aeropuertos previos seleccionados" in after["quality_notes"][-1]
+
+
+@pytest.mark.parametrize("selected", [[], ["CUN"], ["MEX", "MEX"]])
+def test_replay_selection_cannot_be_missing_unpublished_or_duplicated(tmp_path, monkeypatch, selected):
+    baseline_path = tmp_path / "site"
+    path = baseline_path / module.TARGETS[0]
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(baseline()))
+    monkeypatch.setattr(
+        module.readiness,
+        "preflight",
+        lambda *args: (_ for _ in ()).throw(RuntimeError("source must not run")),
+    )
+    with pytest.raises(ValueError, match="finite"):
+        module.replay(
+            {
+                "schema_version": "afac_airports_demand_source_v1",
+                "item": {"product": "afac_airports", "id": "afac"},
+                "as_of": "2026-10-29T03:12:37Z",
+                "selected_airports": selected,
+            },
+            baseline_path,
+        )

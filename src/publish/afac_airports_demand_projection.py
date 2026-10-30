@@ -99,7 +99,7 @@ def project_rows(item, checked, before, reference):
 
 def replay(profile, baseline):
     if (
-        set(profile) != {"schema_version", "item", "as_of"}
+        set(profile) != {"schema_version", "item", "as_of", "selected_airports"}
         or profile["schema_version"] != "afac_airports_demand_source_v1"
     ):
         raise ValueError("Unsupported AFAC airport demand profile")
@@ -109,13 +109,23 @@ def replay(profile, baseline):
     recipe = {"version": 1, "as_of": profile["as_of"], "required_items": [item["id"]], "items": [item]}
     before = json.loads((baseline / TARGETS[0]).read_bytes())
     _validate(before)
+    selected = profile["selected_airports"]
+    available = {row["key"] for row in before["airports"]}
+    if (
+        not isinstance(selected, list)
+        or not selected
+        or selected != sorted(set(selected))
+        or not set(selected) <= available
+    ):
+        raise ValueError("Pin a finite nonempty selection of already-published airport codes")
+    scoped = {**before, "airports": [row for row in before["airports"] if row["key"] in selected]}
     with block_network():
         task = readiness.preflight(recipe, ROOT / "tmp/source-updates/afac-airports-demand-check")[0]
         checked = readiness.check_task(task, item["candidate_as_of"], profile["as_of"])
         if not accepted(task, checked):
             raise ValueError("AFAC airport source needs its complete physical availability and replay")
         reference = ROOT / REFERENCE
-        projection = project_rows(task, checked, before, reference)
+        projection = project_rows(task, checked, scoped, reference)
         inputs = [*_input_files(task), reference]
     binding = {key: item[key] for key in ("product", "period", "receipt_id", "candidate_as_of")}
     binding["output_sha256"] = checked["output_sha256"]
@@ -131,12 +141,17 @@ def public_outputs(before, projection):
     allowed = sorted({row["key"] for row in payload["airports"]})
     rows, period = projection["airports"], projection["period"]
     if (
-        projection["baseline_airport_keys"] != allowed
+        projection["baseline_airport_keys"] != sorted(set(projection["baseline_airport_keys"]))
+        or not set(projection["baseline_airport_keys"]) <= set(allowed)
         or not re.fullmatch(r"20\d{2}M(?:0[1-9]|1[0-2])", period)
         or not rows
-        or any(row["key"] not in allowed or row["period_id"] != period for row in rows)
+        or any(
+            row["key"] not in projection["baseline_airport_keys"] or row["period_id"] != period
+            for row in rows
+        )
         or len(rows) != len({row["key"] for row in rows})
-        or projection["unmapped_existing_airports"] != sorted(set(allowed) - {row["key"] for row in rows})
+        or projection["unmapped_existing_airports"]
+        != sorted(set(projection["baseline_airport_keys"]) - {row["key"] for row in rows})
         or any(row["previous_passengers"] is not None or row["yoy_pct"] is not None for row in rows)
         or any(row["source_system"] != "afac" for row in rows)
     ):
@@ -151,8 +166,9 @@ def public_outputs(before, projection):
     note = (
         "AFAC: base alternativa de pasajeros por aeropuerto según el libro oficial; sólo aeropuertos "
         "ya presentes en el dashboard, sin atribución a aerolíneas. Sus cifras no sustituyen los reportes "
-        f"directos ni se suman con ellos. Cobertura del mes {period}: {len(rows)} de {len(allowed)} "
-        "aeropuertos existentes; no se completa un trimestre ni se inventa base interanual."
+        f"directos ni se suman con ellos. Cobertura del mes {period}: {len(rows)} de "
+        f"{len(projection['baseline_airport_keys'])} aeropuertos previos seleccionados; "
+        "no se completa un trimestre ni se inventa base interanual."
     )
     updated["quality_notes"] = [
         value for value in payload["quality_notes"] if not value.startswith("AFAC:")

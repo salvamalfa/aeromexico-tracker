@@ -271,8 +271,10 @@ del mes; no se agregan operaciones o carga. Sin comparación anual en el libro
 seleccionado, sus campos interanuales permanecen nulos. Un mes aislado no completa
 un trimestre.
 
-Su perfil privado `afac_airports_demand_source_v1` contiene `item` y `as_of`
-exactos. Usa el gate común `src.publish.source_data_update` y su autoridad de
+Su perfil privado `afac_airports_demand_source_v1` contiene `item`, `as_of` y
+`selected_airports`: lista ordenada, única y explícita de códigos ya publicados.
+Ese alcance no se amplía cuando otro producto incorpora aeropuertos al mismo
+build. Usa el gate común `src.publish.source_data_update` y su autoridad de
 datos vinculada al `authority_scope` inspeccionado, como la skill de aeropuertos.
 El outbox usa `release_kind=source_data` y el mismo escritor serial del sitio.
 Después del gate, revisión/CI/merge/Pages, comprobar el selector real en escritorio
