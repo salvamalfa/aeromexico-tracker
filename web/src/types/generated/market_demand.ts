@@ -6,6 +6,7 @@ export interface PublicAirportDemandV1 {
   universe: string;
   months: string[];
   airports: Row[];
+  afac_airports?: Row[];
   groups: Row[];
   quality_notes: string[];
   quarantined_group_months: string[];

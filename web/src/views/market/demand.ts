@@ -1,6 +1,6 @@
 import { formatMarketNumber as fmt } from "./calculations";
 interface Row { key:string; group:string; period_id:string; passengers:number|null; yoy_pct:number|null; previous_period:string; previous_passengers:number|null; source_url?:string|null; source_hash?:string; captured_at?:string; }
-interface Demand { months:string[]; airports:Row[]; groups:Row[]; quality_notes:string[]; }
+interface Demand { months:string[]; airports:Row[]; afac_airports?:Row[]; groups:Row[]; quality_notes:string[]; }
 let data: Demand | null = null;
 let loading: Promise<void> | null = null;
 function table(id:string, rows:Row[], period:string) {
@@ -19,9 +19,18 @@ export function mountDemand(root:string): Promise<void> {
     const response=await fetch(`${root}/market-demand.json`); if(!response.ok) throw new Error("unavailable");data=await response.json() as Demand;
     const picker=document.getElementById("airport-period") as HTMLSelectElement;
     picker.replaceChildren(...data.months.map(id=>new Option(id.replace("M","-"),id)));picker.value=data.months.at(-1)??"";
-    function render(){ if(!data)return;table("airport-demand",data.airports,picker.value);table("airport-groups",data.groups,picker.value);
-      document.getElementById("airport-note")!.textContent=`Corte aeroportuario: ${picker.value}. Las bases interanuales se comparan dentro de cada aeropuerto/grupo; N/D indica base ausente. No representa todo México ni viajeros únicos; no se atribuye a Aeroméxico.`;
+    let sourcePicker:HTMLSelectElement|null=null;
+    if(data.afac_airports?.length){
+      sourcePicker=document.createElement("select");sourcePicker.id="airport-source";
+      sourcePicker.setAttribute("aria-label","Base de cifras aeroportuarias");
+      sourcePicker.append(new Option("Reportes directos de aeropuertos y grupos","direct"),new Option("Estadísticas AFAC · mismos aeropuertos","afac"));
+      picker.insertAdjacentElement("afterend",sourcePicker);
+    }
+    function render(){ if(!data)return;const afac=sourcePicker?.value==="afac";
+      table("airport-demand",afac?(data.afac_airports??[]):data.airports,picker.value);table("airport-groups",data.groups,picker.value);
+      const basis=afac?"Base de aeropuertos: estadísticas AFAC, separadas de los reportes directos. Los grupos conservan sus reportes directos.":"Base de aeropuertos y grupos: sus reportes directos.";
+      document.getElementById("airport-note")!.textContent=`Corte aeroportuario: ${picker.value}. ${basis} Las bases interanuales se comparan dentro de cada aeropuerto/grupo; N/D indica base ausente. No representa todo México ni viajeros únicos; no se atribuye a Aeroméxico.`;
       document.getElementById("airport-quality")!.textContent=data.quality_notes.join(" "); }
-    picker.addEventListener("change",render);render();
+    picker.addEventListener("change",render);sourcePicker?.addEventListener("change",render);render();
   }catch{document.getElementById("airport-note")!.textContent="Demanda aeroportuaria no disponible en este build.";loading=null;}})();return loading;
 }

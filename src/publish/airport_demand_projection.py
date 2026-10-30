@@ -96,7 +96,7 @@ def _validate(payload):
     schema = json.loads((ROOT / "contracts/web/market_demand.schema.json").read_bytes())
     Draft202012Validator(schema).validate(payload)
     check_privacy(payload, load_privacy_rules())
-    for table in ("airports", "groups"):
+    for table in ("airports", "groups", *(["afac_airports"] if "afac_airports" in payload else [])):
         grains = [(row["key"], row["period_id"]) for row in payload[table]]
         if len(grains) != len(set(grains)):
             raise ValueError("Duplicate public airport demand grain")

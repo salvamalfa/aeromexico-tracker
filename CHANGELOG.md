@@ -1,5 +1,11 @@
 # Changelog
 
+- AFAC aeroportuario conserva una base alternativa, limitada a los aeropuertos
+  ya visibles, en la misma tabla de demanda y con cruce físico existente. Los
+  reportes directos no se sustituyen ni se mezclan. El comprobador BTS acredita
+  un no-cambio sólo con hechos exactos y los consumidores realmente publicados;
+  un nuevo mes o cifra distinta queda bloqueado para su propia proyección.
+
 - Puente selectivo de AICM, AIFA, ASUR, GAP y OMA hacia la tabla de demanda existente:
   replay por fuente, país compatible sin alterar Gold, mes objetivo y alcance
   explícitos, comparativos retenidos y preservación de otros productos. El gate
