@@ -17,6 +17,7 @@ from src.web_export.contract_versions import ARCHIVED_CONTRACTS, resolve_contrac
 ROOT = Path(__file__).resolve().parents[1]
 OLD_SHA = "17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7"
 COMPONENT_SHA = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
+P1_SHA = "6b5626c10552c7a3af385a6aa6a251fadef31f0e317067c6532869a9c0a96721"
 
 
 @pytest.mark.parametrize("name", manifest_mod.CONTRACT_FILES)
@@ -99,6 +100,56 @@ def test_new_component_cannot_be_validated_under_old_manifest(isolated_site) -> 
     rel = _with_component(site)
     assert any(rel in problem and "flight_components" in problem for problem in verify_site(site))
     with pytest.raises(SnapshotError, match="flight_components"):
+        Snapshot(site)
+
+
+def test_p1_flights_edition_remains_readable_by_both_consumers(isolated_site) -> None:
+    site, _ = isolated_site
+    _set_contract(site, P1_SHA)
+    assert verify_site(site) == []
+    assert Snapshot(site).payload("data/v1/flights/quarters.json")
+
+
+@pytest.mark.parametrize("peer", [False, True])
+def test_new_monthly_series_cannot_use_the_p1_flights_hash(isolated_site, peer) -> None:
+    site, contracts = isolated_site
+    rel = "data/v1/flights/quarters.json"
+    path = site / rel
+    payload = json.loads(path.read_bytes())
+    if peer:
+        field = "corporate_peer_monthly_passengers"
+        payload[field] = {}
+    else:
+        field = "corporate_monthly_passengers"
+        payload[field] = {
+            "entity": "AEROMEXICO",
+            "source_url": "https://ir.aeromexico.com/traffic",
+            "source_sha256": "1" * 64,
+            "captured_at": "2026-10-28T00:00:00Z",
+            "documentary_date": "2026-10-06",
+            "scope": "company_reported_month_including_charter_and_its_prior_year_comparative_not_AFAC",
+            "records": [
+                {
+                    "period_id": "2026M09",
+                    "date": "2026-09-01",
+                    "domestic": 1,
+                    "international": 1,
+                    "reported_total": 2,
+                    "total_segment_sum": 2,
+                    "reconciliation_delta": 0,
+                }
+            ],
+        }
+    path.write_text(json.dumps(payload))
+    manifest = manifest_mod.load_manifest(site)
+    manifest["files"] = manifest_mod.file_entries(site)
+    manifest["contracts"]["flights.schema.json"] = manifest_mod.sha256_file(contracts / "flights.schema.json")
+    manifest_mod.write_manifest(site, manifest)
+    assert verify_site(site) == []
+    assert Snapshot(site).payload(rel)
+    _set_contract(site, P1_SHA)
+    assert any(rel in problem and field in problem for problem in verify_site(site))
+    with pytest.raises(SnapshotError, match=field):
         Snapshot(site)
 
 

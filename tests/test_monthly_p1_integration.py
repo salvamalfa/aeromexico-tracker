@@ -156,6 +156,7 @@ def test_recovery_rejects_a_redirected_scratch_directory(tmp_path):
 @pytest.mark.parametrize(
     "name,digest",
     [
+        ("flights.schema.json", "6b5626c10552c7a3af385a6aa6a251fadef31f0e317067c6532869a9c0a96721"),
         ("market.schema.json", "3ac4a80fbeadea2b6c4eea6ee6d906acf24b1cf1202b295bde0b86b32b2d0008"),
         ("market_demand.schema.json", "420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf"),
     ],
