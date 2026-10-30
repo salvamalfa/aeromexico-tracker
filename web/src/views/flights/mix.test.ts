@@ -77,7 +77,7 @@ describe("separate corporate monthly passenger basis", () => {
     mocks.entities = [entity]; state.passengerBasis = "corporate";
     state.corporatePeerMonthlyPassengers[entity] = {
       ...state.corporateMonthlyPassengers!, entity, scope: "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter",
-      reporting_status: "preliminar", entity_attribution: "Universo corporativo; no censo de operadores AFAC",
+      reporting_status: "preliminary_unaudited", entity_attribution: "Viva brand; legal issuer/operator not established by this release",
     };
     renderMix(record);
     expect(mocks.entity).not.toHaveBeenCalled();
@@ -85,6 +85,9 @@ describe("separate corporate monthly passenger basis", () => {
     expect(mocks.react.mock.calls[0]![2].shapes).toEqual([]);
     expect(mocks.react.mock.calls[0]![2].yaxis.title.text).toBe("Tramos de pasajero reservados");
     expect(document.getElementById("mix-source-inline")?.textContent).toContain("no pasajeros transportados");
+    expect(document.getElementById("mix-source-inline")?.textContent).toContain("preliminar, no auditado");
+    expect(document.getElementById("mix-source-inline")?.textContent).not.toContain("preliminary");
+    if (entity === "VIVA_AEROBUS") expect(document.getElementById("mix-source-inline")?.textContent).toContain("no establece un operador legal");
     expect(document.getElementById("mix-source-inline")?.textContent).toContain("comparativo anual reportados en la misma edición");
     expect(document.getElementById("passenger-basis-control")?.hidden).toBe(false);
     state.passengerBasis = "afac"; renderMix(record);

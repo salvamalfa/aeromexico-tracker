@@ -53,8 +53,14 @@ export function renderMix(record: QuarterRecord): void {
   const booked = corporate && corporateSeries && "reporting_status" in corporateSeries;
   if (source) {
     const company = corporateSeries?.entity === "VOLARIS" ? "Volaris" : corporateSeries?.entity === "VIVA_AEROBUS" ? "Viva (marca)" : "Aeroméxico IR";
+    const reporting = corporateSeries && "reporting_status" in corporateSeries ? {
+      preliminary: "preliminar", preliminary_unaudited: "preliminar, no auditado", unaudited: "no auditado",
+    }[corporateSeries.reporting_status] ?? corporateSeries.reporting_status : "";
+    const attribution = corporateSeries?.entity === "VIVA_AEROBUS"
+      ? "El reporte identifica la marca Viva; no establece un operador legal."
+      : corporateSeries?.entity === "VOLARIS" ? "Universo reportado por Volaris; no censo de operadores." : "";
     source.textContent = corporate
-      ? `${company} · ${booked ? "reservaciones de tramos, no pasajeros transportados" : "pasajeros del reporte corporativo no auditado"}; mes y comparativo anual reportados en la misma edición; incluye fletamento. ${booked ? corporateSeries.reporting_status + ". " : ""}Documento ${corporateSeries!.documentary_date}; captura ${corporateSeries!.captured_at.slice(0, 10)}. No equivale a AFAC.${booked ? " " + corporateSeries.entity_attribution : ""}`
+      ? `${company} · ${booked ? "reservaciones de tramos, no pasajeros transportados" : "pasajeros del reporte corporativo no auditado"}; mes y comparativo anual reportados en la misma edición; incluye fletamento. ${booked ? reporting + ". " : ""}Documento ${corporateSeries!.documentary_date}; captura ${corporateSeries!.captured_at.slice(0, 10)}. No equivale a AFAC.${booked ? " " + attribution : ""}`
       : "AFAC · pasajeros transportados; serie histórica y ediciones verificadas";
     if (corporate) {
       const link = document.createElement("a");
