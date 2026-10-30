@@ -143,6 +143,48 @@ coincidan; la presencia de un archivo por sí sola no acredita aprobación.
 
 ## Punto de entrada
 
+### Handoff independiente de Viva y Volaris 3T26
+
+`src.publish.issuer_update` incorpora una entidad por ejecución desde un paquete
+`issuer_quarter_v1` aprobado, con replay físico de fuentes, cálculo, auditoría y
+ledger. La proyección validada es la frontera pública: no concatena observaciones
+candidatas con `fact_carrier_metrics`, no reconstruye el warehouse ni altera la
+historia. Usa las gráficas existentes y mantiene separados pasajeros con boleto,
+ocupación regular y medidas totales. El comparativo anual del reporte afecta solo
+la vista nueva; no reemplaza una cifra histórica de distinta precisión/edición.
+
+El baseline debe coincidir con Git remoto y Pages/HTTPS. Su verificador original
+liberado comprueba íntegramente sus bytes; fallar con un runtime posterior no
+autoriza ignorar un error histórico. Los registros anteriores se reproducen por
+sus cohortes y el registro nuevo con el productor actual, antes y después del
+build. Solo cambian la tesis nueva, el bloque ejecutivo de esa entidad y el recibo
+`issuer-publication.json`. Industria, las otras entidades, frontend y todos los
+demás datasets se conservan. No hay una barrera que espere otras aerolíneas.
+
+```bash
+python -m src.publish.issuer_update --prepare-record <registro-nuevo-aprobado>
+# Revisar y confirmar los pins de issuer-release.json y approval-cohorts.json.
+python -m src.publish.issuer_update --record <cada-registro-anterior> --record <registro-nuevo> --out site/
+python -m src.publish.issuer_scope site/
+```
+
+La preparación genera pins reproducibles de entidad/periodo, aprobación,
+SHA/tamaño de las dos salidas y huella del productor; no aprueba contenido. Un
+registro idéntico ya servido se reconcilia sin otra publicación. Una edición
+distinta del mismo periodo se detiene para una revisión explícita, conservando
+la anterior. El modo está limitado a las primeras ediciones Viva/Volaris 3T26;
+un trimestre nuevo requiere extender y revisar su adaptador, no cambiar una fecha.
+
+Pages selecciona el verificador de issuer cuando existe su recibo, sin fallback.
+Los recibos financieros/editoriales anteriores siguen como evidencia histórica;
+no afirman que su antiguo alcance incluya esta actualización. La verificación
+offline prueba integridad, pins y preservación, y reproduce el verificador del
+baseline; no autentica por sí sola observaciones remotas. El gate observa la red
+y el agente comprueba por HTTPS la versión realmente servida tras el despliegue.
+Build, merge y publicación servida son estados distintos. La
+[skill del agente dashboard](../../.agents/skills/airline-update-dashboard/SKILL.md)
+documenta QA, recibos, integración y recuperación idempotente.
+
 ### Publicación editorial acotada
 
 El dueño autorizó el 24 de octubre separar la lectura de los indicadores.
