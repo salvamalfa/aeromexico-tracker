@@ -50,7 +50,7 @@ export function renderMix(record: QuarterRecord): void {
   if (source) {
     source.textContent = corporate
       ? `Aeroméxico IR · mes y comparativo anual reportados, incluye fletamento; no auditado. Documento ${state.corporateMonthlyPassengers!.documentary_date}; captura ${state.corporateMonthlyPassengers!.captured_at.slice(0, 10)}. No equivale a AFAC.`
-      : "AFAC Gold · serie mensual consolidada";
+      : "AFAC · pasajeros transportados; serie histórica y ediciones verificadas";
     if (corporate) {
       const link = document.createElement("a");
       link.href = state.corporateMonthlyPassengers!.source_url;
@@ -63,8 +63,10 @@ export function renderMix(record: QuarterRecord): void {
   const series = corporate ? state.corporateMonthlyPassengers! : state.monthlyPassengers!;
   const monthlyPoints = series.records.map((point) => ({ ...point, period_label: dateLabel(point.date) }));
   const quarterGroups = new Map<string, QuarterPoint>();
+  const quarterMonths = new Map<string, string[]>();
   monthlyPoints.forEach((point) => {
     const periodId = quarterForDate(point.date);
+    quarterMonths.set(periodId, [...(quarterMonths.get(periodId) ?? []), point.date.slice(0, 7)]);
     let quarter = quarterGroups.get(periodId);
     if (!quarter) {
       const startMonth = (Number(periodId.slice(-1)) - 1) * 3 + 1;
@@ -81,7 +83,16 @@ export function renderMix(record: QuarterRecord): void {
     quarter.total_segment_sum += point.total_segment_sum;
   });
   const points: Array<MonthlyPassengerPoint & { period_label: string }> | QuarterPoint[] =
-    state.passengerPeriod === "quarter" ? [...quarterGroups.values()] : monthlyPoints;
+    state.passengerPeriod === "quarter" ? [...quarterGroups.values()].filter((quarter) => {
+      const months = quarterMonths.get(quarter.period_id)!;
+      const first = (Number(quarter.period_id.slice(-1)) - 1) * 3 + 1;
+      const expected = [0, 1, 2].map((offset) => `${quarter.period_id.slice(0, 4)}-${String(first + offset).padStart(2, "0")}`);
+      return months.length === 3 && new Set(months).size === 3 && expected.every((m) => months.includes(m));
+    }) : monthlyPoints;
+  if (!points.length) {
+    void Plotly.react("mix-chart", [], { annotations: [{ text: "No hay un trimestre con sus tres meses completos.", showarrow: false }] }, { displayModeBar: false, responsive: true });
+    return;
+  }
   const narrow = window.matchMedia("(max-width: 736px)").matches;
   const veryNarrow = window.matchMedia("(max-width: 420px)").matches;
   const rangeStart = new Date(`${points[0]!.date}T00:00:00Z`);

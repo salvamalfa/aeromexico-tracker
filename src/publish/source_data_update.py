@@ -17,6 +17,7 @@ from . import manifest as manifests
 from .approval_cohorts import verify_approval_cohorts
 from .issuer_authority import input_snapshot
 from .issuer_update import _write_pins
+from .source_data_nochange import verify_no_visual_change as verify_no_visual_change
 from .source_data_scope import (
     ANCHOR,
     PROOF,
@@ -224,6 +225,11 @@ def publish_source(path, out):
     path, request, profile, records = request_inputs(path, repo)
     if (request["product"], request["period"]) != (spec["product"], spec["period_id"]):
         raise ValueError("Source request differs from committed release")
+    from .source_data_nochange import already_built
+
+    existing = already_built(path, request, profile, records, spec, repo)
+    if existing is not None:
+        return existing
     if (
         code_version() != spec["producer_code_version"]
         or gate._trusted_site_commit(repo) != spec["baseline_commit"]

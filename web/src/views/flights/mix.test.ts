@@ -16,7 +16,7 @@ describe("separate corporate monthly passenger basis", () => {
     document.body.innerHTML = '<p id="mix-source-inline"></p><label id="passenger-basis-control" hidden></label><select id="passenger-period"><option value="quarter">Trimestral</option><option value="month">Mensual</option></select><div id="mix-chart"></div>';
     window.matchMedia = vi.fn().mockReturnValue({ matches: false });
     state.passengerPeriod = "quarter"; state.passengerBasis = "afac";
-    state.monthlyPassengers = { records: [{ date: "2026-06-01", domestic: 10, international: 5, total_segment_sum: 15 }] };
+    state.monthlyPassengers = { records: ["04", "05", "06"].map((month) => ({ date: `2026-${month}-01`, domestic: 10, international: 5, total_segment_sum: 15 })) };
     state.corporateMonthlyPassengers = { entity: "AEROMEXICO", source_url: "https://ir.aeromexico.com/node/9131/html",
       source_sha256: "a".repeat(64), captured_at: "2026-10-28T22:09:43+00:00", documentary_date: "2026-10-06", scope: "company",
       records: [{ period_id: "2025M09", date: "2025-09-01", domestic: 1276000, international: 617000,
@@ -26,8 +26,8 @@ describe("separate corporate monthly passenger basis", () => {
   });
   it("keeps AFAC as the existing default", () => {
     renderMix(record);
-    expect(mocks.react.mock.calls[0]![1][2].y).toEqual([15]);
-    expect(document.getElementById("mix-source-inline")?.textContent).toContain("AFAC Gold");
+    expect(mocks.react.mock.calls[0]![1][2].y).toEqual([45]);
+    expect(document.getElementById("mix-source-inline")?.textContent).toContain("AFAC · pasajeros transportados");
   });
   it("plots reported totals and isolated months without a false quarterly aggregate or gap line", () => {
     state.passengerBasis = "corporate";
@@ -50,10 +50,22 @@ describe("separate corporate monthly passenger basis", () => {
     expect(mocks.entity).toHaveBeenCalledWith(mocks.entities, record, "quarter");
     expect(document.getElementById("passenger-basis-control")?.hidden).toBe(true);
   });
+  it("omits incomplete AFAC quarters instead of turning July and August into Q3", () => {
+    for (const month of ["07", "08"]) state.monthlyPassengers!.records.push({ date: `2026-${month}-01`, domestic: 3, international: 2, total_segment_sum: 5 });
+    renderMix(record);
+    expect(mocks.react.mock.calls[0]![1][2].x).toEqual(["2026-04-01"]);
+    expect(mocks.react.mock.calls[0]![1][2].y).toEqual([45]);
+  });
+  it("shows an empty-state explanation when the only quarter has fewer than three months", () => {
+    state.monthlyPassengers!.records = state.monthlyPassengers!.records.slice(0, 2);
+    renderMix(record);
+    expect(mocks.react.mock.calls[0]![1]).toEqual([]);
+    expect(mocks.react.mock.calls[0]![2].annotations[0].text).toContain("tres meses completos");
+  });
   it("falls back to the retained AFAC chart when no corporate payload is present", () => {
     state.passengerBasis = "corporate"; state.corporateMonthlyPassengers = null;
     renderMix(record);
-    expect(mocks.react.mock.calls[0]![1][2].y).toEqual([15]);
+    expect(mocks.react.mock.calls[0]![1][2].y).toEqual([45]);
     expect(document.getElementById("passenger-basis-control")?.hidden).toBe(true);
   });
 });

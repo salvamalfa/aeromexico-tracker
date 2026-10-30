@@ -22,7 +22,15 @@ def verify(job: dict, source: dict, result: dict, expected_binding: dict, root: 
     expected_status = "no_material_analysis_change" if job["stage"] == "analysis" else "no_visual_change"
     if result["status"] != expected_status:
         raise ValueError("No-change receipt has the wrong stage")
-    if job["entity"] == "AEROMEXICO":
+    if job["stage"] == "dashboard" and job.get("release_kind") == "source_data":
+        from src.publish.source_data_update import verify_no_visual_change
+
+        observed = verify_no_visual_change(
+            reference(result["source_profile"]), expected_binding, site=root / "site"
+        )
+        if observed.get("status") != "no_visual_change":
+            raise ValueError("Selective source projection did not prove unchanged visible data")
+    elif job["entity"] == "AEROMEXICO":
         from scripts.published_am_equivalence import verify as verify_am
 
         observed = verify_am(

@@ -11,11 +11,15 @@ from src.config import PATHS
 
 from . import editorial as transport
 from . import manifest as manifests
-from .issuer_scope import encoded as encoded
 from .issuer_scope import sha, verify_historical_baseline
 
 ANCHOR = "config/publish/source-data-release.json"
 PROOF = "source-data-publication.json"
+
+
+def encoded(value):
+    """Strict JSON on this new surface; never emit nonstandard NaN/Infinity."""
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n").encode()
 
 
 def adapter(product):

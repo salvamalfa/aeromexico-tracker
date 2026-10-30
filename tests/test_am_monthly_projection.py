@@ -74,3 +74,14 @@ def test_project_requires_full_native_replay_before_reading_a_chart_cell(monkeyp
     with pytest.raises(ValueError, match="physical source replay"):
         projection.project(Path("not-a-candidate"), "2026M09", "frozen-cutoff", "id")
     assert called == [{"check": True}]
+
+
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan")])
+@pytest.mark.parametrize(
+    "field", ["domestic", "international", "reported_total", "total_segment_sum", "reconciliation_delta"]
+)
+def test_nonfinite_projection_never_reaches_browser_json(field, value):
+    candidate = series()
+    candidate["records"][0][field] = value
+    with pytest.raises(ValueError):
+        projection.apply({}, candidate)

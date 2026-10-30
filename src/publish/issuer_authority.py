@@ -140,6 +140,9 @@ def input_snapshot(record_paths, spec, package_path=None, repo=PATHS.root):
                 for artifact in [source, *source.get("proofs", [])]:
                     path = repo / "data/bronze" / artifact["source_file"]
                     add(path)
+                    expected_hash = artifact.get("artifact_sha256")
+                    if expected_hash is not None and sha(path.read_bytes()) != expected_hash:
+                        raise ValueError("Snapshot artifact differs from its evidence hash")
                     sidecar = Path(str(path) + ".meta.json")
                     if sidecar.exists() or sidecar.is_symlink():
                         add(sidecar)

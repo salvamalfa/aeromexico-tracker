@@ -70,6 +70,7 @@ def apply(quarters: dict, series: dict) -> dict:
     from src.web_export.schemas import FLIGHTS_SCHEMA
 
     schema = {"$defs": FLIGHTS_SCHEMA["$defs"], "$ref": "#/$defs/corporate_monthly_passengers"}
+    json.dumps(series, allow_nan=False)
     Draft202012Validator(schema).validate(series)
     result = deepcopy(quarters)
     result["corporate_monthly_passengers"] = deepcopy(series)
@@ -83,7 +84,7 @@ CONTRACTS = ("flights.schema.json",)
 
 def public_outputs(before: dict[str, bytes], projection: dict) -> dict[str, bytes]:
     """Add only the separate company-reported series to one published payload."""
-    from .issuer_scope import encoded
+    from .source_data_scope import encoded
 
     if set(before) != set(TARGETS):
         raise ValueError("Monthly passenger projection only changes the quarters document")

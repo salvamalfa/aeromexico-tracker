@@ -562,3 +562,14 @@ su skill existente. Una llegada recuperada conserva el documento original y su
 fecha de captura; no crea una ejecución programada histórica inexistente. El
 build local, la integración y la comprobación HTTPS/browser servida se registran
 como estados distintos conforme al flujo general.
+
+
+Una llegada `source_data` cuyo resultado ya coincide termina con
+`source_data_update.verify_no_visual_change`: reproduce fuente/alcance, contrasta
+bytes con el baseline Git, verifica cohortes y conserva un recibo de equivalencia
+sin build ni nueva autorización editorial. El outbox revalida ese recibo antes
+de cerrar `no_change`. Si el mismo gate ya produjo el build exacto, su recuperación
+revalida fuente, autoridad vigente, aprobaciones, manifiesto y pins; devuelve
+`already_built_verified` sin otro intercambio ni recibos de publicación duplicados.
+Eso no acredita el despliegue ni sustituye la verificación servida.
+Los payloads nuevos se serializan como JSON estricto: NaN e infinitos bloquean.
