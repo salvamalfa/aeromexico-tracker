@@ -73,6 +73,22 @@ def test_preparing_same_committed_pins_keeps_original_producer(revision):
     assert issuer_update._stable_cohort(p["root"], {"same_source_and_outputs": False}, fresh) == fresh
 
 
+def test_preparation_replaces_existing_committed_config_and_repeats_without_rewrite(revision, monkeypatch):
+    from types import SimpleNamespace
+
+    from src.publish import issuer_update
+
+    p = revision
+    monkeypatch.setattr(issuer_update, "PATHS", SimpleNamespace(root=p["root"]))
+    target = p["root"] / cohorts.CONFIG
+    value = {"new_prepared_pin": True}
+    issuer_update._write_pins([(cohorts.CONFIG, value)])
+    assert json.loads(target.read_bytes()) == value
+    identity = target.stat().st_ino
+    issuer_update._write_pins([(cohorts.CONFIG, value)])
+    assert target.stat().st_ino == identity
+
+
 @pytest.mark.parametrize("mutation", ["old_version", "old_quarter", "old_file", "new_entity", "same_version"])
 def test_revision_cannot_guess_or_change_previous_slot(revision, mutation):
     p = revision

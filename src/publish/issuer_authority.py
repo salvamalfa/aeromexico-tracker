@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 
 from src.config import PATHS
 
@@ -84,3 +86,84 @@ def verified_data(package, spec, baseline, repo=PATHS.root):
         raise ValueError("Issuer data projection differs from its reviewed output")
     approvals = authority(package, spec, repo)
     return raw, approvals
+
+
+def input_snapshot(record_paths, spec, package_path=None, repo=PATHS.root):
+    """Fingerprint only selected source closures after/before slow verification.
+
+    This is an integrity guard, not a substitute for any source or approval replay.
+    Unrelated candidate/analysis workspaces do not become publication dependencies.
+    """
+    files, packages = set(), []
+
+    def add(path):
+        path = Path(path).absolute()
+        if (
+            ".." in path.parts
+            or not path.is_relative_to(repo.absolute())
+            or any(p.is_symlink() for p in [path, *path.parents])
+        ):
+            raise ValueError("Issuer snapshot input escapes the checkout or traverses a symlink")
+        if not path.is_file():
+            raise ValueError("Issuer snapshot input is missing")
+        files.add(path)
+
+    selected = [Path(p) for p in record_paths]
+    previous = spec.get("previous_entry")
+    if previous:
+        path = repo / "analysis_runs/drafts"
+        if "entity_key" in previous:
+            path /= previous["entity_key"]
+        selected.append(path / previous["period_id"] / (previous["version"] + ".json"))
+    for path in selected:
+        add(path)
+        draft = json.loads(path.read_bytes())["draft"]
+        evidence = repo / "analysis_runs/evidence" / (draft["package_id"] + ".json")
+        add(evidence)
+        add(repo / "analysis_runs/quantitative" / (draft["calculation_fingerprint"] + ".json"))
+        packages.append(json.loads(evidence.read_bytes()))
+    if package_path is not None:
+        add(package_path)
+        packages.append(json.loads(Path(package_path).read_bytes()))
+    for package in packages:
+        if package.get("source_profile") == "issuer_quarter_v1":
+            workspace = repo / package["workspace"]
+            if ".." in workspace.parts or not workspace.is_relative_to(repo / "tmp/source-updates"):
+                raise ValueError("Issuer snapshot workspace is not a private source candidate")
+            for path in workspace.rglob("*"):
+                if path.is_symlink():
+                    raise ValueError("Issuer source candidate contains a symlink")
+                if path.is_file():
+                    add(path)
+        else:
+            for source in package["sources"]:
+                path = repo / "data/bronze" / source["source_file"]
+                add(path)
+                sidecar = Path(str(path) + ".meta.json")
+                if sidecar.exists() or sidecar.is_symlink():
+                    add(sidecar)
+            if package.get("capsule_fingerprint"):
+                capsule = repo / "analysis_runs/entity_review_bundles" / package["capsule_fingerprint"]
+                for name in package["capsule_files"]:
+                    add(capsule / name)
+    for path in (repo / "analysis_runs/lifecycle").rglob("*.json"):
+        if "publications" not in path.relative_to(repo / "analysis_runs/lifecycle").parts:
+            add(path)
+    if spec.get("authorization_sha256"):
+        path = (
+            repo / "analysis_runs/dashboard_updates/authorizations" / (spec["authorization_sha256"] + ".json")
+        )
+        add(path)
+        audit_sha = json.loads(path.read_bytes())["source_audit_sha256"]
+        add(repo / "analysis_runs/dashboard_updates/audits" / (audit_sha + ".json"))
+    return {
+        str(p.relative_to(repo)): {
+            "sha256": sha(p.read_bytes()),
+            "library_identity": {
+                key: sha(os.getxattr(p, key))
+                for key in getattr(os, "listxattr", lambda _: ())(p)
+                if key.startswith("user.library-")
+            },
+        }
+        for p in sorted(files)
+    }

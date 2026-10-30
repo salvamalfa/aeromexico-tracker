@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -29,8 +30,6 @@ from .records import PublicationRefused
 
 
 def _write_pins(writes):
-    from . import gate
-
     repo = PATHS.root
     prepared = []
     for name, value in writes:
@@ -49,9 +48,22 @@ def _write_pins(writes):
         actual = target.read_bytes() if target.exists() else None
         if actual != committed and (actual is None or json.loads(actual) != value):
             raise ValueError("Issuer pin has an unrelated local edit; reconcile its owner first")
-        prepared.append((target, value))
-    for target, value in prepared:
-        gate.flow.atomic_json(target, value)
+        prepared.append((target, value, actual))
+    for target, value, previous in prepared:
+        if previous is not None and json.loads(previous) == value:
+            continue
+        if (target.read_bytes() if target.exists() else None) != previous:
+            raise ValueError("Issuer pin changed concurrently")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=".issuer-pin-")
+        try:
+            with os.fdopen(fd, "wb") as stream:
+                stream.write((json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode())
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
 
 
 def _stable_cohort(repo, spec, cohort):
@@ -400,12 +412,38 @@ def publish_issuer(record_paths: list[Path], out_dir: Path, *, package_path: Pat
             problems = _verify_site(candidate, preserved_approval_files=preserved)
             if problems:
                 raise ValueError(f"Issuer candidate rejected: {problems[:3]}")
+            manifests.refuse_if_build_inputs_dirty()
+            if anchor(repo) != spec or manifests.current_commit(repo) != start_head:
+                raise ValueError("Issuer code or authority changed during candidate verification")
+            if code_version() != spec["producer_code_version"]:
+                raise ValueError("Issuer runtime changed during candidate verification")
+            if (
+                transport._git(repo, "ls-remote", "origin", "refs/heads/master").decode().split()[0]
+                != spec["baseline_commit"]
+            ):
+                raise ValueError("Remote issuer baseline moved before the final swap")
+            if input_snapshot(record_paths, spec, package_path, repo) != snapshot:
+                raise ValueError("Issuer source, review or approval changed before the final swap")
 
         with gate.flow.writer(gate.flow.ROOT):
+            from .issuer_authority import input_snapshot
+
             gate.require_trusted_site_baseline(baseline, trusted_commit=spec["baseline_commit"])
+            snapshot = input_snapshot(record_paths, spec, package_path, repo)
             if verified() != first or anchor(repo) != spec or manifests.current_commit(repo) != start_head:
                 raise ValueError("Issuer source, approval, release or build code changed")
-            transport.witness_remote(repo, spec)
+            if input_snapshot(record_paths, spec, package_path, repo) != snapshot:
+                raise ValueError("Issuer input changed during final source replay")
+            final_witness = transport.witness_remote(repo, spec)
+            (prepared / PROOF).write_bytes(
+                encoded(
+                    {
+                        "schema_version": "issuer_publication_v1",
+                        "anchor_sha256": sha((repo / ANCHOR).read_bytes()),
+                        "remote_witness": final_witness,
+                    }
+                )
+            )
             if code_version() != spec["producer_code_version"]:
                 raise ValueError("Issuer implementation changed during publication")
             manifest = gate.assemble_site(

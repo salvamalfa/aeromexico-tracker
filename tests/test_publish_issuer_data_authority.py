@@ -132,3 +132,41 @@ def test_pin_preparation_preserves_other_owners_local_edits(tmp_path, monkeypatc
     with pytest.raises(ValueError, match="unrelated local edit"):
         update._write_pins([("config/publish/issuer-release.json", {"this_job": True})])
     assert json.loads(path.read_bytes()) == {"other_job": True}
+
+
+def test_final_snapshot_tracks_only_selected_candidate_and_ledger(tmp_path):
+    source = tmp_path / "tmp/source-updates/selected/data/bronze/source.pdf"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"physical selected source")
+    package = tmp_path / "analysis_runs/evidence/package.json"
+    package.parent.mkdir(parents=True)
+    package.write_text(
+        json.dumps({"source_profile": "issuer_quarter_v1", "workspace": "tmp/source-updates/selected"})
+    )
+    ledger = tmp_path / "analysis_runs/lifecycle/head.json"
+    ledger.parent.mkdir()
+    ledger.write_text('{"head":1}')
+    first = authority.input_snapshot([], {}, package, tmp_path)
+    unrelated = tmp_path / "tmp/source-updates/another-airline/source.pdf"
+    unrelated.parent.mkdir()
+    unrelated.write_bytes(b"another independent arrival")
+    assert authority.input_snapshot([], {}, package, tmp_path) == first
+    source.write_bytes(b"changed after source verification")
+    assert authority.input_snapshot([], {}, package, tmp_path) != first
+    source.write_bytes(b"physical selected source")
+    ledger.write_text('{"head":2}')
+    assert authority.input_snapshot([], {}, package, tmp_path) != first
+
+
+def test_final_snapshot_rejects_source_symlink_even_with_identical_bytes(tmp_path):
+    source = tmp_path / "tmp/source-updates/selected/source.pdf"
+    source.parent.mkdir(parents=True)
+    physical = tmp_path / "physical.pdf"
+    physical.write_bytes(b"identical")
+    source.symlink_to(physical)
+    package = tmp_path / "package.json"
+    package.write_text(
+        json.dumps({"source_profile": "issuer_quarter_v1", "workspace": "tmp/source-updates/selected"})
+    )
+    with pytest.raises(ValueError, match="symlink"):
+        authority.input_snapshot([], {}, package, tmp_path)
