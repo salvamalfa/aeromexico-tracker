@@ -52,6 +52,22 @@ export interface FlightComponent {
 }
 
 export interface Route {
+  recorded_movements?: {
+    count: number;
+    source_label: string;
+    observed_months: string[];
+    definition: string;
+    provisional: true;
+    official_classification_confirmed: false;
+    agent_eligible: false;
+    flight_type_code: "S";
+    traffic_code: "I";
+    components: {
+      operator_icao: string; commercial_designator_as_reported: string | null;
+      origin_iata: string; destination_iata: string; period_id: string;
+      operations: number; source_hash: string; source_locator: string;
+    }[];
+  };
   flight_components?: FlightComponent[];
   market_key: string;
   origin: Airport;

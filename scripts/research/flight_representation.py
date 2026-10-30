@@ -97,9 +97,6 @@ def route_values(route, entity, period, network, counts, observations, *, compon
                         raise ValueError("BTS service classes do not reconcile to component")
                     strict.append(regular)
                     notes.add("BTS F/G regular; L/P excluded")
-                elif "Aerocivil" in source:
-                    strict.append(regular)
-                    notes.add("Aerocivil regular service")
                 else:
                     notes.add("Observed service class unconfirmed; excluded from strict numerator")
         displayed = sum_known(totals[k] for k in ("observed", "estimated", "attributed"))

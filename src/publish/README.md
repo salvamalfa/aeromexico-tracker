@@ -209,7 +209,8 @@ sin efecto visible se reproduce con `issuer_update.verify_no_visual_change`;
 una etiqueta del worker no sustituye esa comprobación. Macro/cotizaciones no
 alimentan las gráficas servidas actuales: Mercado usa pasajeros AFAC.
 
-Pages selecciona el verificador de issuer cuando existe su recibo, sin fallback.
+Pages selecciona el perfil vigente entre los recibos declarados y conservados,
+según la precedencia Git descrita abajo, sin fallback.
 Los recibos financieros/editoriales anteriores siguen como evidencia histórica;
 no afirman que su antiguo alcance incluya esta actualización. La verificación
 offline prueba integridad, pins y preservación, y reproduce el verificador del
@@ -218,6 +219,93 @@ y el agente comprueba por HTTPS la versión realmente servida tras el despliegue
 Build, merge y publicación servida son estados distintos. La
 [skill del agente dashboard](../../.agents/skills/airline-update-dashboard/SKILL.md)
 documenta QA, recibos, integración y recuperación idempotente.
+
+### Corrección de movimientos Aerocivil
+
+`src.publish.movements_update` prepara y publica exclusivamente la corrección
+semántica de Aerocivil en la red internacional existente. El perfil privado
+reproduce los originales retenidos y la certificación nativa de julio; conserva
+captura, SHA, metadatos y supuestos. Si el verificador dedicado rechaza una
+certificación por cambio de productor, requiere otra certificación offline
+aislada desde esos originales, sin HTTP ni renovar sus fechas. Un recibo global
+antiguo no se revalida con otro runtime: se conserva con su código histórico.
+Movimientos provisionales permanecen separados de salidas; no se dividen entre
+dos ni certifican vuelos regulares o cobertura trimestral completa.
+
+La solicitud privada tiene `schema_version: aerocivil_movements_request_v1`,
+`source_profile: {path, sha256}`, los siete `record_paths` exactos del manifiesto
+publicado y `authorization: {path, sha256}`. Para inspeccionar antes de retener la
+autorización, usar `authorization: null`. El perfil contiene sus originales y
+metadatos fijados por SHA, referencia de aeropuertos, `july_item` certificado y
+`round_as_of` original con zona horaria. El esquema
+`aerocivil_movement_source_profile_v1` exige tres originales: histórico de
+8/sep, corte 2T26 de 19/oct y julio de 21/oct. Cada original y la referencia
+declaran `path`, `sha256`, `metadata_path` y `metadata_sha256`. Sus archivos
+físicos y el candidato/disponibilidad deben materializarse en el checkout
+consumidor; cambiar rutas no cambia sus bytes, capturas ni ediciones.
+La proyección cubre exactamente 38 redes existentes y `flights/quarters.json`;
+Industria cambia solo en el widget de datos, nunca en su tesis.
+`movements_history.source_projection` verifica ese cierre físico, devuelve las
+filas tipadas y la proyección acotada. La lista de archivos públicos procede del
+alcance revisado en `movements_scope.TARGETS`; no se infiere desde un candidato.
+
+```bash
+python -m src.publish.movements_update --inspect <solicitud-privada.json>
+# Retener consentimiento auténtico con el authority_scope exacto de la inspección.
+python -m src.publish.movements_update --prepare <solicitud-privada.json>
+# Revisar y confirmar config/publish/aerocivil-movements-release.json.
+python -m src.publish.movements_update --request <solicitud-privada.json> --out site/
+python -m src.publish.movements_scope site/
+```
+
+La autorización privada se conserva en
+`analysis_runs/dashboard_updates/authorizations/<SHA256>.json` y contiene
+`schema_version: aerocivil_movements_authorization_v1`, `status: authorized`,
+`scope` idéntico a `authority_scope` y
+`owner_consent: {source_reference, instruction, received_at}` con referencia a
+la delegación auténtica, instrucción literal y recepción real con zona horaria.
+No inventar identificadores de mensajes ni presentar una delegación como cita
+verbatim del usuario. El publicador solo la lee: no
+crea consentimiento, aprobaciones ni eventos editoriales. El ancla pública fija
+su hash, baseline, productor, fuente nativa, proyección y recursos compilados;
+los expedientes privados no se incorporan al repositorio público.
+
+El gate reproduce el verificador liberado del baseline y las siete aprobaciones
+con sus cohortes originales. Comprueba baseline remoto y bytes servidos, y repite
+replay de fuente, autorización y cohortes bajo el lock antes del intercambio
+atómico. Coteja el cierre físico, metadatos Library, ledger, código, ancla y remoto
+tras los verificadores lentos. Conserva todas las tesis, datos financieros y bytes
+ajenos a los targets; permite solo sus payloads de movimientos, el contrato de
+Vuelos y la nueva clausura frontend revisada. Conserva los recursos históricos.
+La selección conjunta de aerolíneas combina únicamente componentes de
+movimientos con grano operador, designador literal, sentido y mes distintos.
+Conserva SHA y locator de cada original, rechaza duplicados o ediciones
+superpuestas y reconcilia cada subtotal; nunca suma esos movimientos a vuelos.
+
+Tras cambiar datos o tesis de `site/`, ejecutar
+`python -m scripts.chat.render_f29_coverage_matrix` y las pruebas
+`python -m pytest tests/test_chat_f29_final_campaign_preflight.py -q` antes de CI.
+La matriz F2.9 deriva los bytes conversacionales del sitio actual: se regenera
+la documentación, conservando fixture, Gold y pins, sin ejecutar campañas.
+
+Pages, outbox y el lector de baselines históricos comparten el selector de
+`check_pages_publication.py`. Cada recibo declarado debe coincidir con el SHA y
+el tamaño del manifiesto y nombrar un objeto commit existente. Si conserva
+varios recibos, el vigente es el único cuyo baseline Git desciende estrictamente
+de los demás. Empates, ramas ajenas, historial ausente, pruebas alteradas o
+perfiles desconocidos bloquean; ninguna fecha de archivo o bandera JSON elige
+el gate. Después de elegir, el verificador específico comprueba toda su ancla,
+alcance y fuentes según corresponda. La relación Git no concede aprobación.
+Esto permite movimientos → financiero/issuer → movimientos con revisión propia,
+sin hacer permanente la prioridad de un recibo histórico. Las pruebas de paridad
+siguen la misma cadena, conservan ejecutivo y siete tesis en el salto de
+movimientos y reproducen la fuente financiera original. El recibo
+acredita `site_built_verified`; solo QA posterior por HTTPS acredita lo servido.
+No usar `--ui-only`, el scope financiero ni `flight_evidence_v1` para esta entrega.
+
+Cierre documental: se conservan el publicador y sus pruebas como procedimiento
+reutilizable; esta guía y la skill del dashboard son la referencia vigente. El
+perfil, consentimiento y recibos quedan privados como evidencia de recuperación.
 
 ### Publicación editorial acotada
 
@@ -246,10 +334,11 @@ El recibo registra observaciones del gate; el verificador offline no autentica
 por sí mismo una observación de red ni reproduce las fuentes antiguas. Esta
 garantía se sustituye por la identidad exacta con el despliegue anterior
 verificado. El verificador general `src.publish.verify` conserva sus controles.
-Pages selecciona el verificador según el sitio que despliega: si contiene
-`editorial-publication.json`, exige el verificador editorial y su ancla exacta,
-sin fallback ante errores. Una publicación posterior de interfaz o datos sin
-ese recibo usa el verificador general, aunque el ancla histórica siga en Git.
+Pages selecciona el verificador vigente según los recibos que declara el
+manifiesto. Cuando solo declara `editorial-publication.json`, exige el
+verificador editorial y su ancla exacta, sin fallback ante errores. Si conserva
+otros recibos, aplica la precedencia Git. Un sitio sin recibos declarados usa
+el verificador general, aunque un ancla histórica siga en Git.
 Un recibo aislado nunca concede autoridad. El gate de la modalidad posterior
 sigue exigiendo sus aprobaciones y fuentes; no hereda la excepción editorial.
 CI y revisión siguen siendo obligatorios y la publicación se comprueba por HTTPS.
@@ -381,8 +470,8 @@ el margen unitario usan la serie publicada. El comparativo de ocupación 3T25
 88,2% del nuevo reporte no sustituye el 88,3% histórico. Trimestre, nueve meses
 y saldos al cierre se mantienen separados.
 
-Pages selecciona primero el verificador financiero si existe
-`financial-publication.json`, sin fallback ante errores; exige ancla, output y
+Una publicación cuyo perfil vigente es `financial-publication.json` exige
+su verificador financiero, sin fallback ante errores; exige ancla, output y
 recursos exactos, preservación estructural/bytes, contratos y privacidad. El
 recibo editorial anterior se conserva como evidencia histórica. Una publicación
 UI posterior sin recibo financiero usa el verificador general y conserva todos

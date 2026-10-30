@@ -59,3 +59,21 @@ describe("flight-only map totals", () => {
     expect(document.getElementById("network-volume")!.hidden).toBe(true);
   });
 });
+
+it("renders 347 July movements separately, including when flights are unknown", () => {
+  document.body.innerHTML = '<div id="network-volume"></div>';
+  state.routes = [route(null, "recorded_movements_provisional", { recorded_movements: {
+    count: 347, observed_months: ["2026M07"] } })];
+  renderNetworkVolume();
+  const html = document.getElementById("network-volume")!.innerHTML;
+  expect(html).toContain("Movimientos registrados · Aerocivil");
+  expect(html).toContain("<strong>347</strong>");
+  expect(html).toContain("Provisional · 2026M07 · fuera de vuelos");
+  expect(html).not.toContain("Vuelos observados");
+  expect(html).not.toContain("<strong>0</strong>");
+  state.routes[0]!.departures = 12;
+  state.routes[0]!.operation_status = "estimated_from_retained_frequencies";
+  renderNetworkVolume();
+  expect(document.getElementById("network-volume")!.innerHTML).toContain("Vuelos estimados");
+  expect(document.getElementById("network-volume")!.innerHTML).not.toContain("<strong>359</strong>");
+});

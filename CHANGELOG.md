@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-30 · Movimientos de Aerocivil separados de salidas
+
+- El normalizador histórico conserva `totaloperaciones` como movimientos y
+  deja salidas, pasajeros y asientos nulos. Empresa/explotador y los códigos
+  S/I conservan su carácter provisional; no se certifica la leyenda oficial.
+- Vuelos conserva un campo de movimientos con meses, sentidos y procedencia,
+  separado de vuelos observados, estimados, programación y sus agregados.
+  Las auditorías rechazan atribuir esos movimientos a vuelos regulares.
+- Replay acotado de tres ediciones originales: 38 mapas existentes y el
+  agregado de cobertura, con igualdad por operador, mes, sentido y hash.
+  Conserva componentes estimados y solo retira comparativos previos cuando
+  su origen Aerocivil está demostrado.
+- La corrección requiere regenerar Gold y payloads desde originales retenidos;
+  código preparado y pruebas no equivalen a publicación ni a activar evidencia.
+
 ## 2026-10-30 · Viva 3T26: tesis e indicadores por emisor
 
 - Entrega combinada de la tesis aprobada y los indicadores financieros de Viva,

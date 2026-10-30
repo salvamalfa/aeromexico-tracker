@@ -1,5 +1,6 @@
 """Declared receipt routing never downgrades and executes the pinned checkout."""
 
+import hashlib
 import json
 import os
 import subprocess
@@ -16,11 +17,23 @@ HELPER = ROOT / "scripts/check_pages_publication.py"
 
 def manifest(site, receipts):
     site.mkdir(exist_ok=True)
-    (site / "publication_manifest.json").write_text(
-        json.dumps({"files": [{"path": name} for name in receipts]}), encoding="utf-8"
-    )
-    for name in receipts:
-        (site / name).write_text("{}", encoding="utf-8")
+    repo = site.parent if site.name == "site" else site
+    if not (repo / ".git").exists():
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        for key, value in (("user.name", "Selector Fixture"), ("user.email", "fixture@example.invalid")):
+            subprocess.run(["git", "config", key, value], cwd=repo, check=True)
+    commits = []
+    for index, _ in enumerate(receipts):
+        subprocess.run(["git", "commit", "--allow-empty", "-qm", f"release{index}"], cwd=repo, check=True)
+        commits.append(subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip())
+    # Receipt list is oldest to newest, unlike the former static priority order.
+    entries = []
+    for name, commit in zip(receipts, commits, strict=True):
+        raw = json.dumps({"remote_witness": {"baseline_commit": commit}}).encode()
+        (site / name).write_bytes(raw)
+        entries.append({"path": name, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)})
+    (site / "publication_manifest.json").write_text(json.dumps({"files": entries}), encoding="utf-8")
+    return repo
 
 
 @pytest.mark.parametrize(
@@ -29,20 +42,21 @@ def manifest(site, receipts):
         ([], "src.publish.verify"),
         (["editorial-publication.json"], "src.publish.editorial"),
         (["editorial-publication.json", "financial-publication.json"], "src.publish.financial_scope"),
-        ([name for name, _ in VERIFIERS], "src.publish.issuer_scope"),
+        (["issuer-publication.json"], "src.publish.issuer_scope"),
+        ([name for name, _ in reversed(VERIFIERS)], "src.publish.movements_scope"),
     ],
 )
 def test_declared_receipt_priority(tmp_path, receipts, expected):
-    manifest(tmp_path, receipts)
-    assert verifier_for(tmp_path) == expected
+    repo = manifest(tmp_path, receipts)
+    assert verifier_for(tmp_path, repo) == expected
 
 
 @pytest.mark.parametrize("receipt, module", VERIFIERS)
 def test_missing_declared_receipt_fails_before_any_verifier(tmp_path, receipt, module):
-    manifest(tmp_path, [receipt])
+    repo = manifest(tmp_path, [receipt])
     (tmp_path / receipt).unlink()
     with pytest.raises(ValueError, match="declared publication receipt is missing"):
-        verifier_for(tmp_path)
+        verifier_for(tmp_path, repo)
 
 
 @pytest.mark.parametrize("receipt, module", [*VERIFIERS, (None, "src.publish.verify")])
@@ -82,3 +96,117 @@ def test_workflow_uses_master_helper_with_preview_cwd():
     assert "python scripts/check_pages_publication.py site/" in production["run"]
     assert preview["working-directory"] == "_preview"
     assert "python ../scripts/check_pages_publication.py site/" in preview["run"]
+
+
+def replace_proof(site, receipt, commit):
+    raw = json.dumps({"remote_witness": {"baseline_commit": commit}}).encode()
+    (site / receipt).write_bytes(raw)
+    document = json.loads((site / "publication_manifest.json").read_bytes())
+    for pin in document["files"]:
+        if pin["path"] == receipt:
+            pin.update(sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
+    (site / "publication_manifest.json").write_text(json.dumps(document))
+
+
+def new_commit(repo, message):
+    subprocess.run(["git", "commit", "--allow-empty", "-qm", message], cwd=repo, check=True)
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+
+
+def test_movements_then_issuer_then_movements_follow_witnessed_git_order(tmp_path):
+    receipts = [
+        "editorial-publication.json",
+        "financial-publication.json",
+        "issuer-publication.json",
+        "aerocivil-movements-publication.json",
+    ]
+    repo = manifest(tmp_path, receipts)
+    assert verifier_for(tmp_path, repo) == "src.publish.movements_scope"
+    replace_proof(tmp_path, "issuer-publication.json", new_commit(repo, "later issuer"))
+    assert verifier_for(tmp_path, repo) == "src.publish.issuer_scope"
+    replace_proof(tmp_path, "aerocivil-movements-publication.json", new_commit(repo, "later movements"))
+    assert verifier_for(tmp_path, repo) == "src.publish.movements_scope"
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "modified",
+        "size",
+        "invalid_commit",
+        "missing_commit",
+        "blob",
+        "tie",
+        "fork",
+        "duplicate",
+        "unknown",
+        "undeclared",
+        "symlink",
+    ],
+)
+def test_ambiguous_modified_unknown_or_unrelated_proofs_never_fall_back(tmp_path, mutation):
+    receipts = [
+        "financial-publication.json",
+        "issuer-publication.json",
+        "aerocivil-movements-publication.json",
+    ]
+    repo = manifest(tmp_path, receipts)
+    document = json.loads((tmp_path / "publication_manifest.json").read_bytes())
+    proof = tmp_path / "aerocivil-movements-publication.json"
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    if mutation == "modified":
+        proof.write_text("tampered")
+    elif mutation == "size":
+        document["files"][-1]["bytes"] += 1
+        (tmp_path / "publication_manifest.json").write_text(json.dumps(document))
+    elif mutation == "invalid_commit":
+        replace_proof(tmp_path, receipts[-1], "latest")
+    elif mutation == "missing_commit":
+        replace_proof(tmp_path, receipts[-1], "f" * 40)
+    elif mutation == "blob":
+        blob = (
+            subprocess.check_output(["git", "hash-object", "-w", "--stdin"], cwd=repo, input=b"not a commit")
+            .decode()
+            .strip()
+        )
+        replace_proof(tmp_path, receipts[-1], blob)
+    elif mutation == "tie":
+        replace_proof(tmp_path, "issuer-publication.json", head)
+    elif mutation == "fork":
+        first = subprocess.check_output(
+            ["git", "rev-list", "--max-parents=0", "HEAD"], cwd=repo, text=True
+        ).strip()
+        subprocess.run(["git", "checkout", "--detach", "-q", first], cwd=repo, check=True)
+        replace_proof(tmp_path, "issuer-publication.json", new_commit(repo, "unrelated fork"))
+    elif mutation == "duplicate":
+        document["files"].append(document["files"][0])
+        (tmp_path / "publication_manifest.json").write_text(json.dumps(document))
+    elif mutation == "unknown":
+        document["files"].append({"path": "new-publication.json"})
+        (tmp_path / "publication_manifest.json").write_text(json.dumps(document))
+    elif mutation == "undeclared":
+        document["files"] = document["files"][:-1]
+        (tmp_path / "publication_manifest.json").write_text(json.dumps(document))
+    else:
+        target = tmp_path / "copied-proof.json"
+        proof.rename(target)
+        proof.symlink_to(target)
+    with pytest.raises(ValueError):
+        verifier_for(tmp_path, repo)
+
+
+def test_single_proof_is_manifest_bound_and_explicit_repository_is_used(tmp_path, monkeypatch):
+    repo = manifest(tmp_path / "site", ["issuer-publication.json"])
+    monkeypatch.chdir(tmp_path.parent)
+    assert verifier_for(tmp_path / "site", repo) == "src.publish.issuer_scope"
+    (tmp_path / "site/issuer-publication.json").write_text("{}")
+    with pytest.raises(ValueError, match="manifest pins"):
+        verifier_for(tmp_path / "site", repo)
+
+
+@pytest.mark.parametrize("proof,module", VERIFIERS)
+def test_undeclared_dangling_proof_never_selects_generic(tmp_path, proof, module):
+    (tmp_path / "publication_manifest.json").write_text(json.dumps({"files": []}))
+    (tmp_path / proof).symlink_to(tmp_path / "missing-target")
+    with pytest.raises(ValueError, match="Undeclared publication receipt"):
+        verifier_for(tmp_path, tmp_path)

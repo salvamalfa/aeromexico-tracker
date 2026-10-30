@@ -244,13 +244,50 @@ def test_editorial_corrupt_publication_is_not_an_optional_missing_candidate(tmp_
 @pytest.mark.parametrize("strict", [False, True])
 def test_editorial_unknown_verifier_never_falls_back_to_a_general_check(tmp_path, monkeypatch, strict):
     from types import SimpleNamespace
+
     from scripts import check_pages_publication
 
     module = editorial_parity_module()
     module.SITE = tmp_path / "site"
     module.SITE.mkdir()
     (module.SITE / "publication_manifest.json").write_text("{}")
-    monkeypatch.setattr(check_pages_publication, "verifier_for", lambda site: "src.publish.unknown_scope")
+    monkeypatch.setattr(
+        check_pages_publication, "verifier_for", lambda site, repo: "src.publish.unknown_scope"
+    )
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     with pytest.raises(AssertionError, match="Unsupported publication verifier"):
+        module.editorial_site.__wrapped__(request)
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize(
+    "artifact",
+    [
+        "dangling_receipt",
+        "manifest_directory",
+        "dangling_manifest",
+        "regular_manifest_symlink",
+        "movement_receipt",
+    ],
+)
+def test_incomplete_publication_artifacts_never_become_optional_missing_data(tmp_path, strict, artifact):
+    from types import SimpleNamespace
+
+    module = editorial_parity_module()
+    module.SITE = tmp_path / "site"
+    module.SITE.mkdir()
+    if artifact == "dangling_receipt":
+        (module.SITE / editorial.PROOF).symlink_to(module.SITE / "absent-proof-target")
+    elif artifact == "manifest_directory":
+        (module.SITE / "publication_manifest.json").mkdir()
+    elif artifact == "regular_manifest_symlink":
+        target = tmp_path / "manifest.json"
+        target.write_text("{}")
+        (module.SITE / "publication_manifest.json").symlink_to(target)
+    elif artifact == "movement_receipt":
+        (module.SITE / "aerocivil-movements-publication.json").write_text("{}")
+    else:
+        (module.SITE / "publication_manifest.json").symlink_to(module.SITE / "absent-manifest-target")
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
+    with pytest.raises(AssertionError, match="manifest"):
         module.editorial_site.__wrapped__(request)

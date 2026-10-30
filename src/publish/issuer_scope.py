@@ -129,15 +129,9 @@ def verify_historical_baseline(repo, spec, site):
                     target.write_bytes(
                         transport._git(repo, "show", f"{spec['baseline_commit']}:site/{item['path']}")
                     )
-            module = (
-                "src.publish.issuer_scope"
-                if (original / PROOF).exists()
-                else "src.publish.financial_scope"
-                if (original / "financial-publication.json").exists()
-                else "src.publish.editorial"
-                if (original / "editorial-publication.json").exists()
-                else "src.publish.verify"
-            )
+            from scripts.check_pages_publication import verifier_for
+
+            module = verifier_for(original, checkout)
             outcome = subprocess.run(
                 [sys.executable, "-B", "-m", module, str(original)],
                 cwd=checkout,
