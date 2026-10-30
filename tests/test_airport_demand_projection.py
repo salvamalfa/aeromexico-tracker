@@ -77,7 +77,7 @@ def test_equivalent_repeated_projection_is_byte_idempotent_and_does_not_mutate_i
 @pytest.mark.parametrize(
     "alter",
     [
-        lambda p: p.update(product="oma_traffic"),
+        lambda p: p.update(product="afac_airports"),
         lambda p: p.update(period="2026Q3"),
         lambda p: p.update(quality_note="All airlines flown passengers"),
         lambda p: p["airports"][0].update(key="CUN"),
@@ -171,8 +171,73 @@ def test_missing_source_profile_or_unknown_product_fails_closed():
         bridge.replay(
             {
                 "schema_version": "airport_demand_source_v1",
-                "item": {"product": "oma_traffic"},
+                "item": {"product": "afac_airports"},
                 "as_of": "2026-10-28T12:00:00Z",
             },
             None,
         )
+
+
+def oma_facts(tmp_path):
+    gold = tmp_path / "data/gold"
+    gold.mkdir(parents=True)
+    rows = []
+    for period in ("2025M09", "2026M09"):
+        for name in [*bridge.OMA_CODES, "OMA Total"]:
+            factor = 13 if name == "OMA Total" else 1
+            for market, value in [("domestic", 7), ("international", 3), ("total", 10)]:
+                rows.append(
+                    dict(
+                        period_id=period,
+                        period_type="month",
+                        airport_as_reported=name,
+                        airport_group="OMA",
+                        source_definition=bridge.OMA_NOTE,
+                        value=value * factor,
+                        market=market,
+                        source_system="oma_ir",
+                        source_hash="d" * 64,
+                        ingested_at="2026-10-28T15:00:00Z",
+                    )
+                )
+    pd.DataFrame(rows).to_parquet(gold / "fact_oma_retained_terminal_traffic.parquet")
+    pd.DataFrame(
+        [{"artifact_sha256": "d" * 64, "source_url": "https://news.oma.aero/report.pdf"}]
+    ).to_parquet(gold / "dim_source_artifact.parquet")
+    hashes = {"gold/" + p.stem: hashlib.sha256(p.read_bytes()).hexdigest() for p in gold.glob("*.parquet")}
+    return {"product": "oma_traffic", "period": "2026M09", "workspace": str(tmp_path)}, {
+        "output_sha256": hashes
+    }
+
+
+def test_oma_native_terminal_table_updates_only_requested_month_and_preserves_quarantine(tmp_path):
+    item, checked = oma_facts(tmp_path)
+    value = bridge.projection_rows(item, checked)
+    assert len(value["airports"]) == 13
+    assert len(value["groups"]) == 1
+    assert sum(row["passengers"] for row in value["airports"]) == value["groups"][0]["passengers"] == 130
+    assert all(row["period_id"] == "2026M09" for row in value["airports"])
+    projected = json.loads(bridge.public_outputs(before(), value)[bridge.TARGETS[0]])
+    assert projected["quarantined_group_months"] == ["OMA:2025M09"]
+    assert "terminales" in value["quality_note"] and "tránsito" in value["quality_note"]
+
+
+@pytest.mark.parametrize("change", ["scope", "missing_airport", "incorrect_total", "year_to_date"])
+def test_oma_source_scope_coverage_and_reconciliation_are_not_inferred(tmp_path, change):
+    item, checked = oma_facts(tmp_path)
+    path = tmp_path / "data/gold/fact_oma_retained_terminal_traffic.parquet"
+    frame = pd.read_parquet(path)
+    if change == "scope":
+        frame.loc[0, "source_definition"] = "commercial passengers only"
+    elif change == "missing_airport":
+        frame = frame[frame.airport_as_reported.ne("Acapulco")]
+    elif change == "incorrect_total":
+        frame.loc[0, "value"] += 1
+    else:
+        frame["period_type"] = "year_to_date"
+    frame.to_parquet(path)
+    checked["output_sha256"]["gold/fact_oma_retained_terminal_traffic"] = hashlib.sha256(
+        path.read_bytes()
+    ).hexdigest()
+    with pytest.raises(ValueError):
+        bridge.projection_rows(item, checked)

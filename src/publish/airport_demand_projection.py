@@ -17,15 +17,18 @@ import pandas as pd
 from jsonschema import Draft202012Validator
 
 from src.dashboard.market_demand import build_market_demand
+from src.ingest.airports.groups import OMA_CODES
 from src.pipeline.offline import block_network
 from src.source_updates import readiness
+from src.source_updates.afac_airports import folded
 from src.source_updates.airport_group_native import ASUR, GAP
 from src.source_updates.catalog import ROOT
 from src.source_updates.closed_editions import accepted
+from src.source_updates.oma_traffic import NOTE as OMA_NOTE
 from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.writer import dumps_deterministic
 
-PRODUCTS = frozenset({"aicm_traffic", "aifa_traffic", "asur_traffic", "gap_traffic"})
+PRODUCTS = frozenset({"aicm_traffic", "aifa_traffic", "asur_traffic", "gap_traffic", "oma_traffic"})
 TARGETS = ("data/v1/market-demand.json",)
 CONTRACTS = ("market_demand.schema.json",)
 SCOPES = {
@@ -49,6 +52,13 @@ SCOPES = {
         "(cota de redondeo ±50 por aeropuerto y ±600 para el grupo). Jamaica excluida; "
         "CBX está incluido en Tijuana y no se suma de nuevo.",
     ),
+    "oma_traffic": (
+        "OMA",
+        13,
+        "OMA: pasajeros terminales de trece aeropuertos mexicanos; incluye aviación comercial, "
+        "chárter y general, excluye tránsito. El mes y el acumulado anual se mantienen separados. "
+        "Se incorpora sólo el mes comprobado; las exclusiones del detalle histórico siguen vigentes.",
+    ),
 }
 
 
@@ -62,7 +72,13 @@ def _projection_scope(projection):
     airports = (
         {key}
         if product in {"aicm_traffic", "aifa_traffic"}
-        else (set(ASUR) if product == "asur_traffic" else set(GAP.values()) - {"MBJ", "KIN"})
+        else (
+            set(OMA_CODES.values())
+            if product == "oma_traffic"
+            else set(ASUR)
+            if product == "asur_traffic"
+            else set(GAP.values()) - {"MBJ", "KIN"}
+        )
     )
     expected_group = "GOVERNMENT" if len(airports) == 1 else key
     if (
@@ -98,13 +114,64 @@ def _facts(candidate, name, checked):
     return pd.read_parquet(path)
 
 
+def _oma_frames(candidate, checked):
+    native = _facts(candidate, "fact_oma_retained_terminal_traffic", checked)
+    if not native.source_definition.eq(OMA_NOTE).all() or not native.airport_group.eq("OMA").all():
+        raise ValueError("OMA terminal-passenger definition or group changed")
+    selected = native[native.period_type.eq("month")].copy()
+    if selected.empty:
+        raise ValueError("OMA needs observed monthly rows; do not convert accumulated figures into a month")
+    selected["airport"] = selected.airport_as_reported.map(folded)
+    codes = {folded(name): code for name, code in OMA_CODES.items()}
+    rows = []
+    for (period, name), block in selected.groupby(["period_id", "airport"], sort=True):
+        if len(block) != 3 or set(block.market) != {"total", "domestic", "international"}:
+            raise ValueError("OMA airport/month needs all three distinct source markets")
+        values = block.set_index("market").value
+        if values.isna().any() or any(float(value) != int(value) or value < 0 for value in values):
+            raise ValueError("OMA passenger counts must be reported nonnegative integers")
+        if values.total != values.domestic + values.international:
+            raise ValueError("OMA total differs from its domestic/international source counts")
+        if name not in codes and name != "OMATOTAL":
+            raise ValueError("Unmapped OMA airport; preserve it as a blocker")
+        first = block.iloc[0]
+        rows.append(
+            dict(
+                period_id=period,
+                airport_iata=codes.get(name),
+                airport_group_key="OMA",
+                operator_group="OMA",
+                country="MX",
+                passengers_total=int(values.total),
+                passengers_international=int(values.international),
+                source_system=first.source_system,
+                source_hash=first.source_hash,
+                ingested_at=first.ingested_at,
+            )
+        )
+    frame = pd.DataFrame(rows)
+    airports = frame[frame.airport_iata.notna()].copy()
+    groups = frame[frame.airport_iata.isna()].copy()
+    for period, group in airports.groupby("period_id"):
+        totals = groups[groups.period_id.eq(period)]
+        if set(group.airport_iata) != set(OMA_CODES.values()) or len(totals) != 1:
+            raise ValueError("Incomplete OMA month; do not publish partial airport coverage")
+        if int(group.passengers_total.sum()) != int(totals.passengers_total.iloc[0]):
+            raise ValueError("OMA group and airport totals disagree")
+    return airports, groups
+
+
 def projection_rows(item, checked):
     """Use the existing demand generator over temporary candidate copies, never active Gold."""
     product, period = item["product"], item["period"]
     if product not in PRODUCTS or "M" not in period:
         raise ValueError("Select an admitted airport product and a native monthly period")
     candidate = Path(item["workspace"])
-    airports = _facts(candidate, "fact_airport_traffic", checked)
+    airports, groups = (
+        _oma_frames(candidate, checked)
+        if product == "oma_traffic"
+        else (_facts(candidate, "fact_airport_traffic", checked), None)
+    )
     artifacts = _facts(candidate, "dim_source_artifact", checked)
     key, count, note = SCOPES[product]
     if not airports.country.eq("MX").all():
@@ -116,7 +183,7 @@ def projection_rows(item, checked):
         if set(airports.airport_iata) != {key} or not airports.operator_group.eq("GOVERNMENT").all():
             raise ValueError("Government source cannot overwrite another airport or group")
         groups = pd.DataFrame(columns=["country", "airport_group_key", "period_id", "passengers_total"])
-    else:
+    elif product != "oma_traffic":
         if not airports.operator_group.eq(key).all():
             raise ValueError("Airport group differs from the verified product")
         groups = _facts(candidate, "fact_airport_group_traffic", checked)
@@ -212,5 +279,12 @@ def public_outputs(before: dict[str, bytes], projection: dict) -> dict[str, byte
     updated["quality_notes"] = [note for note in old["quality_notes"] if not note.startswith(prefix)] + [
         projection["quality_note"]
     ]
+    if product == "oma_traffic":
+        updated["quality_notes"] = [
+            "Detalle OMA de ediciones anteriores retenido para revisión; su Gold histórico no se modifica."
+            if note.startswith("Detalle OMA retenido para revisión:")
+            else note
+            for note in updated["quality_notes"]
+        ]
     _validate(updated)
     return {TARGETS[0]: (dumps_deterministic(updated) + "\n").encode()}

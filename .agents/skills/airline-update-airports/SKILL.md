@@ -28,7 +28,7 @@ formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
 
 La adquisición sigue siendo de esta skill; el coordinador conserva su recibo y
 despacha el handoff de datos a `airline-update-dashboard`. Para `aicm_traffic`,
-`aifa_traffic`, `asur_traffic` y `gap_traffic`, el puente
+`aifa_traffic`, `asur_traffic`, `gap_traffic` y `oma_traffic`, el puente
 `src.publish.airport_demand_projection` reproduce el certificador propio y su
 disponibilidad, y prepara únicamente `data/v1/market-demand.json`. No copia Gold
 al dataset activo ni espera las demás fuentes o una tesis. El outbox usa
@@ -62,14 +62,17 @@ el código de país `MX` al nombre que espera ese consumidor y verifica que no s
 omita ningún aeropuerto. No modifica las tablas fuente. Sólo sustituye las filas
 del producto y mes solicitado; los comparativos del reporte quedan en sus campos
 de comparación, sin reescribir las filas históricas. Conserva la cuarentena OMA,
-los otros aeropuertos, AFAC, las tesis y todos los demás payloads.
+los otros aeropuertos, AFAC, las tesis y todos los demás payloads. OMA se reproduce
+desde su tabla nativa de pasajeros terminales: trece aeropuertos, grupo y tres
+mercados reconciliados; nunca reutiliza el detalle heredado mal tipado.
 
 Comprobar en la tabla visible las notas de alcance: AICM comercial; AIFA comercial
 y aviación general; ASUR sólo nueve aeropuertos mexicanos, con representación
 reconstruida identificada; GAP sólo doce aeropuertos mexicanos, valores
-preliminares redondeados, Jamaica excluida y CBX sin doble conteo. No sumar grupo
-y aeropuertos ni atribuir esos pasajeros a una aerolínea. OMA y los slots conservan
-sus controles y requieren su propio puente; no caben en estos cuatro productos.
+preliminares redondeados, Jamaica excluida y CBX sin doble conteo; OMA terminal comercial/chárter/general sin tránsito,
+separando mes de acumulado anual. No sumar grupo y aeropuertos ni atribuir esos
+pasajeros a una aerolínea. Los slots conservan sus controles y requieren su propio
+puente; no caben en estos cinco productos.
 
 La comprobación física de actualidad admite AICM y OMA mediante sus índices
 oficiales, además de AIFA. Vincular `availability` al recibo de colección que

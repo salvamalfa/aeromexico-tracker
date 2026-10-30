@@ -1,6 +1,6 @@
 # Changelog
 
-- Puente selectivo de AICM, AIFA, ASUR y GAP hacia la tabla de demanda existente:
+- Puente selectivo de AICM, AIFA, ASUR, GAP y OMA hacia la tabla de demanda existente:
   replay por fuente, país compatible sin alterar Gold, mes objetivo y alcance
   explícitos, comparativos retenidos y preservación de otros productos. El gate
   común de datos y su handoff no equivalen a una publicación ya servida.
