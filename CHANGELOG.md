@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-30 · Viva 3T26: tesis e indicadores por emisor
+
+- Entrega combinada de la tesis aprobada y los indicadores financieros de Viva,
+  desde los resultados validados de la ronda de fuentes, sin repetir adquisición.
+- Actualiza sus tarjetas, tres gráficas y tabla trimestral; conserva los
+  históricos, las cinco lecturas anteriores, las otras aerolíneas e Industria.
+- Identifica pasajeros con boleto y ocupación regular; convierte las cifras
+  por asiento-milla a asiento-kilómetro y separa trimestre de acumulado anual.
+- El gate verifica el baseline remoto completo, reproduce las fuentes y las
+  aprobaciones antes y después del build y conserva la publicación servida
+  como una comprobación posterior a la integración.
+
 ## 2026-10-30 · Handoffs por producto y publicación por aerolínea
 
 - Cola privada por fuente, periodo y versión, con intenciones anteriores a

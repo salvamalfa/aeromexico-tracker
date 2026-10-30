@@ -41,7 +41,11 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   «Ingresos récord, margen bajo presión», tiene fuentes, cálculos, auditoría
   independiente y aprobación vinculados a su versión exacta. Su publicación
   editorial exige baseline remoto y servido, CI, revisión y verificación de Pages.
-  La lectura tiene un selector independiente. La modalidad financiera acotada añade solo los indicadores y gráficas existentes de Aeroméxico 3T26; Industria y las otras aerolíneas conservan sus cortes.
+  La lectura tiene un selector independiente. Aeroméxico conserva su modalidad
+  financiera acotada. La entrega por emisor de Viva 3T26 incorpora su tesis
+  aprobada y los indicadores de las tarjetas, tres gráficas y tabla existentes,
+  con fuentes y aprobación propias. Industria y Volaris conservan sus cortes.
+  Los recibos distinguen build verificado, integración y publicación servida.
   Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
   conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
 - **Actualización por producto:** el único coordinador de fuentes conserva el
