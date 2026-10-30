@@ -273,7 +273,13 @@ def envelope(state: dict, job: dict) -> dict:
         "skill": skill,
         "ledger": str(Path(state["workspace"]) / "state.json"),
         "scope": IMPACTS[source["product"]],
-        "publication_scope": "AEROMEXICO,VIVA_AEROBUS,VOLARIS; exclude Industria and unrelated products",
+        "publication_scope": (
+            "Aerocivil correction of 39 existing flight-data payloads for AEROMEXICO, "
+            "VIVA_AEROBUS, VOLARIS and the existing INDUSTRY aggregate; preserve seven theses; "
+            "no new periods, source values, Industry editorial or unrelated products"
+            if source["product"] == "aerocivil"
+            else "AEROMEXICO,VIVA_AEROBUS,VOLARIS; exclude Industria and unrelated products"
+        ),
         "dependency_result": state["jobs"][job["dependency"]]["result"] if job["dependency"] else None,
     }
     return {

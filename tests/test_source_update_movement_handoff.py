@@ -1,6 +1,7 @@
 """Synthetic movement routing checks; no native send or publication occurs."""
 
 import copy
+import json
 import sys
 from types import ModuleType
 
@@ -81,6 +82,27 @@ def test_source_arrival_dispatches_one_dashboard_and_zero_financial_analyses(env
     changed["synthetic_version"] = "c" * 64
     result = action(workspace, "observe", "actual-revision", observation=changed)
     assert len(result["state"]["jobs"]) == 2 and len(result["ready_jobs"]) == 1
+
+
+@pytest.mark.parametrize("product", ["aerocivil", "viva_financials", "volaris_sec", "am_financials"])
+def test_native_envelope_keeps_existing_movement_aggregate_separate_from_editorial(env, product):
+    workspace, observation, _ = env
+    observation["item"]["product"] = product
+    result = start(env)
+    call = result["ready_jobs"][0]
+    message = call["arguments"]["message"]
+    instruction = json.loads(message[message.index("{") :])
+    scope = instruction["publication_scope"]
+    if product == "aerocivil":
+        assert instruction["job"]["release_kind"] == "movements"
+        assert "39 existing flight-data payloads" in scope
+        assert "existing INDUSTRY aggregate" in scope
+        assert "preserve seven theses" in scope
+        assert "no new periods, source values, Industry editorial" in scope
+        assert "exclude Industria" not in scope
+    else:
+        assert "exclude Industria and unrelated products" in scope
+        assert "existing INDUSTRY aggregate" not in scope
 
 
 def test_native_replay_and_operational_policy_are_both_required(tmp_path, monkeypatch):

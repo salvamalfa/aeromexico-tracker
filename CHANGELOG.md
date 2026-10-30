@@ -27,6 +27,9 @@
   su origen Aerocivil está demostrado.
 - La corrección requiere regenerar Gold y payloads desde originales retenidos;
   código preparado y pruebas no equivalen a publicación ni a activar evidencia.
+- El despacho distingue la corrección de los 39 archivos de vuelos existentes,
+  incluido el agregado de Industria, de una publicación editorial. Conserva las
+  siete tesis y no autoriza periodos ni valores de fuente nuevos.
 
 ## 2026-10-30 · Viva 3T26: tesis e indicadores por emisor
 
