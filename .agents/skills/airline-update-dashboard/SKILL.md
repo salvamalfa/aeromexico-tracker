@@ -134,7 +134,18 @@ justifica otra tesis por estilo ni una recompilación idéntica.
    con su propio verificador liberado, comprueba Git/Pages/HTTPS, revalida fuentes
    y aprobaciones antes/después del build y sustituye `site/` atómicamente. No
    admitir un baseline que falle su verificador original. Una actualización ya
-   presente exige reconciliar su versión; no sobrescribirla para ocultar una carrera.
+   presente e idéntica termina sin build. Para una revisión material del mismo
+   trimestre, seleccionar explícitamente la versión servida con
+   `--replace-version <version-anterior-exacta>` al preparar el registro nuevo.
+   El ancla conserva `previous_entry` y `previous_file` completos. La nueva tesis
+   debe tener auditoría y aprobación propias; el dato cambiado usa su autoridad
+   independiente o una entrega combinada autorizada. En la invocación del gate,
+   seleccionar los registros anteriores excepto el slot que se reemplaza, más
+   el registro nuevo. El registro anterior debe seguir en su ruta canónica del
+   ledger privado: el gate lo reproduce con su implementación y fuente originales
+   antes de sustituir el único slot. No revoca ni borra su aprobación. La historia
+   de Git conserva su archivo público; un cambio de otra entidad/cohorte, una
+   versión anterior incorrecta o una aprobación no vigente bloquean la revisión.
 6. El gate ejecuta `npm ci && npm run build`. En modo issuer, el frontend debe
    permanecer idéntico; todos los demás archivos de datos se conservan byte a byte.
    Para una modificación real de interfaz, usar el modo aplicable de `src.publish`

@@ -52,6 +52,8 @@ def anchor(repo=PATHS.root):
         "evidence_fingerprint",
         "source_binding",
         "authorization_sha256",
+        "previous_entry",
+        "previous_file",
     }
     if set(spec) != fields or spec["schema_version"] != "issuer_release_v1":
         raise ValueError("Invalid issuer release anchor")
@@ -68,8 +70,12 @@ def anchor(repo=PATHS.root):
             raise ValueError("Data-only release cannot introduce a thesis")
         if not re.fullmatch("[a-f0-9]{64}", spec["authorization_sha256"] or ""):
             raise ValueError("Data-only release requires exact data exposure authority")
+        if spec["previous_entry"] is not None or spec["previous_file"] is not None:
+            raise ValueError("Data-only publication cannot replace a thesis approval")
     elif manifests.analysis_identity(spec["analysis_entry"]) != (spec["entity_key"], spec["period_id"]):
         raise ValueError("Issuer release and approved thesis identities disagree")
+    if (spec["previous_entry"] is None) != (spec["previous_file"] is None):
+        raise ValueError("A revision requires both prior approval and file pins")
     for key in (
         "baseline_manifest_sha256",
         "executive_sha256",
@@ -183,14 +189,30 @@ def preserved_files(site: Path, repo: Path, spec: dict):
         else None
     )
     additions = [spec["analysis_entry"]] if name else []
-    expected_entries = sorted([*old["analysis_manifest"], *additions], key=manifests.analysis_sort_key)
+    previous = spec["previous_entry"]
+    retained_entries = [e for e in old["analysis_manifest"] if e != previous]
+    if previous is not None:
+        from .approval_cohorts import _cohorts, replacement_cohort
+
+        raw = transport._git(repo, "show", f"{spec['baseline_commit']}:config/publish/approval-cohorts.json")
+        new_file = {"path": name, "sha256": spec["analysis_sha256"], "bytes": spec["analysis_bytes"]}
+        replacement_cohort(
+            {
+                "entry": spec["analysis_entry"],
+                "file": new_file,
+                "replaces": {"entry": previous, "file": spec["previous_file"]},
+            },
+            _cohorts(raw),
+            old,
+        )
+    expected_entries = sorted([*retained_entries, *additions], key=manifests.analysis_sort_key)
     if current["analysis_manifest"] != expected_entries or current["contracts"] != old["contracts"]:
         raise ValueError("Issuer release changed another approval or a contract")
     old_names = {r["path"] for r in old["files"]}
     new_names = {r["path"] for r in current["files"]}
-    if (name is not None and name in old_names) or new_names != old_names | ({name} if name else set()) | {
-        PROOF
-    }:
+    if (name is not None and name in old_names and previous is None) or new_names != old_names | (
+        {name} if name else set()
+    ) | {PROOF}:
         raise ValueError("Issuer release added/removed an unrelated surface")
     allowed = {EXECUTIVE, name, PROOF}
     preserved = set()

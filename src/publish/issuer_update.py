@@ -25,6 +25,7 @@ from .issuer_scope import (
     sha,
     verify_historical_baseline,
 )
+from .records import PublicationRefused
 
 
 def _write_pins(writes):
@@ -51,6 +52,29 @@ def _write_pins(writes):
         prepared.append((target, value))
     for target, value in prepared:
         gate.flow.atomic_json(target, value)
+
+
+def _stable_cohort(repo, spec, cohort):
+    """Re-preparing committed pins must not move the already-selected producer."""
+    from .approval_cohorts import _cohorts, _optional_config
+
+    exists = (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"HEAD:{ANCHOR}"],
+            cwd=repo,
+            capture_output=True,
+        ).returncode
+        == 0
+    )
+    if exists and json.loads(transport._git(repo, "show", f"HEAD:{ANCHOR}")) == spec:
+        matches = [
+            c
+            for c in _cohorts(_optional_config(repo, "HEAD"))
+            if c["analysis_manifest"] == cohort["analysis_manifest"] and c["files"] == cohort["files"]
+        ]
+        if len(matches) == 1:
+            return matches[0]
+    return cohort
 
 
 def inspect_data(package_path: Path):
@@ -87,6 +111,8 @@ def inspect_data(package_path: Path):
         "executive_bytes": len(raw),
         "producer_code_version": code_version(),
         "authorization_sha256": None,
+        "previous_entry": None,
+        "previous_file": None,
     }
     return {
         "anchor": spec,
@@ -137,12 +163,12 @@ def prepare_data(package_path: Path, authorization_path: Path):
     return {"status": "data_pins_prepared_not_published", "anchor": spec}
 
 
-def prepare_issuer(record_path: Path, *, stage="combined"):
+def prepare_issuer(record_path: Path, *, stage="combined", replace_version: str | None = None):
     """Prepare public pins from a currently approved thesis; never approve it."""
     from src.analysis_agent.entity_adapter import code_version
 
     from . import gate
-    from .approval_cohorts import CONFIG, _cohorts, _optional_config
+    from .approval_cohorts import CONFIG, _cohorts, _optional_config, replacement_cohort
 
     if stage not in {"combined", "editorial_only"}:
         raise ValueError("Invalid editorial stage")
@@ -158,11 +184,27 @@ def prepare_issuer(record_path: Path, *, stage="combined"):
         identity = gate._analysis_manifest_entry(entry[1])
         if identity in old["analysis_manifest"]:
             return {"status": "already_published", "analysis_entry": identity}
-        if any(
-            manifests.analysis_identity(e) == manifests.analysis_identity(identity)
-            for e in old["analysis_manifest"]
-        ):
-            raise ValueError("Existing issuer edition requires explicit revision reconciliation")
+        previous = next(
+            (
+                e
+                for e in old["analysis_manifest"]
+                if manifests.analysis_identity(e) == manifests.analysis_identity(identity)
+            ),
+            None,
+        )
+        previous_file = next(
+            (
+                f
+                for f in old["files"]
+                if previous is not None
+                and f["path"] == "data/v1/" + manifests.analysis_relative_path(previous).as_posix()
+            ),
+            None,
+        )
+        if previous is not None and replace_version != previous["version"]:
+            raise ValueError("Select the exact prior version explicitly before preparing a revision")
+        if previous is None and replace_version is not None:
+            raise ValueError("No published prior version matches the requested replacement")
         executive = executive_projection(json.loads((baseline / EXECUTIVE).read_bytes()), entry[2])
         analysis_raw, executive_raw = encoded(gate._analysis_payload(*entry)), encoded(executive)
         if stage == "editorial_only" and executive_raw != (baseline / EXECUTIVE).read_bytes():
@@ -189,6 +231,8 @@ def prepare_issuer(record_path: Path, *, stage="combined"):
             "executive_bytes": len(executive_raw),
             "producer_code_version": code_version(),
             "authorization_sha256": None,
+            "previous_entry": previous,
+            "previous_file": previous_file,
         }
         cohort = {
             "implementation_commit": manifests.current_commit(repo),
@@ -201,9 +245,22 @@ def prepare_issuer(record_path: Path, *, stage="combined"):
                 }
             ],
         }
+        cohort = _stable_cohort(repo, spec, cohort)
+        trusted = _cohorts(_optional_config(repo, commit))
+        replaced = replacement_cohort(
+            {
+                "entry": identity,
+                "file": cohort["files"][0],
+                "replaces": {"entry": previous, "file": previous_file},
+            }
+            if previous
+            else None,
+            trusted,
+            old,
+        )
         config = {
             "schema_version": "analysis_approval_cohorts_v1",
-            "cohorts": [*_cohorts(_optional_config(repo, commit)), cohort],
+            "cohorts": [*[c for c in trusted if c != replaced], cohort],
         }
         _write_pins([(ANCHOR, spec), (CONFIG, config)])
     return {"status": "pins_prepared_not_published", "anchor": spec, "cohort": cohort}
@@ -252,7 +309,7 @@ def publish_issuer(record_paths: list[Path], out_dir: Path, *, package_path: Pat
         if spec["analysis_entry"] is not None
         else None
     )
-    if name and (baseline / name).exists():
+    if name and (baseline / name).exists() and spec["previous_entry"] is None:
         raise ValueError("Issuer thesis already published: reconcile its existing version before a revision")
     original_executive = json.loads((baseline / EXECUTIVE).read_bytes())
 
@@ -289,6 +346,8 @@ def publish_issuer(record_paths: list[Path], out_dir: Path, *, package_path: Pat
             "bytes": analysis_raw,
             "file": {"path": name, "sha256": sha(analysis_raw), "bytes": len(analysis_raw)},
         }
+        if spec["previous_entry"] is not None:
+            pending["replaces"] = {"entry": spec["previous_entry"], "file": spec["previous_file"]}
         cohorts = verify_approval_cohorts(
             record_paths,
             repo,
@@ -333,7 +392,8 @@ def publish_issuer(record_paths: list[Path], out_dir: Path, *, package_path: Pat
             )
         )
         additions = [spec["analysis_entry"]] if name else []
-        entries = sorted([*old["analysis_manifest"], *additions], key=manifests.analysis_sort_key)
+        retained_entries = [e for e in old["analysis_manifest"] if e != spec["previous_entry"]]
+        entries = sorted([*retained_entries, *additions], key=manifests.analysis_sort_key)
 
         def validate(candidate):
             preserved = preserved_files(candidate, repo, spec)
@@ -363,6 +423,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare-record", type=Path)
     parser.add_argument("--editorial-only", action="store_true")
+    parser.add_argument("--replace-version", help="exact currently published thesis version to supersede")
     parser.add_argument("--inspect-data", type=Path)
     parser.add_argument("--prepare-data", type=Path)
     parser.add_argument("--data-authorization", type=Path)
@@ -384,12 +445,17 @@ def main(argv=None):
             return 0
         if args.prepare_record:
             stage = "editorial_only" if args.editorial_only else "combined"
-            print(json.dumps(prepare_issuer(args.prepare_record, stage=stage), ensure_ascii=False))
+            print(
+                json.dumps(
+                    prepare_issuer(args.prepare_record, stage=stage, replace_version=args.replace_version),
+                    ensure_ascii=False,
+                )
+            )
             return 0
         if not args.record:
             raise ValueError("Publication requires exact baseline record paths")
         value = publish_issuer(args.record, args.out, package_path=args.package)
-    except (ValueError, OSError, subprocess.SubprocessError) as error:
+    except (ValueError, OSError, subprocess.SubprocessError, PublicationRefused) as error:
         print(f"Issuer publication refused: {error}")
         return 1
     print(json.dumps({"manifest_sha256": value["receipt"]["manifest_sha256"], "site_built_verified": True}))

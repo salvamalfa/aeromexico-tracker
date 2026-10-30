@@ -191,8 +191,13 @@ python -m src.publish.issuer_scope site/
 La preparación genera pins reproducibles de entidad/periodo, aprobación,
 SHA/tamaño de las dos salidas y huella del productor; no aprueba contenido. Un
 registro idéntico ya servido se reconcilia sin otra publicación. Una edición
-distinta del mismo periodo se detiene para una revisión explícita, conservando
-la anterior. El modo está limitado a las primeras ediciones Viva/Volaris 3T26;
+distinta del mismo periodo requiere `--replace-version <version-servida-exacta>`:
+el ancla fija el registro y archivo anteriores, y la nueva versión debe estar
+auditada y aprobada. El gate reproduce ambas aprobaciones y sus fuentes; reemplaza
+solo ese slot, conserva los demás pins y no revoca ni elimina la versión anterior.
+Seleccionar los registros que seguirán publicados y el nuevo; el registro anterior
+se recupera de su ruta canónica privada. El modo está limitado a las ediciones
+verificadas Viva/Volaris 3T26;
 un trimestre nuevo requiere extender y revisar su adaptador, no cambiar una fecha.
 
 `issuer_authority` verifica los JSON privados retenidos por SHA-256 bajo

@@ -51,7 +51,7 @@ def authority(package, spec, repo=PATHS.root):
     if len(review_sha) != 64 or any(c not in "0123456789abcdef" for c in review_sha):
         raise ValueError("Data authority must retain its exact independent source audit")
     review_path = directory / "audits" / (review_sha + ".json")
-    if review_path.is_symlink():
+    if any(p.is_symlink() for p in [review_path, *review_path.parents]):
         raise ValueError("Data audit cannot be a symlink")
     review_raw = review_path.read_bytes()
     if sha(review_raw) != review_sha:
