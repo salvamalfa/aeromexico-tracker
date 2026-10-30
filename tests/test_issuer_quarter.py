@@ -193,3 +193,66 @@ def test_compact_profile_cannot_hide_provenance_section():
     draft["reader_private_section_keys"] = ["methodology"]
     with pytest.raises(ValueError, match="cannot hide"):
         issuer.validate(draft, package, calculations)
+
+
+@pytest.mark.parametrize(
+    "section",
+    [
+        {"title": "El negocio", "claim_ids": ["entry"]},
+        {"key": "", "title": "El negocio", "claim_ids": ["entry"]},
+        {"key": "unknown", "title": "El negocio", "claim_ids": ["entry"]},
+        {"key": ["drivers"], "title": "El negocio", "claim_ids": ["entry"]},
+        {"key": "drivers", "title": "El negocio", "claim_ids": ["entry"], "extra": True},
+        {"key": "drivers", "title": None, "claim_ids": ["entry"]},
+        {"key": "drivers", "title": "El negocio", "claim_ids": "entry"},
+    ],
+)
+def test_import_refuses_invalid_section_before_freezing(monkeypatch, section):
+    draft, package, calculations = example()
+    draft["summary_claim_ids"] = []
+    draft["sections"] = [section]
+    monkeypatch.setattr(issuer, "calculate", lambda p: calculations)
+    monkeypatch.setattr(
+        issuer, "immutable", lambda *a: pytest.fail("Invalid draft reached immutable storage")
+    )
+    with pytest.raises(ValueError, match="compact section"):
+        issuer.import_draft(package, draft)
+
+
+def test_duplicate_section_keys_rejected_even_with_distinct_claims():
+    draft, package, calculations = example()
+    second = {**draft["claims"][1], "claim_id": "second"}
+    draft["claims"].append(second)
+    draft["summary_claim_ids"] = []
+    draft["sections"] = [
+        {"key": "drivers", "title": "Primer bloque", "claim_ids": ["entry"]},
+        {"key": "drivers", "title": "Segundo bloque", "claim_ids": ["second"]},
+    ]
+    with pytest.raises(ValueError, match="duplicate compact section"):
+        issuer.validate(draft, package, calculations)
+
+
+def test_valid_compact_sections_reach_real_citation_exporter():
+    from src.web_export.analysis import publication_payload
+
+    draft, package, calculations = example()
+    draft["summary_claim_ids"] = []
+    draft["sections"] = [{"key": "drivers", "title": "La lectura comercial", "claim_ids": ["entry"]}]
+    checks = issuer.validate(draft, package, calculations)
+    # No ledger bypass: exercise only the pure public projection on validated input.
+    package.update(
+        schema_version="entity_evidence_v1",
+        sources=[{"artifact_id": "source", "source_url": "https://www.sec.gov/Archives/test.htm"}],
+    )
+    package["excerpts"][0].update(artifact_id="source", locator="table/row", period_id="2026Q3")
+    package["metrics"][0].update(excerpt_id="excerpt", artifact_id="source")
+    record = {"draft": draft}
+    payload = {
+        "sections": [{"title": "La lectura comercial", "paragraphs": [checks["rendered"]["entry"]]}],
+        "claims": [
+            {"claim_id": c["claim_id"], "text": checks["rendered"][c["claim_id"]]} for c in draft["claims"]
+        ],
+    }
+    exported = publication_payload(record, payload, package, calculations)
+    assert exported["sections"][0]["claim_ids"] == ["entry"]
+    assert exported["claims"][1]["citations"]

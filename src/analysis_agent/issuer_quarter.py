@@ -352,7 +352,7 @@ def calculate(package):
 
 
 def validate(draft, package, calculations):
-    from .analyst import TYPES, lineage
+    from .analyst import SECTIONS, TYPES, lineage
 
     if (
         draft.get("schema_version") != "entity_analyst_v1"
@@ -438,9 +438,25 @@ def validate(draft, package, calculations):
                 raise ValueError("Claim emphasis must be an exact supported span")
         rendered[cid] = text
     placements = [draft["thesis_claim_id"], *draft["summary_claim_ids"]]
+    section_keys = set()
+    if not isinstance(draft["sections"], list):
+        raise ValueError("Invalid compact sections")
     for section in draft["sections"]:
-        if not section["claim_ids"] or re.search(r"\d|[{}]", section["title"]):
-            raise ValueError("Invalid compact section")
+        if (
+            not isinstance(section, dict)
+            or set(section) != {"key", "title", "claim_ids"}
+            or not isinstance(section["key"], str)
+            or section["key"] not in SECTIONS
+            or section["key"] in section_keys
+            or not isinstance(section["title"], str)
+            or not section["title"].strip()
+            or re.search(r"\d|[{}]", section["title"])
+            or not isinstance(section["claim_ids"], list)
+            or not section["claim_ids"]
+            or any(not isinstance(cid, str) for cid in section["claim_ids"])
+        ):
+            raise ValueError("Invalid or duplicate compact section key/structure")
+        section_keys.add(section["key"])
         placements += section["claim_ids"]
     if len(placements) != len(set(placements)) or set(placements) != set(rendered):
         raise ValueError("Claims must appear exactly once")
