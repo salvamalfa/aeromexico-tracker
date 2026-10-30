@@ -394,8 +394,12 @@ def extend_networks(
                     source_hashes=sorted(group.source_hash.unique()),
                     record_ids=sorted(group.record_id.unique()),
                     **({"recorded_movements": movement_payload(group)} if source == "aerocivil" else {}),
-                    operation_status="recorded_movements_provisional" if source == "aerocivil" else "operated_observed",
-                    carrier_role="source_derived_operator_label_unconfirmed_AOC" if source == "aerocivil" else "operator_reporting_carrier",
+                    operation_status="recorded_movements_provisional"
+                    if source == "aerocivil"
+                    else "operated_observed",
+                    carrier_role="source_derived_operator_label_unconfirmed_AOC"
+                    if source == "aerocivil"
+                    else "operator_reporting_carrier",
                     marketing_carrier=None,
                     agent_eligible=False,
                 )
@@ -573,9 +577,9 @@ def extend_networks(
         for route in network["routes"]:
             if movement := route.get("recorded_movements"):
                 route["coverage_note"] += " · " + movement["definition"]
-                network["coverage_by_source"][MOVEMENT_LABEL] = sorted(set(
-                    network["coverage_by_source"].get(MOVEMENT_LABEL, []) + movement["observed_months"]
-                ))
+                network["coverage_by_source"][MOVEMENT_LABEL] = sorted(
+                    set(network["coverage_by_source"].get(MOVEMENT_LABEL, []) + movement["observed_months"])
+                )
         network["coverage_by_source"].pop(LABELS["aerocivil"], None)
         # Aena's company exports identify an airport, not the Mexican endpoint.
         # Present them alongside the map, never as a carrier-route observation.

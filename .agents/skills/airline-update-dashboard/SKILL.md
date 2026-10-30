@@ -252,6 +252,14 @@ del job y `period=2026M07` del binding; no sustituirlos ni mover la captura.
    el resultado validado anterior; no repetir adquisición o análisis ya cerrados.
    Un envío incierto mantiene su intención hasta comprobarlo. No crear calendarios,
    monitores, reintentos diarios, aprobaciones ni revisiones históricas para pasarlo.
+   Si CI exige corregir el productor de un build todavía no servido, el coordinador
+   puede usar `continue_existing_worker` sobre ese mismo job de dashboard, bloqueado
+   o completado, con su lease, acuse nativo y reconciliación física. Se conservan el
+   resultado anterior y `receipt_history`; no se crea ni se despacha otro job. Un
+   nuevo `finish` exige otro recibo y reproduce el gate con el productor corregido
+   y su autoridad exacta. La reapertura de un build completado no admite trabajos
+   de análisis, versiones superadas ni estados `served_verified` o `no_change`.
+   La recuperación ya existente de workers bloqueados conserva sus condiciones.
 
 
 ## Fuentes mensuales independientes

@@ -499,9 +499,15 @@ def transition(state: dict, action: dict, workspace: Path):
         # This is an operator assertion backed by retained evidence, not automatic proof of absence.
         job.update(status="blocked", reconciliation=action["positive_nonexecution_evidence"])
     elif kind == "continue_existing_worker":
-        if job["status"] != "blocked" or job["native_response"] is None or not is_current(state, job):
-            raise ValueError("Continue only the acknowledged blocked worker; never create a duplicate")
+        if (
+            not (job["status"] == "blocked" or (job["stage"] == "dashboard" and job["status"] == "completed"))
+            or job["native_response"] is None
+            or not is_current(state, job)
+        ):
+            raise ValueError("Continue only the current acknowledged blocked worker or completed dashboard")
         checked_ref(action["reconciliation"])
+        if job["status"] == "completed":
+            checked_ref(job["result"])
         job.update(status="running", reconciliation=action["reconciliation"])
     elif kind == "served":
         if job["stage"] != "dashboard" or job["status"] != "completed":
