@@ -1,5 +1,10 @@
 # Changelog
 
+- Puente selectivo de AICM, AIFA, ASUR y GAP hacia la tabla de demanda existente:
+  replay por fuente, país compatible sin alterar Gold, mes objetivo y alcance
+  explícitos, comparativos retenidos y preservación de otros productos. El gate
+  común de datos y su handoff no equivalen a una publicación ya servida.
+
 ## 2026-10-30 · Revisiones semánticas del handoff
 
 - La comparación incluye contexto primario financiero verificado: una revisión
