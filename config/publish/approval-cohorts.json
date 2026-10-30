@@ -41,6 +41,27 @@
           "bytes": 7571
         }
       ]
+    },
+    {
+      "implementation_commit": "04688a96426368cfca409906928435885657d4cd",
+      "analysis_manifest": [
+        {
+          "period_id": "2026Q3",
+          "version": "9181a6d6777d8d3dd1b5d4c03bb22d42aaa7e59feb731351600a95247e882058",
+          "content_hash": "fd51371c9e0b5260e27695bb2629bcd19177d36251eef386784937704d7def56",
+          "evidence_fingerprint": "56e68190f89aa469bdeb48a72ef8432ec395af0d9329c1ef67d73929c53c40a6",
+          "approval_event": "42bc5902887d6520a001a5f6fdc026ed6ed58b35bfbb4f639dcfae99ca0fc582",
+          "audit_hash": "9a7d2599dc5af4c8e548678d2b98649435462f568e69d37ea69f7c54e9e49845",
+          "entity_key": "VOLARIS"
+        }
+      ],
+      "files": [
+        {
+          "path": "data/v1/analysis/VOLARIS/2026Q3.json",
+          "sha256": "d9a2ad42c802258e419a894b1890f0492602c72737842c8c2191a86aae294aef",
+          "bytes": 8762
+        }
+      ]
     }
   ]
 }
