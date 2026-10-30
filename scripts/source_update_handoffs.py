@@ -403,7 +403,7 @@ def transition(state: dict, action: dict, workspace: Path):
         if any(
             other["job_id"] != job["job_id"]
             and other["stage"] == "dashboard"
-            and other["status"] in {"dispatch_intent", "running"}
+            and other["status"] in {"dispatch_intent", "running", "completed"}
             for other in state["jobs"].values()
         ):
             raise ValueError("Another dashboard writer must be reconciled before this handoff")

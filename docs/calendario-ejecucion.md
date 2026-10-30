@@ -142,6 +142,9 @@ la versión previa y su motivo; nunca se sobreescribe el histórico para dedupli
    El comando realiza GET a la URL canónica y exige HTTP200 y los mismos hashes
    del manifiesto y payloads/páginas elegidos. Sólo entonces conserva
    `served_verified`. Si la red falla, conservar el build y reconciliar el despliegue.
+   Un build `completed` conserva la exclusión del escritor del dashboard hasta
+   esa QA: otro trabajo no puede reemplazar `site/` ni su manifiesto mientras
+   queda pendiente verificarlo. Un fallo HTTP o de hash mantiene el bloqueo.
    `no_visual_change` también exige replay: para Viva/Volaris se reconstruye
    la proyección de la cápsula y se compara con el sitio de referencia; para
    Aeroméxico se ejecuta la prueba de equivalencia aprobada. El recibo conserva
