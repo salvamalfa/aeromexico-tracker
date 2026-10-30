@@ -48,19 +48,27 @@ export function renderMarket(periodId: string | undefined): void {
   host.setAttribute("aria-label", `Participación mensual de pasajeros por aerolínea hasta ${selected}`);
   const source = document.getElementById("market-source");
   if (source) {
-    const note = `Fuente: AFAC. Universo: aerolíneas mexicanas; Aeroméxico incluye Connect. Pasajeros por tramo, no personas únicas. Comparaciones del trimestre ${selected} contra el mismo trimestre del año anterior; N/D indica falta de base comparable. Contribución: cambio de pasajeros de la aerolínea / total mexicano un año antes × 100. Última observación: ${market.metadata.last_period}; captura: ${market.metadata.data_as_of ?? "N/D"}.`;
+    const note = `Fuente: AFAC. Universo: aerolíneas mexicanas; Aeroméxico incluye Connect. Pasajeros por tramo, no personas únicas. Comparaciones del trimestre ${selected} contra el mismo trimestre del año anterior; N/D indica falta de base comparable. Contribución: cambio de pasajeros de la aerolínea / total mexicano un año antes × 100. Última observación: ${market.metadata.last_period}; captura: ${market.metadata.data_as_of ?? "N/D"}. ${market.metadata.method_note}`;
     source.title = note;
     source.setAttribute("aria-label", "Fuente y alcance del mercado");
     const detail = document.getElementById("market-source-note");
     if (detail) detail.textContent = note;
   }
-  const x = months.map((month) => monthDate(month.period_id));
+  const breaks = new Set(Array.isArray(market.metadata.method_breaks)
+    ? market.metadata.method_breaks.filter((value): value is string => typeof value === "string") : []);
+  // A source-universe change is not a business trend. Keep the first new point
+  // while breaking the line that would join it to the prior methodology.
+  const points = months.flatMap(month => breaks.has(month.period_id)
+    ? [{ date: monthDate(month.period_id), row: null }, { date: monthDate(month.period_id), row: month }]
+    : [{ date: monthDate(month.period_id), row: month }]);
+  const x = points.map(point => point.date);
   const traces: Data[] = marketEntities.map((key) => {
     const color = ENTITY_COLORS[key];
     return {
       x,
-      y: months.map((month) => {
-        const block = month.segments[segment];
+      y: points.map((point) => {
+        if (!point.row) return null;
+        const block = point.row.segments[segment];
         const item = key === "INDUSTRY" ? block.industry : block.carriers[key];
         return item?.share == null ? null : item.share * 100;
       }),
@@ -73,6 +81,11 @@ export function renderMarket(periodId: string | undefined): void {
     } as Data;
   });
   const shapes: Layout["shapes"] = [];
+  for (const month of months.filter(row => breaks.has(row.period_id))) {
+    const date = monthDate(month.period_id);
+    shapes.push({ type: "line", xref: "x", yref: "paper", x0: date, x1: date,
+      y0: 0, y1: 1, line: { color: "#a66d21", width: 1.5, dash: "dot" } });
+  }
   if (selected) {
     const [x0, x1] = quarterBounds(selected);
     shapes.push({

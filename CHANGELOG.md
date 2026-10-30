@@ -1,5 +1,7 @@
 # Changelog
 
+## 2026-10-30 · Demanda aeroportuaria y equivalencia BTS
+
 - AFAC aeroportuario conserva una base alternativa, limitada a los aeropuertos
   ya visibles, en la misma tabla de demanda y con cruce físico existente. Los
   reportes directos no se sustituyen ni se mezclan. El comprobador BTS acredita
@@ -10,6 +12,19 @@
   replay por fuente, país compatible sin alterar Gold, mes objetivo y alcance
   explícitos, comparativos retenidos y preservación de otros productos. El gate
   común de datos y su handoff no equivalen a una publicación ya servida.
+
+## 2026-10-30 · Puente de pasajeros mensuales AFAC
+
+- El puente reproduce el expediente de agosto y las filas mensuales originales
+  de julio/agosto antes de extender dos payloads existentes. Conserva Gold,
+  warehouse, rutas, modelos, tesis y todos los puntos históricos publicados.
+- Las celdas regular/fletamento de Aerovías y Connect se conservan en origen;
+  el grupo se calcula con ambas. El denominador incluye los operadores mexicanos
+  reportados sin mapeo y excluye los grupos extranjeros. Ausencia no significa cero.
+- La procedencia conserva edición, captura y hashes del PDF y la base. El cambio
+  de cobertura del denominador queda señalado y la línea no une metodologías.
+  Un cambio en la frontera histórica exige revisión de esa edición; no se calcula
+  un trimestre incompleto. El gate común conserva su autoridad y entrega separadas.
 
 ## 2026-10-30 · Revisiones semánticas del handoff
 

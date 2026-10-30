@@ -120,6 +120,28 @@ la nota; la base no recibe flags PDF. La advertencia de información incompleta
 internacional permanece visible: filas reportadas conciliadas no acreditan
 el universo completo ni disponibilidad reciente. Sin activación/publicación.
 
+### Handoff AFAC a las gráficas existentes
+
+El adaptador `src.publish.afac_carrier_projection` reproduce originales, Silver,
+Gold, recibos y disponibilidad histórica antes de proyectar meses nuevos a
+`flights/quarters.json` y `market.json`. La tarea de septiembre puede conservar
+agosto como edición nativa: no cambiar el mes del certificado ni afirmar captura
+actual. El perfil lleva `schema_version=afac_carrier_chart_source_v1`, el `item`
+físico y su `as_of` retenido. El gate común de datos exige autoridad exacta propia;
+la certificación candidata no concede autorización editorial o pública.
+
+Julio y agosto proceden de filas mensuales observadas del original DB, verificadas
+de nuevo y contrastadas con la frontera histórica y el Gold de agosto. No presentar
+el certificado Gold de agosto como uno de julio. El grupo Aeroméxico suma Aerovías
+y Connect sólo después de comprobar ambas celdas literales regular/fletamento en
+cada mercado; una ausencia bloquea, nunca vale cero. El denominador conserva todos
+los operadores mexicanos reportados, incluso nombres de chárter sin mapeo, y excluye
+los grupos extranjeros. `source_group=Total general` identifica operadores del PDF;
+no es una fila de total en Gold. La cobertura observacional completa sigue sin
+certificarse. La publicación conserva el histórico, registra procedencia por edición
+y señala el cambio de cobertura del denominador con una interrupción de la línea.
+No publica 3T26 con sólo julio/agosto ni transforma rutas, modelos o warehouse.
+
 ### BTS retenido: certificación mensual completa del candidato
 
 Usar `python -m src.source_updates.bts_candidate retain` con producto
