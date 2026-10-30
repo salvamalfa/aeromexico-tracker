@@ -166,6 +166,16 @@ def test_another_source_can_add_a_primary_airport_without_expanding_afac_selecti
     assert "1 de 1 aeropuertos previos seleccionados" in after["quality_notes"][-1]
 
 
+def test_afac_recovery_keeps_other_sources_later_notes_in_place(tmp_path):
+    value = projection(tmp_path)
+    first = module.public_outputs({module.TARGETS[0]: json.dumps(baseline()).encode()}, value)
+    payload = json.loads(first[module.TARGETS[0]])
+    payload["quality_notes"].append("OMA: independently incorporated after AFAC")
+    before = {module.TARGETS[0]: json.dumps(payload).encode()}
+    after = json.loads(module.public_outputs(before, value)[module.TARGETS[0]])
+    assert after["quality_notes"] == payload["quality_notes"]
+
+
 @pytest.mark.parametrize("selected", [[], ["CUN"], ["MEX", "MEX"]])
 def test_replay_selection_cannot_be_missing_unpublished_or_duplicated(tmp_path, monkeypatch, selected):
     baseline_path = tmp_path / "site"

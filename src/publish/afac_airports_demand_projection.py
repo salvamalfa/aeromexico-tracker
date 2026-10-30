@@ -14,7 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.pipeline.offline import block_network
-from src.publish.airport_demand_projection import _facts, _input_files, _validate
+from src.publish.airport_demand_projection import _facts, _input_files, _validate, replace_quality_note
 from src.source_updates import readiness
 from src.source_updates.afac_airports import folded
 from src.source_updates.catalog import ROOT
@@ -170,8 +170,6 @@ def public_outputs(before, projection):
         f"{len(projection['baseline_airport_keys'])} aeropuertos previos seleccionados; "
         "no se completa un trimestre ni se inventa base interanual."
     )
-    updated["quality_notes"] = [
-        value for value in payload["quality_notes"] if not value.startswith("AFAC:")
-    ] + [note]
+    updated["quality_notes"] = replace_quality_note(payload["quality_notes"], "AFAC:", note)
     _validate(updated)
     return {TARGETS[0]: (dumps_deterministic(updated) + "\n").encode()}

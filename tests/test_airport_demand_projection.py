@@ -74,6 +74,15 @@ def test_equivalent_repeated_projection_is_byte_idempotent_and_does_not_mutate_i
     assert initial == before()
 
 
+def test_recovery_does_not_move_a_source_note_after_another_sources_note():
+    initial = baseline()
+    initial["quality_notes"] += [bridge.SCOPES["aicm_traffic"][2], "ASUR: later independent source note"]
+    expected = bridge.public_outputs(before(initial), projection())
+    observed = json.loads(expected[bridge.TARGETS[0]])
+    assert observed["quality_notes"] == initial["quality_notes"]
+    assert bridge.public_outputs(expected, projection()) == expected
+
+
 @pytest.mark.parametrize(
     "alter",
     [

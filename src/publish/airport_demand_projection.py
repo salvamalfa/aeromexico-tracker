@@ -104,6 +104,19 @@ def _validate(payload):
         raise ValueError("Airport demand periods must be unique and ordered")
 
 
+def replace_quality_note(notes, prefix, replacement):
+    """Retain unrelated ordering when a later source is replayed during recovery."""
+    result, found = [], False
+    for note in notes:
+        if note.startswith(prefix):
+            if not found:
+                result.append(replacement)
+            found = True
+        else:
+            result.append(note)
+    return result if found else [*result, replacement]
+
+
 def _facts(candidate, name, checked):
     key = "gold/" + name
     path = candidate / "data" / (key + ".parquet")
@@ -276,9 +289,7 @@ def public_outputs(before: dict[str, bytes], projection: dict) -> dict[str, byte
         updated[table] = sorted([*kept, *rows], key=lambda row: (row["period_id"], row["key"]))
     updated["months"] = sorted(set(old["months"]) | {period})
     prefix = SCOPES[product][2].split(":", 1)[0] + ":"
-    updated["quality_notes"] = [note for note in old["quality_notes"] if not note.startswith(prefix)] + [
-        projection["quality_note"]
-    ]
+    updated["quality_notes"] = replace_quality_note(old["quality_notes"], prefix, projection["quality_note"])
     if product == "oma_traffic":
         updated["quality_notes"] = [
             "Detalle OMA de ediciones anteriores retenido para revisión; su Gold histórico no se modifica."
