@@ -117,6 +117,31 @@ def test_future_dates_periods_and_separate_authorizations(ledger):
     assert str(workspace) in payload["prompt"]
 
 
+@pytest.mark.parametrize("activated", [False, True])
+def test_future_prompt_separates_source_guards_and_conditional_product_handoffs(ledger, activated):
+    workspace, _, _ = ledger
+    if activated:
+        bind(workspace)
+    before = (workspace / "state.json").read_bytes()
+    output = coordinator.run(workspace, now=NOW)
+    prompt = output["next_trigger"]["payload"]["prompt"]
+    assert "Etapa FUENTES: no publiques ni actives datos, noticias o tesis" in prompt
+    assert "publication_authorized=false" in prompt
+    assert "ready_for_automatic_execution=false" in prompt
+    assert "Tras cada resultado válido, sin esperar otras fuentes" in prompt
+    assert "python -m scripts.source_update_handoffs" in prompt
+    assert "skills de análisis/dashboard por fuente/producto/periodo" in prompt
+    assert "autorización exacta vigente" in prompt and "auditoría/aprobación propias" in prompt
+    assert "Datos y gráficas no esperan una tesis" in prompt
+    assert "bloquea sólo ese producto" in prompt
+    assert "no crees una regla permanente ni apruebes contenido automáticamente" in prompt
+    assert "No admitas Noticias al índice aprobado ni publiques Noticias o tesis de Industria" in prompt
+    assert "Actualiza este mismo ID" in prompt and "sin alterar cadencia ni crear sondeos" in prompt
+    assert output["state"]["publication_authorized"] is output["publication_authorized"] is False
+    assert output["network_requests"] == output["scheduled_executions"] == 0
+    assert (workspace / "state.json").read_bytes() == before
+
+
 def test_prepare_is_byte_idempotent_and_cannot_replace_existing_state(ledger):
     workspace, request, _ = ledger
     before = (workspace / "state.json").read_bytes()

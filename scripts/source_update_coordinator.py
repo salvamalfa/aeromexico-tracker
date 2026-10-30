@@ -194,7 +194,15 @@ def trigger(state: dict, now: str) -> dict:
             "con originales transferidos por Library. No crees otro monitor Viva. "
             "Aerocivil conserva sus supuestos operacionales documentados y confirmación oficial pendiente; "
             "comprueba datos, disponibilidad y recibos requeridos sin sustituir faltantes por supuestos. "
-            "No publiques ni actives datos, noticias o tesis. Actualiza este mismo ID al próximo evento."
+            "Etapa FUENTES: no publiques ni actives datos, noticias o tesis; conserva publication_authorized=false y "
+            "ready_for_automatic_execution=false. Tras cada resultado válido, sin esperar otras fuentes, aplica "
+            "python -m scripts.source_update_handoffs y las skills de análisis/dashboard por fuente/producto/periodo. "
+            "Cada tramo exige autorización exacta vigente y validación; publicar requiere auditoría/aprobación propias. "
+            "Datos y gráficas no esperan una tesis. Si falta una condición, bloquea sólo ese producto y conserva evidencia. "
+            "No infieras permisos del calendario, no crees una regla permanente ni apruebes contenido automáticamente. "
+            "No admitas Noticias al índice aprobado ni publiques Noticias o tesis de Industria. Concilia IDs, recibos y escritor único; "
+            "aplica gates, revisión, CI y QA servida. Actualiza este mismo ID al próximo evento del calendario, "
+            "sin alterar cadencia ni crear sondeos o automatizaciones adicionales."
         ),
         "schedule": (
             f"BEGIN:VEVENT\nDTSTART;TZID=America/Mexico_City:{due.replace('-', '')}T080000\nEND:VEVENT"

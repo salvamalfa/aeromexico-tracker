@@ -358,6 +358,16 @@ prompt, `schedule` VEVENT sin RRULE, zona y modo flexible. **Mostrarlo no lo
 crea ni autoriza ejecutarlo.** Si está vencido o hay un escritor sin resolver,
 el payload es nulo y exige reconciliación. No se mueve a mañana por defecto.
 
+El prompt separa dos tramos: fuentes conserva `publication_authorized=false`
+y `ready_for_automatic_execution=false`; después de cada resultado válido,
+el agente aplica el outbox por producto y las skills de análisis/dashboard.
+Cada tramo requiere autorización exacta vigente y sus controles propios;
+publicar exige auditoría y aprobación correspondientes. Si falta una condición,
+sólo se bloquea ese producto. El calendario no concede permisos de publicación
+ni crea una regla permanente de aprobación. Noticias y tesis de Industria no
+se admiten en esta entrega. Esa continuación no cambia cadencia, fechas ni ID,
+ni implica modificar la automatización activa al generar el payload.
+
 ### Activación realizada y recuperación de su creación
 
 La capacidad nativa conocida crea tareas habilitadas y no admite crearlas
