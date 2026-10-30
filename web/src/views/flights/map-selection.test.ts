@@ -29,3 +29,17 @@ it("keeps partial-frequency warnings even when three months are known", () => {
   const r = mergeCarrierNetworks([partial, network("AEROMEXICO")]).routes[0]!;
   expect(r.operation_status).toContain("partial_frequencies"); expect(coverageIndicator(r, 3)!.variant).toBe("is-partial");
 });
+it("preserves movement evidence even when Aeromexico is selected second; never adds it to flights", () => {
+  const am = network("AEROMEXICO");
+  am.routes[0]!.recorded_movements = {
+    count: 347, source_label: "Aerocivil", observed_months: ["2026M07"], definition: "No salidas",
+    provisional: true, official_classification_confirmed: false, agent_eligible: false,
+    flight_type_code: "S", traffic_code: "I", components: [],
+  };
+  const merged = mergeCarrierNetworks([network("VOLARIS"), am]).routes[0]!;
+  expect(merged.departures).toBe(8);
+  expect(merged.recorded_movements!.count).toBe(347);
+  const duplicate = network("VIVA_AEROBUS");
+  duplicate.routes[0]!.recorded_movements = am.routes[0]!.recorded_movements;
+  expect(() => mergeCarrierNetworks([am, duplicate])).toThrow(/Movimientos.*duplicados/);
+});

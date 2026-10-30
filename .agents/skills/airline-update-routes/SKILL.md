@@ -63,6 +63,22 @@ Consultar cada producto de esta familia:
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
 
+## Consumo de movimientos Aerocivil en Vuelos
+
+El generador histórico `src.transform.international_routes` conserva
+`totaloperaciones` como `operations` y `departures` nulo, con versión de
+parser propia. Regenerar desde originales retenidos; no reutilizar Gold que
+los tipaba como salidas. `src.dashboard.recorded_movements` exporta el conteo,
+meses, grano empresa/explotador y procedencia como `recorded_movements`.
+Queda fuera de componentes, sumas, comparaciones interanuales y cobertura de
+vuelos regulares. El frontal conserva las rutas y presenta una tarjeta y
+nota de movimientos provisionales, incluso si no hay cifra de salidas.
+Las frecuencias estimadas conservan su propia fuente y clasificación. No
+dividir movimientos entre dos, convertir faltantes en cero, certificar la
+leyenda ni activar `flight_evidence_v1`. Esta corrección no integra por sí
+sola un candidato nuevo ni autoriza publicación: se requiere regeneración,
+gate de datos aplicable, revisión y verificación del sitio servido.
+
 ## Candidato Aerocivil por mes
 
 `python -m src.source_updates.aerocivil recipe --period YYYYMmm` produce tres GET públicos: conteo, filas y conteo posterior. Un solo mes, operadores de fuente AMX/SLI, hasta 1.000 filas y 15 solicitudes contando redirecciones; sin paginación implícita. La misma receta con `--metadata` emite el diccionario oficial. Capturar ambas selecciones mediante `collect` y conservar sus recibos. El conteo debe coincidir antes/después y con todas las filas. Esto no demuestra aislamiento transaccional de versiones del proveedor.

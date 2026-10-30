@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-30 · Movimientos de Aerocivil separados de salidas
+
+- El normalizador histórico conserva `totaloperaciones` como movimientos y
+  deja salidas, pasajeros y asientos nulos. Empresa/explotador y los códigos
+  S/I conservan su carácter provisional; no se certifica la leyenda oficial.
+- Vuelos conserva un campo de movimientos con meses, sentidos y procedencia,
+  separado de vuelos observados, estimados, programación y sus agregados.
+  Las auditorías rechazan atribuir esos movimientos a vuelos regulares.
+- La corrección requiere regenerar Gold y payloads desde originales retenidos;
+  código preparado y pruebas no equivalen a publicación ni a activar evidencia.
+
 ## 2026-10-30 · Handoffs por producto y publicación por aerolínea
 
 - Cola privada por fuente, periodo y versión, con intenciones anteriores a

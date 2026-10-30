@@ -234,9 +234,5 @@ def test_aerocivil_component_is_reconciled_to_authoritative_direction_and_operat
     elif change == "operator":
         c["carrier_key"] = "AEROMEXICO_CONNECT"
     part = {"_flight_component": c, "source_label": c["source_label"]}
-    if change is None:
-        value, _ = coverage.regular_observed(part, ["2026M04"], "AEROMEXICO", {}, observations)
-        assert value == 80
-    else:
-        with pytest.raises(ValueError, match="authoritative Gold"):
-            coverage.regular_observed(part, ["2026M04"], "AEROMEXICO", {}, observations)
+    with pytest.raises(ValueError, match="movements.*not.*departures"):
+        coverage.regular_observed(part, ["2026M04"], "AEROMEXICO", {}, observations)

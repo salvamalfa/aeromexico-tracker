@@ -13,6 +13,8 @@ export function mergeCarrierNetworks(networks: PeriodNetworkDocument[]): PeriodN
     groups.set(route.market_key, [...groups.get(route.market_key) ?? [], route]);
   }
   const routes = [...groups].map(([market_key, parts]) => {
+    const movements = parts.flatMap((r) => r.recorded_movements ? [r.recorded_movements] : []);
+    if (movements.length > 1) throw new Error("Movimientos de Aerocivil duplicados entre aerolíneas");
     const components = parts.flatMap((r) => r.flight_components ?? []);
     const seen = new Set<string>();
     for (const c of components) {
@@ -28,6 +30,7 @@ export function mergeCarrierNetworks(networks: PeriodNetworkDocument[]): PeriodN
     return {
       ...parts[0]!, market_key, departures: counts.length ? counts.reduce((a, b) => a + b, 0) : null,
       flight_components: components,
+      ...(movements.length ? { recorded_movements: movements[0]! } : {}),
       source_label: [...new Set(parts.map((r) => r.source_label).filter(Boolean))].join(" · "),
       operation_status: estimatedOnly || (kinds.size === 1 && kinds.has("estimated")) ? "estimated_from_retained_frequencies" + (partial ? "_partial_frequencies" : "")
         : kinds.size === 1 && kinds.has("observed") ? "operated_observed" : "mixed_observed_estimated_cells",

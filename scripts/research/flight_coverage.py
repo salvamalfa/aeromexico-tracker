@@ -214,6 +214,8 @@ def match_component_hashes(component: dict, expected: list[str]) -> None:
 def regular_observed(route: dict, months: list[str], entity: str, counts: dict,
                      observations: pd.DataFrame, *, component_counts: dict | None = None) -> tuple[float | None, str]:
     source = route.get("source_label", "")
+    if "Aerocivil" in source:
+        raise ValueError("Aerocivil recorded movements are not authoritative Gold departures or regular flights")
     if component := route.get("_flight_component"):
         carrier = component["carrier_key"]
         if carrier not in ENTITIES[entity]:
@@ -250,8 +252,6 @@ def regular_observed(route: dict, months: list[str], entity: str, counts: dict,
                 raise ValueError(f"{label} component count differs from authoritative Gold")
             hashes = sorted(set(selected.source_hash.dropna().astype(str))) if "source_hash" in selected else []
             match_component_hashes(component, hashes)
-            if system == "aerocivil":
-                return float(value), "Aerocivil Gold explicitly regular international operations"
             return None, "Regular-service comparability unverified; excluded from comparable numerator"
         raise ValueError("Observed component source lacks an authoritative Gold resolver")
     if route.get("flight_components"):
@@ -261,14 +261,6 @@ def regular_observed(route: dict, months: list[str], entity: str, counts: dict,
         if abs(sum(pair[0] for pair in pairs) - route["departures"]) > .51:
             raise ValueError(f"BTS map/Gold count mismatch for {entity}/{route['market_key']}/{months}")
         return sum(pair[1] for pair in pairs), "BTS scheduled classes F/G; nonscheduled L/P excluded from comparable numerator"
-    if "Aerocivil" in source:
-        selected = observations[observations.source_system.eq("aerocivil")
-                                & observations.operator_icao.eq("AMX")
-                                & observations.period_id.isin(months)
-                                & observations.market_key.eq(route["market_key"])]
-        value = selected.departures.sum(min_count=1)
-        if pd.notna(value) and abs(value - route["departures"]) <= .51:
-            return float(value), "Aerocivil explicitly regular international operations"
     return None, "Regular-service comparability unverified; excluded from comparable numerator"
 
 
