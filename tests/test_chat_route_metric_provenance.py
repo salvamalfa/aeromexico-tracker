@@ -3,6 +3,10 @@ from pathlib import Path
 from _published_flight_profiles import (
     LEGACY_SCHEDULED_DEPARTURES,
     LEGACY_SHARED_PASSENGERS,
+    MOVEMENT_COUNTS_2026Q2,
+    MOVEMENT_SCHEDULED_DEPARTURES,
+    MOVEMENT_SHARED_TOTALS_2026Q2,
+    has_recorded_movements,
     has_regular_map_projection,
     has_signed_flight_components,
 )
@@ -79,14 +83,20 @@ def test_published_scheduled_statuses_classify_departures_not_capacity() -> None
         )
     ]
     regular = has_regular_map_projection(tools.snapshot)
-    expected = {"MEX<>SNA": None if regular else 182} if components else LEGACY_SCHEDULED_DEPARTURES
+    expected = (
+        MOVEMENT_SCHEDULED_DEPARTURES
+        if has_recorded_movements(tools.snapshot)
+        else {"MEX<>SNA": None if regular else 182}
+        if components
+        else LEGACY_SCHEDULED_DEPARTURES
+    )
     assert {route["market_key"]: route["departures"] for route in scheduled} == expected
     for route in scheduled:
         assert bool(route.get("flight_components")) is components
         assert route["operation_status"] == (
             "scheduled_from_dated_release" if route["market_key"] == "CDG<>MTY" else "assigned_slot_not_flown"
         )
-        if regular:
+        if regular and expected[route["market_key"]] is None:
             # Programming remains explicit evidence, never a performed-flight
             # headline or a queryable departure value. Capacity stays distinct.
             assert sum(cell["departures"] for cell in route["flight_components"]) == 182
@@ -110,6 +120,79 @@ def test_published_scheduled_statuses_classify_departures_not_capacity() -> None
         assert row["value"] == expected[route["market_key"]]
         if components:
             assert row["value"] == sum(cell["departures"] for cell in route["flight_components"])
+
+
+def test_signed_movement_contract_keeps_literal_counts_separate_from_queryable_flights():
+    tools = RouteTools(Snapshot(Path("site")))
+    if not has_recorded_movements(tools.snapshot):
+        return  # The three frozen older editions do not carry this typed metric.
+    network, _ = tools._load("AEROMEXICO_GROUP", "international", "2026Q2")
+    movements = {r["market_key"]: r for r in network["routes"] if r.get("recorded_movements")}
+    assert {
+        key: row["recorded_movements"]["count"] for key, row in movements.items()
+    } == MOVEMENT_COUNTS_2026Q2
+    for market, row in movements.items():
+        movement = row["recorded_movements"]
+        assert movement["count"] == sum(c["operations"] for c in movement["components"])
+        assert movement["provisional"] is True
+        assert movement["official_classification_confirmed"] is False
+        assert movement["agent_eligible"] is False
+        assert movement["traffic_code"] == "I" and movement["flight_type_code"] == "S"
+        assert "No equivalen a salidas" in movement["definition"]
+        assert all("Aerocivil" not in c["source_label"] for c in row["flight_components"])
+        if market == "BOG<>TGZ":
+            assert row["operation_status"] == "recorded_movements_provisional"
+            assert row["flight_components"] == []
+            for metric in ("departures", "seats", "passengers", "load_factor"):
+                assert row[metric] is None
+                result = tools.invoke(
+                    "query_routes",
+                    dict(
+                        entity_id="AEROMEXICO_GROUP",
+                        segment="international",
+                        period="2026Q2",
+                        metric=metric,
+                        origin_iata="BOG",
+                        destination_iata="TGZ",
+                        top_n=1,
+                    ),
+                )
+                assert result["rows"] == [] and result["missing_route_count"] == 1
+        else:
+            scheduled = _route_query(tools, market, "departures")
+            assert scheduled["value"] == MOVEMENT_SCHEDULED_DEPARTURES[market]
+            assert scheduled["value_kind"] == "scheduled"
+            assert "AICM" in scheduled["metric_source_label"]
+            assert "Aerocivil" not in scheduled["metric_source_label"]
+
+
+def test_signed_profiles_preserve_frozen_versions_and_reject_unknown_contracts():
+    from types import SimpleNamespace
+
+    import pytest
+    from _published_flight_profiles import (
+        COMPONENT_FLIGHTS,
+        LEGACY_FLIGHTS,
+        MOVEMENT_FLIGHTS,
+        REGULAR_MAP_FLIGHTS,
+    )
+
+    for digest, expected in (
+        (LEGACY_FLIGHTS, (False, False, False)),
+        (COMPONENT_FLIGHTS, (True, False, False)),
+        (REGULAR_MAP_FLIGHTS, (True, True, False)),
+        (MOVEMENT_FLIGHTS, (True, True, True)),
+    ):
+        snapshot = SimpleNamespace(manifest={"contracts": {"flights.schema.json": digest}})
+        assert (
+            has_signed_flight_components(snapshot),
+            has_regular_map_projection(snapshot),
+            has_recorded_movements(snapshot),
+        ) == expected
+    unknown = SimpleNamespace(manifest={"contracts": {"flights.schema.json": "0" * 64}})
+    for select in (has_signed_flight_components, has_regular_map_projection, has_recorded_movements):
+        with pytest.raises(AssertionError, match="Review published-route expectations"):
+            select(unknown)
 
 
 def test_legacy_scheduled_statuses_keep_capacity_estimated():
@@ -309,7 +392,7 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
             row["combined_value"] == sum(carrier["value"] for carrier in row["carriers"].values())
             for row in international_shared["rows"]
         )
-        assert {row["market_key"]: row["combined_value"] for row in international_shared["rows"]} == {
+        expected_combined = {
             "GDL<>LAX": 212017,
             "LAX<>MEX": 190570,
             "MEX<>ORD": 141042,
@@ -318,5 +401,33 @@ def test_queries_the_signed_public_snapshot_without_private_inputs() -> None:
             "LAS<>MEX": 88760,
             "MEX<>SAT": 64284,
         }
+        if has_recorded_movements(tools.snapshot):
+            # Coverage/provisional provenance grew; retain the same byte budget
+            # and prove that truncation did not remove the underlying passengers.
+            expected_combined = {
+                k: v for k, v in MOVEMENT_SHARED_TOTALS_2026Q2.items() if k not in {"MEX<>SAT", "GDL<>IAH"}
+            }
+            assert international_shared["available_route_count"] == 8
+            assert international_shared["applied_top_n"] == 6
+            assert international_shared["requested_top_n"] == 20
+            assert international_shared["truncated"] is True
+            assert international_shared["truncation_reason"] == "tool_result_size_limit"
+            networks = [
+                tools._load(entity, "international", "2026Q2")[0]
+                for entity in (
+                    "AEROMEXICO_GROUP",
+                    "VOLARIS",
+                    "VIVA_AEROBUS",
+                )
+            ]
+            values = [
+                {r["market_key"]: r["passengers"] for r in n["routes"] if r["passengers"] is not None}
+                for n in networks
+            ]
+            common = values[0].keys() & values[1].keys() & values[2].keys()
+            assert {key: sum(v[key] for v in values) for key in common} == MOVEMENT_SHARED_TOTALS_2026Q2
+        assert {
+            row["market_key"]: row["combined_value"] for row in international_shared["rows"]
+        } == expected_combined
     assert len(international_shared["display"]["columns"]) <= 12
     assert "combined_value" not in [column["key"] for column in international_shared["display"]["columns"]]
