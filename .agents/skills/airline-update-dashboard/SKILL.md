@@ -11,6 +11,31 @@ versión real de contenido. Una tesis de una aerolínea no espera a las demás.
 Una fuente común actualiza solo sus consumidores afectados. Una revisión cruzada
 material necesita evidencia y motivo; no desencadena una reescritura universal.
 
+## Preparación del entorno cloud
+
+Antes de cualquier `inspect`, gate o `verify`, exportar
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` y
+`CHAT_EVIDENCE_APPROVED_INDEX_SHA256` con sus valores literales vigentes.
+El [workflow de CI](../../../.github/workflows/ci.yml) referencia `vars` de GitHub;
+no contiene los valores. Obtener los valores resueltos de logs autorizados de CI
+o del expediente vigente y cotejarlos con el registro canónico enlazado por la
+[guía cloud](../../../docs/cloud-development.md). No crear otra lista de pins,
+calcularlos desde un recibo ni calcular el SHA del texto del pin. Si faltan valores
+o no se acredita su vigencia, conservar ese bloqueo; no cambiar variables,
+permisos o protecciones ni ejecutar el gate con pins inventados o vacíos.
+
+Aplicar las cachés escribibles de la misma guía antes de invocar Python o npm:
+
+```bash
+export UV_CACHE_DIR=/workspace/.cache/uv
+export NPM_CONFIG_CACHE=/workspace/.cache/npm
+export npm_config_cache="$NPM_CONFIG_CACHE"
+```
+
+Las dos formas de la variable npm apuntan al mismo destino documentado;
+no dejar que una shell nueva vuelva a la caché de `HOME`. Conservar la
+validación TLS y la confianza autorizada; no omitir la comprobación de certificados.
+
 ## Entrada y alcance
 
 1. Recibir `job_id`, `data_version`, entidad, periodo, `release_kind` y recibo físico
