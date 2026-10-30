@@ -504,14 +504,17 @@ def transition(state: dict, action: dict, workspace: Path):
         checked_ref(action["reconciliation"])
         job.update(status="running", reconciliation=action["reconciliation"])
     elif kind == "served":
-        if job["stage"] != "dashboard" or job["status"] != "completed" or not is_current(state, job):
-            raise ValueError("Served QA follows this current dashboard build, never an analysis receipt")
+        if job["stage"] != "dashboard" or job["status"] != "completed":
+            raise ValueError("Served QA follows this completed dashboard build, never an analysis receipt")
         source = state["sources"][job["source_id"]]
         verify_release_binding(job, source)
         if job["dependency"]:
             parent = state["jobs"][job["dependency"]]
             verify_analysis(parent, source, load(checked_ref(parent["result"])))
-        job["served_verification"] = verify_served(load(checked_ref(job["result"])), action["paths"])
+        job["served_verification"] = {
+            **verify_served(load(checked_ref(job["result"])), action["paths"]),
+            "is_current_source": is_current(state, job),
+        }
         job["status"] = "served_verified"
     else:
         raise ValueError("Unknown handoff transition")

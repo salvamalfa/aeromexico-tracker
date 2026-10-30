@@ -145,6 +145,10 @@ la versión previa y su motivo; nunca se sobreescribe el histórico para dedupli
    Un build `completed` conserva la exclusión del escritor del dashboard hasta
    esa QA: otro trabajo no puede reemplazar `site/` ni su manifiesto mientras
    queda pendiente verificarlo. Un fallo HTTP o de hash mantiene el bloqueo.
+   Si entretanto llega otra revisión de la misma fuente, la QA del build ya
+   completado acredita sus propios bytes y registra `is_current_source=false`.
+   No lo presenta como la versión nueva ni cambia la cabeza de datos. Tras
+   esa comprobación puede continuar el trabajo pendiente de la nueva versión.
    `no_visual_change` también exige replay: para Viva/Volaris se reconstruye
    la proyección de la cápsula y se compara con el sitio de referencia; para
    Aeroméxico se ejecuta la prueba de equivalencia aprobada. El recibo conserva

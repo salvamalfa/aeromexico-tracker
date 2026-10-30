@@ -68,3 +68,31 @@ def test_physically_verified_no_change_does_not_hold_publication_writer(env, mon
     assert handoffs.run(workspace)["state"]["jobs"][first]["status"] == "no_change"
     result = action(workspace, "claim", "claim2", job_id=second, owner_lease_id="local_lease:test")
     assert result["state"]["jobs"][second]["status"] == "dispatch_intent"
+
+
+def test_new_source_arrival_keeps_old_served_qa_historical_and_releases_new_version(env, monkeypatch):
+    workspace, first, _ = finished_dashboard(env, monkeypatch)
+    changed = copy.deepcopy(env[1])
+    changed["synthetic_version"] = "c" * 64
+    result = action(workspace, "observe", "revision3", observation=changed)
+    next_job = next(
+        key
+        for key, value in result["state"]["jobs"].items()
+        if value["stage"] == "dashboard"
+        and value["entity"] == "VIVA_AEROBUS"
+        and handoffs.is_current(result["state"], value)
+    )
+    heads = copy.deepcopy(result["state"]["heads"])
+    with pytest.raises(ValueError, match="Another dashboard writer"):
+        action(workspace, "claim", "claim3", job_id=next_job, owner_lease_id="local_lease:test")
+    monkeypatch.setattr(handoffs, "verify_served", lambda *args: {"synthetic_verified": True})
+    result = action(
+        workspace, "served", "oldqa", job_id=first, owner_lease_id="local_lease:test", paths=["index.html"]
+    )
+    old = result["state"]["jobs"][first]
+    assert old["status"] == "served_verified"
+    assert old["served_verification"]["is_current_source"] is False
+    assert result["state"]["heads"] == heads
+    assert result["state"]["jobs"][next_job]["status"] == "planned"
+    result = action(workspace, "claim", "claim3", job_id=next_job, owner_lease_id="local_lease:test")
+    assert result["state"]["jobs"][next_job]["status"] == "dispatch_intent"
