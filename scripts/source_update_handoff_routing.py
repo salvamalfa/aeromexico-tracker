@@ -108,3 +108,19 @@ def verify_release(job: dict, source: dict, binding: dict):
         or spec.get("stage") not in allowed
     ):
         raise ValueError("Dashboard publication does not consume this exact source and release stage")
+
+
+def verify_site(site, repo):
+    from importlib import import_module
+
+    from scripts.check_pages_publication import verifier_for
+
+    module = verifier_for(site, repo)
+    function = {
+        "src.publish.movements_scope": "verify_movements",
+        "src.publish.issuer_scope": "verify_issuer",
+        "src.publish.financial_scope": "verify_financial",
+        "src.publish.editorial": "verify_editorial",
+        "src.publish.verify": "verify_site",
+    }[module]
+    return getattr(import_module(module), function)(site)

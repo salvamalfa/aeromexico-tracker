@@ -515,6 +515,11 @@ def test_invalid_scoped_proof_cannot_fall_back_to_generic_site_verification(env,
     module.verify_issuer = lambda path: ["invalid strict proof"]
     monkeypatch.setitem(sys.modules, "src.publish.issuer_scope", module)
     monkeypatch.setattr(verify, "verify_site", lambda path: [])
+    from scripts import check_pages_publication
+
+    monkeypatch.setattr(
+        check_pages_publication, "verifier_for", lambda site, repo: "src.publish.issuer_scope"
+    )
     with pytest.raises(ValueError, match="invalid strict proof"):
         handoffs.verify_dashboard({"site_path": str(site), "manifest": manifest})
 

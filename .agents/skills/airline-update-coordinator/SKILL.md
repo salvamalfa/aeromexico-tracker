@@ -273,7 +273,10 @@ y completar el mismo trabajo; el CLI no envía el envelope por sí solo.
 
 El [gate de movimientos](../../../src/publish/movements_scope.py) exige su propio
 recibo `aerocivil-movements-publication.json`; el selector de Pages y `finish`
-lo verifican sin recurrir al gate financiero si falla. El perfil de corrección
+lo verifican sin recurrir al gate financiero si falla. Los recibos históricos
+se conservan; el selector común exige pins y una precedencia Git única para
+elegir el perfil vigente, también en los baselines archivados. Un perfil
+desconocido o una precedencia ambigua bloquean. El perfil de corrección
 cubre los 19 meses `2025M01`–`2026M07` y siete trimestres
 `2025Q1`–`2026Q3` de Aeroméxico, doce redes de Viva, Volaris e Industria
 (`2026M04`–`2026M06` y `2026Q2`) y su resumen de cobertura, ya publicados. Reproduce los originales retenidos con sus

@@ -147,6 +147,11 @@ def test_invalid_movements_proof_cannot_fall_back_to_financial_or_generic_verifi
     module = ModuleType("src.publish.movements_scope")
     module.verify_movements = lambda path: ["invalid movement source proof"]
     monkeypatch.setitem(sys.modules, "src.publish.movements_scope", module)
+    from scripts import check_pages_publication
+
+    monkeypatch.setattr(
+        check_pages_publication, "verifier_for", lambda site, repo: "src.publish.movements_scope"
+    )
     with pytest.raises(ValueError, match="invalid movement source proof"):
         handoffs.verify_dashboard({"site_path": str(site), "manifest": manifest})
 

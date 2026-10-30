@@ -335,34 +335,14 @@ def verify_release_binding(job: dict, source: dict):
 
 
 def verify_dashboard(result: dict) -> None:
-    from src.publish.verify import verify_site
-
     site = Path(result["site_path"])
     if site != (ROOT / "site").absolute():
         raise ValueError("Dashboard result must identify this checkout's generated site")
     manifest = checked_ref(result["manifest"])
     if manifest != site / "publication_manifest.json":
         raise ValueError("Publication manifest is not inside the verified site")
-    # Explicit, reviewed publication modes keep their own strict proof verifier.
-    # Never catch a failed scope verification and retry with a looser mode.
-    if (site / "aerocivil-movements-publication.json").exists():
-        from src.publish.movements_scope import verify_movements
-
-        errors = verify_movements(site)
-    elif (site / "issuer-publication.json").exists():
-        from src.publish.issuer_scope import verify_issuer
-
-        errors = verify_issuer(site)
-    elif (site / "financial-publication.json").exists():
-        from src.publish.financial_scope import verify_financial
-
-        errors = verify_financial(site)
-    elif (site / "editorial-publication.json").exists():
-        from src.publish.editorial import verify_editorial
-
-        errors = verify_editorial(site)
-    else:
-        errors = verify_site(site)
+    # Select one current, witnessed publication; a failed strong gate never falls back.
+    errors = routing.verify_site(site, ROOT)
     if errors:
         raise ValueError(f"Generated site failed its canonical verification: {errors}")
 

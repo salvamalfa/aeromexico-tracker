@@ -1,18 +1,21 @@
 """Test consumers follow exact issuer history instead of freezing the entire site."""
 
 import json
+import tempfile
 from pathlib import Path
 
-from scripts.check_pages_publication import verifier_for
-from src.publish import issuer_scope
+from scripts.check_pages_publication import VERIFIERS, verifier_for
+from src.publish import issuer_scope, movements_scope
 from src.publish.editorial import _git
 from src.publish.financial_scope import encoded, sha
 from src.publish.issuer_projection import require_scope
 
 
 def verify_current_publication(site, repo, financial_checker):
-    module = verifier_for(site)
-    if module == "src.publish.issuer_scope":
+    module = verifier_for(site, repo)
+    if module == "src.publish.movements_scope":
+        problems = movements_scope.verify_movements(site, repo)
+    elif module == "src.publish.issuer_scope":
         problems = issuer_scope.verify_issuer(site, repo)
     elif module == "src.publish.financial_scope":
         problems = financial_checker(site, repo)
@@ -20,11 +23,49 @@ def verify_current_publication(site, repo, financial_checker):
         from src.publish.editorial import verify_editorial
 
         problems = verify_editorial(site, repo)
-    else:
+    elif module == "src.publish.verify":
         from src.publish.verify import verify_site
 
         problems = verify_site(site)
+    else:
+        raise AssertionError("Unsupported strict publication verifier: " + module)
     assert not problems, problems
+
+
+def _active_module(site, repo, manifest, commit):
+    if commit is None:
+        return verifier_for(site, repo)
+    # Only selector inputs are materialized here; the strict current verifier
+    # already replays the complete released baseline chain.
+    with tempfile.TemporaryDirectory(prefix="parity-proof-") as temporary:
+        archive = Path(temporary)
+        (archive / "publication_manifest.json").write_bytes(encoded(manifest))
+        names = {item["path"] for item in manifest["files"]}
+        for proof, _ in VERIFIERS:
+            if proof in names:
+                (archive / proof).write_bytes(_git(repo, "show", f"{commit}:site/{proof}"))
+        return verifier_for(archive, repo)
+
+
+def _preserved_movement_financials(site, repo, manifest, commit, spec):
+    previous = spec["baseline_commit"]
+    raw = _git(repo, "show", f"{previous}:site/publication_manifest.json")
+    assert sha(raw) == spec["baseline_manifest_sha256"]
+    before = json.loads(raw)
+    assert len(before["analysis_manifest"]) == 7
+    assert manifest["analysis_manifest"] == before["analysis_manifest"], (
+        "Movement correction changed approvals"
+    )
+    readings = [item for item in before["files"] if item["path"].startswith("data/v1/analysis/")]
+    assert len(readings) == 7, "Movement baseline is missing a financial thesis"
+    for item in readings:
+        actual = (
+            (site / item["path"]).read_bytes()
+            if commit is None
+            else _git(repo, "show", f"{commit}:site/{item['path']}")
+        )
+        assert sha(actual) == item["sha256"] and len(actual) == item["bytes"], item["path"]
+    return before
 
 
 def preserved_financial_projection(site, repo, financial_spec):
@@ -35,11 +76,30 @@ def preserved_financial_projection(site, repo, financial_spec):
     Here each financial delta is checked structurally, including prior issuer
     releases, before comparing the complete original financial source replay.
     """
-    current = json.loads((site / issuer_scope.EXECUTIVE).read_bytes())
+    current_raw = (site / issuer_scope.EXECUTIVE).read_bytes()
+    current = json.loads(current_raw)
     manifest = json.loads((site / "publication_manifest.json").read_bytes())
     commit = None
     seen = set()
-    while sha(encoded(current)) != financial_spec["executive_sha256"]:
+    while sha(encoded(current)) != financial_spec["executive_sha256"] or movements_scope.PROOF in {
+        item["path"] for item in manifest["files"]
+    }:
+        module = _active_module(site, repo, manifest, commit)
+        if module == "src.publish.movements_scope":
+            spec = json.loads(
+                (repo / movements_scope.ANCHOR).read_bytes()
+                if commit is None
+                else _git(repo, "show", f"{commit}:{movements_scope.ANCHOR}")
+            )
+            previous = spec["baseline_commit"]
+            assert previous not in seen, "Cyclic publication baseline"
+            seen.add(previous)
+            before_raw = _git(repo, "show", f"{previous}:site/{issuer_scope.EXECUTIVE}")
+            assert current_raw == before_raw, "Movement correction changed financial bytes"
+            manifest = _preserved_movement_financials(site, repo, manifest, commit, spec)
+            current_raw, current, commit = before_raw, json.loads(before_raw), previous
+            continue
+        assert module == "src.publish.issuer_scope", "Unreviewed financial publication profile"
         assert issuer_scope.PROOF in {item["path"] for item in manifest["files"]}, (
             "Unreviewed financial delta without an issuer receipt"
         )
@@ -54,7 +114,8 @@ def preserved_financial_projection(site, repo, financial_spec):
         previous = spec["baseline_commit"]
         assert previous not in seen, "Cyclic issuer baseline"
         seen.add(previous)
-        before = json.loads(_git(repo, "show", f"{previous}:site/{issuer_scope.EXECUTIVE}"))
+        before_raw = _git(repo, "show", f"{previous}:site/{issuer_scope.EXECUTIVE}")
+        before = json.loads(before_raw)
         if spec["stage"] == "editorial_only":
             assert current == before, "Editorial stage changed financial data"
         else:
@@ -62,7 +123,7 @@ def preserved_financial_projection(site, repo, financial_spec):
         manifest_raw = _git(repo, "show", f"{previous}:site/publication_manifest.json")
         assert sha(manifest_raw) == spec["baseline_manifest_sha256"]
         manifest = json.loads(manifest_raw)
-        current, commit = before, previous
+        current_raw, current, commit = before_raw, before, previous
     assert len(encoded(current)) == financial_spec["executive_bytes"]
     return current
 
