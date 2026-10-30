@@ -149,3 +149,9 @@ def test_invalid_movements_proof_cannot_fall_back_to_financial_or_generic_verifi
     monkeypatch.setitem(sys.modules, "src.publish.movements_scope", module)
     with pytest.raises(ValueError, match="invalid movement source proof"):
         handoffs.verify_dashboard({"site_path": str(site), "manifest": manifest})
+
+
+def test_financial_source_cannot_alias_the_movements_stage():
+    source = {"product": "viva_financials", "source_binding": {"item": {"product": "viva_financials"}}}
+    with pytest.raises(ValueError, match="financial source"):
+        routing.verify_release({"release_kind": "movements"}, source, {})

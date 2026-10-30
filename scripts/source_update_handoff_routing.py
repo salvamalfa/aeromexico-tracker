@@ -95,6 +95,8 @@ def verify_release(job: dict, source: dict, binding: dict):
         ):
             raise ValueError("Movement release does not consume this exact source/period/stage")
         return
+    if job["release_kind"] not in {"data", "editorial"}:
+        raise ValueError("A financial source cannot use another product's release stage")
     from src.publish.issuer_scope import anchor
 
     spec = anchor()
