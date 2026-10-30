@@ -29,7 +29,18 @@ def editorial_site(request):
         anchor as financial_anchor,
     )
 
-    if verifier_for(SITE) == "src.publish.issuer_scope":
+    manifest_path = SITE / "publication_manifest.json"
+    if not manifest_path.is_file():
+        assert not manifest_path.is_symlink(), "Publication manifest cannot be a dangling symlink"
+        assert not any(
+            (SITE / name).exists() for name in (PROOF, FINANCIAL_PROOF, "issuer-publication.json")
+        ), "An existing publication receipt requires its manifest"
+        _unavailable(request, "Editorial candidate has not been assembled")
+    try:
+        profile = verifier_for(SITE)
+    except (ValueError, OSError, KeyError, TypeError) as error:
+        raise AssertionError(f"Invalid publication verification selection: {error}") from error
+    if profile == "src.publish.issuer_scope":
         checker = request.getfixturevalue("verify_financial_publication")
         verify_current_publication(SITE, ROOT, checker)
         spec = anchor(ROOT)
