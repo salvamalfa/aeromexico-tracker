@@ -30,6 +30,18 @@ def publication_scope(product):
             "preserve AFAC, other airlines, all seven theses and every other data payload; "
             "no quarterly aggregation or Airline Monthly editorial"
         )
+    if product in {"viva_traffic", "volaris_traffic_ir"}:
+        return (
+            "Only the separately labelled company-reported monthly booked passenger series and "
+            "same-edition annual comparisons for this airline; preserve AFAC, other corporate "
+            "series, all theses and unrelated data; no incomplete quarterly aggregation"
+        )
+    if product == "afac_airports":
+        return (
+            "Only the separately labelled AFAC alternative for the explicitly selected existing "
+            "airport-demand keys; preserve direct issuer reports, groups, flight maps and theses; "
+            "no new airports, historical backfill or fabricated annual comparison"
+        )
     if product == "bts_segments":
         return (
             "Assess the existing July BTS flight-map dependency by exact physical replay; "

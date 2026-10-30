@@ -260,7 +260,10 @@ def observe(state: dict, observation: dict, workspace: Path):
         enqueue(state, "dashboard", source_id, "AEROMEXICO", release_kind="movements")
     elif item["product"] in monthly.IMPACTS:
         enqueue(
-            state, "dashboard", source_id, monthly.entity(item["product"]),
+            state,
+            "dashboard",
+            source_id,
+            monthly.entity(item["product"]),
             release_kind=monthly.release_kind(item["product"]),
         )
     # Macro inputs currently have no public chart consumer. Preserve the result

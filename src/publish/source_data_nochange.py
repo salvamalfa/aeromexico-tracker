@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import json
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 from src.config import PATHS
 
 from . import editorial as transport
 from . import manifest as manifests
+from . import source_data_members as members
 from .approval_cohorts import verify_approval_cohorts
-from .source_data_scope import ANCHOR, PROOF, pins, sha, verify_historical_baseline
+from .source_data_scope import ANCHOR, PROOF, adapter, pins, sha, verify_historical_baseline
 
 
 def _records(repo, old):
@@ -64,6 +67,24 @@ def verify_no_visual_change(profile_path, binding, *, site=None):
     }
 
 
+@contextmanager
+def frozen_target_baseline(repo, spec):
+    """Reproduce the inspected release against its immutable Git input edition."""
+    scratch = repo / "tmp/source-updates"
+    if any(path.is_symlink() for path in (scratch, *scratch.parents)):
+        raise ValueError("Source recovery baseline requires a physical scratch directory")
+    scratch.mkdir(parents=True, exist_ok=True)
+    targets = members.target_names(members.members(spec), adapter)
+    with tempfile.TemporaryDirectory(prefix="source-recovery-", dir=scratch) as directory:
+        baseline = Path(directory)
+        for name in sorted(targets):
+            raw = transport._git(repo, "show", f"{spec['baseline_commit']}:site/{name}")
+            path = baseline / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+        yield baseline
+
+
 def already_built(request_path, request, profile, records, spec, repo):
     """Return verified existing build metadata without another swap or receipt."""
     from src.analysis_agent.entity_adapter import code_version
@@ -89,9 +110,9 @@ def already_built(request_path, request, profile, records, spec, repo):
     if code_version() != spec["producer_code_version"]:
         raise ValueError("Existing source build uses another producer")
     old = verify_historical_baseline(repo, spec, site)
-    with gate.flow.writer(gate.flow.ROOT):
+    with gate.flow.writer(gate.flow.ROOT), frozen_target_baseline(repo, spec) as baseline:
         authority(request, spec, repo)
-        value, outputs = replay(request, profile, site, repo)
+        value, outputs = replay(request, profile, baseline, repo)
         if (
             value["source_binding"] != spec["source_binding"]
             or value.get("additional_sources", []) != spec.get("additional_sources", [])
@@ -105,7 +126,7 @@ def already_built(request_path, request, profile, records, spec, repo):
         if problems:
             raise ValueError(f"Existing source build is invalid: {problems[:3]}")
         if (
-            replay(request, profile, site, repo) != (value, outputs)
+            replay(request, profile, baseline, repo) != (value, outputs)
             or snapshot(request_path, request, profile, records, value, repo) != initial
         ):
             raise ValueError("Existing source build inputs changed during recovery")
