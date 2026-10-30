@@ -62,6 +62,16 @@ describe("separate corporate monthly passenger basis", () => {
     expect(mocks.react.mock.calls[0]![1]).toEqual([]);
     expect(mocks.react.mock.calls[0]![2].annotations[0].text).toContain("tres meses completos");
   });
+  it("rejects a complete-looking quarter whose regional count is null", () => {
+    state.monthlyPassengers!.records[1]!.international = null as unknown as number;
+    renderMix(record);
+    expect(mocks.react.mock.calls[0]![1]).toEqual([]);
+  });
+  it("rejects three records that repeat one month", () => {
+    state.monthlyPassengers!.records[1]!.date = "2026-04-01";
+    renderMix(record);
+    expect(mocks.react.mock.calls[0]![1]).toEqual([]);
+  });
   it("falls back to the retained AFAC chart when no corporate payload is present", () => {
     state.passengerBasis = "corporate"; state.corporateMonthlyPassengers = null;
     renderMix(record);

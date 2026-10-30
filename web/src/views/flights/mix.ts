@@ -64,8 +64,12 @@ export function renderMix(record: QuarterRecord): void {
   const monthlyPoints = series.records.map((point) => ({ ...point, period_label: dateLabel(point.date) }));
   const quarterGroups = new Map<string, QuarterPoint>();
   const quarterMonths = new Map<string, string[]>();
+  const incompleteQuarters = new Set<string>();
   monthlyPoints.forEach((point) => {
     const periodId = quarterForDate(point.date);
+    if (![point.domestic, point.international, point.total_segment_sum].every(Number.isFinite)) {
+      incompleteQuarters.add(periodId);
+    }
     quarterMonths.set(periodId, [...(quarterMonths.get(periodId) ?? []), point.date.slice(0, 7)]);
     let quarter = quarterGroups.get(periodId);
     if (!quarter) {
@@ -87,7 +91,7 @@ export function renderMix(record: QuarterRecord): void {
       const months = quarterMonths.get(quarter.period_id)!;
       const first = (Number(quarter.period_id.slice(-1)) - 1) * 3 + 1;
       const expected = [0, 1, 2].map((offset) => `${quarter.period_id.slice(0, 4)}-${String(first + offset).padStart(2, "0")}`);
-      return months.length === 3 && new Set(months).size === 3 && expected.every((m) => months.includes(m));
+      return !incompleteQuarters.has(quarter.period_id) && months.length === 3 && new Set(months).size === 3 && expected.every((m) => months.includes(m));
     }) : monthlyPoints;
   if (!points.length) {
     void Plotly.react("mix-chart", [], { annotations: [{ text: "No hay un trimestre con sus tres meses completos.", showarrow: false }] }, { displayModeBar: false, responsive: true });
