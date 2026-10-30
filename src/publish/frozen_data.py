@@ -88,6 +88,9 @@ def verify_baseline_approvals(
             tar.extractall(base, filter="data")
         (base / "analysis_runs").symlink_to(PATHS.root / "analysis_runs", target_is_directory=True)
         (base / "data").symlink_to(PATHS.data, target_is_directory=True)
+        from .issuer_replay_inputs import materialize_issuer_inputs
+
+        materialize_issuer_inputs(record_paths, PATHS.root, base)
         script = """import json,sys
 from pathlib import Path
 from src.analysis_agent import lifecycle
