@@ -335,8 +335,8 @@ export interface AnalysisDocument {
   entity_key?: string;
   period_label?: string;
   cutoff_date?: string;
-  selection_mode?: "retrospective";
-  guidance_as_of?: "report_date";
+  selection_mode?: "retrospective" | "retrospective_source_edition";
+  guidance_as_of?: "report_date" | "2026-10-26" | "2026-10-28";
   thesis: string;
   summary_items: AnalysisSummaryItem[];
   context: string[];
