@@ -93,7 +93,11 @@ def test_native_replay_and_operational_policy_are_both_required(tmp_path, monkey
 
     monkeypatch.setattr(handoffs.readiness, "preflight", preflight)
     monkeypatch.setattr(handoffs.readiness, "check_task", lambda *args: provisional_result())
-    monkeypatch.setattr(handoffs, "meaningful_data", lambda value, checked: value)
+    monkeypatch.setattr(
+        handoffs,
+        "meaningful_data",
+        lambda value, checked: {**value, "tables": {"gold/fact_synthetic": [{"value": 1}]}},
+    )
     result = handoffs.verify_candidate(observation, tmp_path / "receipt")
     assert observed[0]["items"][0]["period"] == "2026M07"
     assert result["source_binding"]["item"]["period"] == "2026Q3"

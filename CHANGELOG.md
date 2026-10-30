@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-30 · Revisiones semánticas del handoff
+
+- La comparación incluye contexto primario financiero verificado: una revisión
+  de perspectiva puede disparar análisis aunque las cifras no cambien. Conserva
+  precisión íntegra y distingue texto del reporte de metadatos de descarga.
+- Aerocivil excluye fecha de captura, identificador de artefacto y URL del
+  criterio de cambio; conserva operador, códigos, definición y elegibilidad.
+- Los trabajos existentes conservan IDs, versiones, intentos y recibos tras
+  reproducir su expediente físico previo. La nueva identidad no fuerza una
+  nueva tesis ni amplía los perfiles de periodos admitidos.
+- Código y pruebas de comparación no acreditan nuevas capturas, aprobaciones,
+  publicación de datos o tesis ni verificación de un despliegue.
+
 ## 2026-10-30 · Movimientos de Aerocivil separados de salidas
 
 - El normalizador histórico conserva `totaloperaciones` como movimientos y

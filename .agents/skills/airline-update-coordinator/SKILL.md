@@ -58,8 +58,17 @@ global como inventario de la ronda; no sustituye la validación individual.
    acredita el sitio servido. El build por sí solo no confirma publicación.
 7. Repetir acciones/lecturas con sus mismos IDs. Ante envío incierto consultar
    el task real antes de reenviar; el outbox no vuelve una intención a pendiente.
-   Los cambios de captura sin cambios de negocio conservan evidencia sin nueva
-   tesis. Las revisiones verdaderas preservan versiones y motivo; una revisión
+   La identidad semántica incluye hechos Gold con precisión íntegra y texto
+   primario financiero normalizado, siempre desde originales verificados. Una
+   explicación o perspectiva material nueva puede requerir análisis con cifras
+   iguales. Capturas, comentarios HTML y metadatos de contenedor no lo disparan.
+   Antes de comparar una cabeza legacy, reproducir SU expediente previo; conservar
+   sus IDs, `data_version`, recibos e intentos. `observe` sólo anota el metadato v2
+   equivalente con el escritor normal; no migrar a mano el ledger. `claim` conserva
+   la compatibilidad con el digest v1 y salidas exactas del propio trabajo. Si no
+   se verifica el primario previo, bloquear en vez de asumir equivalencia numérica.
+   Los perfiles Q2/Q3 y el ZIP Volaris admitido siguen acotados; no afirmar soporte
+   automático de un trimestre futuro. Las revisiones preservan versiones y motivo; una revisión
    cruzada necesita relevancia material documentada, no reescritura universal.
    Un bloqueo resuelto puede continuar el mismo worker nativo: retener la
    respuesta real de seguimiento y registrar `continue_existing_worker` con

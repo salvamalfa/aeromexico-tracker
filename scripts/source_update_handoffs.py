@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from scripts import source_update_handoff_routing as routing
+from scripts import source_update_semantic_identity as semantic
 from scripts.source_update_coordinator import digest, load, persist
 from src.source_updates import readiness
 from src.source_updates.calendar import local_time
@@ -37,19 +38,8 @@ CONSUMERS = [
     "src/dashboard/recorded_movements.py",
     "src/web_export/flights.py",
 ]
-PROVENANCE = {
-    "record_id",
-    "source_file",
-    "source_hash",
-    "ingested_at",
-    "parser_version",
-    "source_locator",
-    "source_row_number",
-    "source_column",
-    "source_table",
-    "native_parent_record_ids",
-    "native_parent_record_id",
-}
+PROVENANCE = semantic.LEGACY_PROVENANCE
+
 SKILLS = {
     "analysis": ".agents/skills/aeromexico-tracker-analysis/SKILL.md",
     "dashboard": ".agents/skills/airline-update-dashboard/SKILL.md",
@@ -186,7 +176,11 @@ def verify_candidate(observation: dict, workspace: Path) -> dict:
         if file_hash(original) not in source_hashes:
             raise ValueError("Publication document is not the original used by the verified financial rows")
     identity = meaningful_data(observation["item"], checked)
-    return {"checked": checked, "data_version": digest(identity), "source_binding": observation}
+    return {
+        "checked": checked,
+        **semantic.versions(observation["item"], identity),
+        "source_binding": observation,
+    }
 
 
 def enqueue(
@@ -228,7 +222,9 @@ def observe(state: dict, observation: dict, workspace: Path):
     key = f"{item['product']}:{item['period']}"
     previous_id = state["heads"].get(key)
     prior = state["sources"].get(previous_id)
-    if prior and prior["data_version"] == verified["data_version"]:
+    if prior and semantic.same_observation(
+        prior, verified, lambda binding: verify_candidate(binding, workspace)
+    ):
         # New availability/capture evidence is retained without creating another thesis.
         if observation not in prior["observations"]:
             prior["observations"].append(observation)
@@ -392,7 +388,7 @@ def transition(state: dict, action: dict, workspace: Path):
             raise ValueError("Only a current planned job can be sent; reconcile existing intent")
         source = state["sources"][job["source_id"]]
         fresh = verify_candidate(source["source_binding"], workspace)
-        if fresh["data_version"] != source["data_version"]:
+        if not semantic.bound_matches(source, fresh):
             raise ValueError("Source candidate changed before dispatch")
         owner = action["owner_lease_id"]
         if not isinstance(owner, str) or not owner.startswith("local_lease:") or not owner[12:]:

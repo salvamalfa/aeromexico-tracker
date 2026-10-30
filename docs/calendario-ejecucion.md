@@ -106,12 +106,31 @@ cruzada material necesita una decisión analítica explícita con fuentes y moti
 Los productos sin ruta ejecutable quedan fuera del handoff hasta implementarla;
 esa limitación no acredita que el flujo completo esté terminado.
 
-`data_version` identifica las filas de negocio de las tablas fact Gold candidatas.
-Conserva campos de significado y precisión numérica, excluye IDs de linaje y
-metadatos de captura. Cambiar sólo descarga, ruta o fecha no genera otra tesis.
-Una revisión numérica, de unidad, cobertura o definición sí cambia la versión.
-Una reversión posterior también se registra como una llegada nueva. Se conserva
-la versión previa y su motivo; nunca se sobreescribe el histórico para deduplicar.
+`data_version` usa `source_semantic_identity_v2`: filas de negocio de las tablas
+fact Gold candidatas y contexto primario financiero normalizado, leído de los
+originales retenidos con hash verificado. Conserva cada bit numérico, unidades,
+definiciones, operador, códigos literales y elegibilidad. Excluye linaje y datos
+de transporte (`downloaded_at`, `artifact_id`, `source_url`). En AM 3T26 compara
+sólo el cuerpo financiero del Exhibit 99.1; en Viva, texto de los PDF admitidos;
+en Volaris 3T26, tablas y notas de la reconstrucción autorizada y fijada por hash.
+No representa esa reconstrucción como bytes SEC originales. Los comentarios
+HTML, espacios y metadatos del contenedor no son una revisión de negocio.
+Un cambio material de explicación o perspectiva puede crear análisis aunque
+Gold numérico sea idéntico. El trabajo de datos conserva su comprobación propia
+y puede cerrar con `no_visual_change`; no publica por un cambio de hash solamente.
+
+Al observar una fuente posterior, el outbox reproduce también el expediente
+físico de la cabeza anterior. Una cabeza legacy conserva `data_version`, IDs,
+recibos e intentos existentes: sólo añade la identidad v2 comprobada mediante
+la escritura normal de `observe` si ambas ediciones son equivalentes. `claim`
+acepta un trabajo legacy sólo si su digest v1 y hashes de salidas originales
+siguen coincidiendo con su propio replay, incluso sin observación intermedia.
+No se crea trabajo por cambiar el algoritmo; no se migra usando la edición
+nueva como si fuera la anterior. Un expediente primario faltante o no verificable
+bloquea, sin volver a comparación sólo numérica. Una revisión real o reversión
+conserva versión, evidencia y motivo anteriores. Estos controles no amplían las
+ediciones admitidas: los perfiles actuales siguen limitados a Q2/Q3 de 2026 y
+Aerocivil a su binding Q3 con mes nativo julio; un periodo nuevo exige su perfil.
 
 1. Registrar una acción privada `observe`, con `operation_id` estable y `at`
    real, mediante `python -m scripts.source_update_handoffs --workspace
