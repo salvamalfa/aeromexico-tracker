@@ -137,7 +137,7 @@ def authorize(env):
         "owner_consent": {
             "source_reference": "synthetic-fixture-parent",
             "instruction": "synthetic fixture consent",
-            "received_at": "2026-10-30T19:00:00Z",
+            "received_at": "2026-10-29T19:00:00Z",
         },
     }
     raw = json.dumps(value).encode()
@@ -346,3 +346,19 @@ def test_owner_authority_timezone_is_not_invented(env):
     spec["authorization_sha256"] = digest(raw)
     with pytest.raises(ValueError, match="timezone"):
         update._authority(request, spec, env.tmp_path)
+
+
+@pytest.mark.parametrize("received_at", ["2099-01-01T00:00:00+00:00", "2099-01-01T00:00:00+14:00"])
+def test_owner_authority_received_in_future_cannot_authorize_publication(env, received_at):
+    spec, auth = authorize(env)
+    value = json.loads(auth.read_bytes())
+    value["owner_consent"]["received_at"] = received_at
+    raw = json.dumps(value).encode()
+    future = auth.with_name(digest(raw) + ".json")
+    future.write_bytes(raw)
+    request = {**env.request, "authorization": {"path": str(future), "sha256": digest(raw)}}
+    spec["authorization_sha256"] = digest(raw)
+    before = {p.relative_to(env.site): p.read_bytes() for p in env.site.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError, match="future"):
+        update._authority(request, spec, env.tmp_path)
+    assert before == {p.relative_to(env.site): p.read_bytes() for p in env.site.rglob("*") if p.is_file()}

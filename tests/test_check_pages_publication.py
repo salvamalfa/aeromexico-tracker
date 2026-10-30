@@ -202,3 +202,11 @@ def test_single_proof_is_manifest_bound_and_explicit_repository_is_used(tmp_path
     (tmp_path / "site/issuer-publication.json").write_text("{}")
     with pytest.raises(ValueError, match="manifest pins"):
         verifier_for(tmp_path / "site", repo)
+
+
+@pytest.mark.parametrize("proof,module", VERIFIERS)
+def test_undeclared_dangling_proof_never_selects_generic(tmp_path, proof, module):
+    (tmp_path / "publication_manifest.json").write_text(json.dumps({"files": []}))
+    (tmp_path / proof).symlink_to(tmp_path / "missing-target")
+    with pytest.raises(ValueError, match="Undeclared publication receipt"):
+        verifier_for(tmp_path, tmp_path)

@@ -10,7 +10,7 @@ import re
 import shutil
 import subprocess
 import tempfile
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from src.config import PATHS
@@ -121,8 +121,11 @@ def _authority(request, spec, repo):
         )
     ):
         raise ValueError("Movement authorization is revoked, incomplete or names a different release")
-    if datetime.fromisoformat(value["owner_consent"]["received_at"].replace("Z", "+00:00")).tzinfo is None:
+    received = datetime.fromisoformat(value["owner_consent"]["received_at"].replace("Z", "+00:00"))
+    if received.tzinfo is None:
         raise ValueError("Movement authority receipt must retain its actual timestamp and timezone")
+    if received > datetime.now(UTC):
+        raise ValueError("Movement authority receipt cannot be dated in the future")
     return path
 
 

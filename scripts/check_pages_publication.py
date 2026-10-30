@@ -30,7 +30,10 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
         if receipt in names and not (site / receipt).is_file():
             raise ValueError(f"declared publication receipt is missing: {receipt}")
     known = {receipt for receipt, _ in VERIFIERS}
-    if any((site / receipt).exists() and receipt not in names for receipt in known):
+    if any(
+        ((site / receipt).exists() or (site / receipt).is_symlink()) and receipt not in names
+        for receipt in known
+    ):
         raise ValueError("Undeclared publication receipt is present; cannot select a looser verifier")
     if any(re.fullmatch(r"[^/]+-publication\.json", name) and name not in known for name in names):
         raise ValueError("Unknown declared publication proof; add its explicit strong verifier")
