@@ -277,6 +277,17 @@ atómico. Coteja el cierre físico, metadatos Library, ledger, código, ancla y 
 tras los verificadores lentos. Conserva todas las tesis, datos financieros y bytes
 ajenos a los targets; permite solo sus payloads de movimientos, el contrato de
 Vuelos y la nueva clausura frontend revisada. Conserva los recursos históricos.
+La selección conjunta de aerolíneas combina únicamente componentes de
+movimientos con grano operador, designador literal, sentido y mes distintos.
+Conserva SHA y locator de cada original, rechaza duplicados o ediciones
+superpuestas y reconcilia cada subtotal; nunca suma esos movimientos a vuelos.
+
+Tras cambiar datos o tesis de `site/`, ejecutar
+`python -m scripts.chat.render_f29_coverage_matrix` y las pruebas
+`python -m pytest tests/test_chat_f29_final_campaign_preflight.py -q` antes de CI.
+La matriz F2.9 deriva los bytes conversacionales del sitio actual: se regenera
+la documentación, conservando fixture, Gold y pins, sin ejecutar campañas.
+
 Pages, outbox y el lector de baselines históricos comparten el selector de
 `check_pages_publication.py`. Cada recibo declarado debe coincidir con el SHA y
 el tamaño del manifiesto y nombrar un objeto commit existente. Si conserva

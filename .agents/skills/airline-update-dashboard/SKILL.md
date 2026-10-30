@@ -230,7 +230,13 @@ del job y `period=2026M07` del binding; no sustituirlos ni mover la captura.
    `period`, `site_path` y `manifest: {path, sha256}`. Ese estado acredita el build,
    no un despliegue. El ledger usa el verificador explícito del recibo presente;
    un fallo no permite caer al verificador genérico para eludirlo.
-3. Incluir `site/` generado en segundo commit del mismo PR inicialmente draft.
+3. Después de cada cambio financiero o de datos en `site/`, regenerar la matriz
+   documental F2.9 con `python -m scripts.chat.render_f29_coverage_matrix` y ejecutar
+   `python -m pytest tests/test_chat_f29_final_campaign_preflight.py -q` antes de CI.
+   La matriz incluye bytes de los payloads conversacionales actuales; cambiar una
+   tesis o dato puede cambiar esos bytes. Conservar el fixture, Gold y pins
+   congelados: regenerar su documentación, sin campañas ni llamadas pagadas.
+   Incluir `site/` y la matriz generada en el segundo commit del mismo PR inicialmente draft.
    Completar lifecycle. Esperar `test`/`web` del head final, dictamen Codex favorable
    e hilos resueltos; integrar con merge commit conforme a `AGENTS.md`.
 4. Seguir `.github/workflows/pages.yml` hasta que verificación, CI y deploy del
