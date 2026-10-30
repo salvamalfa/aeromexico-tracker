@@ -146,11 +146,11 @@ def replay(workspace, entity, period, retention, cutoff):
                 )
             except AssertionError as exc:
                 raise ValueError(f"Issuer source replay differs: {name}") from exc
-    return inputs, outputs[f"gold/{table}"], receipt_hash
+    return inputs, outputs[f"gold/{table}"], receipt_hash, details
 
 
 def package_for(workspace, entity, period, retention, cutoff):
-    inputs, frame, receipt_hash = replay(workspace, entity, period, retention, cutoff)
+    inputs, frame, receipt_hash, details = replay(workspace, entity, period, retention, cutoff)
     workspace = Path(workspace).resolve()
     sources, excerpts, metrics = [], [], []
     for role, (raw, meta) in sorted(inputs.items()):
@@ -229,12 +229,24 @@ def package_for(workspace, entity, period, retention, cutoff):
             if len(selected) != 1:
                 raise ValueError(f"Exact comparable metric missing/ambiguous: {key}/{year}")
             add_metric(next(selected.itertuples()), key, f"{year}Q3")
+    if entity == "VIVA_AEROBUS":
+        days = set(frame.loc[frame.edition == period, "report_date"])
+        if len(days) != 1:
+            raise ValueError("Ambiguous issuer report date")
+        report_date = next(iter(days))
+    else:
+        report_date = details["report_date"]
+    if datetime.fromisoformat(report_date).date().isoformat() != report_date:
+        raise ValueError("Issuer report date must be an exact day")
+    if report_date > datetime.fromisoformat(cutoff).date().isoformat():
+        raise ValueError("Issuer report date follows the source cutoff")
     base = dict(
         schema_version="entity_evidence_v1",
         source_profile=PROFILE,
         entity_key=entity,
         period_id=period,
         cutoff_date=datetime.fromisoformat(cutoff).date().isoformat(),
+        report_date=report_date,
         source_cutoff=cutoff,
         workspace=workspace.relative_to(PATHS.root).as_posix(),
         retention_id=retention,
@@ -351,8 +363,28 @@ def validate(draft, package, calculations):
     for key in ("entity_key", "period_id", "package_id", "evidence_fingerprint"):
         if draft.get(key) != package[key]:
             raise ValueError("Issuer draft identity differs")
-    if draft.get("calculation_fingerprint") != calculations["calculation_fingerprint"]:
+    expected_metadata = dict(
+        period_label=f"{package['period_id'][-1]}T{package['period_id'][2:4]}",
+        cutoff_date=package["cutoff_date"],
+        guidance_as_of=package["report_date"],
+        selection_mode=package["selection_mode"],
+    )
+    if any(draft.get(key) != value for key, value in expected_metadata.items()):
+        raise ValueError("Issuer public metadata differs from verified evidence")
+    if any(
+        calculations.get(key) != package[key]
+        for key in ("entity_key", "period_id", "package_id", "evidence_fingerprint")
+    ):
+        raise ValueError("Issuer calculation input identity differs")
+    if (
+        calculations.get("status") != "validated"
+        or draft.get("calculation_fingerprint") != calculations["calculation_fingerprint"]
+    ):
         raise ValueError("Issuer calculation identity differs")
+    if draft.get("reader_private_section_keys") or draft.get("context_claim_ids"):
+        raise ValueError("Compact issuer profile cannot hide or duplicate public claims")
+    if draft.get("summary_format", "paragraphs") != "paragraphs":
+        raise ValueError("Compact issuer summary format is paragraphs")
     if (
         draft.get("language") != "es-MX"
         or draft.get("model") is None
@@ -398,6 +430,12 @@ def validate(draft, package, calculations):
             raise ValueError("Company explanation needs a literal source span")
         if claim["type"] == "hypothesis" and not claim.get("limitations"):
             raise ValueError("Interpretation requires limitations")
+        lead = claim.get("lead", "")
+        if lead and (not text.startswith(lead) or re.search(r"[<>]", lead)):
+            raise ValueError("Claim lead must be an exact supported prefix")
+        for phrase in claim.get("emphasis", []):
+            if not phrase or text.count(phrase) != 1 or re.search(r"[<>]", phrase):
+                raise ValueError("Claim emphasis must be an exact supported span")
         rendered[cid] = text
     placements = [draft["thesis_claim_id"], *draft["summary_claim_ids"]]
     for section in draft["sections"]:

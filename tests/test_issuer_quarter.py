@@ -22,10 +22,18 @@ def example():
         period_id="2026Q3",
         package_id="package",
         evidence_fingerprint="evidence",
+        cutoff_date="2026-10-29",
+        report_date="2026-10-26",
+        selection_mode="retrospective_source_edition",
         excerpts=[dict(excerpt_id="excerpt", text="Exact quote")],
         metrics=[dict(metric_id="metric_revenue")],
     )
-    calc = dict(calculation_fingerprint="calculation", nodes=[node])
+    calc = dict(
+        calculation_fingerprint="calculation",
+        nodes=[node],
+        status="validated",
+        **{k: package[k] for k in ("entity_key", "period_id", "package_id", "evidence_fingerprint")},
+    )
     claim = dict(
         claim_id="entry",
         type="observed_fact",
@@ -42,6 +50,10 @@ def example():
     draft = dict(
         schema_version="entity_analyst_v1",
         source_profile=issuer.PROFILE,
+        period_label="3T26",
+        cutoff_date=package["cutoff_date"],
+        guidance_as_of=package["report_date"],
+        selection_mode=package["selection_mode"],
         state="draft",
         entity_key=package["entity_key"],
         period_id=package["period_id"],
@@ -150,3 +162,34 @@ def test_same_private_artifact_is_idempotent_and_conflicting_bytes_rejected(tmp_
     with pytest.raises(ValueError, match="Immutable"):
         issuer.immutable(path, {"source": "different"})
     assert before == path.read_bytes()
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("period_label", "4T99"),
+        ("cutoff_date", "2099-12-31"),
+        ("guidance_as_of", "2099-12-31"),
+        ("selection_mode", "prospective_official"),
+    ],
+)
+def test_public_metadata_cannot_override_frozen_evidence(field, value):
+    draft, package, calculations = example()
+    draft[field] = value
+    with pytest.raises(ValueError, match="public metadata"):
+        issuer.validate(draft, package, calculations)
+
+
+@pytest.mark.parametrize("field", ["entity_key", "period_id", "package_id", "evidence_fingerprint", "status"])
+def test_calculation_identity_must_match_same_evidence(field):
+    draft, package, calculations = example()
+    calculations[field] = "another edition"
+    with pytest.raises(ValueError, match="calculation"):
+        issuer.validate(draft, package, calculations)
+
+
+def test_compact_profile_cannot_hide_provenance_section():
+    draft, package, calculations = example()
+    draft["reader_private_section_keys"] = ["methodology"]
+    with pytest.raises(ValueError, match="cannot hide"):
+        issuer.validate(draft, package, calculations)
