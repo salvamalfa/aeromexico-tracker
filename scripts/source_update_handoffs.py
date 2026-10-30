@@ -435,6 +435,10 @@ def transition(state: dict, action: dict, workspace: Path):
         if job["native_response"] and job["native_response"] != action["native_response"]:
             raise ValueError("Another native worker is already bound to this intention")
         job.update(status="running", native_response=action["native_response"])
+    elif kind == "refresh_analysis_approval":
+        from scripts.source_update_handoff_review import refresh
+
+        refresh(state, job, action, ROOT)
     elif kind == "finish":
         if job["status"] != "running":
             raise ValueError("A real acknowledged worker must complete this handoff")

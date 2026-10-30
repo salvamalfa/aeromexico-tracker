@@ -169,6 +169,32 @@ el corte de la evidencia y la autorización actual; no se presenta como una
 ejecución automática anterior. Aplica también al 30/oct si el código de los
 nuevos tramos termina después de su actualización de fuentes.
 
+Si una corrección del código invalida una aprobación técnica **todavía no
+publicada**, la operación `refresh_analysis_approval` permite conservar el
+trabajo editorial y revisar su nueva identidad técnica. Es una recuperación
+acotada: requiere el mismo texto completo, `content_hash`, paquete, cálculos,
+producto, periodo y `data_version`; debe cambiar de verdad el código o la skill
+ligados al registro. No permite cambios de prosa o datos, revocaciones previas,
+análisis superados ni descendientes de dashboard en envío incierto, ejecutándose,
+construidos o servidos. Un worker activo debe reconciliarse antes de esta operación.
+
+El agente conserva el mismo worker y registra su nueva versión mediante el
+lifecycle normal: importación, auditoría y aprobación vigente. Después presenta
+al outbox un JSON con `action=refresh_analysis_approval`, `operation_id`, `at`,
+`job_id`, `owner_lease_id` original, `previous_result={path,sha256}` exacto,
+`receipt={path,sha256}` del nuevo `analysis_approved`,
+`review_report={path,sha256}` y `reason` concreto. El informe físico se compara
+con el audit registrado y su hash canónico; su SHA de archivo es otra identidad.
+El CLI no fabrica una aprobación. Conserva ambos recibos en `receipt_history`
+y añade referencias, motivo y aprobaciones en `technical_review_history`.
+No crea trabajos o envíos, ni cambia cabezas, fuentes o versiones de datos.
+
+Si un dashboard dependiente ya estaba trabajando, retener su recibo real de
+bloqueo y continuar ese mismo worker con `continue_existing_worker` y un
+follow-up nativo después de registrar la revisión. No reescribir su intención
+original ni volver a despacharlo. Repetir la misma operación y argumentos
+es idempotente; reutilizar su ID con otros argumentos se rechaza.
+
 `mode=validated_publication_arrival` permite procesar un financiero individual
 confirmado antes de la fecha consolidada y sin que existan los otros reportes.
 No exige que el periodo ya esté en las tareas preplanificadas. Sí exige el
