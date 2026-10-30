@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import copy
 import math
-from dataclasses import asdict
 
 from src.dashboard.entities import ENTITY_BY_KEY
 from src.dashboard.executive_summary import (
     _entity_kpi_definitions,
     _period_label,
     _period_view,
-    _point_comparison,
-    _previous_quarter,
 )
 
 MILE_KM = 1.609344
@@ -72,6 +69,8 @@ def executive_projection(baseline: dict, package: dict) -> dict:
     prior["2025Q3"] = comparative
     definitions = [dict(d) for d in _entity_kpi_definitions(ENTITY_BY_KEY[entity], "reported")]
     for definition in definitions:
+        if definition["key"] == "load_factor":
+            definition["key"] = "load_factor_reported"
         if definition["key"] == "passengers":
             definition.update(
                 label="Pasajeros con boleto",
@@ -79,25 +78,21 @@ def executive_projection(baseline: dict, package: dict) -> dict:
                     "Clientes con boleto según el reporte; no equivale a pasajeros observados en vuelo."
                 ),
             )
+    # The shared renderer recognizes this internal alias as a percentage-point
+    # metric for both KPI comparisons and generated conclusions. Keep the alias
+    # ephemeral: public records and the entity KPI retain their existing keys.
     view = _period_view(
-        current,
-        prior,
+        {**current, "load_factor_reported": current["load_factor"]},
+        {p: {**r, "load_factor_reported": r["load_factor"]} for p, r in prior.items()},
         definitions=tuple(definitions),
-        load_key="load_factor",
+        load_key="load_factor_reported",
         subject=ENTITY_BY_KEY[entity].subject,
         load_verb="reportó",
         industry=None,
     )
-    previous = prior.get(_previous_quarter(period))
     for kpi in view["kpis"]:
-        if kpi["key"] == "load_factor":
-            kpi["yoy"] = asdict(_point_comparison(current["load_factor"], comparative["load_factor"]))
-            kpi["qoq"] = asdict(
-                _point_comparison(
-                    current["load_factor"],
-                    previous["load_factor"] if previous is not None else None,
-                )
-            )
+        if kpi["key"] == "load_factor_reported":
+            kpi["key"] = "load_factor"
     notes = [
         "Julio–septiembre de 2026; comparativo anual del mismo reporte. "
         "Los nueve meses acumulados y los saldos al cierre quedan separados.",

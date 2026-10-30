@@ -95,6 +95,9 @@ def test_reported_occupancy_comparisons_use_percentage_points(
         "display": expected_qoq,
         "direction": "up",
     }
+    assert block["views"]["2026Q3"]["conclusions"][1].endswith(f"La ocupación cambió {expected_qoq}.")
+    assert "load_factor_reported" not in block["records"][-1]
+    assert not any(k["key"] == "load_factor_reported" for k in block["views"]["2026Q3"]["kpis"])
     assert block["records"][:-1] == before["entities"][entity]["records"]
     assert {p: v for p, v in block["views"].items() if p != "2026Q3"} == before["entities"][entity]["views"]
     assert baseline == before
@@ -113,6 +116,7 @@ def test_missing_occupancy_quarter_comparison_stays_unavailable(projected, entit
     after = projection.executive_projection(baseline, package)
     load = next(k for k in after["entities"][entity]["views"]["2026Q3"]["kpis"] if k["key"] == "load_factor")
     assert load["qoq"] == {"available": False, "raw": None, "display": "No disponible", "direction": "na"}
+    assert "La ocupación cambió" not in " ".join(after["entities"][entity]["views"]["2026Q3"]["conclusions"])
 
 
 @pytest.mark.parametrize("entity,period", [("INDUSTRY", "2026Q3"), ("VOLARIS", "2026Q4")])
