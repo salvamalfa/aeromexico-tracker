@@ -591,3 +591,12 @@ solicitado y `source_period` nativo. Readiness y el binding usan el mes real del
 original. Por ejemplo, una tarea de septiembre puede entregar AFAC agosto o BTS
 julio; no se etiqueta el contenido como septiembre. El publisher usa ese mes
 nativo en su request y la verificación del handoff coteja ambos contextos.
+
+
+La proyección corporativa mensual de Viva y Volaris es independiente de la de
+AM y de AFAC. Guarda cada emisor en `corporate_peer_monthly_passengers` sin tocar
+el bloque de la otra aerolínea. La gráfica existente ofrece la base corporativa
+para una sola aerolínea y conserva AFAC en comparaciones. Son tramos reservados,
+incluido fletamento, con unidad, preliminar y atribución del reporte. Muestra el
+mes y su comparativo anual de la misma edición, con documento/captura y fuente;
+no activa una historia retrospectiva, acumulados ni un trimestre incompleto.

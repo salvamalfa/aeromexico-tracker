@@ -22,6 +22,7 @@ export interface VuelosPayloadIntegradoV1 {
   quarters: Quarter[];
   monthly_passengers: MonthlyPassengers;
   corporate_monthly_passengers?: CorporateMonthlyPassengers;
+  corporate_peer_monthly_passengers?: CorporatePeerMonthlyPassengers;
   route_network: {
     world_geometry: WorldGeometry;
   };
@@ -157,6 +158,16 @@ export interface CorporateMonthlyPassengers {
       reconciliation_delta: number;
     }[]
   ];
+}
+export interface CorporatePeerMonthlyPassengers {
+  VIVA_AEROBUS?: CorporatePeerMonthlySeries;
+  VOLARIS?: CorporatePeerMonthlySeries1;
+}
+export interface CorporatePeerMonthlySeries {
+  entity: "VIVA_AEROBUS";
+}
+export interface CorporatePeerMonthlySeries1 {
+  entity: "VOLARIS";
 }
 export interface WorldGeometry {
   geojson: {};

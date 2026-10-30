@@ -32,6 +32,9 @@
   siete tesis y no autoriza periodos ni valores de fuente nuevos.
 
 ## 2026-10-30 · Actualización mensual selectiva
+- La gráfica mensual separa las series corporativas de las tres aerolíneas:
+  Viva/Volaris usan reservaciones de tramos de su edición y comparativo anual;
+  las comparaciones mantienen AFAC. No infiere trimestres desde meses incompletos.
 
 - Preparación de actualización mensual selectiva: gate compartido por fuente con
   replay físico y autoridad de exposición exacta; serie corporativa AM separada

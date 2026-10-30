@@ -16,6 +16,7 @@ describe("separate corporate monthly passenger basis", () => {
     document.body.innerHTML = '<p id="mix-source-inline"></p><label id="passenger-basis-control" hidden></label><select id="passenger-period"><option value="quarter">Trimestral</option><option value="month">Mensual</option></select><div id="mix-chart"></div>';
     window.matchMedia = vi.fn().mockReturnValue({ matches: false });
     state.passengerPeriod = "quarter"; state.passengerBasis = "afac";
+    state.corporatePeerMonthlyPassengers = {};
     state.monthlyPassengers = { records: ["04", "05", "06"].map((month) => ({ date: `2026-${month}-01`, domestic: 10, international: 5, total_segment_sum: 15 })) };
     state.corporateMonthlyPassengers = { entity: "AEROMEXICO", source_url: "https://ir.aeromexico.com/node/9131/html",
       source_sha256: "a".repeat(64), captured_at: "2026-10-28T22:09:43+00:00", documentary_date: "2026-10-06", scope: "company",
@@ -71,6 +72,23 @@ describe("separate corporate monthly passenger basis", () => {
     state.monthlyPassengers!.records[1]!.date = "2026-04-01";
     renderMix(record);
     expect(mocks.react.mock.calls[0]![1]).toEqual([]);
+  });
+  it.each(["VIVA_AEROBUS", "VOLARIS"] as const)("shows %s corporate bookings alone and leaves AFAC comparisons intact", (entity) => {
+    mocks.entities = [entity]; state.passengerBasis = "corporate";
+    state.corporatePeerMonthlyPassengers[entity] = {
+      ...state.corporateMonthlyPassengers!, entity, scope: "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter",
+      reporting_status: "preliminar", entity_attribution: "Universo corporativo; no censo de operadores AFAC",
+    };
+    renderMix(record);
+    expect(mocks.entity).not.toHaveBeenCalled();
+    expect(mocks.react.mock.calls[0]![1][2].y).toEqual([1892000, 1853000]);
+    expect(mocks.react.mock.calls[0]![2].shapes).toEqual([]);
+    expect(mocks.react.mock.calls[0]![2].yaxis.title.text).toBe("Tramos de pasajero reservados");
+    expect(document.getElementById("mix-source-inline")?.textContent).toContain("no pasajeros transportados");
+    expect(document.getElementById("mix-source-inline")?.textContent).toContain("comparativo anual reportados en la misma edición");
+    expect(document.getElementById("passenger-basis-control")?.hidden).toBe(false);
+    state.passengerBasis = "afac"; renderMix(record);
+    expect(mocks.entity).toHaveBeenCalledWith([entity], record, "month");
   });
   it("falls back to the retained AFAC chart when no corporate payload is present", () => {
     state.passengerBasis = "corporate"; state.corporateMonthlyPassengers = null;

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 IMPACTS = {
     "am_traffic_ir": ["AEROMEXICO"],
+    "viva_traffic": ["VIVA_AEROBUS"],
+    "volaris_traffic_ir": ["VOLARIS"],
     "afac_carriers": ["AEROMEXICO", "VIVA_AEROBUS", "VOLARIS"],
     "afac_airports": [],
     "bts_segments": [],
@@ -14,7 +16,11 @@ IMPACTS = {
 def entity(product):
     if product not in IMPACTS:
         raise ValueError("No selective monthly route for this source")
-    return "AEROMEXICO" if product == "am_traffic_ir" else None
+    return {
+        "am_traffic_ir": "AEROMEXICO",
+        "viva_traffic": "VIVA_AEROBUS",
+        "volaris_traffic_ir": "VOLARIS",
+    }.get(product)
 
 
 def publication_scope(product):

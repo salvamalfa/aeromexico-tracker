@@ -40,6 +40,7 @@
     },
     "monthly_passengers": { "$ref": "#/$defs/monthly_passengers" },
     "corporate_monthly_passengers": { "$ref": "#/$defs/corporate_monthly_passengers" },
+    "corporate_peer_monthly_passengers": { "$ref": "#/$defs/corporate_peer_monthly_passengers" },
     "route_network": {
       "type": "object",
       "additionalProperties": false,
@@ -247,6 +248,123 @@
         "domestic": { "type": "number" },
         "international": { "type": "number" },
         "total": { "type": "number" }
+      }
+    },
+
+    "corporate_peer_monthly_passengers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "VIVA_AEROBUS": {
+          "$ref": "#/$defs/corporate_peer_monthly_series",
+          "properties": {
+            "entity": {
+              "const": "VIVA_AEROBUS"
+            }
+          }
+        },
+        "VOLARIS": {
+          "$ref": "#/$defs/corporate_peer_monthly_series",
+          "properties": {
+            "entity": {
+              "const": "VOLARIS"
+            }
+          }
+        }
+      }
+    },
+
+    "corporate_peer_monthly_series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity",
+        "source_url",
+        "source_sha256",
+        "captured_at",
+        "documentary_date",
+        "scope",
+        "records",
+        "reporting_status",
+        "entity_attribution"
+      ],
+      "properties": {
+        "entity": {
+          "enum": [
+            "VIVA_AEROBUS",
+            "VOLARIS"
+          ]
+        },
+        "source_url": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "captured_at": {
+          "type": "string"
+        },
+        "documentary_date": {
+          "type": "string"
+        },
+        "scope": {
+          "const": "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter"
+        },
+        "records": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period_id",
+              "date",
+              "domestic",
+              "international",
+              "reported_total",
+              "total_segment_sum",
+              "reconciliation_delta"
+            ],
+            "properties": {
+              "period_id": {
+                "type": "string",
+                "pattern": "^[0-9]{4}M(0[1-9]|1[0-2])$"
+              },
+              "date": {
+                "type": "string"
+              },
+              "domestic": {
+                "type": "number",
+                "minimum": 0
+              },
+              "international": {
+                "type": "number",
+                "minimum": 0
+              },
+              "reported_total": {
+                "type": "number",
+                "minimum": 0
+              },
+              "total_segment_sum": {
+                "type": "number",
+                "minimum": 0
+              },
+              "reconciliation_delta": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "reporting_status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entity_attribution": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
 

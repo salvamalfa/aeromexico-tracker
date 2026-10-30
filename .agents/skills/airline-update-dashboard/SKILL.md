@@ -270,3 +270,14 @@ fletamento. Mantener fecha documental, captura y enlace; distinguir total report
 de suma de componentes redondeados. Los comparativos de la edición no reescriben
 AFAC ni otra edición. Un mes aislado no forma trimestre. Las llegadas de aeropuertos
 usan el adaptador aeroportuario y sus controles de grano/universo propios.
+
+
+Las series mensuales corporativas de Viva y Volaris usan
+`peer_monthly_projection` y `corporate_peer_monthly_passengers`, separadas de
+AFAC y de las cifras financieras trimestrales. Son reservaciones de tramos,
+no pasajeros observados transportados. Conservar estado preliminar, captura,
+fecha del documento, original y atribución de entidad: el reporte Viva identifica
+la marca sin establecer un operador legal. El selector corporativo está disponible
+solo para una aerolínea; las comparaciones de varias aerolíneas conservan AFAC.
+Septiembre 2025 es el comparativo de la edición septiembre 2026, no una fuente
+histórica capturada en 2025. No sumar acumulados ni construir 3T desde ese mes.

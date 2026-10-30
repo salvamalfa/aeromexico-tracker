@@ -28,11 +28,14 @@ export function renderMix(record: QuarterRecord): void {
   // Dashboard v2: anything but Aeroméxico alone reads AFAC by airline.
   const entities = selection("mix");
   const source = $("mix-source-inline");
-  const corporateAvailable = !!state.corporateMonthlyPassengers?.records.length;
   const amOnly = !entities.length || (entities.length === 1 && entities[0] === "AEROMEXICO");
+  const single = entities.length === 1 ? entities[0] : null;
+  const corporateSeries = amOnly ? state.corporateMonthlyPassengers
+    : single === "VIVA_AEROBUS" || single === "VOLARIS" ? state.corporatePeerMonthlyPassengers[single] : null;
+  const corporateAvailable = !!corporateSeries?.records.length;
   const basisControl = $("passenger-basis-control");
-  if (basisControl) basisControl.hidden = !amOnly || !corporateAvailable;
-  const corporate = amOnly && corporateAvailable && state.passengerBasis === "corporate";
+  if (basisControl) basisControl.hidden = !corporateAvailable;
+  const corporate = corporateAvailable && state.passengerBasis === "corporate";
   const periodControl = $("passenger-period") as HTMLSelectElement | null;
   if (periodControl) {
     const quarter = periodControl.querySelector<HTMLOptionElement>('option[value="quarter"]');
@@ -42,25 +45,27 @@ export function renderMix(record: QuarterRecord): void {
     state.passengerPeriod = "month";
     if (periodControl) periodControl.value = "month";
   }
-  if (entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
+  if (!corporate && entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
     if (source) source.textContent = "AFAC · pasajeros por aerolínea (regular y fletamento)";
     renderEntityMix(entities, record, state.passengerPeriod);
     return;
   }
+  const booked = corporate && corporateSeries && "reporting_status" in corporateSeries;
   if (source) {
+    const company = corporateSeries?.entity === "VOLARIS" ? "Volaris" : corporateSeries?.entity === "VIVA_AEROBUS" ? "Viva (marca)" : "Aeroméxico IR";
     source.textContent = corporate
-      ? `Aeroméxico IR · mes y comparativo anual reportados, incluye fletamento; no auditado. Documento ${state.corporateMonthlyPassengers!.documentary_date}; captura ${state.corporateMonthlyPassengers!.captured_at.slice(0, 10)}. No equivale a AFAC.`
+      ? `${company} · ${booked ? "reservaciones de tramos, no pasajeros transportados" : "pasajeros del reporte corporativo no auditado"}; mes y comparativo anual reportados en la misma edición; incluye fletamento. ${booked ? corporateSeries.reporting_status + ". " : ""}Documento ${corporateSeries!.documentary_date}; captura ${corporateSeries!.captured_at.slice(0, 10)}. No equivale a AFAC.${booked ? " " + corporateSeries.entity_attribution : ""}`
       : "AFAC · pasajeros transportados; serie histórica y ediciones verificadas";
     if (corporate) {
       const link = document.createElement("a");
-      link.href = state.corporateMonthlyPassengers!.source_url;
+      link.href = corporateSeries!.source_url;
       link.textContent = " Reporte fuente";
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       source.append(link);
     }
   }
-  const series = corporate ? state.corporateMonthlyPassengers! : state.monthlyPassengers!;
+  const series = corporate ? corporateSeries! : state.monthlyPassengers!;
   const monthlyPoints = series.records.map((point) => ({ ...point, period_label: dateLabel(point.date) }));
   const quarterGroups = new Map<string, QuarterPoint>();
   const quarterMonths = new Map<string, string[]>();
@@ -121,7 +126,7 @@ export function renderMix(record: QuarterRecord): void {
       : "<span style='color:#182233'>■</span> <b>Total</b> %{customdata[1]:,.0f}",
     "<span style='color:#003087'>■</span> Nacional %{customdata[2]:,.0f} (%{customdata[4]:.1%})",
     "<span style='color:#c99400'>■</span> Internacional %{customdata[3]:,.0f} (%{customdata[5]:.1%})",
-    ...(corporate ? ["Componentes publicados redondeados; pueden diferir del total."] : []),
+    ...(corporate ? ["Mes y comparativo anual de la misma edición; no son una serie histórica reconstruida.", "Componentes publicados redondeados; pueden diferir del total."] : []),
     "<extra></extra>",
   ].join("<br>");
   const traces: Data[] = [
@@ -155,13 +160,13 @@ export function renderMix(record: QuarterRecord): void {
       dtick: state.passengerPeriod === "quarter" ? (veryNarrow ? "M24" : "M12") : (veryNarrow ? "M24" : narrow ? "M12" : "M6"), tickangle: 0,
       range: [rangeStart.toISOString(), rangeEnd.toISOString()], tickfont: { size: narrow ? 8 : 10 },
     },
-    yaxis: { rangemode: "tozero", gridcolor: "#e7ebf1", tickformat: ".2s", title: { text: "Pasajeros" } },
-    shapes: [{
+    yaxis: { rangemode: "tozero", gridcolor: "#e7ebf1", tickformat: ".2s", title: { text: booked ? "Tramos de pasajero reservados" : "Pasajeros" } },
+    shapes: corporate ? [] : [{
       type: "rect", xref: "x", yref: "paper", x0: record.metrics.passengers.period_start,
       x1: record.metrics.passengers.period_end, y0: 0, y1: 1,
       fillcolor: "rgba(0,48,135,.06)", line: { color: "rgba(0,48,135,.32)", width: 1, dash: "dot" }, layer: "below",
     }],
-    annotations: [{
+    annotations: corporate ? [] : [{
       x: record.metrics.passengers.period_start, y: 1, xref: "x", yref: "paper", xanchor: "left", yanchor: "bottom",
       text: record.period_label, showarrow: false, font: { size: 9, color: "#003087" },
     }],

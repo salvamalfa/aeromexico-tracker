@@ -26,6 +26,8 @@ def encoded(value):
 def adapter(product):
     if product == "am_traffic_ir":
         from . import am_monthly_projection as module
+    elif product in {"viva_traffic", "volaris_traffic_ir"}:
+        from . import peer_monthly_projection as module
     elif product == "afac_carriers":
         from . import afac_carrier_projection as module
     elif product == "afac_airports":

@@ -13,6 +13,7 @@ import type {
   FlightsMetadata,
   MonthlyPassengerSeries,
   CorporateMonthlyPassengerSeries,
+  CorporatePeerMonthlyPassengerSeries,
   Network,
   PeriodNetworkDocument,
   QuarterRecord,
@@ -38,6 +39,7 @@ export interface FlightsState {
   byPeriod: Map<string, QuarterRecord>;
   monthlyPassengers: MonthlyPassengerSeries | null;
   corporateMonthlyPassengers: CorporateMonthlyPassengerSeries | null;
+  corporatePeerMonthlyPassengers: Partial<Record<"VIVA_AEROBUS" | "VOLARIS", CorporatePeerMonthlyPassengerSeries>>;
   passengerBasis: "afac" | "corporate";
   worldGeometry: WorldGeometry | null;
   availablePeriods: AvailablePeriods;
@@ -89,6 +91,7 @@ export const state: FlightsState = {
   byPeriod: new Map(),
   monthlyPassengers: null,
   corporateMonthlyPassengers: null,
+  corporatePeerMonthlyPassengers: {},
   passengerBasis: "afac",
   worldGeometry: null,
   availablePeriods: { domestic: [], domestic_monthly: [], international: [] },
@@ -178,6 +181,7 @@ export function initState(quartersDoc: QuartersDocument): void {
   state.byPeriod = new Map(state.quarters.map((item) => [item.period_id, item]));
   state.monthlyPassengers = quartersDoc.monthly_passengers;
   state.corporateMonthlyPassengers = quartersDoc.corporate_monthly_passengers ?? null;
+  state.corporatePeerMonthlyPassengers = quartersDoc.corporate_peer_monthly_passengers ?? {};
   state.passengerBasis = "afac";
   state.worldGeometry = quartersDoc.route_network.world_geometry;
   state.availablePeriods = quartersDoc.available_periods;
