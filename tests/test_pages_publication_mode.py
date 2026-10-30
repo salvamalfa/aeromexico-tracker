@@ -43,7 +43,9 @@ def run_step(script, cwd):
     # Keep the workflow's actual branch and actual verifier modules. Only the
     # environment installer/launcher is replaced by this test's interpreter.
     script = "\n".join(line for line in script.splitlines() if "uv sync " not in line)
-    script = script.replace("uv run python ", f'"{sys.executable}" ')
+    script = script.replace(
+        "uv run --locked --no-group dev --extra analytics python ", f'"{sys.executable}" '
+    )
     helper = ROOT / "scripts/check_pages_publication.py"
     script = script.replace("../scripts/check_pages_publication.py", str(helper))
     script = script.replace(" scripts/check_pages_publication.py", f" {helper}")
