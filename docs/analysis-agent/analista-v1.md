@@ -1,5 +1,17 @@
 # Analista v1 · Etapa 16
 
+## Ediciones nuevas y handoff vigente
+
+La [skill de análisis](../../.agents/skills/aeromexico-tracker-analysis/SKILL.md)
+conserva el procedimiento vigente y la pauta de 200–300 palabras para nuevas
+ediciones. `issuer_quarter_v1` amplía el replay de fuentes validado a Viva y
+Volaris 3T26, con identidad por entidad/periodo/versión y el lifecycle existente.
+Las secciones fechadas siguientes describen contratos históricos; no se
+reformatean ni se les atribuye una aprobación nueva por esta ampliación.
+El analista entrega un borrador; auditoría independiente, autorización real y
+gate siguen siendo pasos separados antes de publicación.
+
+
 ## Revisión editorial posterior: resumen y ensayo de negocio
 
 La petición más reciente autoriza ampliar el resumen anterior, superando su
