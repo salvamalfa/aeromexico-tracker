@@ -42,9 +42,11 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   independiente y aprobación vinculados a su versión exacta. Su publicación
   editorial exige baseline remoto y servido, CI, revisión y verificación de Pages.
   La lectura tiene un selector independiente. Aeroméxico conserva su modalidad
-  financiera acotada. La entrega por emisor de Viva 3T26 incorpora su tesis
-  aprobada y los indicadores de las tarjetas, tres gráficas y tabla existentes,
-  con fuentes y aprobación propias. Industria y Volaris conservan sus cortes.
+  financiera acotada. Las entregas por emisor de Viva y Volaris 3T26 incorporan
+  sus tesis aprobadas y los indicadores de las tarjetas, tres gráficas y tabla
+  existentes, con fuentes y aprobaciones propias. Industria conserva su corte.
+  Volaris usa la reconstrucción visible autorizada del reporte de referencia;
+  no se certifican sus bytes originales SEC ni revisiones posteriores.
   Los recibos distinguen build verificado, integración y publicación servida.
   Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
   conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
