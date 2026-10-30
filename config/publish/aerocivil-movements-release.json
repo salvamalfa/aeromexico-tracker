@@ -5,9 +5,9 @@
   "stage": "movements",
   "baseline_commit": "9a33eef8f6aeb1e474c51755c633ea629af67fd3",
   "baseline_manifest_sha256": "f075c0be12603b8d9c222ed04cfbd196f29a089d0de14f2c41369a38f9a30267",
-  "producer_code_version": "7b515fd76a208a70ec4de27f6d76d26e60a66c86f6019dbf187097b7de9b71b0",
+  "producer_code_version": "bc0d50e518d3a954f78e1a6d76eaf73c9604c3e701cdd0802e2c0b0a755212e2",
   "flights_contract_sha256": "6b5626c10552c7a3af385a6aa6a251fadef31f0e317067c6532869a9c0a96721",
-  "authorization_sha256": "6ef587606ffbb4c6e1968f619aaf551bb5de12b3f06d9769d4dd6725e47ee5cc",
+  "authorization_sha256": "df4db599408aa21499a0c2647e49c94b4bca2693d6dfcafe5c76fa6332cb1c8e",
   "source_binding": {
     "product": "aerocivil",
     "period": "2026M07",
