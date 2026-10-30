@@ -16,6 +16,7 @@ from pathlib import Path
 
 from scripts import source_update_handoff_routing as routing
 from scripts import source_update_semantic_identity as semantic
+from scripts import source_update_monthly_handoff as monthly
 from scripts.source_update_coordinator import digest, load, persist
 from src.source_updates import readiness
 from src.source_updates.calendar import local_time
@@ -25,6 +26,7 @@ from src.source_updates.collection import safe_workspace, writer
 
 ENTITIES = {"am_financials": "AEROMEXICO", "volaris_sec": "VOLARIS", "viva_financials": "VIVA_AEROBUS"}
 IMPACTS = {
+    **monthly.IMPACTS,
     **{k: [v] for k, v in ENTITIES.items()},
     **{k: [] for k in ("banxico", "fuel", "equities")},
     "aerocivil": ["AEROMEXICO"],
@@ -123,8 +125,8 @@ def verify_source(observation: dict, workspace: Path) -> dict:
         raise ValueError("Distinguish the scheduled result from recovery of existing evidence")
     if mode == "validated_publication_arrival":
         # A confirmed individual report does not wait for the consolidated round.
-        if product not in ENTITIES:
-            raise ValueError("Publication-arrival route is limited to the three issuer financials")
+        if product not in ENTITIES and product not in monthly.IMPACTS:
+            raise ValueError("Publication-arrival route requires a reviewed selective source adapter")
         checked_ref(observation["publication_evidence"])
     else:
         task = calendar["tasks"][observation["source_task_key"]]
@@ -244,7 +246,9 @@ def observe(state: dict, observation: dict, workspace: Path):
         "observations": [observation],
         "previous_source_id": state["heads"].get(key),
         "public_impact": {
-            "status": routing.impact_status(item["product"]),
+            "status": monthly.impact_status(item["product"])
+            if item["product"] in monthly.IMPACTS
+            else routing.impact_status(item["product"]),
             "consumer_code": {name: file_hash(ROOT / name) for name in CONSUMERS},
         },
     }
@@ -254,6 +258,8 @@ def observe(state: dict, observation: dict, workspace: Path):
         enqueue(state, "dashboard", source_id, ENTITIES[item["product"]], release_kind="data")
     elif item["product"] == "aerocivil":
         enqueue(state, "dashboard", source_id, "AEROMEXICO", release_kind="movements")
+    elif item["product"] in monthly.IMPACTS:
+        enqueue(state, "dashboard", source_id, monthly.entity(item["product"]), release_kind="source_data")
     # Macro inputs currently have no public chart consumer. Preserve the result
     # without inventing a dashboard job or forcing an unrelated thesis rewrite.
 
@@ -278,7 +284,7 @@ def envelope(state: dict, job: dict) -> dict:
             "VIVA_AEROBUS, VOLARIS and the existing INDUSTRY aggregate; preserve seven theses; "
             "no new periods, source values, Industry editorial or unrelated products"
             if source["product"] == "aerocivil"
-            else "AEROMEXICO,VIVA_AEROBUS,VOLARIS; exclude Industria and unrelated products"
+            else monthly.scope_or_financial(source["product"])
         ),
         "dependency_result": state["jobs"][job["dependency"]]["result"] if job["dependency"] else None,
     }
@@ -333,6 +339,8 @@ def verify_analysis(job: dict, source: dict, result: dict) -> dict:
 
 
 def verify_release_binding(job: dict, source: dict):
+    if source["source_binding"]["item"]["product"] in monthly.IMPACTS:
+        return monthly.verify_release(job, source, expected_binding(source))
     routing.verify_release(job, source, expected_binding(source))
 
 
@@ -344,7 +352,7 @@ def verify_dashboard(result: dict) -> None:
     if manifest != site / "publication_manifest.json":
         raise ValueError("Publication manifest is not inside the verified site")
     # Select one current, witnessed publication; a failed strong gate never falls back.
-    errors = routing.verify_site(site, ROOT)
+    errors = monthly.verify_site(site, ROOT)
     if errors:
         raise ValueError(f"Generated site failed its canonical verification: {errors}")
 

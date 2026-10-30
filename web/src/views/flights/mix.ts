@@ -28,13 +28,39 @@ export function renderMix(record: QuarterRecord): void {
   // Dashboard v2: anything but Aeroméxico alone reads AFAC by airline.
   const entities = selection("mix");
   const source = $("mix-source-inline");
+  const corporateAvailable = !!state.corporateMonthlyPassengers?.records.length;
+  const amOnly = !entities.length || (entities.length === 1 && entities[0] === "AEROMEXICO");
+  const basisControl = $("passenger-basis-control");
+  if (basisControl) basisControl.hidden = !amOnly || !corporateAvailable;
+  const corporate = amOnly && corporateAvailable && state.passengerBasis === "corporate";
+  const periodControl = $("passenger-period") as HTMLSelectElement | null;
+  if (periodControl) {
+    const quarter = periodControl.querySelector<HTMLOptionElement>('option[value="quarter"]');
+    if (quarter) quarter.disabled = corporate;
+  }
+  if (corporate) {
+    state.passengerPeriod = "month";
+    if (periodControl) periodControl.value = "month";
+  }
   if (entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
     if (source) source.textContent = "AFAC · pasajeros por aerolínea (regular y fletamento)";
     renderEntityMix(entities, record, state.passengerPeriod);
     return;
   }
-  if (source) source.textContent = "AFAC Gold · serie mensual consolidada";
-  const series = state.monthlyPassengers!;
+  if (source) {
+    source.textContent = corporate
+      ? `Aeroméxico IR · mes y comparativo anual reportados, incluye fletamento; no auditado. Documento ${state.corporateMonthlyPassengers!.documentary_date}; captura ${state.corporateMonthlyPassengers!.captured_at.slice(0, 10)}. No equivale a AFAC.`
+      : "AFAC Gold · serie mensual consolidada";
+    if (corporate) {
+      const link = document.createElement("a");
+      link.href = state.corporateMonthlyPassengers!.source_url;
+      link.textContent = " Reporte fuente";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      source.append(link);
+    }
+  }
+  const series = corporate ? state.corporateMonthlyPassengers! : state.monthlyPassengers!;
   const monthlyPoints = series.records.map((point) => ({ ...point, period_label: dateLabel(point.date) }));
   const quarterGroups = new Map<string, QuarterPoint>();
   monthlyPoints.forEach((point) => {
@@ -70,14 +96,17 @@ export function renderMix(record: QuarterRecord): void {
         : new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" }).format(
             new Date(`${point.date}T00:00:00Z`)
           );
-    const total = point.total_segment_sum;
+    const total = corporate && "reported_total" in point ? Number(point.reported_total) : point.total_segment_sum;
     return [heading, total, point.domestic, point.international, total ? point.domestic / total : 0, total ? point.international / total : 0];
   });
   const hoverTemplate = [
     "<b>%{customdata[0]}</b>",
-    "<span style='color:#182233'>■</span> <b>Total</b> %{customdata[1]:,.0f}",
+    corporate
+      ? "<span style='color:#182233'>■</span> <b>Total reportado</b> %{customdata[1]:,.0f}"
+      : "<span style='color:#182233'>■</span> <b>Total</b> %{customdata[1]:,.0f}",
     "<span style='color:#003087'>■</span> Nacional %{customdata[2]:,.0f} (%{customdata[4]:.1%})",
     "<span style='color:#c99400'>■</span> Internacional %{customdata[3]:,.0f} (%{customdata[5]:.1%})",
+    ...(corporate ? ["Componentes publicados redondeados; pueden diferir del total."] : []),
     "<extra></extra>",
   ].join("<br>");
   const traces: Data[] = [
@@ -92,8 +121,9 @@ export function renderMix(record: QuarterRecord): void {
       customdata: hoverData, hovertemplate: hoverTemplate,
     },
     {
-      type: "scatter", mode: "lines+markers", x: points.map((point) => point.date),
-      y: points.map((point) => point.total_segment_sum), name: "Total",
+      type: "scatter", mode: corporate ? "markers" : "lines+markers", x: points.map((point) => point.date),
+      y: points.map((point) => corporate && "reported_total" in point ? Number(point.reported_total) : point.total_segment_sum),
+      name: corporate ? "Total reportado" : "Total",
       connectgaps: false, line: { color: "#182233", width: 2.5 },
       marker: { color: "#fff", line: { color: "#182233", width: 1.5 }, size: 6 },
       customdata: hoverData, hovertemplate: hoverTemplate,

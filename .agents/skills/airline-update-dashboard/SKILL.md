@@ -252,3 +252,21 @@ del job y `period=2026M07` del binding; no sustituirlos ni mover la captura.
    el resultado validado anterior; no repetir adquisición o análisis ya cerrados.
    Un envío incierto mantiene su intención hasta comprobarlo. No crear calendarios,
    monitores, reintentos diarios, aprobaciones ni revisiones históricas para pasarlo.
+
+
+## Fuentes mensuales independientes
+
+Para `release_kind=source_data`, seguir la receta de
+`src/publish/README.md` (Llegadas mensuales). Ejecutar
+`src.publish.source_data_update --inspect`, cotejar el alcance exacto y el
+consentimiento real de exposición, preparar/confirmar los pins y ejecutar su gate.
+No añadir aprobación ni tesis por una llegada operativa. El manifiesto editorial
+anterior completo debe conservarse, con verificación de sus cohortes congeladas.
+
+El adaptador AM `am_monthly_projection` reproduce la fuente original y las siete
+salidas del candidato con disponibilidad en su corte retenido. Su gráfica usa un
+selector explícito entre AFAC y el reporte corporativo no auditado, que incluye
+fletamento. Mantener fecha documental, captura y enlace; distinguir total reportado
+de suma de componentes redondeados. Los comparativos de la edición no reescriben
+AFAC ni otra edición. Un mes aislado no forma trimestre. Las llegadas de aeropuertos
+usan el adaptador aeroportuario y sus controles de grano/universo propios.

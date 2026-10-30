@@ -31,6 +31,13 @@
   incluido el agregado de Industria, de una publicación editorial. Conserva las
   siete tesis y no autoriza periodos ni valores de fuente nuevos.
 
+## 2026-10-30 · Actualización mensual selectiva
+
+- Preparación de actualización mensual selectiva: gate compartido por fuente con
+  replay físico y autoridad de exposición exacta; serie corporativa AM separada
+  de AFAC en la gráfica mensual. Conserva las lecturas y el resto del sitio; el
+  código preparado no acredita publicación servida.
+
 ## 2026-10-30 · Volaris 3T26: tesis e indicadores por emisor
 
 - Entrega combinada del análisis aprobado de Volaris y su proyección financiera,

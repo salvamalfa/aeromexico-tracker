@@ -12,6 +12,7 @@ from pathlib import Path
 
 VERIFIERS = (
     ("aerocivil-movements-publication.json", "src.publish.movements_scope"),
+    ("source-data-publication.json", "src.publish.source_data_scope"),
     ("issuer-publication.json", "src.publish.issuer_scope"),
     ("financial-publication.json", "src.publish.financial_scope"),
     ("editorial-publication.json", "src.publish.editorial"),

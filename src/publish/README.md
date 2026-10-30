@@ -521,3 +521,44 @@ reproducen las fuentes completas. Los verificadores generales permanecen intacto
 las excepciones semánticas de datos antiguos solo aplican tras demostrar sus
 bytes exactos contra Git y el baseline servido. CI, revisión, merge normal,
 Pages y verificación real por HTTPS siguen siendo obligatorios.
+
+
+### Llegadas mensuales de datos por fuente
+
+`src.publish.source_data_update` incorpora una fuente validada sin esperar otra
+fuente ni redactar una tesis. Conserva íntegro el manifiesto editorial servido
+(siete lecturas en el corte de octubre de 2026), reproduce sus cohortes con sus
+productores históricos y cambia solo el payload de su adaptador revisado.
+Aeroméxico IR añade una serie corporativa mensual separada en
+`flights/quarters.json`; no sustituye AFAC ni agrega un trimestre desde un mes.
+Los adaptadores aeroportuarios usan su propio universo de demanda.
+
+El request privado `source_data_request_v1` declara `product`, `period`,
+`source_profile: {path, sha256}`, `record_paths` con todos los registros exactos
+del manifiesto anterior y `authorization`, inicialmente `null`. El perfil AM
+`am_monthly_source_profile_v1` contiene `item` de readiness y `as_of` congelado.
+El replay contrasta originales, sidecars, recibos, siete salidas y disponibilidad
+al corte retenido; una recuperación no acredita actualidad del día de ejecución.
+
+```bash
+python -m src.publish.source_data_update --inspect <request.json>
+# Retener la autorización de exposición real para authority_scope exacto.
+python -m src.publish.source_data_update --prepare <request.json>
+# Revisar y confirmar config/publish/source-data-release.json en Git.
+python -m src.publish.source_data_update --request <request.json> --out site/
+python -m src.publish.source_data_scope site/
+```
+
+`--inspect` no concede autoridad. `source_data_authorization_v1` exige estado
+`authorized`, el `scope` exacto inspeccionado y `owner_consent` con referencia,
+instrucción y fecha reales; vive por hash en el ledger privado de autorizaciones.
+No se fabrica desde un candidato ni reemplaza la aprobación editorial. El gate
+repite fuentes, cohorte, hashes, identidad Library y baseline antes del intercambio
+atómico. Requiere Git y Pages vigentes, no acepta una salida de otro producto,
+no activa Gold/warehouse ni permite `--ui-only` para introducir datos nuevos.
+
+El outbox mensual entrega `release_kind=source_data` al agente dashboard con
+su skill existente. Una llegada recuperada conserva el documento original y su
+fecha de captura; no crea una ejecución programada histórica inexistente. El
+build local, la integración y la comprobación HTTPS/browser servida se registran
+como estados distintos conforme al flujo general.

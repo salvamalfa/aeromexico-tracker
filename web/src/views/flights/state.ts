@@ -12,6 +12,7 @@ import type {
   MapCoverage,
   FlightsMetadata,
   MonthlyPassengerSeries,
+  CorporateMonthlyPassengerSeries,
   Network,
   PeriodNetworkDocument,
   QuarterRecord,
@@ -36,6 +37,8 @@ export interface FlightsState {
   quarters: QuarterRecord[];
   byPeriod: Map<string, QuarterRecord>;
   monthlyPassengers: MonthlyPassengerSeries | null;
+  corporateMonthlyPassengers: CorporateMonthlyPassengerSeries | null;
+  passengerBasis: "afac" | "corporate";
   worldGeometry: WorldGeometry | null;
   availablePeriods: AvailablePeriods;
 
@@ -85,6 +88,8 @@ export const state: FlightsState = {
   quarters: [],
   byPeriod: new Map(),
   monthlyPassengers: null,
+  corporateMonthlyPassengers: null,
+  passengerBasis: "afac",
   worldGeometry: null,
   availablePeriods: { domestic: [], domestic_monthly: [], international: [] },
 
@@ -172,6 +177,8 @@ export function initState(quartersDoc: QuartersDocument): void {
   state.quarters = quartersDoc.quarters;
   state.byPeriod = new Map(state.quarters.map((item) => [item.period_id, item]));
   state.monthlyPassengers = quartersDoc.monthly_passengers;
+  state.corporateMonthlyPassengers = quartersDoc.corporate_monthly_passengers ?? null;
+  state.passengerBasis = "afac";
   state.worldGeometry = quartersDoc.route_network.world_geometry;
   state.availablePeriods = quartersDoc.available_periods;
   state.periodIndex = Math.max(

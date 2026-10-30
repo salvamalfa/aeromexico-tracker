@@ -85,6 +85,13 @@ function wireControls(): void {
     state.networkMode = "international";
     await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
   });
+  $("passenger-basis")?.addEventListener("change", (event) => {
+    state.passengerBasis = (event.target as HTMLSelectElement).value === "corporate" ? "corporate" : "afac";
+    if (state.passengerBasis === "corporate") state.passengerPeriod = "month";
+    const period = $("passenger-period") as HTMLSelectElement;
+    period.value = state.passengerPeriod;
+    renderMix(state.quarters[state.periodIndex]!);
+  });
   $("passenger-period")!.addEventListener("change", (event) => {
     state.passengerPeriod = (event.target as HTMLSelectElement).value as "quarter" | "month";
     renderMix(state.quarters[state.periodIndex]!);

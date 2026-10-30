@@ -16,6 +16,7 @@ ARCHIVED_CONTRACTS = {
     ),
     "flights.schema.json": frozenset(
         {
+            "3eb5e9425dd346a38088ddef500ff0ff5f71d62dad6559bba7b486135f8ccc58",
             "17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7",
             "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6",
         }
