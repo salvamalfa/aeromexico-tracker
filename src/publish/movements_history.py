@@ -238,7 +238,10 @@ def typed_outputs(profile):
                         table_name=TABLE,
                         lineage_type="derived",
                         artifact_ids=tuple(artifacts.artifact_id),
-                        lineage_note="Recorded movements under provisional literal S/I codes; original and airport reference",
+                        lineage_note=(
+                            "Recorded movements under provisional literal S/I codes; "
+                            "original and airport reference"
+                        ),
                     )
                     for row in frame.itertuples(index=False)
                 ],
