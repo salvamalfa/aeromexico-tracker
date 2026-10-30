@@ -42,15 +42,14 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-      # Only jsonschema/PyYAML (src.publish.verify's own imports) are
-      # needed here, but the project has one locked environment; this
-      # never installs the "analytics" extra's heavier deps for nothing
-      # since uv resolves from the same lockfile CI already trusts.
+      # Strong publication profiles also load the existing analytics
+      # dependencies (for example, the movement-source contracts).
+      # Install them from the same lockfile without private inputs or rebuilds.
       - name: Install locked dependencies
-        run: uv sync --locked --no-group dev
+        run: uv sync --locked --no-group dev --extra analytics
       - name: Verify site/ (no private data, no rebuild)
         run: |
-          uv run python scripts/check_pages_publication.py site/
+          uv run --locked --no-group dev --extra analytics python scripts/check_pages_publication.py site/
 
   # Deploying site/ should never ship ahead of the same checks a PR into
   # master already had to pass: this reuses ci.yml itself (as a
@@ -129,8 +128,8 @@ jobs:
         name: Verify the preview's site/ with its own verifier
         working-directory: _preview
         run: |
-          uv sync --locked --no-group dev
-          uv run python ../scripts/check_pages_publication.py site/
+          uv sync --locked --no-group dev --extra analytics
+          uv run --locked --no-group dev --extra analytics python ../scripts/check_pages_publication.py site/
 
   deploy:
     needs: [verify, preview, ci]
