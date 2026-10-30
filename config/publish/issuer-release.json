@@ -1,0 +1,39 @@
+{
+  "schema_version": "issuer_release_v1",
+  "stage": "combined",
+  "baseline_commit": "b9e920ab225f3e89301b9859ead8e49e9f8c77b9",
+  "baseline_manifest_sha256": "51d3672eaf9b384ef41ee28f28c63d5a475d6dc2b428a324268ad3a4b13cbc81",
+  "entity_key": "VIVA_AEROBUS",
+  "period_id": "2026Q3",
+  "package_id": "VIVA_AEROBUS_2026Q3_6751fa65130d8e580066553dfd3fa6ac605ed29d0faa5fcd516caaf9dae6e641",
+  "evidence_fingerprint": "6751fa65130d8e580066553dfd3fa6ac605ed29d0faa5fcd516caaf9dae6e641",
+  "source_binding": {
+    "candidate_as_of": "2026-10-29T12:41:42.825028+00:00",
+    "output_sha256": {
+      "gold/bridge_record_lineage": "38fb3a92659160b4592dd81f55522f85809f747fa48f90aaf401812dc18df824",
+      "gold/dim_source_artifact": "9f667463975f5a069fb10e7a378719fb0f977b5e551814fbe11413e606b17357",
+      "gold/fact_viva_retained_financial_source_metrics": "280d89be42163624ec8bb0bcfa13d7f5aa13162b0b30681962e5c291dbc1ff73",
+      "silver/viva_financial_native": "4beecca35a94792c8732ff0bd0d9613ed054bfd354b523df4ef1adf452b20b97"
+    },
+    "period": "2026Q3",
+    "product": "viva_financials",
+    "receipt_id": "a8f2c8c3a957409699a5eb0a2397609c"
+  },
+  "analysis_entry": {
+    "period_id": "2026Q3",
+    "version": "df5678b61bfeb02435ecd83d03b0680940515cd06c27cfc34cc243d7a1400746",
+    "content_hash": "a83b123b638b1d52c2706e74de5ddc0c07e262fcf240e158a3f030313b785146",
+    "evidence_fingerprint": "6751fa65130d8e580066553dfd3fa6ac605ed29d0faa5fcd516caaf9dae6e641",
+    "approval_event": "af137de7c9fae5981486d7eddf329b41be831954412bb1e2adf71664dbeca327",
+    "audit_hash": "1cb4784597e61457a483339e64c83748b592c5cf5ef5ef3f464f0834a75e11fe",
+    "entity_key": "VIVA_AEROBUS"
+  },
+  "analysis_sha256": "327fd5b46c0f09f4f8a0fa92871bce7fbca9578fad9d4148c841b28542dd48a2",
+  "analysis_bytes": 7571,
+  "executive_sha256": "71be78c4ee27d0b9e706cdb6c40331a5148c0438e19a4ec4d335e38e161f109d",
+  "executive_bytes": 315725,
+  "producer_code_version": "a450029e4ffbc8ea1bc6982b79fe815e7d4911bfb0101dbbca0a909843288dfc",
+  "authorization_sha256": null,
+  "previous_entry": null,
+  "previous_file": null
+}

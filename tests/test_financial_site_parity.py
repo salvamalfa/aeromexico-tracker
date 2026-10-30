@@ -2,8 +2,15 @@
 
 import json
 from pathlib import Path
+
 import pytest
-from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, sha
+
+from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, encoded, sha
+from tests._site_publication_parity import (
+    preserved_financial_projection,
+    preserved_readings,
+    verify_current_publication,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
@@ -23,34 +30,34 @@ def financial_site(request):
     if "2026Q3" not in doc["views"]:
         unavailable(request, "Financial 3Q26 candidate has not been assembled")
     spec = anchor(ROOT)
-    raw = (SITE / EXECUTIVE).read_bytes()
-    assert sha(raw) == spec["executive_sha256"] and len(raw) == spec["executive_bytes"]
-    if (SITE / PROOF).exists():
-        verify_financial_publication = request.getfixturevalue("verify_financial_publication")
-        assert verify_financial_publication(SITE, ROOT) == []
-    else:
-        from src.publish.verify import verify_site
-
-        assert verify_site(SITE) == []
+    checker = request.getfixturevalue("verify_financial_publication")
+    verify_current_publication(SITE, ROOT, checker)
+    original = preserved_financial_projection(SITE, ROOT, spec)
+    assert sha(encoded(original)) == spec["executive_sha256"]
     return spec
 
 
-def test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources(financial_site, request):
+def test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources(
+    financial_site, request
+):
     from src.publish.financial_scope import preserved_executive, preserved_files, transport
 
     spec = financial_site
     before = json.loads(transport._git(ROOT, "show", f"{spec['baseline_commit']}:site/{EXECUTIVE}"))
-    after = json.loads((SITE / EXECUTIVE).read_bytes())
+    after = preserved_financial_projection(SITE, ROOT, spec)
+    preserved_readings(SITE, ROOT, spec)
     preserved_executive(before, after)
     assert after["metadata"]["default_period"] == before["metadata"]["default_period"]
     assert after["views"]["2026Q3"]["kpis"][0]["yoy"]["display"] == "+12.2%"
     if (SITE / PROOF).exists():
         frozen = preserved_files(SITE, ROOT, spec)
         assert len([p for p in frozen if p.startswith("data/v1/analysis/")]) == 5
-    from src.publish.financial_sources import replay_published_projection
+    from src.publish.financial_sources import approved_projection
 
     path = ROOT / "analysis_runs/drafts/2026Q3" / (financial_site["analysis_entry"]["version"] + ".json")
     if not path.is_file():
         unavailable(request, "Financial source record is not restored; complete replay is required")
-    expected = replay_published_projection(SITE, ROOT)
-    assert json.loads((SITE / EXECUTIVE).read_bytes()) == expected
+    from src.analysis_agent import lifecycle as flow
+
+    expected = approved_projection([path], spec, flow.ROOT, ROOT)
+    assert after == expected

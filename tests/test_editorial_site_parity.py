@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from src.publish.editorial import ANALYSIS, PROOF, anchor, preserved_files, verify_editorial
+from tests._site_publication_parity import verify_current_publication
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
@@ -20,11 +21,41 @@ def _unavailable(request, message):
 
 @pytest.fixture(scope="module")
 def editorial_site(request):
+    from scripts.check_pages_publication import verifier_for
     from src.publish.financial_scope import (
         PROOF as FINANCIAL_PROOF,
+    )
+    from src.publish.financial_scope import (
         anchor as financial_anchor,
     )
 
+    manifest_path = SITE / "publication_manifest.json"
+    assert not manifest_path.is_symlink(), "Publication manifest cannot be a symlink"
+    if not manifest_path.is_file():
+        assert not manifest_path.exists(), "Publication manifest must be a regular file"
+        assert not any(
+            (SITE / name).exists() or (SITE / name).is_symlink()
+            for name in (PROOF, FINANCIAL_PROOF, "issuer-publication.json")
+        ), "An existing publication receipt requires its manifest"
+        _unavailable(request, "Editorial candidate has not been assembled")
+    try:
+        profile = verifier_for(SITE)
+    except (ValueError, OSError, KeyError, TypeError) as error:
+        raise AssertionError(f"Invalid publication verification selection: {error}") from error
+    assert profile in {
+        "src.publish.verify",
+        "src.publish.editorial",
+        "src.publish.financial_scope",
+        "src.publish.issuer_scope",
+    }, f"Unsupported publication verifier: {profile}"
+    if profile == "src.publish.issuer_scope":
+        checker = request.getfixturevalue("verify_financial_publication")
+        verify_current_publication(SITE, ROOT, checker)
+        spec = anchor(ROOT)
+        payload = (SITE / ANALYSIS).read_bytes()
+        assert len(payload) == spec["analysis_bytes"]
+        assert hashlib.sha256(payload).hexdigest() == spec["analysis_sha256"]
+        return spec
     if (SITE / FINANCIAL_PROOF).exists():
         verify_financial_publication = request.getfixturevalue("verify_financial_publication")
         assert verify_financial_publication(SITE, ROOT) == []
@@ -53,8 +84,18 @@ def editorial_site(request):
 
 
 def test_editorial_site_preserves_every_historical_file(editorial_site):
+    from scripts.check_pages_publication import verifier_for
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
 
+    if verifier_for(SITE) == "src.publish.issuer_scope":
+        from src.publish.issuer_scope import anchor as issuer_anchor
+        from src.publish.issuer_scope import preserved_files as issuer_preserved
+
+        inherited = issuer_preserved(SITE, ROOT, issuer_anchor(ROOT))
+        assert ANALYSIS in inherited
+        assert "data/v1/news.json" in inherited
+        assert any(p.startswith("data/v1/flights/") for p in inherited)
+        return
     if (SITE / FINANCIAL_PROOF).exists():
         pytest.skip("Financial mode has its own strict historical structure/byte preservation check")
     if not (SITE / PROOF).exists():
