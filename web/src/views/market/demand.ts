@@ -11,7 +11,7 @@ function table(id:string, rows:Row[], period:string) {
     for(const [index,text] of texts.entries()){ const td=document.createElement("td");td.textContent=text;
       if(index===0 && row.source_url){try{const url=new URL(row.source_url);if(url.protocol==="https:"&&!url.username&&!url.password){const a=document.createElement("a");a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";a.textContent=text;a.title=`Fuente · captura: ${row.captured_at ?? "N/D"} · SHA-256: ${row.source_hash ?? "N/D"}`;td.replaceChildren(a);}}catch{ /* Unknown provenance stays plain text. */ }}
       tr.append(td); } return tr; }));
-  if(!selected.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=5;td.textContent="Sin observaciones en este mes.";tr.append(td);host.append(tr);}
+  if(!selected.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=id==="airport-groups"?4:5;td.textContent="Sin observaciones en este mes.";tr.append(td);host.append(tr);}
 }
 export function mountDemand(root:string): Promise<void> {
   if(loading) return loading;
@@ -24,7 +24,9 @@ export function mountDemand(root:string): Promise<void> {
       sourcePicker=document.createElement("select");sourcePicker.id="airport-source";
       sourcePicker.setAttribute("aria-label","Base de cifras aeroportuarias");
       sourcePicker.append(new Option("Reportes directos de aeropuertos y grupos","direct"),new Option("Estadísticas AFAC · mismos aeropuertos","afac"));
-      picker.insertAdjacentElement("afterend",sourcePicker);
+      const basis=document.createElement("label");basis.className="chart-range-control";
+      basis.htmlFor="airport-source";basis.textContent="Base aeroportuaria";basis.append(sourcePicker);
+      (picker.closest("label")??picker).insertAdjacentElement("afterend",basis);
     }
     function render(){ if(!data)return;const afac=sourcePicker?.value==="afac";
       table("airport-demand",afac?(data.afac_airports??[]):data.airports,picker.value);table("airport-groups",data.groups,picker.value);
