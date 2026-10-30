@@ -3,6 +3,8 @@
 import hashlib
 import json
 from copy import deepcopy
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -100,3 +102,94 @@ def test_snapshot_preserves_physical_source_changes_and_library_metadata(tmp_pat
     p.write_text("changed")
     second = update.snapshot(p, request, p, [], {"input_files": [str(p)]}, tmp_path)
     assert first != second
+
+
+def replay_fixture(tmp_path, monkeypatch, source_inputs):
+    """Exercise the real file checks while replacing only native source adapters."""
+    repo = tmp_path / "repo"
+    repo.mkdir(exist_ok=True)
+    baseline = repo / "site"
+    target = "data/v1/market-demand.json"
+    (baseline / target).parent.mkdir(parents=True)
+    (baseline / target).write_text('{"retained": true}')
+    profiles = [repo / "am-profile.json", repo / "afac-profile.json"]
+    for profile in profiles:
+        profile.write_text("{}")
+    products = ["am_traffic_ir", "afac_carriers"]
+
+    def native_adapter(product):
+        return SimpleNamespace(
+            TARGETS=(target,),
+            replay=lambda *_: {
+                "source_binding": {"product": product, "period": "2026M09"},
+                "projection": {product: True},
+                "input_files": source_inputs[product],
+            },
+            public_outputs=lambda before, projection: {
+                target: scope.encoded({**json.loads(before[target]), **projection})
+            },
+        )
+
+    monkeypatch.setattr(update, "adapter", native_adapter)
+    units = [
+        {"product": product, "period": "2026M09", "source_profile": reference(profile)}
+        for product, profile in zip(products, profiles, strict=True)
+    ]
+    return repo, baseline, profiles, {**units[0], "additional_sources": units[1:]}
+
+
+def test_replay_combines_mixed_native_paths_as_one_sorted_absolute_json_closure(tmp_path, monkeypatch):
+    repo = tmp_path / "repo"
+    inputs = repo / "inputs"
+    inputs.mkdir(parents=True)
+    shared, native = inputs / "shared.txt", inputs / "native.txt"
+    shared.write_text("shared native evidence")
+    native.write_text("other independently retained native evidence")
+    repo, baseline, profiles, request = replay_fixture(
+        tmp_path,
+        monkeypatch,
+        {
+            "am_traffic_ir": [str(shared), Path("inputs/shared.txt")],
+            "afac_carriers": [native, "inputs/native.txt", shared, str(shared)],
+        },
+    )
+    value, outputs = update.replay(request, profiles[0], baseline, repo)
+    assert value["input_files"] == sorted(str(p) for p in [shared, native, *profiles])
+    assert all(isinstance(p, str) and Path(p).is_absolute() for p in value["input_files"])
+    assert json.loads(json.dumps(value)) == value
+    assert json.loads(outputs["data/v1/market-demand.json"]) == {
+        "retained": True,
+        "am_traffic_ir": True,
+        "afac_carriers": True,
+    }
+
+
+@pytest.mark.parametrize(
+    "invalid", ["outside_string", "outside_path", "parent_escape", "symlink", "ancestor_symlink"]
+)
+def test_replay_path_normalization_preserves_escape_and_symlink_rejections(tmp_path, monkeypatch, invalid):
+    repo = tmp_path / "repo"
+    inputs = repo / "inputs"
+    inputs.mkdir(parents=True)
+    source = inputs / "source.txt"
+    source.write_text("valid native evidence")
+    outside = tmp_path / "outside.txt"
+    outside.write_text("outside the declared checkout")
+    link = repo / "linked.txt"
+    link.symlink_to(source)
+    linked_folder = repo / "linked-folder"
+    linked_folder.symlink_to(inputs, target_is_directory=True)
+    invalid_path = {
+        "outside_string": str(outside),
+        "outside_path": outside,
+        "parent_escape": Path("../outside.txt"),
+        "symlink": link,
+        "ancestor_symlink": "linked-folder/source.txt",
+    }[invalid]
+    repo, baseline, profiles, request = replay_fixture(
+        tmp_path,
+        monkeypatch,
+        {"am_traffic_ir": [str(source)], "afac_carriers": [invalid_path]},
+    )
+    with pytest.raises(ValueError, match="outside its checkout or a symlink"):
+        update.replay(request, profiles[0], baseline, repo)

@@ -124,7 +124,7 @@ def replay(request, profile, baseline, repo):
                 "projection": value["projection"],
             }
         )
-        files.update(value["input_files"])
+        files.update(str(physical_path(p, repo)) for p in value["input_files"])
         files.add(str(path))
     before = {name: (baseline / name).read_bytes() for name in members.target_names(units, adapter)}
     outputs = members.compose(before, units, adapter)
