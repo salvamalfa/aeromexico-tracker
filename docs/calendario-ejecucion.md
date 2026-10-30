@@ -86,7 +86,10 @@ programada, build validado y datos efectivamente servidos.
 
 La unidad es el producto validado, no el cierre de la ronda. El outbox vive en
 otro directorio privado bajo `tmp/source-updates/`, ligado al calendario canónico
-por referencia física y SHA. No sustituye su ledger ni cambia horarios. Una
+por referencia física y SHA. Una copia inmutable de los bytes observados vive
+en `evidence/calendar-<sha>.json` sólo como evidencia; no se opera como ledger.
+El progreso legítimo del calendario no invalida esa prueba. El outbox no sustituye
+el ledger canónico ni cambia horarios. Una
 observación declara su tarea, autorización, motivo, corte original y un `item`
 de readiness. `verify_source` coteja el calendario y ejecuta el verificador
 dedicado real del producto, con disponibilidad propia o edición cerrada aceptada.
@@ -131,11 +134,19 @@ la versión previa y su motivo; nunca se sobreescribe el histórico para dedupli
    Sólo entonces se encola su trabajo editorial de dashboard. El trabajo de
    datos validado se había encolado por separado, con `release_kind=data`;
    ambos se serializan al escribir el sitio. El editorial usa `release_kind=editorial`.
+   Un resultado `no_material_analysis_change` mantiene la aprobación anterior
+   sólo tras la prueba física de equivalencia de Aeroméxico; no encola una
+   nueva publicación editorial. El outbox conserva ese recibo como `no_change`.
 6. `site_built_verified` pasa el gate y verificador del sitio; aún no es despliegue.
    Tras PR, revisión, CI, merge y Pages, registrar `served` con las rutas afectadas.
    El comando realiza GET a la URL canónica y exige HTTP200 y los mismos hashes
    del manifiesto y payloads/páginas elegidos. Sólo entonces conserva
    `served_verified`. Si la red falla, conservar el build y reconciliar el despliegue.
+   `no_visual_change` también exige replay: para Viva/Volaris se reconstruye
+   la proyección de la cápsula y se compara con el sitio de referencia; para
+   Aeroméxico se ejecuta la prueba de equivalencia aprobada. El recibo conserva
+   `equivalence_proof={path,sha256}` y el verificador lo reproduce. Un texto que
+   diga «sin cambios» no sustituye esa comprobación ni acredita un despliegue.
 
 La frontera sigue siendo candidato aislado antes del gate. Ni `observe` ni
 `analysis_approved` copian tablas a Gold activo. La skill del dashboard incorpora
@@ -283,11 +294,12 @@ prompt, `schedule` VEVENT sin RRULE, zona y modo flexible. **Mostrarlo no lo
 crea ni autoriza ejecutarlo.** Si está vencido o hay un escritor sin resolver,
 el payload es nulo y exige reconciliación. No se mueve a mañana por defecto.
 
-### Activación futura y recuperación de su creación
+### Activación realizada y recuperación de su creación
 
 La capacidad nativa conocida crea tareas habilitadas y no admite crearlas
-apagadas. Por eso no se invoca durante esta preparación. Una vez verificadas las condiciones de la autorización
-ya recibida, el coordinador realiza estos pasos una sola vez:
+apagadas. La creación del 29/oct ya está confirmada y vinculada; no ejecutar
+`create` otra vez. Los siguientes pasos documentan el historial y la recuperación
+de una creación incierta; su aplicación inicial ya se completó:
 
 1. Comprobar el estado canónico y las tareas nativas existentes. Conservar la
    referencia exacta de la autorización condicional. Cotejar los recibos de Viva y sus fechas,
@@ -376,17 +388,19 @@ python -m pytest tests/test_source_update_coordinator_state.py tests/test_source
 Cierre documental: conservar el script y sus regresiones como contrato de
 operación; conservar esta guía como referencia única del estado/recuperación;
 actualizar solo su enlace en `REPO_MAP.md`. Los JSON privados y sus recibos se
-conservan fuera del diff y no se suben al repositorio. No hay retiros ni cambios
-de originales, Gold, sitio, aprobaciones, Noticias o workflows.
+conservan fuera del diff y no se suben al repositorio. Estos CLI no modifican
+originales, Gold activo, sitio o aprobaciones; esos cambios tienen los gates y
+recibos separados de sus skills. No se retiran documentos ni se duplican guías.
 
 ## Pendientes
 
-- Completar la entrega de la política operacional/despacho con revisión y CI
-  del head final y serializar su integración con el hilo principal.
-- Vincular los recibos verificados de Viva 3T26 al estado y comprobar los datos
-  requeridos de la ronda con la política vigente;
-  entonces el coordinador puede ejecutar la autorización condicional ya recibida,
-  con una sola automatización. Este hilo de preparación no la crea.
+- Integrar y ejecutar los nuevos handoffs con revisión y CI del head final.
+  Conservar recibos por fuente, análisis, datos y publicación servida; distinguir
+  continuación de evidencia previa y ejecución automática real.
+- Reconciliar cada envío nativo antes de reenviar. `reconcile_not_sent` conserva
+  un bloqueo con evidencia positiva de no ejecución. No tiene reenvío automático;
+  si no existe worker, la siguiente decisión corresponde al operador autorizado,
+  con evidencia nueva cuando proceda. No editar el ledger para eludir ese bloqueo.
 - Conservar Aerocivil como seguimiento de confirmación oficial, sin bloquear
   por esa espera; corregir los cálculos si la respuesta contradice los supuestos.
   El mes nuevo exige evidencia propia; septiembre no certifica octubre.

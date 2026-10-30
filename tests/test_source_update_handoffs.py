@@ -31,7 +31,13 @@ def env(tmp_path, monkeypatch):
     source = tmp_path / "tmp/source-updates/source"
     original = write(source / "original.json", {"synthetic": True})
     observation = {
-        "item": {"product": "viva_financials", "period": "2026Q3", "workspace": str(source)},
+        "item": {
+            "product": "viva_financials",
+            "period": "2026Q3",
+            "workspace": str(source),
+            "receipt_id": "synthetic-retention",
+            "candidate_as_of": NOW,
+        },
         "as_of": NOW,
         "authorization_reference": "synthetic-consent",
         "change_reason": "first edition",
@@ -426,6 +432,20 @@ def test_publication_arrival_needs_its_original_but_no_other_report_or_round_bar
     }
     verified = handoffs.verify_source(observation, workspace)
     assert verified["checked"] == checked
+    snapshot = handoffs.checked_ref(verified["calendar_snapshot"])
+    calendar_path.write_text('{"legitimate_later_progress":true}')
+    assert json.loads(snapshot.read_text())["automation_id"] == "synthetic-id"
+    calendar = write(
+        calendar_path,
+        {
+            "coordinator_id": "airlines-tracker-source-calendar",
+            "automation_id": "synthetic-id",
+            "workspace": str(calendar_path.parent),
+            "activation_authorized": True,
+            "tasks": {},
+        },
+    )
+    observation["calendar_state"] = calendar
     unrelated = write(candidate / "unrelated.json", {"unrelated": True})
     with pytest.raises(ValueError, match="not the original"):
         handoffs.verify_source({**observation, "publication_evidence": unrelated}, workspace)
@@ -497,3 +517,42 @@ def test_invalid_scoped_proof_cannot_fall_back_to_generic_site_verification(env,
     monkeypatch.setattr(verify, "verify_site", lambda path: [])
     with pytest.raises(ValueError, match="invalid strict proof"):
         handoffs.verify_dashboard({"site_path": str(site), "manifest": manifest})
+
+
+def test_no_visual_change_receipt_is_replayed_not_accepted_from_status(tmp_path, monkeypatch):
+    import sys
+    from types import ModuleType
+
+    from scripts.source_update_handoff_nochange import verify
+
+    module = ModuleType("src.publish.issuer_update")
+    observed = {"status": "no_visual_change", "source_binding": {"exact": True}}
+    module.verify_no_visual_change = lambda *args, **kwargs: observed
+    monkeypatch.setitem(sys.modules, "src.publish.issuer_update", module)
+    result = {
+        "status": "no_visual_change",
+        "package": write(tmp_path / "package.json", {}),
+        "equivalence_proof": write(tmp_path / "proof.json", observed),
+    }
+    job = {"entity": "VIVA_AEROBUS", "stage": "dashboard", "release_kind": "data"}
+    verify(job, {}, result, {"exact": True}, tmp_path)
+    observed["source_binding"] = {"different": True}
+    with pytest.raises(ValueError, match="differs from"):
+        verify(job, {}, result, {"exact": True}, tmp_path)
+
+
+def test_no_material_change_finishes_without_new_editorial_job(env, monkeypatch):
+    from scripts import source_update_handoff_nochange
+
+    workspace, _, _ = env
+    job = only_job(start(env))
+    claim(workspace, job)
+    ack(workspace, job)
+    calls = []
+    monkeypatch.setattr(source_update_handoff_nochange, "verify", lambda *args: calls.append(args))
+    receipt = result_receipt(workspace, job, "no_material_analysis_change")
+    result = action(
+        workspace, "finish", "nochange1", job_id=job, owner_lease_id="local_lease:test", receipt=receipt
+    )
+    assert calls and result["state"]["jobs"][job]["status"] == "no_change"
+    assert not any(value["release_kind"] == "editorial" for value in result["state"]["jobs"].values())

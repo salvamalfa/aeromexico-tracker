@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -109,7 +110,10 @@ def verify_source(observation: dict, workspace: Path) -> dict:
     if not observation.get("authorization_reference") or not observation.get("change_reason"):
         raise ValueError("Explicit authorization provenance and change reason are required")
     state_path = checked_ref(observation["calendar_state"])
-    calendar = load(state_path)
+    state_bytes = state_path.read_bytes()
+    if hashlib.sha256(state_bytes).hexdigest() != observation["calendar_state"]["sha256"]:
+        raise ValueError("Canonical calendar changed while observing; read its current reference")
+    calendar = json.loads(state_bytes)
     if calendar.get("coordinator_id") != "airlines-tracker-source-calendar" or not calendar.get(
         "automation_id"
     ):
@@ -127,12 +131,12 @@ def verify_source(observation: dict, workspace: Path) -> dict:
         if product not in ENTITIES:
             raise ValueError("Publication-arrival route is limited to the three issuer financials")
         checked_ref(observation["publication_evidence"])
-        return verify_candidate(observation, workspace)
-    task = calendar["tasks"][observation["source_task_key"]]
-    if (task["product"], task["period"]) != (product, item["period"]):
-        raise ValueError("Source task does not identify this product and period")
-    if mode == "scheduled_result" and task["status"] != "completed":
-        raise ValueError("Scheduled source result has not completed in its actual ledger")
+    else:
+        task = calendar["tasks"][observation["source_task_key"]]
+        if (task["product"], task["period"]) != (product, item["period"]):
+            raise ValueError("Source task does not identify this product and period")
+        if mode == "scheduled_result" and task["status"] != "completed":
+            raise ValueError("Scheduled source result has not completed in its actual ledger")
     if mode == "scheduled_result":
         dispatch = task["dispatches"][-1]
         candidate = Path(item["workspace"])
@@ -141,7 +145,18 @@ def verify_source(observation: dict, workspace: Path) -> dict:
             raise ValueError("Candidate is not inside the reconciled scheduled worker workspace")
         receipt = task["receipts"][-1]
         checked_ref({"path": str(state_path.parent / receipt["file"]), "sha256": receipt["sha256"]})
-    return verify_candidate(observation, workspace)
+    verified = verify_candidate(observation, workspace)
+    snapshots = workspace / "evidence"
+    snapshots.mkdir(parents=True, exist_ok=True)
+    snapshot = snapshots / f"calendar-{observation['calendar_state']['sha256']}.json"
+    if snapshot.exists():
+        checked_ref({"path": str(snapshot), "sha256": observation["calendar_state"]["sha256"]})
+    else:
+        with snapshot.open("xb") as stream:
+            stream.write(state_bytes)
+            stream.flush()
+            os.fsync(stream.fileno())
+    return {**verified, "calendar_snapshot": file_ref(snapshot)}
 
 
 def verify_candidate(observation: dict, workspace: Path) -> dict:
@@ -200,6 +215,8 @@ def enqueue(
 
 def observe(state: dict, observation: dict, workspace: Path):
     verified = verify_source(observation, workspace)
+    if "calendar_snapshot" in verified:
+        observation = {**observation, "calendar_snapshot": verified["calendar_snapshot"]}
     item = observation["item"]
     key = f"{item['product']}:{item['period']}"
     previous_id = state["heads"].get(key)
@@ -430,10 +447,19 @@ def transition(state: dict, action: dict, workspace: Path):
             job["period"],
         ):
             raise ValueError("Worker receipt does not bind the exact job/data/entity/period")
+        job.setdefault("receipt_history", []).append(action["receipt"])
         if result.get("status") == "blocked":
             if not result.get("reason"):
                 raise ValueError("Retain the concrete blocking control")
             job.update(status="blocked", result=action["receipt"])
+            return
+        if result.get("status") in {"no_visual_change", "no_material_analysis_change"}:
+            from scripts.source_update_handoff_nochange import verify
+
+            verify(job, source, result, expected_binding(source), ROOT)
+            job.update(
+                status="no_change" if is_current(state, job) else "superseded", result=action["receipt"]
+            )
             return
         if job["stage"] == "analysis":
             if result.get("status") != "analysis_approved":
@@ -473,13 +499,18 @@ def transition(state: dict, action: dict, workspace: Path):
         # This is an operator assertion backed by retained evidence, not automatic proof of absence.
         job.update(status="blocked", reconciliation=action["positive_nonexecution_evidence"])
     elif kind == "continue_existing_worker":
-        if job["status"] != "blocked" or job["native_response"] is None:
+        if job["status"] != "blocked" or job["native_response"] is None or not is_current(state, job):
             raise ValueError("Continue only the acknowledged blocked worker; never create a duplicate")
         checked_ref(action["reconciliation"])
         job.update(status="running", reconciliation=action["reconciliation"])
     elif kind == "served":
         if job["stage"] != "dashboard" or job["status"] != "completed" or not is_current(state, job):
             raise ValueError("Served QA follows this current dashboard build, never an analysis receipt")
+        source = state["sources"][job["source_id"]]
+        verify_release_binding(job, source)
+        if job["dependency"]:
+            parent = state["jobs"][job["dependency"]]
+            verify_analysis(parent, source, load(checked_ref(parent["result"])))
         job["served_verification"] = verify_served(load(checked_ref(job["result"])), action["paths"])
         job["status"] = "served_verified"
     else:
@@ -551,7 +582,7 @@ def main(argv=None) -> int:
         result = run(args.workspace, action=load(args.record) if args.record else None)
         print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
         return 0
-    except (KeyError, ValueError, OSError, TypeError) as exc:
+    except (KeyError, ValueError, OSError, TypeError, ImportError) as exc:
         print(json.dumps({"status": "blocked", "reason": str(exc), "native_sends": 0}))
         return 1
 
