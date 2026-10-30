@@ -4,9 +4,16 @@ from __future__ import annotations
 
 import copy
 import math
+from dataclasses import asdict
 
 from src.dashboard.entities import ENTITY_BY_KEY
-from src.dashboard.executive_summary import _entity_kpi_definitions, _period_label, _period_view
+from src.dashboard.executive_summary import (
+    _entity_kpi_definitions,
+    _period_label,
+    _period_view,
+    _point_comparison,
+    _previous_quarter,
+)
 
 MILE_KM = 1.609344
 ENTITIES = {"VOLARIS", "VIVA_AEROBUS"}
@@ -81,6 +88,16 @@ def executive_projection(baseline: dict, package: dict) -> dict:
         load_verb="reportó",
         industry=None,
     )
+    previous = prior.get(_previous_quarter(period))
+    for kpi in view["kpis"]:
+        if kpi["key"] == "load_factor":
+            kpi["yoy"] = asdict(_point_comparison(current["load_factor"], comparative["load_factor"]))
+            kpi["qoq"] = asdict(
+                _point_comparison(
+                    current["load_factor"],
+                    previous["load_factor"] if previous is not None else None,
+                )
+            )
     notes = [
         "Julio–septiembre de 2026; comparativo anual del mismo reporte. "
         "Los nueve meses acumulados y los saldos al cierre quedan separados.",

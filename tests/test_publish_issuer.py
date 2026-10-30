@@ -55,6 +55,66 @@ def test_identical_projection_is_idempotent(projected):
     assert projection.executive_projection(once, package) == once
 
 
+@pytest.mark.parametrize(
+    "entity,current,prior_year,expected_yoy,expected_qoq",
+    [
+        ("VIVA_AEROBUS", 0.892, 0.882, "+1.0 pp", "+3.3 pp"),
+        ("VOLARIS", 0.857, 0.844, "+1.3 pp", "+0.9 pp"),
+    ],
+)
+def test_reported_occupancy_comparisons_use_percentage_points(
+    projected,
+    entity,
+    current,
+    prior_year,
+    expected_yoy,
+    expected_qoq,
+):
+    baseline, package, nodes, _ = projected
+    before = copy.deepcopy(baseline)
+    package["entity_key"] = entity
+    for node in nodes:
+        if node["key"] == "load":
+            node["value"] = current if node["period_id"] == "2026Q3" else prior_year
+    after = projection.executive_projection(baseline, package)
+    block = after["entities"][entity]
+    load = next(k for k in block["views"]["2026Q3"]["kpis"] if k["key"] == "load_factor")
+    assert load["display_value"] == f"{current:.1%}"
+    assert load["yoy"] == {
+        "available": True,
+        "raw": pytest.approx((current - prior_year) * 100),
+        "display": expected_yoy,
+        "direction": "up",
+    }
+    quarter_prior = next(
+        r["load_factor"] for r in before["entities"][entity]["records"] if r["period_id"] == "2026Q2"
+    )
+    assert load["qoq"] == {
+        "available": True,
+        "raw": pytest.approx((current - quarter_prior) * 100),
+        "display": expected_qoq,
+        "direction": "up",
+    }
+    assert block["records"][:-1] == before["entities"][entity]["records"]
+    assert {p: v for p, v in block["views"].items() if p != "2026Q3"} == before["entities"][entity]["views"]
+    assert baseline == before
+    projection.require_scope(before, after, entity, "2026Q3")
+
+
+@pytest.mark.parametrize("entity", ["VIVA_AEROBUS", "VOLARIS"])
+def test_missing_occupancy_quarter_comparison_stays_unavailable(projected, entity):
+    baseline, package, _, _ = projected
+    package["entity_key"] = entity
+    block = baseline["entities"][entity]
+    block["records"] = [r for r in block["records"] if r["period_id"] != "2026Q2"]
+    block["views"].pop("2026Q2")
+    block["quarter_count"] = len(block["records"])
+    block["last_period"] = block["records"][-1]["period_id"]
+    after = projection.executive_projection(baseline, package)
+    load = next(k for k in after["entities"][entity]["views"]["2026Q3"]["kpis"] if k["key"] == "load_factor")
+    assert load["qoq"] == {"available": False, "raw": None, "display": "No disponible", "direction": "na"}
+
+
 @pytest.mark.parametrize("entity,period", [("INDUSTRY", "2026Q3"), ("VOLARIS", "2026Q4")])
 def test_other_scope_rejected(projected, entity, period):
     baseline, package, _, _ = projected
