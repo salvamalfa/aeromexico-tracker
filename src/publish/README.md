@@ -97,6 +97,11 @@ as — a directory built from `web/` plus the exported v1 payloads. See
 - `site/` itself is *not* gitignored: an approved run's output is committed
   like any other file, then deployed as-is by CI (`.github/workflows/
   pages.yml` never rebuilds it, never touches `analysis_runs/`).
+  Los perfiles fuertes de publicación cargan también dependencias del extra
+  `analytics` ya fijado en `uv.lock`. Pages instala y ejecuta el selector con
+  `--locked --no-group dev --extra analytics`, tanto para el sitio principal
+  como para la preview con su propio checkout y lockfile. Instalar ese entorno
+  no ejecuta ingestas, modelos ni un rebuild, ni requiere expedientes privados.
 - The `intent`/`published` receipt goes to
   `analysis_runs/publications/` (local, gitignored — see `.gitignore`'s
   `analysis_runs/` rule) and hashes the *manifest*, not the raw `site/`
