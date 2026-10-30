@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from src.publish.financial_scope import ANCHOR, EXECUTIVE, PROOF, anchor, encoded, sha
+from src.publish.financial_scope import ANCHOR, EXECUTIVE, anchor, encoded, sha
 from tests._site_publication_parity import (
     preserved_financial_projection,
     preserved_readings,
@@ -49,7 +49,9 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
     preserved_executive(before, after)
     assert after["metadata"]["default_period"] == before["metadata"]["default_period"]
     assert after["views"]["2026Q3"]["kpis"][0]["yoy"]["display"] == "+12.2%"
-    if (SITE / PROOF).exists():
+    from scripts.check_pages_publication import verifier_for
+
+    if verifier_for(SITE, ROOT) == "src.publish.financial_scope":
         frozen = preserved_files(SITE, ROOT, spec)
         assert len([p for p in frozen if p.startswith("data/v1/analysis/")]) == 5
     from src.publish.financial_sources import approved_projection

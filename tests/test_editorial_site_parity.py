@@ -29,7 +29,13 @@ def editorial_site(request):
         anchor as financial_anchor,
     )
 
-    if verifier_for(SITE) == "src.publish.issuer_scope":
+    if not (SITE / "publication_manifest.json").is_file():
+        _unavailable(request, "Editorial candidate has not been assembled")
+    try:
+        profile = verifier_for(SITE, ROOT)
+    except (ValueError, OSError, KeyError, TypeError) as error:
+        raise AssertionError(f"Invalid declared publication profile: {error}") from error
+    if profile in {"src.publish.issuer_scope", "src.publish.movements_scope"}:
         checker = request.getfixturevalue("verify_financial_publication")
         verify_current_publication(SITE, ROOT, checker)
         spec = anchor(ROOT)
@@ -68,11 +74,12 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
     from scripts.check_pages_publication import verifier_for
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
 
-    if verifier_for(SITE) == "src.publish.issuer_scope":
-        from src.publish.issuer_scope import anchor as issuer_anchor
-        from src.publish.issuer_scope import preserved_files as issuer_preserved
+    module = verifier_for(SITE, ROOT)
+    if module in {"src.publish.issuer_scope", "src.publish.movements_scope"}:
+        from importlib import import_module
 
-        inherited = issuer_preserved(SITE, ROOT, issuer_anchor(ROOT))
+        scope = import_module(module)
+        inherited = scope.preserved_files(SITE, ROOT, scope.anchor(ROOT))
         assert ANALYSIS in inherited
         assert "data/v1/news.json" in inherited
         assert any(p.startswith("data/v1/flights/") for p in inherited)

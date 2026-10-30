@@ -178,7 +178,7 @@ def test_structural_scope_is_separate_from_output_hash(projected, mutation):
 def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch):
     spec = {"baseline_commit": "a" * 40}
     old = {"code_commit": "b" * 40, "files": []}
-    monkeypatch.setattr(scope.transport, "baseline", lambda *a: (old, b"{}"))
+    monkeypatch.setattr(scope.transport, "baseline", lambda *a: (old, b'{"files":[]}'))
     monkeypatch.setattr(scope.transport, "_git", lambda *a: b"")
     actions = []
 
@@ -187,7 +187,7 @@ def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch):
         if "worktree" in command and "add" in command:
             target = Path(command[-2])
             (target / "site").mkdir(parents=True)
-            (target / "site/publication_manifest.json").write_bytes(b"{}")
+            (target / "site/publication_manifest.json").write_bytes(b'{"files":[]}')
         return SimpleNamespace(returncode=1 if "-m" in command else 0)
 
     monkeypatch.setattr(scope.subprocess, "run", run)
