@@ -30,16 +30,24 @@ def editorial_site(request):
     )
 
     manifest_path = SITE / "publication_manifest.json"
+    assert not manifest_path.is_symlink(), "Publication manifest cannot be a symlink"
     if not manifest_path.is_file():
-        assert not manifest_path.is_symlink(), "Publication manifest cannot be a dangling symlink"
+        assert not manifest_path.exists(), "Publication manifest must be a regular file"
         assert not any(
-            (SITE / name).exists() for name in (PROOF, FINANCIAL_PROOF, "issuer-publication.json")
+            (SITE / name).exists() or (SITE / name).is_symlink()
+            for name in (PROOF, FINANCIAL_PROOF, "issuer-publication.json")
         ), "An existing publication receipt requires its manifest"
         _unavailable(request, "Editorial candidate has not been assembled")
     try:
         profile = verifier_for(SITE)
     except (ValueError, OSError, KeyError, TypeError) as error:
         raise AssertionError(f"Invalid publication verification selection: {error}") from error
+    assert profile in {
+        "src.publish.verify",
+        "src.publish.editorial",
+        "src.publish.financial_scope",
+        "src.publish.issuer_scope",
+    }, f"Unsupported publication verifier: {profile}"
     if profile == "src.publish.issuer_scope":
         checker = request.getfixturevalue("verify_financial_publication")
         verify_current_publication(SITE, ROOT, checker)
