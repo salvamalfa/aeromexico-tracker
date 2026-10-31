@@ -176,7 +176,9 @@ def snapshot(path, request, profile, records, value, repo):
         result[str(p.relative_to(repo))] = {
             "sha256": sha(p.read_bytes()),
             "library_identity": {
-                k: sha(os.getxattr(p, k)) for k in os.listxattr(p) if k.startswith("user.library-")
+                k: sha(os.getxattr(p, k))
+                for k in getattr(os, "listxattr", lambda _: ())(p)
+                if k.startswith("user.library-")
             },
         }
     return result

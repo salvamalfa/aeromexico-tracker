@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
@@ -102,6 +103,58 @@ def test_snapshot_preserves_physical_source_changes_and_library_metadata(tmp_pat
     p.write_text("changed")
     second = update.snapshot(p, request, p, [], {"input_files": [str(p)]}, tmp_path)
     assert first != second
+
+
+def test_snapshot_without_platform_xattr_api_preserves_content(tmp_path, monkeypatch):
+    monkeypatch.setattr(update, "input_snapshot", lambda *a, **k: {})
+    monkeypatch.delattr(os, "listxattr", raising=False)
+    monkeypatch.delattr(os, "getxattr", raising=False)
+    p = tmp_path / "source.json"
+    p.write_bytes(b"original")
+    first = update.snapshot(p, {"authorization": None}, p, [], {"input_files": [str(p)]}, tmp_path)
+    assert first == {
+        "source.json": {"sha256": hashlib.sha256(b"original").hexdigest(), "library_identity": {}}
+    }
+    p.write_bytes(b"changed")
+    assert update.snapshot(p, {"authorization": None}, p, [], {"input_files": [str(p)]}, tmp_path) != first
+
+
+def test_snapshot_still_detects_library_metadata_changes_on_supported_platform(tmp_path, monkeypatch):
+    monkeypatch.setattr(update, "input_snapshot", lambda *a, **k: {})
+    p = tmp_path / "source.json"
+    p.write_bytes(b"original")
+    attribute = b"retained-library-id"
+    monkeypatch.setattr(os, "listxattr", lambda _: ["user.library-file-id", "user.unrelated"], raising=False)
+
+    def read_attribute(path, key):
+        assert path == p and key == "user.library-file-id"
+        return attribute
+
+    monkeypatch.setattr(os, "getxattr", read_attribute, raising=False)
+    first = update.snapshot(p, {"authorization": None}, p, [], {"input_files": [str(p)]}, tmp_path)
+    assert first["source.json"]["library_identity"] == {
+        "user.library-file-id": hashlib.sha256(attribute).hexdigest()
+    }
+    attribute = b"another-library-id"
+    second = update.snapshot(p, {"authorization": None}, p, [], {"input_files": [str(p)]}, tmp_path)
+    assert first != second
+    assert first["source.json"]["sha256"] == second["source.json"]["sha256"]
+
+
+@pytest.mark.parametrize("api", ["listxattr", "getxattr"])
+def test_snapshot_fails_closed_if_supported_xattr_api_errors(tmp_path, monkeypatch, api):
+    monkeypatch.setattr(update, "input_snapshot", lambda *a, **k: {})
+    p = tmp_path / "source.json"
+    p.write_bytes(b"original")
+    monkeypatch.setattr(os, "listxattr", lambda _: ["user.library-file-id"], raising=False)
+    monkeypatch.setattr(os, "getxattr", lambda *a: b"retained", raising=False)
+
+    def fail(*args):
+        raise PermissionError("Cannot verify retained library metadata")
+
+    monkeypatch.setattr(os, api, fail)
+    with pytest.raises(PermissionError, match="Cannot verify"):
+        update.snapshot(p, {"authorization": None}, p, [], {"input_files": [str(p)]}, tmp_path)
 
 
 def replay_fixture(tmp_path, monkeypatch, source_inputs):
