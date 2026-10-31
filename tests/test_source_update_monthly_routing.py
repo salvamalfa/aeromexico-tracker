@@ -63,3 +63,13 @@ def test_coalescing_scope_needs_exact_authorized_request_and_individually_ready_
         assert "Do not select extra sources automatically or wait for other sources" in scope
         assert "preserve all data outside that authorized union" in scope
     assert "additional_sources" not in publication_scope("bts_segments")
+
+
+@pytest.mark.parametrize(
+    "product", ["aicm_traffic", "aifa_traffic", "asur_traffic", "gap_traffic", "oma_traffic", "afac_airports"]
+)
+def test_airport_handoff_preserves_export_only_boundary_and_retired_ui(product):
+    scope = publication_scope(product)
+    assert "existing airport-demand JSON export" in scope
+    assert "do not reinstate retired airport UI" in scope
+    assert "airport chart" not in scope

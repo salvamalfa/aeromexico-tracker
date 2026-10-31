@@ -39,7 +39,8 @@ def _single_publication_scope(product):
     if product == "afac_airports":
         return (
             "Only the separately labelled AFAC alternative for the explicitly selected existing "
-            "airport-demand keys; preserve direct issuer reports, groups, flight maps and theses; "
+            "airport-demand keys in the existing airport-demand JSON export; do not reinstate "
+            "retired airport UI; preserve direct issuer reports, groups, flight maps and theses; "
             "no new airports, historical backfill or fabricated annual comparison"
         )
     if product == "bts_segments":
@@ -54,7 +55,8 @@ def _single_publication_scope(product):
         )
     if product in IMPACTS:
         return (
-            "Only the validated source's airport-demand observations in the existing airport chart; "
+            "Only the validated source's airport-demand observations in the existing airport-demand "
+            "JSON export; do not reinstate retired airport UI; "
             "preserve other groups, AFAC, flight-map counts, all seven theses and every other "
             "data payload; no Industry editorial"
         )
