@@ -79,3 +79,30 @@ def test_shared_contributor_does_not_accept_an_extra_publication_target(retained
     with pytest.raises(ValueError):
         adapter.public_outputs(before, projection)
     assert before == original
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
+def test_afac_new_month_append_rejects_nonfinite_existing_field(nonfinite):
+    import math
+    import subprocess
+    from jsonschema import ValidationError
+
+    spec = json.loads((ROOT / "config/publish/source-data-release.json").read_bytes())
+    projection = copy.deepcopy(
+        next(u["projection"] for u in spec["additional_sources"] if u["product"] == "afac_carriers")
+    )
+    adapter = source_data_scope.adapter("afac_carriers")
+    before = {
+        name: subprocess.check_output(["git", "show", f"{spec['baseline_commit']}:site/{name}"], cwd=ROOT)
+        for name in adapter.TARGETS
+    }
+    quarters = json.loads(before["data/v1/flights/quarters.json"])
+    assert quarters["monthly_passengers"]["records"][-1]["period_id"] < min(projection["periods"])
+    row = projection["records"][-1]
+    assert "reported_total" in row and math.isfinite(row["reported_total"])
+    row["reported_total"] = nonfinite
+    original = copy.deepcopy(before)
+    with pytest.raises((ValueError, ValidationError)) as error:
+        adapter.public_outputs(before, projection)
+    assert "retry differs" not in str(error.value)
+    assert before == original
