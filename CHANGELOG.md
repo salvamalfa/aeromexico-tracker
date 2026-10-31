@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-31 · Comprobación previa y controles CI separados
+
+- Pages y la imagen Docker real se verifican antes de las suites costosas.
+  Los checks `test` y `web` conservan sus nombres y exigen todos sus componentes.
+- Los componentes permiten reintentos nativos del mismo SHA. La selección por
+  cambios sólo recomienda en sombra: las suites completas siguen ejecutándose.
+- Se evita el CI independiente de pushes compuestos sólo por artefactos que ya
+  ejecutan el CI completo desde Pages. Los pushes mixtos conservan los controles.
+  No cambian protecciones, permisos, secretos, dependencias ni el sitio publicado.
+
 ## 2026-10-30 · Demanda aeroportuaria y equivalencia BTS
 
 - AFAC aeroportuario conserva una base alternativa, limitada a los aeropuertos
