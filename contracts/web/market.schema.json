@@ -25,7 +25,95 @@
         "data_as_of": { "type": ["string", "null"] },
         "industry_note": { "type": "string" },
         "industry_share_latest": { "type": ["number", "null"] },
-        "method_note": { "type": "string" }
+        "method_note": { "type": "string" },
+        "method_breaks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^20\\d{2}M(?:0[1-9]|1[0-2])$"
+          }
+        },
+        "source_editions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "edition",
+              "previous_period",
+              "published_months",
+              "universe_version",
+              "database_sha256",
+              "pdf_sha256",
+              "source_url",
+              "captured_at",
+              "scope",
+              "unmapped_operators"
+            ],
+            "properties": {
+              "edition": {
+                "type": "string"
+              },
+              "previous_period": {
+                "type": "string"
+              },
+              "published_months": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "universe_version": {
+                "const": "afac_reported_mexican_all_services_v1"
+              },
+              "database_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "pdf_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "source_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "captured_at": {
+                "type": "string"
+              },
+              "scope": {
+                "const": "reported_Mexican_carrier_passengers_scheduled_and_charter_not_foreign_or_route_estimates"
+              },
+              "unmapped_operators": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "domestic",
+                    "international"
+                  ],
+                  "properties": {
+                    "domestic": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "international": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "carriers": { "type": "array", "items": { "type": "string" } },

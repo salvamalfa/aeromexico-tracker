@@ -120,6 +120,28 @@ la nota; la base no recibe flags PDF. La advertencia de información incompleta
 internacional permanece visible: filas reportadas conciliadas no acreditan
 el universo completo ni disponibilidad reciente. Sin activación/publicación.
 
+### Handoff AFAC a las gráficas existentes
+
+El adaptador `src.publish.afac_carrier_projection` reproduce originales, Silver,
+Gold, recibos y disponibilidad histórica antes de proyectar meses nuevos a
+`flights/quarters.json` y `market.json`. La tarea de septiembre puede conservar
+agosto como edición nativa: no cambiar el mes del certificado ni afirmar captura
+actual. El perfil lleva `schema_version=afac_carrier_chart_source_v1`, el `item`
+físico y su `as_of` retenido. El gate común de datos exige autoridad exacta propia;
+la certificación candidata no concede autorización editorial o pública.
+
+Julio y agosto proceden de filas mensuales observadas del original DB, verificadas
+de nuevo y contrastadas con la frontera histórica y el Gold de agosto. No presentar
+el certificado Gold de agosto como uno de julio. El grupo Aeroméxico suma Aerovías
+y Connect sólo después de comprobar ambas celdas literales regular/fletamento en
+cada mercado; una ausencia bloquea, nunca vale cero. El denominador conserva todos
+los operadores mexicanos reportados, incluso nombres de chárter sin mapeo, y excluye
+los grupos extranjeros. `source_group=Total general` identifica operadores del PDF;
+no es una fila de total en Gold. La cobertura observacional completa sigue sin
+certificarse. La publicación conserva el histórico, registra procedencia por edición
+y señala el cambio de cobertura del denominador con una interrupción de la línea.
+No publica 3T26 con sólo julio/agosto ni transforma rutas, modelos o warehouse.
+
 ### BTS retenido: certificación mensual completa del candidato
 
 Usar `python -m src.source_updates.bts_candidate retain` con producto
@@ -207,3 +229,55 @@ El replay real de julio conservó 2.730 filas, 65 aeropuertos y 173 cruces.
 no se fabrica recibo de colección. El HTTP403 del 27/oct conserva actualidad
 bloqueada aunque el lector histórico y el contrato estén implementados.
 Fecha genérica de página y números del filename no prueban publicación.
+
+## Handoff de BTS al consumidor publicado
+
+El mes de la tarea y el mes nativo permanecen distintos: por ejemplo, una tarea
+mensual de septiembre puede acreditar julio observado en T-100. El outbox mantiene
+la tarea y el vínculo físico; `source_dependency_assessment` despacha al agente de
+dashboard sin pedir una tesis. No renombrar el mes nativo como septiembre.
+
+Para una llegada sin cambios, `scripts.source_update_bts_nochange.verify` reproduce
+el candidato y contrasta todos los campos de negocio con el Gold activo del mismo
+mes, con precisión íntegra. Excluye únicamente identificador y procedencia de
+captura. Además compara los componentes BTS por operador, ruta, mes y clase de
+servicio con los cuatro mapas existentes (Aeroméxico, Viva, Volaris y agregado),
+la oferta del selector, el manifiesto, Git publicado y los bytes HTTPS servidos.
+Un archivo Gold igual por sí solo no demuestra que las gráficas estén actualizadas.
+
+El recibo `no_visual_change` conserva la prueba física, `job_id`, `data_version`,
+entidad y periodo del handoff. El coordinador la reproduce al cerrar. No recompila,
+publica, vuelve a descargar ni recalcula modelos por un cambio de captura.
+Si cambian hechos o falta un mes en el consumidor publicado, este comprobador
+bloquea con el motivo exacto: no es un adaptador de publicación de datos nuevos.
+El trabajador existente debe continuar con la proyección correspondiente; nunca
+convertir ese bloqueo en `no_public_impact` ni reenviar un intento incierto.
+
+## AFAC aeroportuario en la tabla existente
+
+`src.publish.afac_airports_demand_projection` reproduce el libro completo y
+prepara únicamente el mes comprobado para los aeropuertos que ya figuran en la
+tabla publicada. Usa `data/reference/afac_city_iata_crosswalk.csv` como cruce
+físico versionado, con coincidencias exactas, y conserva ese archivo en el cierre
+de insumos del gate. No incorpora aeropuertos nuevos, rutas ni estimaciones.
+Un código sin cruce no se inventa ni se convierte en cero; queda en la cobertura
+pendiente del producto.
+
+La base AFAC se ofrece en la misma tabla mediante un selector de fuente. El
+campo `afac_airports` conserva sus propias cifras, URL, hash y captura; las filas
+de reportes directos y las de grupos permanecen intactas. No son una única serie
+mezclada. Dos mercados nativos, doméstico e internacional, forman cada total
+del mes; no se agregan operaciones o carga. Sin comparación anual en el libro
+seleccionado, sus campos interanuales permanecen nulos. Un mes aislado no completa
+un trimestre.
+
+Su perfil privado `afac_airports_demand_source_v1` contiene `item`, `as_of` y
+`selected_airports`: lista ordenada, única y explícita de códigos ya publicados.
+Ese alcance no se amplía cuando otro producto incorpora aeropuertos al mismo
+build. Usa el gate común `src.publish.source_data_update` y su autoridad de
+datos vinculada al `authority_scope` inspeccionado, como la skill de aeropuertos.
+El outbox usa `release_kind=source_data` y el mismo escritor serial del sitio.
+Después del gate, revisión/CI/merge/Pages, comprobar el selector real en escritorio
+y móvil, sus fuentes y `N/D`, la conservación de reportes directos y el payload
+servido. Ni el candidato ni una nueva certificación técnica conceden aprobación
+editorial, nueva disponibilidad o autorización para modelos.

@@ -11,6 +11,31 @@ versión real de contenido. Una tesis de una aerolínea no espera a las demás.
 Una fuente común actualiza solo sus consumidores afectados. Una revisión cruzada
 material necesita evidencia y motivo; no desencadena una reescritura universal.
 
+## Preparación del entorno cloud
+
+Antes de cualquier `inspect`, gate o `verify`, exportar
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` y
+`CHAT_EVIDENCE_APPROVED_INDEX_SHA256` con sus valores literales vigentes.
+El [workflow de CI](../../../.github/workflows/ci.yml) referencia `vars` de GitHub;
+no contiene los valores. Obtener los valores resueltos de logs autorizados de CI
+o del expediente vigente y cotejarlos con el registro canónico enlazado por la
+[guía cloud](../../../docs/cloud-development.md). No crear otra lista de pins,
+calcularlos desde un recibo ni calcular el SHA del texto del pin. Si faltan valores
+o no se acredita su vigencia, conservar ese bloqueo; no cambiar variables,
+permisos o protecciones ni ejecutar el gate con pins inventados o vacíos.
+
+Aplicar las cachés escribibles de la misma guía antes de invocar Python o npm:
+
+```bash
+export UV_CACHE_DIR=/workspace/.cache/uv
+export NPM_CONFIG_CACHE=/workspace/.cache/npm
+export npm_config_cache="$NPM_CONFIG_CACHE"
+```
+
+Las dos formas de la variable npm apuntan al mismo destino documentado;
+no dejar que una shell nueva vuelva a la caché de `HOME`. Conservar la
+validación TLS y la confianza autorizada; no omitir la comprobación de certificados.
+
 ## Entrada y alcance
 
 1. Recibir `job_id`, `data_version`, entidad, periodo, `release_kind` y recibo físico
@@ -260,3 +285,32 @@ del job y `period=2026M07` del binding; no sustituirlos ni mover la captura.
    y su autoridad exacta. La reapertura de un build completado no admite trabajos
    de análisis, versiones superadas ni estados `served_verified` o `no_change`.
    La recuperación ya existente de workers bloqueados conserva sus condiciones.
+
+
+## Fuentes mensuales independientes
+
+Para `release_kind=source_data`, seguir la receta de
+`src/publish/README.md` (Llegadas mensuales). Ejecutar
+`src.publish.source_data_update --inspect`, cotejar el alcance exacto y el
+consentimiento real de exposición, preparar/confirmar los pins y ejecutar su gate.
+No añadir aprobación ni tesis por una llegada operativa. El manifiesto editorial
+anterior completo debe conservarse, con verificación de sus cohortes congeladas.
+
+El adaptador AM `am_monthly_projection` reproduce la fuente original y las siete
+salidas del candidato con disponibilidad en su corte retenido. Su gráfica usa un
+selector explícito entre AFAC y el reporte corporativo no auditado, que incluye
+fletamento. Mantener fecha documental, captura y enlace; distinguir total reportado
+de suma de componentes redondeados. Los comparativos de la edición no reescriben
+AFAC ni otra edición. Un mes aislado no forma trimestre. Las llegadas de aeropuertos
+usan el adaptador aeroportuario y sus controles de grano/universo propios.
+
+
+Las series mensuales corporativas de Viva y Volaris usan
+`peer_monthly_projection` y `corporate_peer_monthly_passengers`, separadas de
+AFAC y de las cifras financieras trimestrales. Son reservaciones de tramos,
+no pasajeros observados transportados. Conservar estado preliminar, captura,
+fecha del documento, original y atribución de entidad: el reporte Viva identifica
+la marca sin establecer un operador legal. El selector corporativo está disponible
+solo para una aerolínea; las comparaciones de varias aerolíneas conservan AFAC.
+Septiembre 2025 es el comparativo de la edición septiembre 2026, no una fuente
+histórica capturada en 2025. No sumar acumulados ni construir 3T desde ese mes.

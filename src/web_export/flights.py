@@ -66,6 +66,10 @@ def export_flights(
             "international": sorted(international_periods),
         },
     }
+    if "corporate_monthly_passengers" in embedded:
+        quarters_doc["corporate_monthly_passengers"] = embedded["corporate_monthly_passengers"]
+    if "corporate_peer_monthly_passengers" in embedded:
+        quarters_doc["corporate_peer_monthly_passengers"] = embedded["corporate_peer_monthly_passengers"]
     # Dashboard v2 (fase 3): Industria, Volaris and Viva maps under
     # flights/entities/<KEY>/…, listed here so web/ knows what to fetch.
     entity_networks = embedded.get("entity_networks", {})
@@ -151,6 +155,14 @@ def recombine_flights(out_dir: Path) -> dict[str, Any]:
         "metadata": quarters_doc["metadata"],
         "quarters": quarters_doc["quarters"],
         "monthly_passengers": quarters_doc["monthly_passengers"],
+        **(
+            {"corporate_monthly_passengers": quarters_doc["corporate_monthly_passengers"]}
+            if "corporate_monthly_passengers" in quarters_doc else {}
+        ),
+        **(
+            {"corporate_peer_monthly_passengers": quarters_doc["corporate_peer_monthly_passengers"]}
+            if "corporate_peer_monthly_passengers" in quarters_doc else {}
+        ),
         "route_network": quarters_doc["route_network"],
         "route_networks": route_networks,
         "domestic_networks": domestic_networks,

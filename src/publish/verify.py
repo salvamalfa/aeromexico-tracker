@@ -108,6 +108,8 @@ def _data_schema_for(
     quarters_schema: dict[str, Any] = QUARTERS_FILE_SCHEMA,
     network_schema: dict[str, Any] = NETWORK_FILE_SCHEMA,
     analysis_schema: dict[str, Any] = ANALYSIS_SCHEMA,
+    market_schema: dict[str, Any] = MARKET_SCHEMA,
+    demand_schema: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
@@ -119,9 +121,13 @@ def _data_schema_for(
     if parts[2:] == ["executive.json"]:
         return EXECUTIVE_SCHEMA
     if parts[2:] == ["market-demand.json"]:
-        return json.loads((CONTRACTS_DIR / "market_demand.schema.json").read_text())
+        return (
+            demand_schema
+            if demand_schema is not None
+            else json.loads((CONTRACTS_DIR / "market_demand.schema.json").read_text())
+        )
     if parts[2:] == ["market.json"]:
-        return MARKET_SCHEMA
+        return market_schema
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
         return quarters_schema
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:
@@ -217,7 +223,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         problems.append("manifest 'analysis_manifest' is empty")
 
     quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
-    analysis_schema = ANALYSIS_SCHEMA
+    analysis_schema, market_schema = ANALYSIS_SCHEMA, MARKET_SCHEMA
+    demand_schema = None
     editorial_schema = None
     try:
         expected_contracts = manifest_mod.contract_hashes(manifest_mod.CONTRACTS_DIR)
@@ -255,6 +262,10 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
                     quarters_schema, network_schema = split_flight_schemas(
                         json.loads(resolved.read_text(encoding="utf-8"))
                     )
+                elif name == "market.schema.json":
+                    market_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == "market_demand.schema.json":
+                    demand_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "analysis.schema.json":
                     analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
@@ -291,7 +302,9 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
     for rel in sorted(actual_paths):
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
-        schema = _data_schema_for(rel, quarters_schema, network_schema, analysis_schema)
+        schema = _data_schema_for(
+            rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema
+        )
         if rel == manifest_mod.EDITORIAL_ANALYSIS_PATH and editorial_schema is not None:
             schema = editorial_schema
         if schema is None:
@@ -316,6 +329,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
             data_payloads[rel] = payload
         if rel == "data/v1/news.json" and rel not in preserved_approval_files:
             from src.web_export.news import news_export_payload
+
             try:
                 if payload != news_export_payload():
                     problems.append("news.json differs from the pinned approved index projection")
@@ -358,7 +372,12 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
     has_receipt = receipt_path in listed_paths
     if has_metrics != has_receipt:
         problems.append("business metrics payload and approval receipt must be published together")
-    elif has_metrics and metrics_path in data_payloads and receipt_path in data_payloads and not {metrics_path, receipt_path} <= preserved_approval_files:
+    elif (
+        has_metrics
+        and metrics_path in data_payloads
+        and receipt_path in data_payloads
+        and not {metrics_path, receipt_path} <= preserved_approval_files
+    ):
         try:
             expected_payload, expected_receipt = build_approved_payload(
                 PATHS.root / "config/chat/business-metrics-proposal.json",

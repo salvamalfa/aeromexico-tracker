@@ -28,17 +28,60 @@ export function renderMix(record: QuarterRecord): void {
   // Dashboard v2: anything but Aeroméxico alone reads AFAC by airline.
   const entities = selection("mix");
   const source = $("mix-source-inline");
-  if (entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
+  const amOnly = !entities.length || (entities.length === 1 && entities[0] === "AEROMEXICO");
+  const single = entities.length === 1 ? entities[0] : null;
+  const corporateSeries = amOnly ? state.corporateMonthlyPassengers
+    : single === "VIVA_AEROBUS" || single === "VOLARIS" ? state.corporatePeerMonthlyPassengers[single] : null;
+  const corporateAvailable = !!corporateSeries?.records.length;
+  const basisControl = $("passenger-basis-control");
+  if (basisControl) basisControl.hidden = !corporateAvailable;
+  const corporate = corporateAvailable && state.passengerBasis === "corporate";
+  const periodControl = $("passenger-period") as HTMLSelectElement | null;
+  if (periodControl) {
+    const quarter = periodControl.querySelector<HTMLOptionElement>('option[value="quarter"]');
+    if (quarter) quarter.disabled = corporate;
+  }
+  if (corporate) {
+    state.passengerPeriod = "month";
+    if (periodControl) periodControl.value = "month";
+  }
+  if (!corporate && entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
     if (source) source.textContent = "AFAC · pasajeros por aerolínea (regular y fletamento)";
     renderEntityMix(entities, record, state.passengerPeriod);
     return;
   }
-  if (source) source.textContent = "AFAC Gold · serie mensual consolidada";
-  const series = state.monthlyPassengers!;
+  const booked = corporate && corporateSeries && "reporting_status" in corporateSeries;
+  if (source) {
+    const company = corporateSeries?.entity === "VOLARIS" ? "Volaris" : corporateSeries?.entity === "VIVA_AEROBUS" ? "Viva (marca)" : "Aeroméxico IR";
+    const reporting = corporateSeries && "reporting_status" in corporateSeries ? {
+      preliminary: "preliminar", preliminary_unaudited: "preliminar, no auditado", unaudited: "no auditado",
+    }[corporateSeries.reporting_status] ?? corporateSeries.reporting_status : "";
+    const attribution = corporateSeries?.entity === "VIVA_AEROBUS"
+      ? "El reporte identifica la marca Viva; no establece un operador legal."
+      : corporateSeries?.entity === "VOLARIS" ? "Universo reportado por Volaris; no censo de operadores." : "";
+    source.textContent = corporate
+      ? `${company} · ${booked ? "reservaciones de tramos, no pasajeros transportados" : "pasajeros del reporte corporativo no auditado"}; mes y comparativo anual reportados en la misma edición; incluye fletamento. ${booked ? reporting + ". " : ""}Documento ${corporateSeries!.documentary_date}; captura ${corporateSeries!.captured_at.slice(0, 10)}. No equivale a AFAC.${booked ? " " + attribution : ""}`
+      : "AFAC · pasajeros transportados; serie histórica y ediciones verificadas";
+    if (corporate) {
+      const link = document.createElement("a");
+      link.href = corporateSeries!.source_url;
+      link.textContent = " Reporte fuente";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      source.append(link);
+    }
+  }
+  const series = corporate ? corporateSeries! : state.monthlyPassengers!;
   const monthlyPoints = series.records.map((point) => ({ ...point, period_label: dateLabel(point.date) }));
   const quarterGroups = new Map<string, QuarterPoint>();
+  const quarterMonths = new Map<string, string[]>();
+  const incompleteQuarters = new Set<string>();
   monthlyPoints.forEach((point) => {
     const periodId = quarterForDate(point.date);
+    if (![point.domestic, point.international, point.total_segment_sum].every(Number.isFinite)) {
+      incompleteQuarters.add(periodId);
+    }
+    quarterMonths.set(periodId, [...(quarterMonths.get(periodId) ?? []), point.date.slice(0, 7)]);
     let quarter = quarterGroups.get(periodId);
     if (!quarter) {
       const startMonth = (Number(periodId.slice(-1)) - 1) * 3 + 1;
@@ -55,7 +98,16 @@ export function renderMix(record: QuarterRecord): void {
     quarter.total_segment_sum += point.total_segment_sum;
   });
   const points: Array<MonthlyPassengerPoint & { period_label: string }> | QuarterPoint[] =
-    state.passengerPeriod === "quarter" ? [...quarterGroups.values()] : monthlyPoints;
+    state.passengerPeriod === "quarter" ? [...quarterGroups.values()].filter((quarter) => {
+      const months = quarterMonths.get(quarter.period_id)!;
+      const first = (Number(quarter.period_id.slice(-1)) - 1) * 3 + 1;
+      const expected = [0, 1, 2].map((offset) => `${quarter.period_id.slice(0, 4)}-${String(first + offset).padStart(2, "0")}`);
+      return !incompleteQuarters.has(quarter.period_id) && months.length === 3 && new Set(months).size === 3 && expected.every((m) => months.includes(m));
+    }) : monthlyPoints;
+  if (!points.length) {
+    void Plotly.react("mix-chart", [], { annotations: [{ text: "No hay un trimestre con sus tres meses completos.", showarrow: false }] }, { displayModeBar: false, responsive: true });
+    return;
+  }
   const narrow = window.matchMedia("(max-width: 736px)").matches;
   const veryNarrow = window.matchMedia("(max-width: 420px)").matches;
   const rangeStart = new Date(`${points[0]!.date}T00:00:00Z`);
@@ -70,14 +122,17 @@ export function renderMix(record: QuarterRecord): void {
         : new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" }).format(
             new Date(`${point.date}T00:00:00Z`)
           );
-    const total = point.total_segment_sum;
+    const total = corporate && "reported_total" in point ? Number(point.reported_total) : point.total_segment_sum;
     return [heading, total, point.domestic, point.international, total ? point.domestic / total : 0, total ? point.international / total : 0];
   });
   const hoverTemplate = [
     "<b>%{customdata[0]}</b>",
-    "<span style='color:#182233'>■</span> <b>Total</b> %{customdata[1]:,.0f}",
+    corporate
+      ? "<span style='color:#182233'>■</span> <b>Total reportado</b> %{customdata[1]:,.0f}"
+      : "<span style='color:#182233'>■</span> <b>Total</b> %{customdata[1]:,.0f}",
     "<span style='color:#003087'>■</span> Nacional %{customdata[2]:,.0f} (%{customdata[4]:.1%})",
     "<span style='color:#c99400'>■</span> Internacional %{customdata[3]:,.0f} (%{customdata[5]:.1%})",
+    ...(corporate ? ["Mes y comparativo anual de la misma edición; no son una serie histórica reconstruida.", "Componentes publicados redondeados; pueden diferir del total."] : []),
     "<extra></extra>",
   ].join("<br>");
   const traces: Data[] = [
@@ -92,8 +147,9 @@ export function renderMix(record: QuarterRecord): void {
       customdata: hoverData, hovertemplate: hoverTemplate,
     },
     {
-      type: "scatter", mode: "lines+markers", x: points.map((point) => point.date),
-      y: points.map((point) => point.total_segment_sum), name: "Total",
+      type: "scatter", mode: corporate ? "markers" : "lines+markers", x: points.map((point) => point.date),
+      y: points.map((point) => corporate && "reported_total" in point ? Number(point.reported_total) : point.total_segment_sum),
+      name: corporate ? "Total reportado" : "Total",
       connectgaps: false, line: { color: "#182233", width: 2.5 },
       marker: { color: "#fff", line: { color: "#182233", width: 1.5 }, size: 6 },
       customdata: hoverData, hovertemplate: hoverTemplate,
@@ -110,13 +166,13 @@ export function renderMix(record: QuarterRecord): void {
       dtick: state.passengerPeriod === "quarter" ? (veryNarrow ? "M24" : "M12") : (veryNarrow ? "M24" : narrow ? "M12" : "M6"), tickangle: 0,
       range: [rangeStart.toISOString(), rangeEnd.toISOString()], tickfont: { size: narrow ? 8 : 10 },
     },
-    yaxis: { rangemode: "tozero", gridcolor: "#e7ebf1", tickformat: ".2s", title: { text: "Pasajeros" } },
-    shapes: [{
+    yaxis: { rangemode: "tozero", gridcolor: "#e7ebf1", tickformat: ".2s", title: { text: booked ? "Tramos de pasajero reservados" : "Pasajeros" } },
+    shapes: corporate ? [] : [{
       type: "rect", xref: "x", yref: "paper", x0: record.metrics.passengers.period_start,
       x1: record.metrics.passengers.period_end, y0: 0, y1: 1,
       fillcolor: "rgba(0,48,135,.06)", line: { color: "rgba(0,48,135,.32)", width: 1, dash: "dot" }, layer: "below",
     }],
-    annotations: [{
+    annotations: corporate ? [] : [{
       x: record.metrics.passengers.period_start, y: 1, xref: "x", yref: "paper", xanchor: "left", yanchor: "bottom",
       text: record.period_label, showarrow: false, font: { size: 9, color: "#003087" },
     }],

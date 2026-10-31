@@ -94,6 +94,11 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   `contracts/web/*.schema.json` sub-schema and `contracts/web/privacy.yaml`,
   and that every `analysis_manifest` entry is well-formed. This is exactly
   what `.github/workflows/pages.yml` runs before deploying.
+  El validador y el lector `Snapshot` usan los bytes del contrato exacto
+  declarado por el manifiesto, también para Mercado y demanda aeroportuaria.
+  Un campo incorporado en una edición nueva no se admite bajo el hash de una
+  edición histórica. Los archivos históricos conservan sus bytes y hashes;
+  privacidad y aprobación siguen exigiendo sus contratos vigentes.
 - `site/` itself is *not* gitignored: an approved run's output is committed
   like any other file, then deployed as-is by CI (`.github/workflows/
   pages.yml` never rebuilds it, never touches `analysis_runs/`).
@@ -526,3 +531,88 @@ reproducen las fuentes completas. Los verificadores generales permanecen intacto
 las excepciones semánticas de datos antiguos solo aplican tras demostrar sus
 bytes exactos contra Git y el baseline servido. CI, revisión, merge normal,
 Pages y verificación real por HTTPS siguen siendo obligatorios.
+
+
+### Llegadas mensuales de datos por fuente
+
+`src.publish.source_data_update` incorpora una fuente validada sin esperar otra
+fuente ni redactar una tesis. Conserva íntegro el manifiesto editorial servido
+(siete lecturas en el corte de octubre de 2026), reproduce sus cohortes con sus
+productores históricos y cambia solo el payload de su adaptador revisado.
+Aeroméxico IR añade una serie corporativa mensual separada en
+`flights/quarters.json`; no sustituye AFAC ni agrega un trimestre desde un mes.
+Los adaptadores aeroportuarios usan su propio universo de demanda.
+
+El request privado `source_data_request_v1` declara `product`, `period`,
+`source_profile: {path, sha256}`, `record_paths` con todos los registros exactos
+del manifiesto anterior y `authorization`, inicialmente `null`. El perfil AM
+`am_monthly_source_profile_v1` contiene `item` de readiness y `as_of` congelado.
+El replay contrasta originales, sidecars, recibos, siete salidas y disponibilidad
+al corte retenido; una recuperación no acredita actualidad del día de ejecución.
+
+```bash
+python -m src.publish.source_data_update --inspect <request.json>
+# Retener la autorización de exposición real para authority_scope exacto.
+python -m src.publish.source_data_update --prepare <request.json>
+# Revisar y confirmar config/publish/source-data-release.json en Git.
+python -m src.publish.source_data_update --request <request.json> --out site/
+python -m src.publish.source_data_scope site/
+```
+
+`--inspect` no concede autoridad. `source_data_authorization_v1` exige estado
+`authorized`, el `scope` exacto inspeccionado y `owner_consent` con referencia,
+instrucción y fecha reales; vive por hash en el ledger privado de autorizaciones.
+No se fabrica desde un candidato ni reemplaza la aprobación editorial. El gate
+repite fuentes, cohorte, hashes, identidad Library y baseline antes del intercambio
+atómico. Requiere Git y Pages vigentes, no acepta una salida de otro producto,
+no activa Gold/warehouse ni permite `--ui-only` para introducir datos nuevos.
+
+El outbox mensual entrega `release_kind=source_data` al agente dashboard con
+su skill existente. Una llegada recuperada conserva el documento original y su
+fecha de captura; no crea una ejecución programada histórica inexistente. El
+build local, la integración y la comprobación HTTPS/browser servida se registran
+como estados distintos conforme al flujo general.
+
+
+Una llegada `source_data` cuyo resultado ya coincide termina con
+`source_data_update.verify_no_visual_change`: reproduce fuente/alcance, contrasta
+bytes con el baseline Git, verifica cohortes y conserva un recibo de equivalencia
+sin build ni nueva autorización editorial. El outbox revalida ese recibo antes
+de cerrar `no_change`. Si el mismo gate ya produjo el build exacto, su recuperación
+revalida fuente, autoridad vigente, aprobaciones, manifiesto y pins; devuelve
+`already_built_verified` sin otro intercambio ni recibos de publicación duplicados.
+Eso no acredita el despliegue ni sustituye la verificación servida.
+Los payloads nuevos se serializan como JSON estricto: NaN e infinitos bloquean.
+
+
+El request puede añadir `additional_sources`, una lista opcional de unidades
+`{product, period, source_profile: {path, sha256}}` ya listas. No existe una lista
+global obligatoria: una sola fuente sigue siendo una entrega válida. Cada unidad
+se reproduce por separado; las proyecciones se componen preservando lo que la
+anterior cambió. El alcance de autorización contiene los bindings individuales
+y los pins finales. Esto permite reunir fuentes listas que comparten payload en
+un build y PR, sin esperar otra fuente. Un miembro inválido no autoriza publicar
+el lote; se conserva su evidencia y se puede entregar cualquier unidad válida
+mediante la modalidad individual. Los jobs restantes pueden comprobar la versión
+ya servida con su equivalencia física, sin otro build ni publicación.
+
+En fuentes con rezago admitido por el calendario, el ledger conserva el mes
+solicitado y `source_period` nativo. Readiness y el binding usan el mes real del
+original. Por ejemplo, una tarea de septiembre puede entregar AFAC agosto o BTS
+julio; no se etiqueta el contenido como septiembre. El publisher usa ese mes
+nativo en su request y la verificación del handoff coteja ambos contextos.
+
+La llegada BTS liga el ZIP original al `source_hash` literal de
+`silver/bts_t100_segment`, sólo después del replay completo de Gold y linaje.
+Silver debe figurar en los hashes de salida comprobados y sus bytes deben
+coincidir: el `source_hash` de Gold es un agregado, no el SHA literal del ZIP.
+Las demás llegadas conservan su comprobación del original contra Gold.
+
+
+La proyección corporativa mensual de Viva y Volaris es independiente de la de
+AM y de AFAC. Guarda cada emisor en `corporate_peer_monthly_passengers` sin tocar
+el bloque de la otra aerolínea. La gráfica existente ofrece la base corporativa
+para una sola aerolínea y conserva AFAC en comparaciones. Son tramos reservados,
+incluido fletamento, con unidad, preliminar y atribución del reporte. Muestra el
+mes y su comparativo anual de la misma edición, con documento/captura y fuente;
+no activa una historia retrospectiva, acumulados ni un trimestre incompleto.

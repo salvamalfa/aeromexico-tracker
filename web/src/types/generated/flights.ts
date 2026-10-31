@@ -21,6 +21,8 @@ export interface VuelosPayloadIntegradoV1 {
   };
   quarters: Quarter[];
   monthly_passengers: MonthlyPassengers;
+  corporate_monthly_passengers?: CorporateMonthlyPassengers;
+  corporate_peer_monthly_passengers?: CorporatePeerMonthlyPassengers;
   route_network: {
     world_geometry: WorldGeometry;
   };
@@ -125,6 +127,78 @@ export interface MonthlyPassengerRecord {
   cutoff_date: NullableString;
   agent_eligible: boolean;
   availability: string;
+}
+export interface CorporateMonthlyPassengers {
+  entity: "AEROMEXICO";
+  source_url: string;
+  source_sha256: string;
+  captured_at: string;
+  documentary_date: string;
+  scope: "company_reported_month_including_charter_and_its_prior_year_comparative_not_AFAC";
+  /**
+   * @minItems 1
+   */
+  records: [
+    {
+      period_id: string;
+      date: string;
+      domestic: number;
+      international: number;
+      reported_total: number;
+      total_segment_sum: number;
+      reconciliation_delta: number;
+    },
+    ...{
+      period_id: string;
+      date: string;
+      domestic: number;
+      international: number;
+      reported_total: number;
+      total_segment_sum: number;
+      reconciliation_delta: number;
+    }[]
+  ];
+}
+export interface CorporatePeerMonthlyPassengers {
+  VIVA_AEROBUS?: CorporatePeerMonthlySeries & {
+    entity: "VIVA_AEROBUS";
+  };
+  VOLARIS?: CorporatePeerMonthlySeries & {
+    entity: "VOLARIS";
+  };
+}
+export interface CorporatePeerMonthlySeries {
+  entity: "VIVA_AEROBUS" | "VOLARIS";
+  source_url: string;
+  source_sha256: string;
+  captured_at: string;
+  documentary_date: string;
+  scope: "booked_flight_segments_not_observed_flown_passengers_itinerary_and_charter";
+  /**
+   * @minItems 1
+   */
+  records: [
+    {
+      period_id: string;
+      date: string;
+      domestic: number;
+      international: number;
+      reported_total: number;
+      total_segment_sum: number;
+      reconciliation_delta: number;
+    },
+    ...{
+      period_id: string;
+      date: string;
+      domestic: number;
+      international: number;
+      reported_total: number;
+      total_segment_sum: number;
+      reconciliation_delta: number;
+    }[]
+  ];
+  reporting_status: string;
+  entity_attribution: string;
 }
 export interface WorldGeometry {
   geojson: {};

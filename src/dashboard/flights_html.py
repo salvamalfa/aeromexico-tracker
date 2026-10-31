@@ -144,6 +144,14 @@ def integration_flight_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "metadata": payload["metadata"],
         "quarters": payload["quarters"],
         "monthly_passengers": payload["monthly_passengers"],
+        **(
+            {"corporate_monthly_passengers": payload["corporate_monthly_passengers"]}
+            if "corporate_monthly_passengers" in payload else {}
+        ),
+        **(
+            {"corporate_peer_monthly_passengers": payload["corporate_peer_monthly_passengers"]}
+            if "corporate_peer_monthly_passengers" in payload else {}
+        ),
         "route_network": {"world_geometry": payload["route_network"]["world_geometry"]},
         "route_networks": {
             period_id: network(value)

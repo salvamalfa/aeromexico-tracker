@@ -39,3 +39,20 @@ it("uses the global quarter for totals, comparisons and the plotted history afte
   expect(layout?.shapes?.[0]?.x1).toBe("2026-07-01");
   expect(document.querySelector("#market-kpis")?.textContent).toContain("N/D");
 });
+
+it("marks an AFAC denominator coverage change and never joins it to a business trend", () => {
+  document.body.innerHTML = '<div id="market-chart"></div><span id="market-source"></span><p id="market-source-note"></p><div id="market-kpis"></div><table><tbody id="market-comparison"></tbody></table>';
+  entityState.market = {
+    schema_version: "market_payload_v1", carriers: ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"],
+    metadata: { default_quarter: "2026Q2", first_period: "2026M06", last_period: "2026M08", industry_note: "", industry_share_latest: 1,
+      method_note: "El denominador nuevo incluye chárter mexicano sin mapeo. No atribuir la diferencia de cobertura al negocio.", method_breaks: ["2026M07"] },
+    quarters: [period("2026Q2", 150)],
+    months: [period("2026M06", 50), period("2026M07", 60), period("2026M08", 70)],
+  } as MarketDocument;
+  renderMarket("2026Q3");
+  const [, traces, layout] = vi.mocked(Plotly.react).mock.calls.at(-1)!;
+  expect(traces[0]).toMatchObject({ x: ["2026-06-01", "2026-07-01", "2026-07-01", "2026-08-01"], y: [50, null, 50, 50], connectgaps: false });
+  expect(layout?.shapes).toContainEqual(expect.objectContaining({ type: "line", x0: "2026-07-01", x1: "2026-07-01" }));
+  expect(document.getElementById("market-source-note")?.textContent).toContain("No atribuir la diferencia de cobertura al negocio");
+  expect(document.getElementById("market-kpis")?.textContent).toContain("N/D");
+});

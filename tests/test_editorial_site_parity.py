@@ -50,8 +50,13 @@ def editorial_site(request):
         "src.publish.financial_scope",
         "src.publish.issuer_scope",
         "src.publish.movements_scope",
+        "src.publish.source_data_scope",
     }, f"Unsupported publication verifier: {profile}"
-    if profile in {"src.publish.issuer_scope", "src.publish.movements_scope"}:
+    if profile in {
+        "src.publish.issuer_scope",
+        "src.publish.movements_scope",
+        "src.publish.source_data_scope",
+    }:
         checker = request.getfixturevalue("verify_financial_publication")
         verify_current_publication(SITE, ROOT, checker)
         spec = anchor(ROOT)
@@ -91,7 +96,11 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
 
     module = verifier_for(SITE, ROOT)
-    if module in {"src.publish.issuer_scope", "src.publish.movements_scope"}:
+    if module in {
+        "src.publish.issuer_scope",
+        "src.publish.movements_scope",
+        "src.publish.source_data_scope",
+    }:
         from importlib import import_module
 
         scope = import_module(module)

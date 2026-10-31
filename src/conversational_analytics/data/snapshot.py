@@ -20,7 +20,6 @@ from src.web_export.schemas import (
     BUSINESS_METRICS_APPROVAL_SCHEMA,
     BUSINESS_METRICS_SCHEMA,
     EXECUTIVE_SCHEMA,
-    MARKET_SCHEMA,
     split_flight_schemas,
 )
 
@@ -146,11 +145,18 @@ class Snapshot:
                     raise SnapshotError(f"Violación de privacidad en {rel}: {exc}") from exc
         schema_map = {
             "data/v1/executive.json": EXECUTIVE_SCHEMA,
-            "data/v1/market.json": MARKET_SCHEMA,
             "data/v1/flights/quarters.json": quarters_schema,
             "data/v1/business_metrics.json": BUSINESS_METRICS_SCHEMA,
             "data/v1/business_metrics.approval.json": BUSINESS_METRICS_APPROVAL_SCHEMA,
         }
+        for name, rel in (
+            ("market.schema.json", "data/v1/market.json"),
+            ("market_demand.schema.json", "data/v1/market-demand.json"),
+        ):
+            if rel in payloads:
+                if name not in resolved_contracts:
+                    raise SnapshotError(f"Falta el contrato exacto declarado para {rel}")
+                schema_map[rel] = json.loads(resolved_contracts[name].read_text(encoding="utf-8"))
         for rel, schema in schema_map.items():
             if rel in payloads:
                 self._validate_payload(paths[rel]["sha256"], schema, payloads[rel])

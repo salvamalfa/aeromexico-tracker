@@ -31,6 +31,12 @@
         "$ref": "#/$defs/row"
       }
     },
+    "afac_airports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/row"
+      }
+    },
     "groups": {
       "type": "array",
       "items": {

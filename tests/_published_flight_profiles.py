@@ -1,4 +1,4 @@
-"""Exact expectations for the four signed flight contracts we support.
+"""Exact expectations for the five signed flight contracts we support.
 
 The legacy baseline predates flight components and June BTS coverage.
 Select expectations from the verified contract, never from query output.
@@ -10,11 +10,20 @@ LEGACY_FLIGHTS = "17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119
 COMPONENT_FLIGHTS = "15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6"
 REGULAR_MAP_FLIGHTS = "3eb5e9425dd346a38088ddef500ff0ff5f71d62dad6559bba7b486135f8ccc58"
 MOVEMENT_FLIGHTS = "6b5626c10552c7a3af385a6aa6a251fadef31f0e317067c6532869a9c0a96721"
+# The monthly source-data edition extends passenger series; its signed native
+# route files retain the movement edition's counts, kinds and missing values.
+MONTHLY_SOURCE_FLIGHTS = "645c58aee902552588aca3c42539f0ac784d19ee00277c1222b18ef5e7ce747e"
 
 
 def _signed_contract(snapshot: Snapshot) -> str:
     contract = snapshot.manifest["contracts"]["flights.schema.json"]
-    assert contract in {LEGACY_FLIGHTS, COMPONENT_FLIGHTS, REGULAR_MAP_FLIGHTS, MOVEMENT_FLIGHTS}, (
+    assert contract in {
+        LEGACY_FLIGHTS,
+        COMPONENT_FLIGHTS,
+        REGULAR_MAP_FLIGHTS,
+        MOVEMENT_FLIGHTS,
+        MONTHLY_SOURCE_FLIGHTS,
+    }, (
         "Review published-route expectations for this new signed flight contract",
         contract,
     )
@@ -26,11 +35,11 @@ def has_signed_flight_components(snapshot: Snapshot) -> bool:
 
 
 def has_regular_map_projection(snapshot: Snapshot) -> bool:
-    return _signed_contract(snapshot) in {REGULAR_MAP_FLIGHTS, MOVEMENT_FLIGHTS}
+    return _signed_contract(snapshot) in {REGULAR_MAP_FLIGHTS, MOVEMENT_FLIGHTS, MONTHLY_SOURCE_FLIGHTS}
 
 
 def has_recorded_movements(snapshot: Snapshot) -> bool:
-    return _signed_contract(snapshot) == MOVEMENT_FLIGHTS
+    return _signed_contract(snapshot) in {MOVEMENT_FLIGHTS, MONTHLY_SOURCE_FLIGHTS}
 
 
 # The correction removes Aerocivil from flight components. Four markets retain

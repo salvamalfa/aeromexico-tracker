@@ -44,6 +44,10 @@ COPY contracts/web/*.json contracts/web/privacy.yaml ./contracts/web/
 COPY contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/flights.schema.json ./contracts/web/versions/17fb7e131da94435190bea925fe9733e298754d04e9b9c5e76fbbea8bef119a7/
 COPY contracts/web/versions/15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6/flights.schema.json ./contracts/web/versions/15768d277f9cb31d361d2b976602e4b65e7ed20d6419a38699557b0c13aafef6/
 COPY contracts/web/versions/c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2/analysis.schema.json ./contracts/web/versions/c0e3b0fb5e3f840087bbb3bed0e222e477f90f5dc9ab9840802916f1ed5eb8c2/
+COPY contracts/web/versions/3ac4a80fbeadea2b6c4eea6ee6d906acf24b1cf1202b295bde0b86b32b2d0008/market.schema.json ./contracts/web/versions/3ac4a80fbeadea2b6c4eea6ee6d906acf24b1cf1202b295bde0b86b32b2d0008/
+COPY contracts/web/versions/420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf/market_demand.schema.json ./contracts/web/versions/420bdc05ef4035fe2f99a5e6e5fce3b0d4d5129abdfefa298a78a1c620dc95bf/
+COPY contracts/web/versions/6b5626c10552c7a3af385a6aa6a251fadef31f0e317067c6532869a9c0a96721/flights.schema.json ./contracts/web/versions/6b5626c10552c7a3af385a6aa6a251fadef31f0e317067c6532869a9c0a96721/
+COPY contracts/web/versions/3eb5e9425dd346a38088ddef500ff0ff5f71d62dad6559bba7b486135f8ccc58/flights.schema.json ./contracts/web/versions/3eb5e9425dd346a38088ddef500ff0ff5f71d62dad6559bba7b486135f8ccc58/
 COPY site/publication_manifest.json ./site/
 COPY site/data/v1/ ./site/data/v1/
 COPY scripts/start_chat_runtime.py ./scripts/start_chat_runtime.py

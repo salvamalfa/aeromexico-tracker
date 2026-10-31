@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-10-30 · Demanda aeroportuaria y equivalencia BTS
+
+- AFAC aeroportuario conserva una base alternativa, limitada a los aeropuertos
+  ya visibles, en la misma tabla de demanda y con cruce físico existente. Los
+  reportes directos no se sustituyen ni se mezclan. El comprobador BTS acredita
+  un no-cambio sólo con hechos exactos y los consumidores realmente publicados;
+  un nuevo mes o cifra distinta queda bloqueado para su propia proyección.
+
+- Puente selectivo de AICM, AIFA, ASUR, GAP y OMA hacia la tabla de demanda existente:
+  replay por fuente, país compatible sin alterar Gold, mes objetivo y alcance
+  explícitos, comparativos retenidos y preservación de otros productos. El gate
+  común de datos y su handoff no equivalen a una publicación ya servida.
+
+## 2026-10-30 · Puente de pasajeros mensuales AFAC
+
+- El puente reproduce el expediente de agosto y las filas mensuales originales
+  de julio/agosto antes de extender dos payloads existentes. Conserva Gold,
+  warehouse, rutas, modelos, tesis y todos los puntos históricos publicados.
+- Las celdas regular/fletamento de Aerovías y Connect se conservan en origen;
+  el grupo se calcula con ambas. El denominador incluye los operadores mexicanos
+  reportados sin mapeo y excluye los grupos extranjeros. Ausencia no significa cero.
+- La procedencia conserva edición, captura y hashes del PDF y la base. El cambio
+  de cobertura del denominador queda señalado y la línea no une metodologías.
+  Un cambio en la frontera histórica exige revisión de esa edición; no se calcula
+  un trimestre incompleto. El gate común conserva su autoridad y entrega separadas.
+
 ## 2026-10-30 · Revisiones semánticas del handoff
 
 - La comparación incluye contexto primario financiero verificado: una revisión
@@ -30,6 +56,16 @@
 - El despacho distingue la corrección de los 39 archivos de vuelos existentes,
   incluido el agregado de Industria, de una publicación editorial. Conserva las
   siete tesis y no autoriza periodos ni valores de fuente nuevos.
+
+## 2026-10-30 · Actualización mensual selectiva
+- La gráfica mensual separa las series corporativas de las tres aerolíneas:
+  Viva/Volaris usan reservaciones de tramos de su edición y comparativo anual;
+  las comparaciones mantienen AFAC. No infiere trimestres desde meses incompletos.
+
+- Preparación de actualización mensual selectiva: gate compartido por fuente con
+  replay físico y autoridad de exposición exacta; serie corporativa AM separada
+  de AFAC en la gráfica mensual. Conserva las lecturas y el resto del sitio; el
+  código preparado no acredita publicación servida.
 
 ## 2026-10-30 · Volaris 3T26: tesis e indicadores por emisor
 

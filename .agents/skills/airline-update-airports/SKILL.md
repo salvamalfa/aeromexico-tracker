@@ -24,6 +24,56 @@ Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
 
+## Continuación al dashboard por producto
+
+La adquisición sigue siendo de esta skill; el coordinador conserva su recibo y
+despacha el handoff de datos a `airline-update-dashboard`. Para `aicm_traffic`,
+`aifa_traffic`, `asur_traffic`, `gap_traffic` y `oma_traffic`, el puente
+`src.publish.airport_demand_projection` reproduce el certificador propio y su
+disponibilidad, y prepara únicamente `data/v1/market-demand.json`. No copia Gold
+al dataset activo ni espera las demás fuentes o una tesis. El outbox usa
+`release_kind=source_data`, con un único escritor del sitio hasta QA servido.
+
+Conservar un perfil privado `airport_demand_source_v1` con `item` exacto del
+readiness y `as_of` explícito. Para una captura retenida, usar su corte histórico;
+un nuevo recibo técnico no es una captura nueva ni acredita disponibilidad hoy.
+Si cambió el código del certificador, construir otro candidato aislado a partir
+de los originales, sidecars, manifiesto, retención y baseline idénticos. Retener
+el fallo y recibo anteriores, comparar todas las salidas y conservar las fechas.
+No editar el `accepted` anterior para hacer pasar un replay.
+
+El gate común recibe `source_data_request_v1` con `product`, `period`,
+`source_profile: {path, sha256}`, los siete registros financieros ya publicados
+y `authorization`. Ejecutar primero:
+
+```bash
+python -m src.publish.source_data_update --inspect <request.json>
+```
+
+La salida fija `authority_scope`; vincular a ese alcance exacto el consentimiento
+auténtico vigente, sin inventar aprobación ni ampliar atribución a aerolíneas.
+La autoridad `source_data_authorization_v1` se conserva por hash. Con la
+autorización vinculada, ejecutar `--prepare <request.json>`, confirmar los pins,
+y después `--request <request.json> --out site/`. Aplicar el flujo completo de
+revisión, CI, integración, Pages y QA servido de la skill de dashboard.
+
+El puente usa el generador de demanda existente con copias temporales: convierte
+el código de país `MX` al nombre que espera ese consumidor y verifica que no se
+omita ningún aeropuerto. No modifica las tablas fuente. Sólo sustituye las filas
+del producto y mes solicitado; los comparativos del reporte quedan en sus campos
+de comparación, sin reescribir las filas históricas. Conserva la cuarentena OMA,
+los otros aeropuertos, AFAC, las tesis y todos los demás payloads. OMA se reproduce
+desde su tabla nativa de pasajeros terminales: trece aeropuertos, grupo y tres
+mercados reconciliados; nunca reutiliza el detalle heredado mal tipado.
+
+Comprobar en la tabla visible las notas de alcance: AICM comercial; AIFA comercial
+y aviación general; ASUR sólo nueve aeropuertos mexicanos, con representación
+reconstruida identificada; GAP sólo doce aeropuertos mexicanos, valores
+preliminares redondeados, Jamaica excluida y CBX sin doble conteo; OMA terminal comercial/chárter/general sin tránsito,
+separando mes de acumulado anual. No sumar grupo y aeropuertos ni atribuir esos
+pasajeros a una aerolínea. Los slots conservan sus controles y requieren su propio
+puente; no caben en estos cinco productos.
+
 La comprobación física de actualidad admite AICM y OMA mediante sus índices
 oficiales, además de AIFA. Vincular `availability` al recibo de colección que
 contiene el índice y el PDF/XLSX exacto usado por el candidato. Exige HTTP200,

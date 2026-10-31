@@ -16,6 +16,24 @@ export interface MercadoPayloadV1 {
     industry_note: string;
     industry_share_latest: number | null;
     method_note: string;
+    method_breaks?: string[];
+    source_editions?: {
+      edition: string;
+      previous_period: string;
+      published_months: string[];
+      universe_version: "afac_reported_mexican_all_services_v1";
+      database_sha256: string;
+      pdf_sha256: string;
+      source_url: string;
+      captured_at: string;
+      scope: "reported_Mexican_carrier_passengers_scheduled_and_charter_not_foreign_or_route_estimates";
+      unmapped_operators: {
+        [k: string]: {
+          domestic: string[];
+          international: string[];
+        };
+      };
+    }[];
   };
   carriers: string[];
   months: Month[];

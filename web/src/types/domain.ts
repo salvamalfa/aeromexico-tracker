@@ -174,6 +174,22 @@ export interface MonthlyPassengerSeries {
   records: MonthlyPassengerPoint[];
 }
 
+export interface CorporateMonthlyPassengerSeries {
+  entity: "AEROMEXICO";
+  source_url: string;
+  source_sha256: string;
+  captured_at: string;
+  documentary_date: string;
+  scope: string;
+  records: Array<MonthlyPassengerPoint & { period_id: string; reported_total: number; reconciliation_delta: number }>;
+}
+
+export interface CorporatePeerMonthlyPassengerSeries extends Omit<CorporateMonthlyPassengerSeries, "entity"> {
+  entity: "VIVA_AEROBUS" | "VOLARIS";
+  reporting_status: string;
+  entity_attribution: string;
+}
+
 export interface MapCoverage {
   source: string;
   source_url: string;
@@ -187,6 +203,8 @@ export interface QuartersDocument {
   metadata: FlightsMetadata;
   quarters: QuarterRecord[];
   monthly_passengers: MonthlyPassengerSeries;
+  corporate_monthly_passengers?: CorporateMonthlyPassengerSeries;
+  corporate_peer_monthly_passengers?: Partial<Record<"VIVA_AEROBUS" | "VOLARIS", CorporatePeerMonthlyPassengerSeries>>;
   route_network: { world_geometry: WorldGeometry };
   available_periods: AvailablePeriods;
 }

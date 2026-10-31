@@ -173,6 +173,7 @@ def test_signed_profiles_preserve_frozen_versions_and_reject_unknown_contracts()
     from _published_flight_profiles import (
         COMPONENT_FLIGHTS,
         LEGACY_FLIGHTS,
+        MONTHLY_SOURCE_FLIGHTS,
         MOVEMENT_FLIGHTS,
         REGULAR_MAP_FLIGHTS,
     )
@@ -182,6 +183,7 @@ def test_signed_profiles_preserve_frozen_versions_and_reject_unknown_contracts()
         (COMPONENT_FLIGHTS, (True, False, False)),
         (REGULAR_MAP_FLIGHTS, (True, True, False)),
         (MOVEMENT_FLIGHTS, (True, True, True)),
+        (MONTHLY_SOURCE_FLIGHTS, (True, True, True)),
     ):
         snapshot = SimpleNamespace(manifest={"contracts": {"flights.schema.json": digest}})
         assert (

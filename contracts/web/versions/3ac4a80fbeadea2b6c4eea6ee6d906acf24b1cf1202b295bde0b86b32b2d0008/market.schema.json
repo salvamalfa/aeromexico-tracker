@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aeromexico-tracker/contracts/web/market.schema.json",
+  "title": "Mercado · payload (v1)",
+  "description": "Output of src.dashboard.market.build_market_payload(): AFAC passenger share of Aeroméxico, Volaris and Viva over all Mexican carriers, monthly and by complete quarter, for the Mercado card of the v2 dashboard. A value AFAC does not publish is null, never zero.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "metadata", "carriers", "months", "quarters"],
+  "properties": {
+    "schema_version": { "const": "market_payload_v1" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source", "denominator", "first_period", "last_period",
+        "default_quarter", "data_as_of", "industry_note",
+        "industry_share_latest", "method_note"
+      ],
+      "properties": {
+        "source": { "type": "string" },
+        "denominator": { "type": "string" },
+        "first_period": { "type": "string", "pattern": "^\\d{4}M\\d{2}$" },
+        "last_period": { "type": "string", "pattern": "^\\d{4}M\\d{2}$" },
+        "default_quarter": { "type": "string", "pattern": "^\\d{4}Q[1-4]$" },
+        "data_as_of": { "type": ["string", "null"] },
+        "industry_note": { "type": "string" },
+        "industry_share_latest": { "type": ["number", "null"] },
+        "method_note": { "type": "string" }
+      }
+    },
+    "carriers": { "type": "array", "items": { "type": "string" } },
+    "months": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/month" }
+    },
+    "quarters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/quarter" }
+    }
+  },
+  "$defs": {
+    "share": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passengers", "share"],
+      "properties": {
+        "passengers": { "type": ["number", "null"], "minimum": 0 },
+        "share": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "share_change_qoq_pp": { "type": ["number", "null"] },
+        "share_change_yoy_pp": { "type": ["number", "null"] }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mexican_carriers_passengers", "carriers", "industry"],
+      "properties": {
+        "mexican_carriers_passengers": { "type": ["number", "null"], "minimum": 0 },
+        "carriers": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/share" }
+        },
+        "industry": { "$ref": "#/$defs/share" }
+      }
+    },
+    "segments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "domestic", "international"],
+      "properties": {
+        "total": { "$ref": "#/$defs/segment" },
+        "domestic": { "$ref": "#/$defs/segment" },
+        "international": { "$ref": "#/$defs/segment" }
+      }
+    },
+    "month": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["period_id", "period_label", "segments"],
+      "properties": {
+        "period_id": { "type": "string", "pattern": "^\\d{4}M\\d{2}$" },
+        "period_label": { "type": "string" },
+        "segments": { "$ref": "#/$defs/segments" }
+      }
+    },
+    "quarter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["period_id", "period_label", "segments"],
+      "properties": {
+        "period_id": { "type": "string", "pattern": "^\\d{4}Q[1-4]$" },
+        "period_label": { "type": "string" },
+        "segments": { "$ref": "#/$defs/segments" }
+      }
+    }
+  }
+}
