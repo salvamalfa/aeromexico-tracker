@@ -309,7 +309,7 @@ export interface MarketShare {
 }
 
 export interface MarketSegment {
-  mexican_carriers_passengers: number;
+  mexican_carriers_passengers: number | null;
   carriers: Record<string, MarketShare>;
   industry: MarketShare;
 }
