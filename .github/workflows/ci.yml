@@ -1,165 +1,254 @@
+# Required test/web names stay stable; components fail closed.
+# Shadow recommendations never reduce execution.
 name: CI
-
-on:
+'on':
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types:
+    - opened
+    - synchronize
+    - reopened
+    - edited
   push:
-    branches: [master]
-  workflow_call:
-
+    branches:
+    - master
+    paths-ignore:
+    - site/**
+    - .github/pages-preview.json
+  workflow_call: null
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-# A blank repository variable keeps financial payloads closed; a published
-# receipt requires the owner's exact canonical hash pin.
 env:
   CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256: ${{ vars.CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 }}
   CHAT_EVIDENCE_APPROVED_INDEX_SHA256: ${{ vars.CHAT_EVIDENCE_APPROVED_INDEX_SHA256 }}
-
-# CI only reads the repository; callers (pages.yml) grant their own scopes.
 permissions:
   contents: read
-
 jobs:
+  change-plan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - name: Report conservative selection in shadow mode only
+      env:
+        PLAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        PLAN_HEAD: ${{ github.sha }}
+      run: python3 scripts/ci_change_plan.py --base "$PLAN_BASE" --head "$PLAN_HEAD" --output test-results/change-plan.json
+    - name: Retain ci-change-plan
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-change-plan-${{ github.run_attempt }}
+        path: test-results/change-plan.json
+        if-no-files-found: error
+        retention-days: 7
+  pages-preflight:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: '3.13'
+        enable-cache: true
+    - name: Verify the exact locked Pages environment and publication
+      run: python3 scripts/check_ci_pages.py --execute --report test-results/pages-preflight.json --cache-state
+        unknown --base "$PUBLICATION_BASE_COMMIT"
+      env:
+        UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/pages-preflight-venv
+        PUBLICATION_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+    - name: Retain pages-preflight
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pages-preflight-${{ github.run_attempt }}
+        path: test-results/pages-preflight.json
+        if-no-files-found: error
+        retention-days: 7
+  docker-preflight:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - name: Measure cold-stage build and offline runtime, then warm rebuild
+      run: |-
+        python3 scripts/check_ci_docker.py --execute --report test-results/docker-preflight-cold.json --cache-state cold --no-cache
+        python3 scripts/check_ci_docker.py --execute --report test-results/docker-preflight-warm.json --cache-state warm
+    - name: Retain docker-preflight
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-preflight-${{ github.run_attempt }}
+        path: test-results/docker-preflight-*.json
+        if-no-files-found: error
+        retention-days: 7
+  static:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: '3.13'
+        enable-cache: true
+    - name: Install locked dependencies
+      run: uv sync --all-extras --all-groups --locked
+    - name: Check task file lifecycle dispositions and documentation references
+      if: github.event_name == 'pull_request'
+      env:
+        DOC_LIFECYCLE_BASE: ${{ github.event.pull_request.base.sha }}
+        DOC_LIFECYCLE_HEAD: ${{ github.event.pull_request.head.sha }}
+        DOC_LIFECYCLE_SUMMARY: ${{ github.event.pull_request.body }}
+      run: |
+        git fetch --no-tags origin "$DOC_LIFECYCLE_BASE" "$DOC_LIFECYCLE_HEAD"
+        uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE" --head "$DOC_LIFECYCLE_HEAD"
+    - name: Ruff pyflakes check on src/ and scripts/
+      run: uv run ruff check --select F src scripts
+    - name: Check ruff format on migrated modules
+      run: uv run ruff format --check src/dashboard/international_routes.py src/analysis_agent/lifecycle.py
+  chat-runtime:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: '3.13'
+        enable-cache: true
+    - name: Install isolated chat runtime profile
+      run: uv sync --locked --only-group chat-runtime
+      env:
+        UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
+    - name: Smoke test isolated chat runtime
+      run: uv run --locked --only-group chat-runtime python -m scripts.check_chat_runtime
+      env:
+        UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
+  public-tests:
+    needs:
+    - change-plan
+    - pages-preflight
+    - docker-preflight
+    - static
+    - chat-runtime
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: '3.13'
+        enable-cache: true
+    - name: Install locked dependencies
+      run: uv sync --all-extras --all-groups --locked
+    - name: Install and check the pinned CI test tools
+      run: |
+        uv --no-config pip install --python .venv/bin/python \
+          --only-binary :all: --no-deps --require-hashes -r .github/ci-test-tools.txt
+        uv pip check --python .venv/bin/python
+    - name: Run the public test subset
+      env:
+        PUBLICATION_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+      run: |
+        # A code-only PR verifies the existing publication with its released
+        # verifier. This does not approve the PR runtime for publication.
+        # Actual publication changes still use the ordinary financial gate.
+        pytest_args=(-m "not local_data and not browser" -q --durations=30)
+        if [[ "$PUBLICATION_BASE_COMMIT" =~ ^[a-f0-9]{40}$ ]] \
+          && git merge-base --is-ancestor "$PUBLICATION_BASE_COMMIT" HEAD \
+          && git diff --quiet "$PUBLICATION_BASE_COMMIT" HEAD -- site; then
+          pytest_args+=(--financial-publication-base "$PUBLICATION_BASE_COMMIT")
+        fi
+        uv run --no-sync pytest -n 2 --dist=loadfile --max-worker-restart=0 \
+          "${pytest_args[@]}" --junitxml=test-results/public.xml
+    - name: Retain public test timings
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: public-test-results-${{ github.run_attempt }}
+        path: test-results/public.xml
+        if-no-files-found: ignore
+        retention-days: 7
+  web-checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: npm
+        cache-dependency-path: web/package-lock.json
+    - name: Install web/ dependencies
+      working-directory: web
+      run: npm ci
+    - name: Type-check (tsc --noEmit)
+      working-directory: web
+      run: npm run check
+    - name: Unit tests (vitest)
+      working-directory: web
+      run: npm run test
+    - name: Build (vite build)
+      working-directory: web
+      run: npm run build
+    - uses: astral-sh/setup-uv@v10.2.0
+      with:
+        python-version: '3.13'
+        enable-cache: true
+    - name: Install locked dependencies
+      run: uv sync --all-extras --all-groups --locked
+    - name: Install Playwright's chromium
+      run: uv run playwright install --with-deps chromium
+    - name: Browser smoke tests against the built site
+      run: uv run pytest -m browser -q --durations=30 --junitxml=test-results/browser.xml tests/test_web_flights_smoke.py
+        tests/test_web_page_smoke.py tests/test_web_chat_smoke.py tests/test_web_review_smoke.py tests/test_web_financial_smoke.py
+    - name: Retain browser test timings
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: browser-test-results-${{ github.run_attempt }}
+        path: test-results/browser.xml
+        if-no-files-found: ignore
+        retention-days: 7
+    needs:
+    - change-plan
+    - pages-preflight
+    - docker-preflight
+    - static
+    - chat-runtime
   test:
+    if: ${{ always() }}
+    needs:
+    - change-plan
+    - pages-preflight
+    - docker-preflight
+    - static
+    - chat-runtime
+    - public-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: astral-sh/setup-uv@v10.2.0
-        with:
-          python-version: "3.13"
-          enable-cache: true
-
-      # Several modules the non-local-data suite imports at collection time
-      # (src/analytics/*, src/transform/stage6_facts.py) depend on the
-      # "analytics" extra (statsmodels, scikit-learn, spaCy, statsforecast),
-      # so this mirrors refresh.yml's install rather than a bare `uv sync`.
-      - name: Install locked dependencies
-        run: uv sync --all-extras --all-groups --locked
-
-      - name: Check task file lifecycle dispositions and documentation references
-        if: github.event_name == 'pull_request'
-        env:
-          DOC_LIFECYCLE_BASE: ${{ github.event.pull_request.base.sha }}
-          DOC_LIFECYCLE_HEAD: ${{ github.event.pull_request.head.sha }}
-          DOC_LIFECYCLE_SUMMARY: ${{ github.event.pull_request.body }}
-        run: |
-          git fetch --no-tags origin "$DOC_LIFECYCLE_BASE" "$DOC_LIFECYCLE_HEAD"
-          uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE" --head "$DOC_LIFECYCLE_HEAD"
-
-      # Pyflakes errors (unused/undefined names, dead assignments) across the
-      # code CI ships. tests/ is excluded for now: pytest fixtures imported by
-      # name read as unused imports there.
-      - name: Ruff pyflakes check on src/ and scripts/
-        run: uv run ruff check --select F src scripts
-
-      # Only these modules are ruff-formatted so far (see REPO_MAP.md);
-      # the rest of the tree is not yet covered.
-      - name: Check ruff format on migrated modules
-        run: >-
-          uv run ruff format --check
-          src/dashboard/international_routes.py
-          src/analysis_agent/lifecycle.py
-
-      # These two hashed tools are separate from the approved runtime lock.
-      - name: Install and check the pinned CI test tools
-        run: |
-          uv --no-config pip install --python .venv/bin/python \
-            --only-binary :all: --no-deps --require-hashes -r .github/ci-test-tools.txt
-          uv pip check --python .venv/bin/python
-
-      # data/warehouse.duckdb, data/silver, data/bronze raw captures, private
-      # Gold cubes and analysis_runs/ are gitignored and local-only (see
-      # AGENTS.md); this runner never has them. Tests that need them are
-      # marked `local_data` (tests/conftest.py) and skip with an explicit
-      # reason here. `browser` (Playwright) tests are excluded too: full
-      # local validation, with the data restored, stays a local/manual step
-      - name: Run the public test subset
-        env:
-          PUBLICATION_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
-        run: |
-          # A code-only PR verifies the existing publication with its released
-          # verifier. This does not approve the PR runtime for publication.
-          # Actual publication changes still use the ordinary financial gate.
-          pytest_args=(-m "not local_data and not browser" -q --durations=30)
-          if [[ "$PUBLICATION_BASE_COMMIT" =~ ^[a-f0-9]{40}$ ]] \
-            && git merge-base --is-ancestor "$PUBLICATION_BASE_COMMIT" HEAD \
-            && git diff --quiet "$PUBLICATION_BASE_COMMIT" HEAD -- site; then
-            pytest_args+=(--financial-publication-base "$PUBLICATION_BASE_COMMIT")
-          fi
-          uv run --no-sync pytest -n 2 --dist=loadfile --max-worker-restart=0 \
-            "${pytest_args[@]}" --junitxml=test-results/public.xml
-
-      - name: Retain public test timings
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-test-results
-          path: test-results/public.xml
-          if-no-files-found: ignore
-          retention-days: 7
-
-      # A second, isolated venv proves the owner-facing API can install and
-      # start without the pipeline, analytics, test, or browser dependencies.
-      - name: Install isolated chat runtime profile
-        env:
-          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
-        run: uv sync --locked --only-group chat-runtime
-      - name: Smoke test isolated chat runtime
-        env:
-          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
-        run: uv run --locked --only-group chat-runtime python -m scripts.check_chat_runtime
-
+    - uses: actions/checkout@v7
+    - name: Require success from every component
+      env:
+        CI_REQUIRED_RESULTS: ${{ toJSON(needs) }}
+      run: python3 scripts/check_ci_jobs.py test
   web:
+    if: ${{ always() }}
+    needs:
+    - change-plan
+    - pages-preflight
+    - docker-preflight
+    - static
+    - chat-runtime
+    - web-checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: web/package-lock.json
-      - name: Install web/ dependencies
-        working-directory: web
-        run: npm ci
-      - name: Type-check (tsc --noEmit)
-        working-directory: web
-        run: npm run check
-      - name: Unit tests (vitest)
-        working-directory: web
-        run: npm run test
-      - name: Build (vite build)
-        working-directory: web
-        run: npm run build
-
-      # The browser smoke tests use synthetic fixtures; chat uses a fake API,
-      # and blind review stays local-only. None needs a warehouse or
-      # analysis_runs/. Playwright parity tests still need the locally-restored
-      # warehouse (`local_data`).
-      - uses: astral-sh/setup-uv@v10.2.0
-        with:
-          python-version: "3.13"
-          enable-cache: true
-      - name: Install locked dependencies
-        run: uv sync --all-extras --all-groups --locked
-      - name: Install Playwright's chromium
-        run: uv run playwright install --with-deps chromium
-      - name: Browser smoke tests against the built site
-        run: >-
-          uv run pytest -m browser -q --durations=30 --junitxml=test-results/browser.xml
-          tests/test_web_flights_smoke.py
-          tests/test_web_page_smoke.py
-          tests/test_web_chat_smoke.py
-          tests/test_web_review_smoke.py
-          tests/test_web_financial_smoke.py
-      - name: Retain browser test timings
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: browser-test-results
-          path: test-results/browser.xml
-          if-no-files-found: ignore
-          retention-days: 7
+    - uses: actions/checkout@v7
+    - name: Require success from every component
+      env:
+        CI_REQUIRED_RESULTS: ${{ toJSON(needs) }}
+      run: python3 scripts/check_ci_jobs.py web

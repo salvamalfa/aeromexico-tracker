@@ -1,0 +1,657 @@
+{
+  "schema_version": "ci_preflight_evidence_v1",
+  "recorded_at": "2026-10-31T06:46:24Z",
+  "base_commit": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+  "branch": "codex/ci-preflight-stages-20261031",
+  "scope": "CI component checks; no source acquisition, activation, analysis or publication",
+  "public_manifest": {
+    "sha256": "be17ab16d78faae4cbe1fa5b2e2b18ebb8304d52eee17c4e13c880654f35ba71",
+    "bytes": 131212
+  },
+  "implementation": {
+    "scripts/check_ci_pages.py": {
+      "sha256": "a37dbb01e6fecacbbc9b081e16bef14d0997d0f0232ee6741e8c03f3f7882210",
+      "bytes": 13445
+    },
+    "scripts/check_ci_docker.py": {
+      "sha256": "2f683d037edf4d9fd6d41d0fa27891a2a47b4dd948f6cbeedeef0c53c3e9b707",
+      "bytes": 12035
+    },
+    "scripts/check_ci_jobs.py": {
+      "sha256": "e88a8604bb5e5bfcf4ace2ac139507245df890d06986752b324d0d366d133c24",
+      "bytes": 1626
+    },
+    "scripts/ci_change_plan.py": {
+      "sha256": "6eae181ade64630fef939155089234b253f4211e873bfe25f900301c616ba0e1",
+      "bytes": 8361
+    },
+    ".github/workflows/ci.yml": {
+      "sha256": "038410726086630cff3846dd987e560d36568581b106a2d94811a10cc36d5310",
+      "bytes": 9007
+    }
+  },
+  "pages_measurements": {
+    "fresh_environment_download_cache_existing": {
+      "identity": {
+        "sha256": "942539913506a7d1d51c8d44a74f4f55c4b415046a8bcec2b7db89e7180e48bd",
+        "bytes": 2831
+      },
+      "result": {
+        "schema_version": "ci_pages_preflight_v2",
+        "status": "passed",
+        "execution_requested": true,
+        "executed": true,
+        "checkout": "/workspace/airline-ci-preflight-20261031",
+        "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+        "cache_state_declared": "cold",
+        "cache_state_observed": "not_inferred",
+        "measurement_scope": "process wall time; no claim about download caches or global CI savings",
+        "environment_path": "/workspace/ci-preflight-pages-profiles-20261031/pages-venv",
+        "environment_existed_before": false,
+        "commands": [
+          [
+            "uv",
+            "sync",
+            "--locked",
+            "--no-group",
+            "dev",
+            "--extra",
+            "analytics"
+          ],
+          [
+            "uv",
+            "run",
+            "--locked",
+            "--no-group",
+            "dev",
+            "--extra",
+            "analytics",
+            "python",
+            "scripts/check_pages_publication.py",
+            "site/"
+          ]
+        ],
+        "verification_policy": {
+          "mode": "current_site_strong",
+          "base": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "reason": "reviewed_runtime_inputs_unchanged"
+        },
+        "site_verification": "current_site_strong_verified",
+        "current_site_strong_verified": true,
+        "current_runtime_approved": false,
+        "phases": [
+          {
+            "phase": "install",
+            "command": [
+              "uv",
+              "sync",
+              "--locked",
+              "--no-group",
+              "dev",
+              "--extra",
+              "analytics"
+            ],
+            "started_at": "2026-10-31T06:37:57.374981+00:00",
+            "completed_at": "2026-10-31T06:37:58.350460+00:00",
+            "elapsed_seconds": 0.9754940440034261,
+            "exit_code": 0,
+            "error_type": null,
+            "stdout": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "stderr": {
+              "sha256": "b7e04006ab37ca984a0d4233c7fb5b07fb60db67005b2cadfd2b3eb5a88568f6",
+              "bytes": 2490
+            }
+          },
+          {
+            "phase": "verify",
+            "command": [
+              "uv",
+              "run",
+              "--locked",
+              "--no-group",
+              "dev",
+              "--extra",
+              "analytics",
+              "python",
+              "scripts/check_pages_publication.py",
+              "site/"
+            ],
+            "started_at": "2026-10-31T06:37:58.350566+00:00",
+            "completed_at": "2026-10-31T06:41:44.009513+00:00",
+            "elapsed_seconds": 225.65898414500407,
+            "exit_code": 0,
+            "error_type": null,
+            "stdout": {
+              "sha256": "6ff338e22e5c19ca40bf59601eb7f6c896e3acec8859119fc8210680f1125e06",
+              "bytes": 32
+            },
+            "stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            }
+          }
+        ],
+        "failed_phase": null,
+        "started_at": "2026-10-31T06:37:57.359599+00:00",
+        "completed_at": "2026-10-31T06:41:44.009588+00:00",
+        "elapsed_seconds": 226.6499653169958
+      }
+    },
+    "same_environment_reused": {
+      "identity": {
+        "sha256": "5a959604e1d6f1ff7e25687ca0c2f4c65f3591c043aef713185b72a86a70a26a",
+        "bytes": 2829
+      },
+      "result": {
+        "schema_version": "ci_pages_preflight_v2",
+        "status": "passed",
+        "execution_requested": true,
+        "executed": true,
+        "checkout": "/workspace/airline-ci-preflight-20261031",
+        "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+        "cache_state_declared": "warm",
+        "cache_state_observed": "not_inferred",
+        "measurement_scope": "process wall time; no claim about download caches or global CI savings",
+        "environment_path": "/workspace/ci-preflight-pages-profiles-20261031/pages-venv",
+        "environment_existed_before": true,
+        "commands": [
+          [
+            "uv",
+            "sync",
+            "--locked",
+            "--no-group",
+            "dev",
+            "--extra",
+            "analytics"
+          ],
+          [
+            "uv",
+            "run",
+            "--locked",
+            "--no-group",
+            "dev",
+            "--extra",
+            "analytics",
+            "python",
+            "scripts/check_pages_publication.py",
+            "site/"
+          ]
+        ],
+        "verification_policy": {
+          "mode": "current_site_strong",
+          "base": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "reason": "reviewed_runtime_inputs_unchanged"
+        },
+        "site_verification": "current_site_strong_verified",
+        "current_site_strong_verified": true,
+        "current_runtime_approved": false,
+        "phases": [
+          {
+            "phase": "install",
+            "command": [
+              "uv",
+              "sync",
+              "--locked",
+              "--no-group",
+              "dev",
+              "--extra",
+              "analytics"
+            ],
+            "started_at": "2026-10-31T06:42:38.781277+00:00",
+            "completed_at": "2026-10-31T06:42:39.118609+00:00",
+            "elapsed_seconds": 0.3373420130010345,
+            "exit_code": 0,
+            "error_type": null,
+            "stdout": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "stderr": {
+              "sha256": "baa984ac7532bc0ba76c859223088aa52d906cc88182d605efb28d041bc8c286",
+              "bytes": 62
+            }
+          },
+          {
+            "phase": "verify",
+            "command": [
+              "uv",
+              "run",
+              "--locked",
+              "--no-group",
+              "dev",
+              "--extra",
+              "analytics",
+              "python",
+              "scripts/check_pages_publication.py",
+              "site/"
+            ],
+            "started_at": "2026-10-31T06:42:39.118713+00:00",
+            "completed_at": "2026-10-31T06:46:14.611040+00:00",
+            "elapsed_seconds": 215.49234790400078,
+            "exit_code": 0,
+            "error_type": null,
+            "stdout": {
+              "sha256": "6ff338e22e5c19ca40bf59601eb7f6c896e3acec8859119fc8210680f1125e06",
+              "bytes": 32
+            },
+            "stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            }
+          }
+        ],
+        "failed_phase": null,
+        "started_at": "2026-10-31T06:42:38.755703+00:00",
+        "completed_at": "2026-10-31T06:46:14.611097+00:00",
+        "elapsed_seconds": 215.85537211700284
+      }
+    }
+  },
+  "pages_comparison_limits": [
+    "Fresh virtual environment used an existing download cache; it is not a globally cold machine. Second run reused the environment.",
+    "Install/verify commands, lock, publication, source runtime and Git base were equal. Helper eligibility guards were refined between launches; that branch was not used in this CI-only current_site_strong case. Phase observations do not establish matched end-to-end savings.",
+    "Light focal tests ran about 3 seconds during the first measurement. No concurrent source, Docker, browser or full-suite work was launched.",
+    "Candidate CI/docs were uncommitted; these measurements do not validate a later SHA. Final-head GitHub checks are required."
+  ],
+  "docker_local_attempts": [
+    {
+      "identity": {
+        "sha256": "39d86029dcfae7c6b659e5195c1a360bc04162caf8ad76540f54c2d3bcaa0706",
+        "bytes": 6540
+      },
+      "result": {
+        "schema_version": "ci_docker_preflight_v1",
+        "recorded_at": "2026-10-31T06:31:18.452301+00:00",
+        "status": "failed",
+        "source": {
+          "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "tracked_tree": "f1113dd509b48e4da3848e26b4c5d9d0d0e94ffc",
+          "tracked_worktree_dirty": true,
+          "tracked_worktree_diff_sha256": "94d26719563b333e007f40c5fbedafacbc8a5d9de31c36bb992c7d10969dd7a0",
+          "input_sha256": {
+            "Dockerfile.chat": "16eb2523bacff40da94811e9c93c506a8b09453d6f5a506a277ad4e1260b7df1",
+            ".dockerignore": "ec2e467575f763d154bd9ce69086b135ba6fe45fbbdd4a4022b5a84b7da3e5d3",
+            "pyproject.toml": "375d8eeca1f1d9716f7ab08ab63e640f5fc06590922ddef0e4d9a18bde268a1d",
+            "uv.lock": "89ff2bbaaa226e836b0f577aedcc9c6bb07647f1c20bfd70d83ead6e1828ab11",
+            "site/publication_manifest.json": "be17ab16d78faae4cbe1fa5b2e2b18ebb8304d52eee17c4e13c880654f35ba71"
+          }
+        },
+        "cache": {
+          "declared_state": "unknown",
+          "docker_stage_cache_disabled": false,
+          "effective_cache_measured": false
+        },
+        "probe_sha256": "a1b675f377a695cc0371be8eaa9826995f6406b7b1b65da605d763aeabe45bee",
+        "runtime_network": "none",
+        "runtime_host_mounts": [],
+        "approval_environment_names": [
+          "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+          "CHAT_EVIDENCE_APPROVED_INDEX_SHA256"
+        ],
+        "plan": {
+          "build": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "build",
+            "--file",
+            "/workspace/airline-ci-preflight-20261031/Dockerfile.chat",
+            "--target",
+            "runtime",
+            "--label",
+            "org.opencontainers.image.revision=7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+            "--tag",
+            "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+            "/workspace/airline-ci-preflight-20261031"
+          ],
+          "inspect": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "image",
+            "inspect",
+            "--format",
+            "{{.Id}} {{index .Config.Labels \"org.opencontainers.image.revision\"}}",
+            "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0"
+          ],
+          "runtime": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--network=none",
+            "--read-only",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            "--workdir=/app",
+            "--tmpfs",
+            "/tmp:rw,nosuid,nodev,mode=1777",
+            "--tmpfs",
+            "/data:rw,nosuid,nodev,mode=700",
+            "--env",
+            "CHAT_PROVIDER=mock",
+            "--env",
+            "CHAT_OPENAI_ENABLED=false",
+            "--env",
+            "PYTHONPATH=/app",
+            "--env",
+            "PYTHONDONTWRITEBYTECODE=1",
+            "--env",
+            "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+            "--env",
+            "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
+            "--entrypoint=python",
+            "<built-image-id>",
+            "-c",
+            "import asyncio\nimport hashlib\nimport json\nimport secrets\nimport tempfile\nfrom pathlib import Path\nimport scripts.start_chat_runtime\nfrom src.config import PATHS\nfrom src.conversational_analytics.api import create_app\nfrom src.conversational_analytics.auth import hash_password\nfrom src.conversational_analytics.config import ChatConfig\nfrom src.conversational_analytics.data.snapshot import Snapshot\nfrom src.web_export.contract_versions import ARCHIVED_CONTRACTS, resolve_contract\n\nroot = Path.cwd()\nassert PATHS.root == root, \"runtime imported code from outside the image\"\nassert not (root / \"tests\").exists(), \"test fixtures entered the runtime image\"\nassert not (root / \"analysis_runs\").exists(), \"private analysis entered the runtime image\"\nassert not (root / \"data/warehouse.duckdb\").exists(), \"warehouse entered the runtime image\"\nretained_contracts_verified = 0\nfor name, versions in ARCHIVED_CONTRACTS.items():\n    for expected in versions:\n        archived = root / \"contracts/web/versions\" / expected / name\n        assert archived.is_file(), \"a retained runtime contract is missing\"\n        assert hashlib.sha256(archived.read_bytes()).hexdigest() == expected\n        resolved = resolve_contract(root / \"contracts/web\", name, expected)\n        assert hashlib.sha256(resolved.read_bytes()).hexdigest() == expected\n        retained_contracts_verified += 1\n# Construct explicitly before create_app: its unavailable-snapshot mode must\n# never turn a missing contract or invalid published payload into smoke success.\nsnapshot = Snapshot(root / \"site\")\nassert snapshot.version != \"unavailable\", \"published snapshot is unavailable\"\n\nasync def check_worker():\n    with tempfile.TemporaryDirectory(prefix=\"ci-docker-runtime-\") as temporary:\n        config = ChatConfig(\n            state_path=Path(temporary) / \"chat.sqlite3\",\n            auth_mode=\"password\",\n            password_users={\"owner\": hash_password(secrets.token_urlsafe(24))},\n            allowed_origins=(\"https://ci.example.invalid\",),\n            provider=\"mock\",\n            openai_enabled=False,\n        )\n        app = create_app(config, snapshot=snapshot, start_worker=True)\n        async with app.router.lifespan_context(app):\n            assert app.state.snapshot_available\n            assert app.state.chat_worker and app.state.chat_worker.running\n        assert not app.state.chat_worker.running\n\nasyncio.run(check_worker())\nprint(json.dumps({\n    \"status\": \"docker_runtime_verified\",\n    \"snapshot_version\": snapshot.version,\n    \"manifest_sha256\": hashlib.sha256((root / \"site/publication_manifest.json\").read_bytes()).hexdigest(),\n    \"provider\": \"mock\",\n    \"worker_started_and_stopped\": True,\n    \"retained_contracts_verified\": retained_contracts_verified,\n}))\n"
+          ]
+        },
+        "phases": [
+          {
+            "name": "build",
+            "command": [
+              "docker",
+              "--host=unix:///var/run/docker.sock",
+              "build",
+              "--file",
+              "/workspace/airline-ci-preflight-20261031/Dockerfile.chat",
+              "--target",
+              "runtime",
+              "--label",
+              "org.opencontainers.image.revision=7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+              "--tag",
+              "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+              "/workspace/airline-ci-preflight-20261031"
+            ],
+            "exit_code": 1,
+            "elapsed_seconds": 0.134516,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_bytes": 0,
+            "stderr_sha256": "2bc8c46d49040153863828b3c6e9c3acb9e6c07b742674126a0ae24c984a09a1",
+            "stderr_bytes": 63
+          }
+        ],
+        "failed_phase": "build"
+      }
+    },
+    {
+      "identity": {
+        "sha256": "95defa89a85835da9ed775e6211925d532392254690ec7beecbf833e8f8e3299",
+        "bytes": 6540
+      },
+      "result": {
+        "schema_version": "ci_docker_preflight_v1",
+        "recorded_at": "2026-10-31T06:33:24.283274+00:00",
+        "status": "failed",
+        "source": {
+          "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "tracked_tree": "f1113dd509b48e4da3848e26b4c5d9d0d0e94ffc",
+          "tracked_worktree_dirty": true,
+          "tracked_worktree_diff_sha256": "94d26719563b333e007f40c5fbedafacbc8a5d9de31c36bb992c7d10969dd7a0",
+          "input_sha256": {
+            "Dockerfile.chat": "16eb2523bacff40da94811e9c93c506a8b09453d6f5a506a277ad4e1260b7df1",
+            ".dockerignore": "ec2e467575f763d154bd9ce69086b135ba6fe45fbbdd4a4022b5a84b7da3e5d3",
+            "pyproject.toml": "375d8eeca1f1d9716f7ab08ab63e640f5fc06590922ddef0e4d9a18bde268a1d",
+            "uv.lock": "89ff2bbaaa226e836b0f577aedcc9c6bb07647f1c20bfd70d83ead6e1828ab11",
+            "site/publication_manifest.json": "be17ab16d78faae4cbe1fa5b2e2b18ebb8304d52eee17c4e13c880654f35ba71"
+          }
+        },
+        "cache": {
+          "declared_state": "unknown",
+          "docker_stage_cache_disabled": false,
+          "effective_cache_measured": false
+        },
+        "probe_sha256": "a1b675f377a695cc0371be8eaa9826995f6406b7b1b65da605d763aeabe45bee",
+        "runtime_network": "none",
+        "runtime_host_mounts": [],
+        "approval_environment_names": [
+          "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+          "CHAT_EVIDENCE_APPROVED_INDEX_SHA256"
+        ],
+        "plan": {
+          "build": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "build",
+            "--file",
+            "/workspace/airline-ci-preflight-20261031/Dockerfile.chat",
+            "--target",
+            "runtime",
+            "--label",
+            "org.opencontainers.image.revision=7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+            "--tag",
+            "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+            "/workspace/airline-ci-preflight-20261031"
+          ],
+          "inspect": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "image",
+            "inspect",
+            "--format",
+            "{{.Id}} {{index .Config.Labels \"org.opencontainers.image.revision\"}}",
+            "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0"
+          ],
+          "runtime": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--network=none",
+            "--read-only",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            "--workdir=/app",
+            "--tmpfs",
+            "/tmp:rw,nosuid,nodev,mode=1777",
+            "--tmpfs",
+            "/data:rw,nosuid,nodev,mode=700",
+            "--env",
+            "CHAT_PROVIDER=mock",
+            "--env",
+            "CHAT_OPENAI_ENABLED=false",
+            "--env",
+            "PYTHONPATH=/app",
+            "--env",
+            "PYTHONDONTWRITEBYTECODE=1",
+            "--env",
+            "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+            "--env",
+            "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
+            "--entrypoint=python",
+            "<built-image-id>",
+            "-c",
+            "import asyncio\nimport hashlib\nimport json\nimport secrets\nimport tempfile\nfrom pathlib import Path\nimport scripts.start_chat_runtime\nfrom src.config import PATHS\nfrom src.conversational_analytics.api import create_app\nfrom src.conversational_analytics.auth import hash_password\nfrom src.conversational_analytics.config import ChatConfig\nfrom src.conversational_analytics.data.snapshot import Snapshot\nfrom src.web_export.contract_versions import ARCHIVED_CONTRACTS, resolve_contract\n\nroot = Path.cwd()\nassert PATHS.root == root, \"runtime imported code from outside the image\"\nassert not (root / \"tests\").exists(), \"test fixtures entered the runtime image\"\nassert not (root / \"analysis_runs\").exists(), \"private analysis entered the runtime image\"\nassert not (root / \"data/warehouse.duckdb\").exists(), \"warehouse entered the runtime image\"\nretained_contracts_verified = 0\nfor name, versions in ARCHIVED_CONTRACTS.items():\n    for expected in versions:\n        archived = root / \"contracts/web/versions\" / expected / name\n        assert archived.is_file(), \"a retained runtime contract is missing\"\n        assert hashlib.sha256(archived.read_bytes()).hexdigest() == expected\n        resolved = resolve_contract(root / \"contracts/web\", name, expected)\n        assert hashlib.sha256(resolved.read_bytes()).hexdigest() == expected\n        retained_contracts_verified += 1\n# Construct explicitly before create_app: its unavailable-snapshot mode must\n# never turn a missing contract or invalid published payload into smoke success.\nsnapshot = Snapshot(root / \"site\")\nassert snapshot.version != \"unavailable\", \"published snapshot is unavailable\"\n\nasync def check_worker():\n    with tempfile.TemporaryDirectory(prefix=\"ci-docker-runtime-\") as temporary:\n        config = ChatConfig(\n            state_path=Path(temporary) / \"chat.sqlite3\",\n            auth_mode=\"password\",\n            password_users={\"owner\": hash_password(secrets.token_urlsafe(24))},\n            allowed_origins=(\"https://ci.example.invalid\",),\n            provider=\"mock\",\n            openai_enabled=False,\n        )\n        app = create_app(config, snapshot=snapshot, start_worker=True)\n        async with app.router.lifespan_context(app):\n            assert app.state.snapshot_available\n            assert app.state.chat_worker and app.state.chat_worker.running\n        assert not app.state.chat_worker.running\n\nasyncio.run(check_worker())\nprint(json.dumps({\n    \"status\": \"docker_runtime_verified\",\n    \"snapshot_version\": snapshot.version,\n    \"manifest_sha256\": hashlib.sha256((root / \"site/publication_manifest.json\").read_bytes()).hexdigest(),\n    \"provider\": \"mock\",\n    \"worker_started_and_stopped\": True,\n    \"retained_contracts_verified\": retained_contracts_verified,\n}))\n"
+          ]
+        },
+        "phases": [
+          {
+            "name": "build",
+            "command": [
+              "docker",
+              "--host=unix:///var/run/docker.sock",
+              "build",
+              "--file",
+              "/workspace/airline-ci-preflight-20261031/Dockerfile.chat",
+              "--target",
+              "runtime",
+              "--label",
+              "org.opencontainers.image.revision=7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+              "--tag",
+              "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+              "/workspace/airline-ci-preflight-20261031"
+            ],
+            "exit_code": 1,
+            "elapsed_seconds": 0.091857,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_bytes": 0,
+            "stderr_sha256": "2bc8c46d49040153863828b3c6e9c3acb9e6c07b742674126a0ae24c984a09a1",
+            "stderr_bytes": 63
+          }
+        ],
+        "failed_phase": "build"
+      }
+    },
+    {
+      "identity": {
+        "sha256": "6aaa023a8e4c13168a528245e1afdd24d006383beec03749940a4c52417cda0a",
+        "bytes": 6542
+      },
+      "result": {
+        "schema_version": "ci_docker_preflight_v1",
+        "recorded_at": "2026-10-31T06:34:01.805244+00:00",
+        "status": "failed",
+        "source": {
+          "head": "7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+          "tracked_tree": "f1113dd509b48e4da3848e26b4c5d9d0d0e94ffc",
+          "tracked_worktree_dirty": true,
+          "tracked_worktree_diff_sha256": "94d26719563b333e007f40c5fbedafacbc8a5d9de31c36bb992c7d10969dd7a0",
+          "input_sha256": {
+            "Dockerfile.chat": "16eb2523bacff40da94811e9c93c506a8b09453d6f5a506a277ad4e1260b7df1",
+            ".dockerignore": "ec2e467575f763d154bd9ce69086b135ba6fe45fbbdd4a4022b5a84b7da3e5d3",
+            "pyproject.toml": "375d8eeca1f1d9716f7ab08ab63e640f5fc06590922ddef0e4d9a18bde268a1d",
+            "uv.lock": "89ff2bbaaa226e836b0f577aedcc9c6bb07647f1c20bfd70d83ead6e1828ab11",
+            "site/publication_manifest.json": "be17ab16d78faae4cbe1fa5b2e2b18ebb8304d52eee17c4e13c880654f35ba71"
+          }
+        },
+        "cache": {
+          "declared_state": "unknown",
+          "docker_stage_cache_disabled": false,
+          "effective_cache_measured": false
+        },
+        "probe_sha256": "a1b675f377a695cc0371be8eaa9826995f6406b7b1b65da605d763aeabe45bee",
+        "runtime_network": "none",
+        "runtime_host_mounts": [],
+        "approval_environment_names": [
+          "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+          "CHAT_EVIDENCE_APPROVED_INDEX_SHA256"
+        ],
+        "plan": {
+          "build": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "build",
+            "--file",
+            "/workspace/airline-ci-preflight-20261031/Dockerfile.chat",
+            "--target",
+            "runtime",
+            "--label",
+            "org.opencontainers.image.revision=7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+            "--tag",
+            "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+            "/workspace/airline-ci-preflight-20261031"
+          ],
+          "inspect": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "image",
+            "inspect",
+            "--format",
+            "{{.Id}} {{index .Config.Labels \"org.opencontainers.image.revision\"}}",
+            "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0"
+          ],
+          "runtime": [
+            "docker",
+            "--host=unix:///var/run/docker.sock",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--network=none",
+            "--read-only",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            "--workdir=/app",
+            "--tmpfs",
+            "/tmp:rw,nosuid,nodev,mode=1777",
+            "--tmpfs",
+            "/data:rw,nosuid,nodev,mode=700",
+            "--env",
+            "CHAT_PROVIDER=mock",
+            "--env",
+            "CHAT_OPENAI_ENABLED=false",
+            "--env",
+            "PYTHONPATH=/app",
+            "--env",
+            "PYTHONDONTWRITEBYTECODE=1",
+            "--env",
+            "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+            "--env",
+            "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
+            "--entrypoint=python",
+            "<built-image-id>",
+            "-c",
+            "import asyncio\nimport hashlib\nimport json\nimport secrets\nimport tempfile\nfrom pathlib import Path\nimport scripts.start_chat_runtime\nfrom src.config import PATHS\nfrom src.conversational_analytics.api import create_app\nfrom src.conversational_analytics.auth import hash_password\nfrom src.conversational_analytics.config import ChatConfig\nfrom src.conversational_analytics.data.snapshot import Snapshot\nfrom src.web_export.contract_versions import ARCHIVED_CONTRACTS, resolve_contract\n\nroot = Path.cwd()\nassert PATHS.root == root, \"runtime imported code from outside the image\"\nassert not (root / \"tests\").exists(), \"test fixtures entered the runtime image\"\nassert not (root / \"analysis_runs\").exists(), \"private analysis entered the runtime image\"\nassert not (root / \"data/warehouse.duckdb\").exists(), \"warehouse entered the runtime image\"\nretained_contracts_verified = 0\nfor name, versions in ARCHIVED_CONTRACTS.items():\n    for expected in versions:\n        archived = root / \"contracts/web/versions\" / expected / name\n        assert archived.is_file(), \"a retained runtime contract is missing\"\n        assert hashlib.sha256(archived.read_bytes()).hexdigest() == expected\n        resolved = resolve_contract(root / \"contracts/web\", name, expected)\n        assert hashlib.sha256(resolved.read_bytes()).hexdigest() == expected\n        retained_contracts_verified += 1\n# Construct explicitly before create_app: its unavailable-snapshot mode must\n# never turn a missing contract or invalid published payload into smoke success.\nsnapshot = Snapshot(root / \"site\")\nassert snapshot.version != \"unavailable\", \"published snapshot is unavailable\"\n\nasync def check_worker():\n    with tempfile.TemporaryDirectory(prefix=\"ci-docker-runtime-\") as temporary:\n        config = ChatConfig(\n            state_path=Path(temporary) / \"chat.sqlite3\",\n            auth_mode=\"password\",\n            password_users={\"owner\": hash_password(secrets.token_urlsafe(24))},\n            allowed_origins=(\"https://ci.example.invalid\",),\n            provider=\"mock\",\n            openai_enabled=False,\n        )\n        app = create_app(config, snapshot=snapshot, start_worker=True)\n        async with app.router.lifespan_context(app):\n            assert app.state.snapshot_available\n            assert app.state.chat_worker and app.state.chat_worker.running\n        assert not app.state.chat_worker.running\n\nasyncio.run(check_worker())\nprint(json.dumps({\n    \"status\": \"docker_runtime_verified\",\n    \"snapshot_version\": snapshot.version,\n    \"manifest_sha256\": hashlib.sha256((root / \"site/publication_manifest.json\").read_bytes()).hexdigest(),\n    \"provider\": \"mock\",\n    \"worker_started_and_stopped\": True,\n    \"retained_contracts_verified\": retained_contracts_verified,\n}))\n"
+          ]
+        },
+        "phases": [
+          {
+            "name": "build",
+            "command": [
+              "docker",
+              "--host=unix:///var/run/docker.sock",
+              "build",
+              "--file",
+              "/workspace/airline-ci-preflight-20261031/Dockerfile.chat",
+              "--target",
+              "runtime",
+              "--label",
+              "org.opencontainers.image.revision=7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+              "--tag",
+              "airlines-ci-preflight:7cd54fa4ebd646042c4987c4f139a0ae19c10ac0",
+              "/workspace/airline-ci-preflight-20261031"
+            ],
+            "exit_code": 1,
+            "elapsed_seconds": 5.901285,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_bytes": 0,
+            "stderr_sha256": "cfdfdf3cb667247935b89aaaa5deee562ab4521904ae16be247346ae52ed03e0",
+            "stderr_bytes": 7738
+          }
+        ],
+        "failed_phase": "build"
+      }
+    }
+  ],
+  "docker_local_diagnosis": {
+    "initial": "Buildx metadata directory read-only under sandbox; build never started.",
+    "recovery": "Created only /home/agent/.docker/buildx with scoped filesystem access; preserved Docker config/credentials/local daemon. No GitHub permissions changed.",
+    "last": "Exact Dockerfile reached uv sync and failed with invalid peer certificate: UnknownIssuer through managed proxy.",
+    "tls_verification_disabled": false,
+    "dockerfile_modified": false,
+    "local_docker_build_passed": false,
+    "raw_logs_published": false,
+    "remote_measurements": "Final-head CI must build with stage cache disabled then rebuild warm. Reports are attempt-scoped; actual results and timings will be retained in the PR validation comment."
+  },
+  "actionlint": {
+    "version": "1.7.12",
+    "official_release": "https://github.com/rhysd/actionlint/releases/tag/v1.7.12",
+    "asset_sha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+    "exit_code": 0,
+    "permanent_dependency_added": false
+  },
+  "focal_validation": {
+    "gates_pages_shadow_passed": 134,
+    "docker_and_context_passed": 27,
+    "full_public_and_web_profiles": "Unchanged; final-head CI required."
+  },
+  "claims": {
+    "global_savings_demonstrated": false,
+    "old_sha_success_can_validate_new_sha": false,
+    "shadow_can_skip_suites": false,
+    "check_names_permissions_or_protections_changed": false
+  },
+  "deduplication": {
+    "paths": [
+      "site/**",
+      ".github/pages-preview.json"
+    ],
+    "scope": "Only master pushes entirely within these paths omit the separate CI run; Pages calls full same-SHA CI and deploy requires success. PRs and mixed pushes retain full execution.",
+    "mixed_push_duplicate_retained": true
+  },
+  "retry_documentation": "https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs?tool=cli"
+}

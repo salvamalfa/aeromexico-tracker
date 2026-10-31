@@ -111,9 +111,79 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 
 ### Eficiencia de pruebas y CI
 
-CI ejecuta lifecycle y Ruff antes del perfil público, con los mismos controles.
-Los jobs `test` y `web` muestran las treinta fases más lentas y conservan JUnit
-durante siete días en `public-test-results` y `browser-test-results`.
+CI conserva los checks obligatorios `test` y `web`. Son agregadores que exigen
+éxito de cada componente; una dependencia ausente, omitida, cancelada o fallida
+los cierra. Antes de las suites completas se ejecutan en jobs separados:
+
+- `pages-preflight`: entorno aislado con el mismo lock, extra `analytics`, ausencia
+  del grupo `dev` y comando de verificación que Pages. Una dependencia instalada
+  para pytest no puede ocultar un faltante del perfil de despliegue.
+  Para código nuevo con publicación, autoridad y dependencias conservadas,
+  comprueba sólo entorno/imports del selector fuerte: el informe lo declara
+  `environment_only`, sin aprobar el runtime ni volver a aprobar el sitio antiguo.
+  Exige base exacta en `origin/master`, ascendencia y bytes/inventario conservados;
+  Git incierto conserva la verificación fuerte actual. La suite pública mantiene
+  su perfil histórico existente. Cuando cambia la publicación, se ejecuta el
+  verificador fuerte actual, sin fallback ante un fallo.
+- `docker-preflight`: build del `Dockerfile.chat` real y smoke de su imagen por
+  ID, sin red ni carpetas del checkout montadas. Carga el snapshot empaquetado
+  y el worker mock; conserva la exclusión de fixtures y credenciales del proveedor.
+- `static`: lifecycle, Ruff y formato; `chat-runtime`: instalación y smoke del
+  perfil mínimo aislado. Los pins aprobados siguen siendo los existentes.
+- `change-plan`: recomendación conservadora **en sombra**. Ninguna recomendación
+  modifica los jobs ni los argumentos de pytest: la ejecución sigue completa.
+  Cambios compartidos, pruebas, contratos, datos, dependencias o rutas desconocidas
+  recomiendan el perfil completo; Git incompleto o un corte no confiable también.
+
+`public-tests` conserva el perfil público completo, dos procesos, agrupación por
+archivo y cero reinicios automáticos. `web-checks` conserva tipos, unitarias,
+build y navegador. Sus agregadores mantienen los nombres `test` y `web`.
+Los JUnit y recibos de preflight se conservan siete días, con sufijo
+`-<intento>` para distinguir intentos del mismo SHA.
+
+Para recuperar un fallo sin cambios de código, comprobar primero el SHA de la
+ejecución y utilizar el [reintento nativo de GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs?tool=cli):
+
+```bash
+gh run view RUN_ID --json headSha,event,status,conclusion
+gh run rerun RUN_ID --failed
+# O repetir un componente y sus dependientes:
+gh run rerun --job JOB_ID
+```
+
+El reintento conserva el SHA/ref originales; un commit nuevo requiere su propia
+validación completa. No se importan resultados de otro SHA ni artefactos como
+autoridad para poner un check en verde. Una edición del cuerpo del PR mantiene
+su evento `edited`: el lifecycle depende de esa metadata y vuelve a validarse.
+Preparar el bloque documental antes del push evita reinicios por presentación.
+
+Sólo un push a `master` compuesto enteramente por `site/**` y/o el pin de preview
+omite el CI independiente: Pages ya llama **el mismo CI completo en ese SHA** y
+su deploy exige su éxito. Ambos filtros usan las mismas rutas. Los pushes mixtos
+con código conservan las dos ejecuciones; no se amplían permisos para consultar
+y reutilizar resultados externos. Los PR y `workflow_call` no se filtran.
+Ver la [semántica de filtros de GitHub](https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions).
+
+Las mediciones del preflight distinguen entorno nuevo, caché de descargas y
+capas Docker existentes. Un intento con caché desconocida no se llama frío.
+Docker registra dos procesos separados: `--no-cache` desactiva las capas del
+primer build y el segundo reutiliza el builder después del éxito del primero.
+Eso no vacía las imágenes base ni las cachés externas de descarga. El smoke usa
+la imagen por ID en ambos casos, con contratos retenidos y snapshot reales.
+El coste de preflight se añade a un head válido: detectar un fallo antes no
+demuestra ahorro global. La evidencia de esta entrega se registra por separado
+de las parejas históricas siguientes, en el
+[registro del 31/oct](docs/referencias/ci-preflight-20261031.json).
+
+La toma local de Pages usó primero un entorno virtual nuevo con caché de
+descargas existente y después ese mismo entorno. Instalación: 0,975 / 0,337 s;
+verificación fuerte: 225,659 / 215,492 s; proceso completo: 226,650 / 215,855 s.
+Las entradas y comandos del verificador fueron iguales. El helper recibió un
+ajuste de elegibilidad que no se ejecutó en este caso; hubo unos tres segundos
+de pruebas ligeras durante la primera toma. No es una pareja controlada de CI
+completa ni demuestra ahorro global. Docker local alcanzó el install exacto,
+pero rechazó la CA del proxy: esa toma no cuenta como build aprobado. La CI
+recoge los builds reales y sus tiempos separados en el runner de GitHub.
 
 Las pruebas de conversación comparten una lectura real de `Snapshot` por
 módulo: dos construcciones en vez de ocho. Cada consumidor comprueba que no
