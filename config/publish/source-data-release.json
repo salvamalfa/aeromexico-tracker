@@ -4,11 +4,11 @@
   "period_id": "2026M09",
   "baseline_commit": "17fc9ca96dc5b665f9c85b2f3d9ec18f96a8dea9",
   "baseline_manifest_sha256": "ec1e182251aafd5938be10696712e05371a2788f72059858e62925d7860e1149",
-  "producer_code_version": "48ef9da4f3fd12c6a22f586da2bccdac0c578e8bd71bf5d488a6fd5a03e51719",
-  "authorization_sha256": "c3b035126070020825edb9709d3ac6ea0f3eac753360dc34eaad26ef432abdf3",
+  "producer_code_version": "4cde1e1720ce7ff6f0456498ad31a9a05186fcae36b4d699e976808a21f0d028",
+  "authorization_sha256": "c7aa1c510540523cff917554751766be20ec31b142addfbc6944ffe88934ade9",
   "contract_changes": {
-    "market_demand.schema.json": "c399520ba220496cbbde7914e6bc7bf95d7ebc9beae31594e4ca8a375f08a925",
     "flights.schema.json": "645c58aee902552588aca3c42539f0ac784d19ee00277c1222b18ef5e7ce747e",
+    "market_demand.schema.json": "c399520ba220496cbbde7914e6bc7bf95d7ebc9beae31594e4ca8a375f08a925",
     "market.schema.json": "7ca75f192cfd25e97e8749915f3a4253f201ef0d4c41e815ec267b5ecf75b5db"
   },
   "source_binding": {
