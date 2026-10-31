@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts import check_pages_publication, source_update_handoff_routing, source_update_monthly_handoff
 from scripts.check_pages_publication import VERIFIERS, verifier_for
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -210,3 +211,123 @@ def test_undeclared_dangling_proof_never_selects_generic(tmp_path, proof, module
     (tmp_path / proof).symlink_to(tmp_path / "missing-target")
     with pytest.raises(ValueError, match="Undeclared publication receipt"):
         verifier_for(tmp_path, tmp_path)
+
+
+@pytest.fixture(params=[source_update_handoff_routing, source_update_monthly_handoff])
+def handoff_verifier(request):
+    return request.param.verify_site
+
+
+PROFILES = [
+    (None, "src.publish.verify", "verify_site"),
+    ("editorial-publication.json", "src.publish.editorial", "verify_editorial"),
+    ("financial-publication.json", "src.publish.financial_scope", "verify_financial"),
+    ("issuer-publication.json", "src.publish.issuer_scope", "verify_issuer"),
+    ("aerocivil-movements-publication.json", "src.publish.movements_scope", "verify_movements"),
+    ("source-data-publication.json", "src.publish.source_data_scope", "verify_source_data"),
+]
+
+
+def install_verifiers(monkeypatch, callback):
+    from types import ModuleType
+
+    for _, name, function in PROFILES:
+        module = ModuleType(name)
+
+        def verify(site, selected=name):
+            return callback(selected, site)
+
+        setattr(module, function, verify)
+        monkeypatch.setitem(sys.modules, name, module)
+
+
+def test_handoff_imports_share_the_canonical_verifier():
+    assert source_update_handoff_routing.verify_site is check_pages_publication.verify_site
+    assert source_update_monthly_handoff.verify_site is check_pages_publication.verify_site
+
+
+@pytest.mark.parametrize("receipt, module, function", PROFILES)
+@pytest.mark.parametrize("result", [[], ["strong proof rejected"]])
+def test_both_handoff_imports_preserve_selected_profile_results(
+    tmp_path, monkeypatch, handoff_verifier, receipt, module, function, result
+):
+    repo = manifest(tmp_path / "site", [receipt] if receipt else [])
+    calls = []
+
+    def verify(selected, site):
+        calls.append((selected, site))
+        return result
+
+    install_verifiers(monkeypatch, verify)
+    monkeypatch.chdir(tmp_path.parent)
+    assert handoff_verifier(tmp_path / "site", repo) is result
+    assert calls == [(module, tmp_path / "site")]
+
+
+def test_both_handoff_imports_follow_git_order_instead_of_static_profile_priority(
+    tmp_path, monkeypatch, handoff_verifier
+):
+    repo = manifest(tmp_path / "site", ["issuer-publication.json", "source-data-publication.json"])
+    calls = []
+    install_verifiers(monkeypatch, lambda name, site: calls.append(name) or [])
+    assert handoff_verifier(tmp_path / "site", repo) == []
+    replace_proof(tmp_path / "site", "issuer-publication.json", new_commit(repo, "later issuer"))
+    assert handoff_verifier(tmp_path / "site", repo) == []
+    assert calls == ["src.publish.source_data_scope", "src.publish.issuer_scope"]
+
+
+@pytest.mark.parametrize("mutation", ["unknown", "invalid_json", "missing", "modified", "tie", "shape"])
+def test_both_handoff_imports_reject_invalid_selection_before_dispatch(
+    tmp_path, monkeypatch, handoff_verifier, mutation
+):
+    site = tmp_path / "site"
+    repo = manifest(site, ["issuer-publication.json", "source-data-publication.json"])
+    calls = []
+    install_verifiers(monkeypatch, lambda name, path: calls.append(name) or [])
+    document = json.loads((site / "publication_manifest.json").read_text())
+    if mutation == "unknown":
+        document["files"].append({"path": "unknown-publication.json"})
+    elif mutation == "invalid_json":
+        (site / "publication_manifest.json").write_text("{")
+    elif mutation == "missing":
+        (site / "source-data-publication.json").unlink()
+    elif mutation == "modified":
+        (site / "source-data-publication.json").write_text("{}")
+    elif mutation == "tie":
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+        replace_proof(site, "issuer-publication.json", head)
+    else:
+        document["files"] = ["not an object"]
+    if mutation in {"unknown", "shape"}:
+        (site / "publication_manifest.json").write_text(json.dumps(document))
+    with pytest.raises(ValueError):
+        handoff_verifier(site, repo)
+    assert calls == []
+
+
+@pytest.mark.parametrize("receipt, module, function", PROFILES)
+def test_both_handoff_imports_propagate_strong_verifier_exceptions(
+    tmp_path, monkeypatch, handoff_verifier, receipt, module, function
+):
+    repo = manifest(tmp_path / "site", [receipt] if receipt else [])
+    calls = []
+    rejection = RuntimeError("selected strong verifier failed")
+
+    def reject(selected, site):
+        calls.append(selected)
+        raise rejection
+
+    install_verifiers(monkeypatch, reject)
+    with pytest.raises(RuntimeError) as error:
+        handoff_verifier(tmp_path / "site", repo)
+    assert error.value is rejection
+    assert calls == [module]
+
+
+def test_unknown_selected_module_has_no_generic_fallback(tmp_path, monkeypatch, handoff_verifier):
+    calls = []
+    install_verifiers(monkeypatch, lambda name, site: calls.append(name) or [])
+    monkeypatch.setattr(check_pages_publication, "verifier_for", lambda site, repo: "src.publish.unknown")
+    with pytest.raises(KeyError, match="src.publish.unknown"):
+        handoff_verifier(tmp_path, tmp_path)
+    assert calls == []

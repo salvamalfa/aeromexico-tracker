@@ -157,6 +157,11 @@ Aerocivil a su binding Q3 con mes nativo julio; un periodo nuevo exige su perfil
    sólo tras la prueba física de equivalencia de Aeroméxico; no encola una
    nueva publicación editorial. El outbox conserva ese recibo como `no_change`.
 6. `site_built_verified` pasa el gate y verificador del sitio; aún no es despliegue.
+   Los imports de `source_update_handoff_routing` y `source_update_monthly_handoff`
+   usan la misma función `check_pages_publication.verify_site`. Su selector conserva
+   la precedencia Git de los recibos y despacha al verificador fuerte del perfil
+   elegido, incluido SourceData. Un perfil desconocido, manifiesto inválido o fallo
+   del verificador se propaga; no se sustituye por una comprobación más permisiva.
    Tras PR, revisión, CI, merge y Pages, registrar `served` con las rutas afectadas.
    El comando realiza GET a la URL canónica y exige HTTP200 y los mismos hashes
    del manifiesto y payloads/páginas elegidos. Sólo entonces conserva

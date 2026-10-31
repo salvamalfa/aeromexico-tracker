@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from scripts.check_pages_publication import verify_site as verify_site
+
 IMPACTS = {
     "am_traffic_ir": ["AEROMEXICO"],
     "viva_traffic": ["VIVA_AEROBUS"],
@@ -94,23 +96,6 @@ def verify_release(job, source, binding):
         raise ValueError(
             "Selective monthly release does not consume this exact source, period and data stage"
         )
-
-
-def verify_site(site, repo):
-    from importlib import import_module
-
-    from scripts.check_pages_publication import verifier_for
-
-    module = verifier_for(site, repo)
-    name = {
-        "src.publish.source_data_scope": "verify_source_data",
-        "src.publish.issuer_scope": "verify_issuer",
-        "src.publish.movements_scope": "verify_movements",
-        "src.publish.financial_scope": "verify_financial",
-        "src.publish.editorial": "verify_editorial",
-        "src.publish.verify": "verify_site",
-    }[module]
-    return getattr(import_module(module), name)(site)
 
 
 def impact_status(product):
