@@ -1,6 +1,10 @@
 import type { MarketDocument, MarketSegmentKey } from "../../types/domain";
 
 type Period = MarketDocument["months"][number];
+export function comparisonQuarter(periods: Period[], selected: string, segment: MarketSegmentKey): Period | undefined {
+  return periods.filter(period => period.period_id <= selected && period.segments[segment].mexican_carriers_passengers != null)
+    .sort((a, b) => b.period_id.localeCompare(a.period_id))[0];
+}
 const labels: Record<string,string> = { AEROMEXICO: "Grupo Aeroméxico", VOLARIS: "Volaris", VIVA_AEROBUS: "Viva" };
 export function growth(current: number | null | undefined, prior: number | null | undefined): number | null {
   return current == null || prior == null || prior <= 0 ? null : (current / prior - 1) * 100;

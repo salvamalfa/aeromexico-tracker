@@ -74,10 +74,13 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const newsMonth = document.querySelector<HTMLSelectElement>("#news-month")?.value;
   const readingSelect = document.querySelector<HTMLSelectElement>("#reading-period");
   const readingPeriod = readingSelect && !readingSelect.disabled ? readingSelect.value : undefined;
+  const marketComparison = cardId === "market-card" && !focusedCard?.closest("#market-chart")
+    ? document.getElementById("market-card")?.dataset.comparisonPeriod : undefined;
   const period = tab === "reading" && readingPeriod && /^\d{4}Q[1-4]$/.test(readingPeriod)
     ? readingPeriod
     : tab === "flights" && flightState.quarters[flightState.periodIndex]
     ? flightState.quarters[flightState.periodIndex]!.period_id
+    : tab === "market" && marketComparison && /^\d{4}Q[1-4]$/.test(marketComparison) ? marketComparison
     : tab === "news" ? newsMonth?.replace("-","M") ?? "" : currentPeriodId() ?? "";
   const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId);
   const context: ChatContext = { tab, period, ...(picked !== undefined ? {entity:picked} : {}) };

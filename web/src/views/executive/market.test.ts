@@ -41,12 +41,12 @@ it("uses the global quarter for totals, comparisons and the plotted history afte
 });
 
 it("marks an AFAC denominator coverage change and never joins it to a business trend", () => {
-  document.body.innerHTML = '<div id="market-chart"></div><span id="market-source"></span><p id="market-source-note"></p><div id="market-kpis"></div><table><tbody id="market-comparison"></tbody></table>';
+  document.body.innerHTML = '<div id="market-chart"></div><p id="market-method-note" hidden></p><h3 id="market-summary-title"></h3><p id="market-coverage"></p><span id="market-source"></span><p id="market-source-note"></p><div id="market-kpis"></div><div class="market-table-wrap"><table class="market-table"><caption></caption><tbody id="market-comparison"></tbody></table></div>';
   entityState.market = {
     schema_version: "market_payload_v1", carriers: ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"],
     metadata: { default_quarter: "2026Q2", first_period: "2026M06", last_period: "2026M08", industry_note: "", industry_share_latest: 1,
       method_note: "El denominador nuevo incluye chárter mexicano sin mapeo. No atribuir la diferencia de cobertura al negocio.", method_breaks: ["2026M07"] },
-    quarters: [period("2026Q2", 150)],
+    quarters: [period("2025Q2", 100), period("2026Q2", 150)],
     months: [period("2026M06", 50), period("2026M07", 60), period("2026M08", 70)],
   } as MarketDocument;
   renderMarket("2026Q3");
@@ -54,5 +54,32 @@ it("marks an AFAC denominator coverage change and never joins it to a business t
   expect(traces[0]).toMatchObject({ x: ["2026-06-01", "2026-07-01", "2026-07-01", "2026-08-01"], y: [50, null, 50, 50], connectgaps: false });
   expect(layout?.shapes).toContainEqual(expect.objectContaining({ type: "line", x0: "2026-07-01", x1: "2026-07-01" }));
   expect(document.getElementById("market-source-note")?.textContent).toContain("No atribuir la diferencia de cobertura al negocio");
-  expect(document.getElementById("market-kpis")?.textContent).toContain("N/D");
+  expect(document.getElementById("market-kpis")?.textContent).not.toContain("N/D");
+  expect(document.querySelector("#market-kpis strong")?.textContent).toBe("150");
+  expect(document.getElementById("market-summary-title")?.textContent).toContain("2T26");
+  expect(document.getElementById("market-coverage")?.textContent).toContain("3T26: 2 de 3 meses disponibles");
+  expect(document.getElementById("market-coverage")?.textContent).toContain("agosto de 2026");
+  expect(document.querySelector(".market-table caption")?.textContent).toContain("2T26");
+  expect(document.getElementById("market-source-note")?.textContent).toContain("Comparaciones del trimestre 2026Q2");
+  expect(document.getElementById("market-method-note")?.hidden).toBe(false);
+  expect(document.getElementById("market-method-note")?.textContent).toContain("julio de 2026");
+  renderMarket("2026Q2");
+  expect(document.getElementById("market-method-note")?.hidden).toBe(true);
+  expect(document.getElementById("market-coverage")?.textContent).toContain("Comparación de 2T26");
+});
+
+it("never fills an earlier selection with a future quarter and hides unavailable summaries", () => {
+  document.body.innerHTML = '<div id="market-chart"></div><h3 id="market-summary-title"></h3><p id="market-coverage"></p><div id="market-kpis"></div><div class="market-table-wrap"><table><tbody id="market-comparison"></tbody></table></div>';
+  entityState.market = {
+    schema_version: "market_payload_v1", carriers: ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"],
+    metadata: { default_quarter: "2026Q2", first_period: "2026M06", last_period: "2026M06", industry_note: "", industry_share_latest: 1, method_note: "" },
+    quarters: [period("2026Q2", 150)], months: [period("2026M06", 50)],
+  } as MarketDocument;
+  renderMarket("2026Q1");
+  expect(document.getElementById("market-kpis")?.hidden).toBe(true);
+  expect(document.querySelector<HTMLElement>(".market-table-wrap")?.hidden).toBe(true);
+  expect(document.getElementById("market-coverage")?.textContent).toContain("1T26: 0 de 3 meses");
+  renderMarket("2026Q2");
+  expect(document.getElementById("market-kpis")?.hidden).toBe(false);
+  expect(document.querySelector<HTMLElement>(".market-table-wrap")?.hidden).toBe(false);
 });

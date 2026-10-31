@@ -9,7 +9,7 @@ import Plotly from "../../lib/plotly";
 import { $ } from "../flights/dom";
 import { entityState, entityLabel } from "./entities";
 import { ENTITY_COLORS, type EntityKey } from "../shell/carriers";
-import { marketSnapshot, formatMarketNumber } from "../market/calculations";
+import { comparisonQuarter, marketSnapshot, formatMarketNumber } from "../market/calculations";
 import { currentPeriodId } from "../../state/period";
 import type { MarketSegmentKey } from "../../types/domain";
 
@@ -30,6 +30,36 @@ function quarterBounds(periodId: string): [string, string] {
   return [`${year}-${String(start).padStart(2, "0")}-01`, new Date(Date.UTC(Number(year), start + 2, 1)).toISOString().slice(0,10)];
 }
 
+function monthLabel(id: string): string {
+  return new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" })
+    .format(new Date(monthDate(id)));
+}
+
+function renderCoverage(market: NonNullable<typeof entityState.market>, selected: string, segment: MarketSegmentKey): string | undefined {
+  const quarter = comparisonQuarter(market.quarters, selected, segment);
+  const card = document.getElementById("market-card");
+  if (card) card.dataset.comparisonPeriod = quarter?.period_id ?? "";
+  const label = (id: string) => `${id.slice(-1)}T${id.slice(2, 4)}`;
+  const title = document.getElementById("market-summary-title");
+  if (title) title.textContent = quarter ? `Indicadores trimestrales · ${label(quarter.period_id)}` : "Sin trimestre completo disponible";
+  const [start, end] = quarterBounds(selected);
+  const available = market.months.filter(row => monthDate(row.period_id) < end && row.segments[segment].mexican_carriers_passengers != null);
+  const latest = available.at(-1);
+  const coverage = document.getElementById("market-coverage");
+  const count = available.filter(row => monthDate(row.period_id) >= start).length;
+  if (coverage) coverage.textContent = quarter?.period_id === selected
+    ? `Comparación de ${label(selected)} contra el mismo trimestre del año anterior.`
+    : `${label(selected)}: ${count} de 3 meses disponibles${latest ? `; gráfica mensual hasta ${monthLabel(latest.period_id)}` : ""}. ` +
+      (quarter ? `Las tarjetas y la tabla muestran ${label(quarter.period_id)}, el último trimestre completo disponible para este segmento.` : "Las tarjetas y la tabla requieren un trimestre completo para este segmento.");
+  const kpis = document.getElementById("market-kpis");
+  const table = document.querySelector<HTMLElement>(".market-table-wrap");
+  if (kpis) kpis.hidden = !quarter;
+  if (table) table.hidden = !quarter;
+  const caption = document.querySelector(".market-table caption");
+  if (caption) caption.textContent = `Contribución al crecimiento interanual · ${quarter ? label(quarter.period_id) : label(selected)} · aerolíneas mexicanas`;
+  return quarter?.period_id;
+}
+
 export function renderMarket(periodId: string | undefined): void {
   const market = entityState.market;
   const host = $("market-chart");
@@ -40,7 +70,8 @@ export function renderMarket(periodId: string | undefined): void {
   }
   const segment = (($("market-segment") as HTMLSelectElement | null)?.value ?? "total") as MarketSegmentKey;
   const selected = periodId ?? currentPeriodId() ?? market.metadata.default_quarter;
-  renderComparison(marketSnapshot(market.quarters, selected, segment));
+  const comparison = renderCoverage(market, selected, segment);
+  renderComparison(marketSnapshot(market.quarters, comparison ?? selected, segment));
   const [, quarterEnd] = quarterBounds(selected);
   const throughCut = market.months.filter(row => monthDate(row.period_id) < quarterEnd);
   const firstAvailable = throughCut.findIndex(row => row.segments[segment].mexican_carriers_passengers != null);
@@ -48,7 +79,7 @@ export function renderMarket(periodId: string | undefined): void {
   host.setAttribute("aria-label", `Participación mensual de pasajeros por aerolínea hasta ${selected}`);
   const source = document.getElementById("market-source");
   if (source) {
-    const note = `Fuente: AFAC. Universo: aerolíneas mexicanas; Aeroméxico incluye Connect. Pasajeros por tramo, no personas únicas. Comparaciones del trimestre ${selected} contra el mismo trimestre del año anterior; N/D indica falta de base comparable. Contribución: cambio de pasajeros de la aerolínea / total mexicano un año antes × 100. Última observación: ${market.metadata.last_period}; captura: ${market.metadata.data_as_of ?? "N/D"}. ${market.metadata.method_note}`;
+    const note = `Fuente: AFAC. Universo: aerolíneas mexicanas; Aeroméxico incluye Connect. Pasajeros por tramo, no personas únicas. Comparaciones del trimestre ${comparison ?? selected} contra el mismo trimestre del año anterior; N/D indica falta de base comparable. Contribución: cambio de pasajeros de la aerolínea / total mexicano un año antes × 100. Última observación: ${market.metadata.last_period}; captura: ${market.metadata.data_as_of ?? "N/D"}. ${market.metadata.method_note}`;
     source.title = note;
     source.setAttribute("aria-label", "Fuente y alcance del mercado");
     const detail = document.getElementById("market-source-note");
@@ -56,6 +87,13 @@ export function renderMarket(periodId: string | undefined): void {
   }
   const breaks = new Set(Array.isArray(market.metadata.method_breaks)
     ? market.metadata.method_breaks.filter((value): value is string => typeof value === "string") : []);
+  const visibleBreaks = months.filter(row => breaks.has(row.period_id));
+  const methodNote = document.getElementById("market-method-note");
+  if (methodNote) {
+    methodNote.hidden = !visibleBreaks.length;
+    methodNote.textContent = visibleBreaks.length
+      ? `Cambio de cobertura AFAC desde ${visibleBreaks.map(row => monthLabel(row.period_id)).join(", ")}: el total incluye operadores mexicanos de vuelos chárter que podían faltar en el histórico. La línea se interrumpe para separar ambas coberturas; el corte no representa una caída de pasajeros.` : "";
+  }
   // A source-universe change is not a business trend. Keep the first new point
   // while breaking the line that would join it to the prior methodology.
   const points = months.flatMap(month => breaks.has(month.period_id)

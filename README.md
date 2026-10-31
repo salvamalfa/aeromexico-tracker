@@ -159,9 +159,13 @@ Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos p
 
 Mercado reúne participación, tamaño, crecimiento interanual, contribución por
 aerolínea y cambios de participación del universo AFAC comparable. Un trimestre
-global controla indicadores, tabla y corte de la historia mensual; segmento y
-aerolíneas conservan su selección. Fuente y salvedades están en el botón de
-información. Los datos aeroportuarios permanecen en su exportación.
+global controla el corte de la historia mensual; segmento y aerolíneas conservan
+su selección. Si falta el trimestre completo, las tarjetas y la tabla muestran
+el último trimestre completo anterior para ese segmento, con su periodo explícito
+y un aviso de los meses disponibles. Si no existe ninguno, se ocultan y se explica
+la ausencia. Los cambios de cobertura se explican junto a la gráfica, que separa
+las series. Fuente y otras salvedades están en el botón de información.
+Los datos aeroportuarios permanecen en su exportación.
 El [plan coordinado](docs/publicacion-mercado-noticias.md) documenta el gate y
 el orden de integración de Vuelos, Mercado y Noticias.
 La [auditoría Gold](docs/gold-exposure.md) distingue exposición, contexto y linaje.

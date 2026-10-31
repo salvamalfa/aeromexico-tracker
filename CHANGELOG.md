@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-31 · Corte mensual y trimestre disponible de Mercado
+
+- Mercado identifica los meses disponibles del trimestre seleccionado y muestra
+  las tarjetas y la tabla del último trimestre completo, rotulado explícitamente.
+  Evita una sección llena de N/D cuando el trimestre nuevo aún está incompleto;
+  no suma meses parciales ni sustituye AFAC con reportes corporativos.
+- El salto de cobertura de julio se explica junto a la gráfica y conserva la
+  separación de líneas. Los datos y las aprobaciones publicadas se conservan.
+
 ## 2026-10-31 · Comprobación previa y controles CI separados
 
 - Pages y la imagen Docker real se verifican antes de las suites costosas.
