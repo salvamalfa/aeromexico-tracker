@@ -83,6 +83,22 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
     return candidates[0]
 
 
+def verify_site(site, repo):
+    """Run the selected strong verifier in this checkout; never downgrade a failure."""
+    from importlib import import_module
+
+    module = verifier_for(site, repo)
+    name = {
+        "src.publish.source_data_scope": "verify_source_data",
+        "src.publish.issuer_scope": "verify_issuer",
+        "src.publish.movements_scope": "verify_movements",
+        "src.publish.financial_scope": "verify_financial",
+        "src.publish.editorial": "verify_editorial",
+        "src.publish.verify": "verify_site",
+    }[module]
+    return getattr(import_module(module), name)(site)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("site", type=Path)
