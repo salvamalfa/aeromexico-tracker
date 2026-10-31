@@ -14,6 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.source_updates.am_traffic_candidate import run
+from src.web_export.writer import dumps_deterministic
 
 
 def project(workspace: Path, period: str, as_of: str, collection: str) -> dict:
@@ -89,13 +90,11 @@ CONTRACTS = ("flights.schema.json",)
 
 def public_outputs(before: dict[str, bytes], projection: dict) -> dict[str, bytes]:
     """Add only the separate company-reported series to one published payload."""
-    from .source_data_scope import encoded
-
     if set(before) != set(TARGETS):
         raise ValueError("Monthly passenger projection only changes the quarters document")
     original = json.loads(before[TARGETS[0]])
     result = apply(original, projection)
-    return {TARGETS[0]: encoded(result)}
+    return {TARGETS[0]: (dumps_deterministic(result) + "\n").encode()}
 
 
 def replay(profile: dict, baseline: Path) -> dict:
