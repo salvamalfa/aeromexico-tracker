@@ -75,7 +75,7 @@ def context(tmp_path, monkeypatch, request):
     return repo, site, state
 
 
-@pytest.mark.parametrize("base", ["master", "f" * 40, BASE])
+@pytest.mark.parametrize("base", ["master", "f" * 40, BASE, True])
 def test_history_requires_a_full_trusted_base_before_running_any_code(context, monkeypatch, base):
     repo, site, state = context
     if base == BASE:
