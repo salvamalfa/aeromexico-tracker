@@ -15,10 +15,17 @@ from pathlib import Path
 from src.publish import financial_continuity_inputs as files
 from src.publish.financial_scope import ANCHOR
 
+PROFILES = {
+    "src.publish.financial_scope": (ANCHOR, "verify_financial"),
+    "src.publish.source_data_scope": ("config/publish/source-data-release.json", "verify_source_data"),
+}
+
 AUTHORITY = (
     "config/publish",
     "config/chat",
     "src/publish",
+    "contracts/web",
+    "scripts/check_pages_publication.py",
     ".agents/skills/aeromexico-tracker-analysis/SKILL.md",
 )
 LOCAL_ONLY = {
@@ -27,7 +34,16 @@ LOCAL_ONLY = {
     "src/publish/financial_continuity_inputs.py",
     "src/publish/README.md",
 }
-RUNTIME = ("src", "contracts", "config", "web", "uv.lock", "pyproject.toml", ".agents")
+RUNTIME = (
+    "src",
+    "contracts",
+    "config",
+    "web",
+    "uv.lock",
+    "pyproject.toml",
+    ".agents",
+    "scripts/check_pages_publication.py",
+)
 
 
 def _authority_paths(repo):
@@ -48,7 +64,10 @@ def _authority_paths(repo):
     return result
 
 
-def _bound_inputs(site, repo, base):
+def _bound_inputs(site, repo, base, module):
+    if module not in PROFILES:
+        raise ValueError("Unsupported historical publication profile")
+    anchor, _ = PROFILES[module]
     if not isinstance(base, str) or not re.fullmatch("[a-f0-9]{40}", base):
         raise ValueError("Published-test BASE must be a full trusted commit SHA")
     head = files.transport._git(repo, "rev-parse", "HEAD").decode().strip()
@@ -59,9 +78,9 @@ def _bound_inputs(site, repo, base):
     expected = files.tree_files(repo, base, "site")
     if files.site_files(site) != expected:
         raise ValueError("Historical profile requires every site byte to equal Git BASE")
-    original = files.git_files(repo, base, [ANCHOR, "site/publication_manifest.json"])
-    if files.committed(repo, ANCHOR) != original[ANCHOR]:
-        raise ValueError("Historical profile cannot change financial authority")
+    original = files.git_files(repo, base, [anchor, "site/publication_manifest.json"])
+    if files.committed(repo, anchor) != original[anchor]:
+        raise ValueError("Historical profile cannot change publication authority")
     before = files.git_files(repo, base, list(AUTHORITY))
     current = files.git_files(repo, "HEAD", list(AUTHORITY))
     before = {k: v for k, v in before.items() if k not in LOCAL_ONLY}
@@ -76,21 +95,25 @@ def _bound_inputs(site, repo, base):
     code = manifest["code_commit"]
     files.ancestor(repo, code, base)
     program = files.git_files(repo, code, list(RUNTIME))
-    if program.get(ANCHOR) != original[ANCHOR]:
-        raise ValueError("Published code does not contain the original financial anchor")
+    if program.get(anchor) != original[anchor]:
+        raise ValueError("Published code does not contain the original publication anchor")
+    if f"{module.replace('.', '/')}.py" not in program:
+        raise ValueError("Published publication verifier is absent")
+    if "scripts/check_pages_publication.py" not in program:
+        raise ValueError("Published strong publication selector is absent")
     for name in ("uv.lock", "pyproject.toml"):
         if files.committed(repo, name) != program[name]:
             raise ValueError("Historical dependency inputs differ from the active locked environment")
-    return expected, original[ANCHOR], program
+    return expected, original[anchor], program
 
 
-def verify_published(site, repo, *, base_commit):
+def verify_published(site, repo, *, base_commit, module="src.publish.financial_scope"):
     """Return problems for historical verification only; no fallback on failure."""
     try:
         repo, site = Path(repo).absolute(), Path(site).absolute()
         if site != repo / "site":
             raise ValueError("Historical profile requires this repository's site")
-        expected, anchor_raw, program = _bound_inputs(site, repo, base_commit)
+        expected, anchor_raw, program = _bound_inputs(site, repo, base_commit, module)
         spec = json.loads(anchor_raw)
         with tempfile.TemporaryDirectory(prefix="published-financial-check-") as folder:
             archive = Path(folder)
@@ -107,22 +130,34 @@ from pathlib import Path
 def offline(*a,**k):raise RuntimeError('Historical verifier network is forbidden')
 socket.create_connection=offline;socket.getaddrinfo=offline
 socket.socket.connect=offline;socket.socket.connect_ex=offline
-from src.publish import financial_scope
+from importlib import import_module
 from src.analysis_agent import entity_adapter
+publication=import_module(sys.argv[3])
 root=Path.cwd().resolve()
-assert Path(financial_scope.__file__).resolve().is_relative_to(root)
+assert Path(publication.__file__).resolve().is_relative_to(root)
 assert Path(entity_adapter.__file__).resolve().is_relative_to(root)
 runtime=entity_adapter.code_version()
 assert runtime==sys.argv[2], 'Published runtime does not match its reviewed producer'
-print(json.dumps({'runtime':runtime,'problems':financial_scope.verify_financial(Path(sys.argv[1]),root)}))
+print(json.dumps({'runtime':runtime,'problems':getattr(publication,sys.argv[4])(Path(sys.argv[1]),root)}))
 """
             result = subprocess.run(
-                [sys.executable, "-B", "-c", command, str(site), spec["producer_code_version"]],
+                [
+                    sys.executable,
+                    "-B",
+                    "-c",
+                    command,
+                    str(site),
+                    spec["producer_code_version"],
+                    module,
+                    PROFILES[module][1],
+                ],
                 cwd=archive,
                 env=env,
                 capture_output=True,
                 text=True,
-                timeout=120,
+                # SourceData replays the complete chain of issuer releases;
+                # existing CI observes >240 s for that strong historical check.
+                timeout=600 if module == "src.publish.source_data_scope" else 120,
             )
             if result.returncode:
                 raise ValueError("Original published financial verifier failed; no fallback permitted")
@@ -131,7 +166,7 @@ print(json.dumps({'runtime':runtime,'problems':financial_scope.verify_financial(
                 raise ValueError("Original published financial verification rejected this site")
             if any((archive / k).read_bytes() != v for k, v in program.items()):
                 raise ValueError("Archived financial verification inputs changed")
-        if _bound_inputs(site, repo, base_commit) != (expected, anchor_raw, program):
+        if _bound_inputs(site, repo, base_commit, module) != (expected, anchor_raw, program):
             raise ValueError("Published verification inputs changed during the check")
         return []
     except (ValueError, KeyError, OSError, subprocess.SubprocessError) as exc:
