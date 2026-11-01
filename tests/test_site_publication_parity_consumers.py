@@ -121,6 +121,34 @@ def test_strict_issuer_failure_never_falls_back(tmp_path, monkeypatch, failure):
     assert len(called) == 1
 
 
+@pytest.mark.parametrize("problems", [[], ["original producer rejected"]])
+def test_source_history_profile_is_explicit_and_never_falls_back(tmp_path, monkeypatch, problems):
+    from tests import _financial_publication_history as history
+
+    module = "src.publish.source_data_scope"
+    monkeypatch.setattr(parity, "verifier_for", lambda *a: module)
+    calls = []
+    monkeypatch.setattr(history, "verify_published", lambda *a, **k: calls.append((a, k)) or problems)
+    monkeypatch.setattr(
+        parity.source_data_scope,
+        "verify_source_data",
+        lambda *a: pytest.fail("Fallback to candidate runtime"),
+    )
+    if problems:
+        with pytest.raises(AssertionError, match="original producer rejected"):
+            parity.verify_current_publication(tmp_path, tmp_path, None, base_commit="a" * 40)
+    else:
+        parity.verify_current_publication(tmp_path, tmp_path, None, base_commit="a" * 40)
+    assert calls == [((tmp_path, tmp_path), {"base_commit": "a" * 40, "module": module})]
+
+
+def test_source_default_profile_still_checks_the_candidate_runtime(tmp_path, monkeypatch):
+    monkeypatch.setattr(parity, "verifier_for", lambda *a: "src.publish.source_data_scope")
+    monkeypatch.setattr(parity.source_data_scope, "verify_source_data", lambda *a: ["candidate rejected"])
+    with pytest.raises(AssertionError, match="candidate rejected"):
+        parity.verify_current_publication(tmp_path, tmp_path, None)
+
+
 def test_historical_approval_or_payload_changes_are_rejected(tmp_path, monkeypatch):
     name = "data/v1/analysis/2026Q3.json"
     entry = {"entity_key": "AEROMEXICO", "version": "approved"}
@@ -241,9 +269,7 @@ def test_unknown_strict_verifier_is_not_replaced_by_generic(tmp_path, monkeypatc
 def source_data_chain(tmp_path, monkeypatch, layers=1):
     from src.publish import movements_scope, source_data_scope
 
-    site, financial, original, docs, _, movement, movement_spec, _ = movement_chain(
-        tmp_path, monkeypatch
-    )
+    site, financial, original, docs, _, movement, movement_spec, _ = movement_chain(tmp_path, monkeypatch)
     previous_git = parity._git
     objects = {}
     previous = copy.deepcopy(movement)
@@ -278,6 +304,7 @@ def source_data_chain(tmp_path, monkeypatch, layers=1):
         return previous_git(repo, action, obj)
 
     monkeypatch.setattr(parity, "_git", read)
+
     def active(site, repo, manifest, at):
         if at is None or at in {str(i + 3) * 40 for i in range(1, layers)}:
             return "src.publish.source_data_scope"
@@ -311,9 +338,7 @@ def test_source_data_replays_movement_and_issuer_history_without_changing_financ
         "historical_thesis",
     ],
 )
-def test_source_data_parity_never_hides_financial_or_historical_damage(
-    tmp_path, monkeypatch, mutation
-):
+def test_source_data_parity_never_hides_financial_or_historical_damage(tmp_path, monkeypatch, mutation):
     from src.publish import source_data_scope
 
     site, financial, _, docs, objects, current, spec, anchor = source_data_chain(tmp_path, monkeypatch)
@@ -354,7 +379,8 @@ def test_source_data_receipt_still_requires_preservation_when_executive_pin_alre
     site, _, _, docs, objects, _, _, _ = source_data_chain(tmp_path, monkeypatch)
     expected = {"executive_sha256": parity.sha(raw(docs[-1])), "executive_bytes": len(raw(docs[-1]))}
     thesis = next(
-        pin for pin in objects["3" * 40 + ":site/publication_manifest.json"]["files"]
+        pin
+        for pin in objects["3" * 40 + ":site/publication_manifest.json"]["files"]
         if pin["path"].startswith("data/v1/analysis/")
     )
     (site / thesis["path"]).write_bytes(b"changed despite equal executive")

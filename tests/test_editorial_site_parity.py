@@ -35,10 +35,9 @@ def editorial_site(request):
         from scripts.check_pages_publication import VERIFIERS
 
         assert not manifest_path.exists(), "Publication manifest must be a regular file"
-        assert not any(
-            (SITE / name).exists() or (SITE / name).is_symlink()
-            for name, _ in VERIFIERS
-        ), "An existing publication receipt requires its manifest"
+        assert not any((SITE / name).exists() or (SITE / name).is_symlink() for name, _ in VERIFIERS), (
+            "An existing publication receipt requires its manifest"
+        )
         _unavailable(request, "Editorial candidate has not been assembled")
     try:
         profile = verifier_for(SITE, ROOT)
@@ -58,7 +57,9 @@ def editorial_site(request):
         "src.publish.source_data_scope",
     }:
         checker = request.getfixturevalue("verify_financial_publication")
-        verify_current_publication(SITE, ROOT, checker)
+        verify_current_publication(
+            SITE, ROOT, checker, base_commit=request.config.getoption("--financial-publication-base")
+        )
         spec = anchor(ROOT)
         payload = (SITE / ANALYSIS).read_bytes()
         assert len(payload) == spec["analysis_bytes"]

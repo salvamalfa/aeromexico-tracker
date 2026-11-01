@@ -11,10 +11,15 @@ from src.publish.financial_scope import encoded, sha
 from src.publish.issuer_projection import require_scope
 
 
-def verify_current_publication(site, repo, financial_checker):
+def verify_current_publication(site, repo, financial_checker, *, base_commit=None):
     module = verifier_for(site, repo)
     if module == "src.publish.source_data_scope":
-        problems = source_data_scope.verify_source_data(site, repo)
+        if base_commit:
+            from tests._financial_publication_history import verify_published
+
+            problems = verify_published(site, repo, base_commit=base_commit, module=module)
+        else:
+            problems = source_data_scope.verify_source_data(site, repo)
     elif module == "src.publish.movements_scope":
         problems = movements_scope.verify_movements(site, repo)
     elif module == "src.publish.issuer_scope":
@@ -55,9 +60,7 @@ def _preserved_nonfinancial_financials(site, repo, manifest, commit, spec, label
     assert sha(raw) == spec["baseline_manifest_sha256"]
     before = json.loads(raw)
     assert len(before["analysis_manifest"]) == 7
-    assert manifest["analysis_manifest"] == before["analysis_manifest"], (
-        f"{label} changed approvals"
-    )
+    assert manifest["analysis_manifest"] == before["analysis_manifest"], f"{label} changed approvals"
     readings = [item for item in before["files"] if item["path"].startswith("data/v1/analysis/")]
     assert len(readings) == 7, f"{label} baseline is missing a financial thesis"
     for item in readings:
@@ -90,9 +93,7 @@ def preserved_financial_projection(site, repo, financial_spec):
     while sha(encoded(current)) != financial_spec["executive_sha256"] or {
         movements_scope.PROOF,
         source_data_scope.PROOF,
-    } & {
-        item["path"] for item in manifest["files"]
-    }:
+    } & {item["path"] for item in manifest["files"]}:
         module = _active_module(site, repo, manifest, commit)
         if module in nonfinancial:
             scope, label = nonfinancial[module]
@@ -109,9 +110,7 @@ def preserved_financial_projection(site, repo, financial_spec):
             seen.add(previous)
             before_raw = _git(repo, "show", f"{previous}:site/{issuer_scope.EXECUTIVE}")
             assert current_raw == before_raw, f"{label} changed financial bytes"
-            manifest = _preserved_nonfinancial_financials(
-                site, repo, manifest, commit, spec, label
-            )
+            manifest = _preserved_nonfinancial_financials(site, repo, manifest, commit, spec, label)
             current_raw, current, commit = before_raw, json.loads(before_raw), previous
             continue
         assert module == "src.publish.issuer_scope", "Unreviewed financial publication profile"
