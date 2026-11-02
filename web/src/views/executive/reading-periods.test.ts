@@ -26,6 +26,7 @@ describe("global reading quarter", () => {
   it.each([
     { analysis_manifest: [{ period_id: "../../escape", approval_event: "a" }] },
     { analysis_manifest: [{ period_id: "2026Q3" }] },
+    { analysis_manifest: [{ entity_key: null, period_id: "2026Q3", approval_event: "a" }] },
     { analysis_manifest: [{ period_id: "2026Q3", approval_event: "a" }, { period_id: "2026Q3", approval_event: "b" }] },
     {},
   ])("rejects unavailable or malformed publication catalogs", async (manifest) => {

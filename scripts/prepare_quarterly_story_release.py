@@ -34,6 +34,7 @@ def prepare(descriptor, output):
     }
     paths, review = [], {}
     for entity in story.ENTITIES:
+        print(f"Preparing and source-replaying {entity}", flush=True)
         package = story.prepare(spec, packages, entity)
         path = story.import_draft(package)
         record = story.read(path)
@@ -58,6 +59,7 @@ def prepare(descriptor, output):
     )
     immutable(output / "request.json", request)
     immutable(output / "four-story-review.json", review)
+    print("Four immutable drafts ready; checking historical baseline and retained Q2", flush=True)
     scope, _, _, _, _ = inspect(output / "request.json")
     immutable(output / "scope.json", scope)
     return dict(

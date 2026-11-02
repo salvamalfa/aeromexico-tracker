@@ -154,6 +154,42 @@ describe("entity narratives", () => {
   });
   afterEach(() => { vi.unstubAllGlobals(); });
 
+  it("loads the exact Aeroméxico namespace from the catalog while preserving its historical Q2 endpoint", async () => {
+    const manifest = { analysis_manifest: [
+      { period_id: "2026Q2", approval_event: "historical" },
+      { entity_key: "AEROMEXICO", period_id: "2026Q3", approval_event: "replacement" },
+    ] };
+    const replacement = { ...analysis("AEROMEXICO", "2026Q3"), entity_key: "AEROMEXICO",
+      period_label: "3T26", cutoff_date: "2026-11-02", selection_mode: "retrospective", guidance_as_of: "report_date" };
+    const fetchMock = vi.fn(async (url: string | URL) => {
+      if (String(url).includes("publication_manifest")) return response(manifest);
+      if (String(url) === "data/v1/analysis/AEROMEXICO/2026Q3.json") return response(replacement);
+      if (String(url) === "data/v1/analysis/2026Q2.json") return response(analysis());
+      return response(null, false);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { loadReadingPeriods } = await import("./reading-periods");
+    const { fetchAnalysis } = await import("./narrative");
+    await loadReadingPeriods("data/v1");
+    expect((await fetchAnalysis("AEROMEXICO", "2026Q3"))?.version).toBe(replacement.version);
+    expect((await fetchAnalysis("AEROMEXICO", "2026Q2"))?.period_id).toBe("2026Q2");
+    expect(fetchMock.mock.calls.slice(1).map(([url]) => url)).toEqual([
+      "data/v1/analysis/AEROMEXICO/2026Q3.json", "data/v1/analysis/2026Q2.json",
+    ]);
+  });
+
+  it("does not fall back to a superseded legacy reading when the catalog selects an unavailable replacement", async () => {
+    const fetchMock = vi.fn(async (url: string | URL) => String(url).includes("publication_manifest")
+      ? response({ analysis_manifest: [{ entity_key: "AEROMEXICO", period_id: "2026Q3", approval_event: "new" }] })
+      : response(null, false));
+    vi.stubGlobal("fetch", fetchMock);
+    const { loadReadingPeriods } = await import("./reading-periods");
+    const { fetchAnalysis } = await import("./narrative");
+    await loadReadingPeriods("data/v1");
+    expect(await fetchAnalysis("AEROMEXICO", "2026Q3")).toBeNull();
+    expect(fetchMock.mock.calls.slice(1).map(([url]) => url)).toEqual(["data/v1/analysis/AEROMEXICO/2026Q3.json"]);
+  });
+
   it.each([
     ["VIVA_AEROBUS", "Viva", "2026-10-28"], ["VOLARIS", "Volaris", "2026-10-26"],
   ])("renders an approved %s source-edition payload returned with HTTP 200", async (entity, label, reportDate) => {

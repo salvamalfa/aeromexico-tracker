@@ -53,6 +53,14 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
     assert after["views"]["2026Q3"]["kpis"][0]["yoy"]["display"] == "+12.2%"
     from scripts.check_pages_publication import verifier_for
 
+    if verifier_for(SITE, ROOT) == "src.publish.quarterly_story_scope":
+        from tests._quarterly_story_parity import missing_records, replay
+
+        if missing_records(SITE, ROOT):
+            unavailable(request, "Restore the complete story/Q2/superseded ledger for full source replay")
+        result = replay(SITE, ROOT)
+        assert len(result["authorized"]) == len(result["payloads"]) == 8
+        return
     if verifier_for(SITE, ROOT) == "src.publish.financial_scope":
         frozen = preserved_files(SITE, ROOT, spec)
         assert len([p for p in frozen if p.startswith("data/v1/analysis/")]) == 5

@@ -18,6 +18,7 @@ import { $ } from "../flights/dom";
 import { state } from "./state";
 import type { AnalysisCitation, AnalysisDocument, ExecutiveView } from "../../types/domain";
 import { isEntityKey } from "../shell/carriers";
+import { publishedAnalysisPath } from "./reading-periods";
 
 export function citationsByClaim(analysis: Pick<AnalysisDocument, "claims">): Map<string, AnalysisCitation[]> {
   return new Map(analysis.claims.map((claim) => [claim.claim_id, claim.citations]));
@@ -120,9 +121,10 @@ export function validAnalysis(payload: unknown, entityKey: string, periodId: str
 
 export async function fetchAnalysis(entityKey: string, periodId: string): Promise<AnalysisDocument | null> {
   if (!isEntityKey(entityKey) || !/^\d{4}Q[1-4]$/.test(periodId)) return null;
-  const key = JSON.stringify([state.dataRoot, entityKey, periodId]);
+  const path = publishedAnalysisPath(entityKey, periodId)
+    ?? (entityKey === "AEROMEXICO" ? periodId : `${entityKey}/${periodId}`);
+  const key = JSON.stringify([state.dataRoot, entityKey, periodId, path]);
   if (cache.has(key)) return cache.get(key) ?? null;
-  const path = entityKey === "AEROMEXICO" ? periodId : `${entityKey}/${periodId}`;
   try {
     const response = await fetch(`${state.dataRoot}/analysis/${path}.json`);
     const raw: unknown = response.ok ? await response.json() : null;

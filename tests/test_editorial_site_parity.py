@@ -50,7 +50,12 @@ def editorial_site(request):
         "src.publish.issuer_scope",
         "src.publish.movements_scope",
         "src.publish.source_data_scope",
+        "src.publish.quarterly_story_scope",
     }, f"Unsupported publication verifier: {profile}"
+    if profile == "src.publish.quarterly_story_scope":
+        from tests._quarterly_story_parity import publication
+
+        return publication(SITE, ROOT)[0]
     if profile in {
         "src.publish.issuer_scope",
         "src.publish.movements_scope",
@@ -97,6 +102,12 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
 
     module = verifier_for(SITE, ROOT)
+    if module == "src.publish.quarterly_story_scope":
+        from tests._quarterly_story_parity import publication
+
+        spec, _, _ = publication(SITE, ROOT)
+        assert spec == editorial_site
+        return
     if module in {
         "src.publish.issuer_scope",
         "src.publish.movements_scope",
@@ -136,6 +147,16 @@ def _required_source_record(entry, request):
 
 
 def test_editorial_new_payload_matches_its_full_approved_source_replay(editorial_site, request):
+    from scripts.check_pages_publication import verifier_for
+
+    if verifier_for(SITE, ROOT) == "src.publish.quarterly_story_scope":
+        from tests._quarterly_story_parity import missing_records, replay
+
+        if missing_records(SITE, ROOT):
+            _unavailable(request, "Restore the complete story/Q2/superseded ledger for full source replay")
+        result = replay(SITE, ROOT)
+        assert len(result["authorized"]) == len(result["payloads"]) == 8
+        return
     from src.analysis_agent import lifecycle as flow
     from src.publish.frozen_data import verify_baseline_approvals
 

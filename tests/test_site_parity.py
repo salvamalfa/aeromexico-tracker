@@ -21,8 +21,6 @@ from __future__ import annotations
 import hashlib
 import io
 import json
-import os
-from contextlib import contextmanager
 import subprocess
 import sys
 import tarfile
@@ -40,6 +38,7 @@ from src.publish.verify import verify_site
 from src.web_export.analysis import MissingAnalysisInput
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
+from tests._site_publication_parity import _published_approval_config_view
 
 pytestmark = pytest.mark.local_data
 
@@ -58,48 +57,18 @@ def _baseline_json(relative: str) -> dict:
     )
 
 
-@contextmanager
-def _published_approval_config_view(repo: Path, manifest_raw: bytes):
-    """Read the configuration committed with this site, not a later pending pin.
-
-    A detached, config-only worktree keeps every production provenance check
-    intact and never edits the caller's working configuration. Source and ledger
-    replay still use the ordinary pinned verifier and actual private inputs.
-    """
-    trusted = None
-    for ref in ("origin/master", "HEAD"):
-        candidate = subprocess.run(
-            ["git", "show", f"{ref}:site/publication_manifest.json"],
-            cwd=repo, capture_output=True,
-        )
-        if candidate.returncode == 0 and candidate.stdout == manifest_raw:
-            trusted = subprocess.check_output(["git", "rev-parse", ref], cwd=repo, text=True).strip()
-            break
-    if trusted is None:
-        raise ValueError("The signed site is not committed; commit the gate output before parity replay")
-    with tempfile.TemporaryDirectory(prefix="parity-published-config-") as folder:
-        view = Path(folder) / "checkout"
-        subprocess.run(
-            ["git", "worktree", "add", "--detach", "--no-checkout", str(view), trusted],
-            cwd=repo, env={**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"},
-            capture_output=True, check=True,
-        )
-        try:
-            archive = subprocess.check_output(["git", "archive", trusted, "config/publish"], cwd=repo)
-            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
-                tar.extractall(view, filter="data")
-            yield view, trusted
-        finally:
-            subprocess.run(["git", "worktree", "remove", "--force", str(view)],
-                           cwd=repo, capture_output=True, check=True)
-
-
 @lru_cache(maxsize=1)
 def _replay_published_cohorts() -> dict:
     """Validate every published entry using its committed verifier and full ledger."""
     from src.publish.approval_cohorts import verify_approval_cohorts
 
     repo = SITE_DIR.parent
+    from scripts.check_pages_publication import verifier_for
+
+    if verifier_for(SITE_DIR, repo) == "src.publish.quarterly_story_scope":
+        from tests._quarterly_story_parity import replay
+
+        return replay(SITE_DIR, repo)
     baseline = manifest_mod.load_manifest(SITE_DIR)
     paths = []
     for entry in baseline["analysis_manifest"]:
@@ -107,26 +76,49 @@ def _replay_published_cohorts() -> dict:
         if "entity_key" in entry:
             path /= entry["entity_key"]
         paths.append(path / entry["period_id"] / f"{entry['version']}.json")
-    with _published_approval_config_view(repo, (SITE_DIR / "publication_manifest.json").read_bytes()) as (view, trusted):
+    with _published_approval_config_view(repo, (SITE_DIR / "publication_manifest.json").read_bytes()) as (
+        view,
+        trusted,
+    ):
         return verify_approval_cohorts(paths, view, trusted, baseline, flow.ROOT)
 
 
 @pytest.fixture(scope="module")
 def published_executive(executive_payload: dict) -> dict:
     """Replay the new primary-source edition over the pinned public baseline."""
+    from scripts.check_pages_publication import verifier_for
+    from src.publish.financial_scope import ANCHOR as FINANCIAL_ANCHOR
+    from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
     from src.publish.records import _analysis_manifest_entry
-    from src.publish.financial_scope import ANCHOR as FINANCIAL_ANCHOR, PROOF as FINANCIAL_PROOF
+
+    if verifier_for(SITE_DIR, SITE_DIR.parent) == "src.publish.quarterly_story_scope":
+        from src.publish.financial_scope import anchor as financial_anchor
+        from tests._quarterly_story_parity import publication
+
+        financial_spec = financial_anchor(SITE_DIR.parent)
+        raw = subprocess.check_output(
+            ["git", "show", f"{financial_spec['baseline_commit']}:site/data/v1/executive.json"],
+            cwd=SITE_DIR.parent,
+        )
+        assert executive_payload == json.loads(raw)
+        publication(SITE_DIR, SITE_DIR.parent)
+        assert len(_replay_published_cohorts()["payloads"]) == 8
+        return json.loads((DATA_DIR / "executive.json").read_bytes())
 
     if (SITE_DIR / FINANCIAL_PROOF).exists() or (
         (SITE_DIR.parent / FINANCIAL_ANCHOR).is_file()
         and "2026Q3" in json.loads((SITE_DIR / "data/v1/executive.json").read_bytes())["views"]
     ):
-        from src.publish.financial_sources import replay_published_projection
         # The original warehouse projection is the frozen financial baseline;
         # only the explicitly reviewed producer may append this quarter.
         from src.publish.financial_scope import anchor as financial_anchor
+        from src.publish.financial_sources import replay_published_projection
+
         financial_spec = financial_anchor(SITE_DIR.parent)
-        raw = subprocess.check_output(["git", "show", f"{financial_spec['baseline_commit']}:site/data/v1/executive.json"], cwd=SITE_DIR.parent)
+        raw = subprocess.check_output(
+            ["git", "show", f"{financial_spec['baseline_commit']}:site/data/v1/executive.json"],
+            cwd=SITE_DIR.parent,
+        )
         assert executive_payload == json.loads(raw)
         return replay_published_projection(SITE_DIR, SITE_DIR.parent)
 
@@ -135,10 +127,12 @@ def published_executive(executive_payload: dict) -> dict:
     if (SITE_DIR / PROOF).exists():
         assert verify_editorial(SITE_DIR, SITE_DIR.parent) == []
         spec = anchor(SITE_DIR.parent)
-        baseline = json.loads(subprocess.check_output(
-            ["git", "show", f"{spec['baseline_commit']}:site/data/v1/executive.json"],
-            cwd=SITE_DIR.parent,
-        ))
+        baseline = json.loads(
+            subprocess.check_output(
+                ["git", "show", f"{spec['baseline_commit']}:site/data/v1/executive.json"],
+                cwd=SITE_DIR.parent,
+            )
+        )
         assert executive_payload == baseline
         return baseline
 
@@ -275,12 +269,23 @@ def test_published_parity_survives_a_later_runtime_without_weakening_replay(
         entries = manifest_mod.load_manifest(SITE_DIR)["analysis_manifest"]
         historical = {(entity, "2026Q2") for entity in ("AEROMEXICO", "INDUSTRY", "VIVA_AEROBUS", "VOLARIS")}
         identities = {manifest_mod.analysis_identity(entry) for entry in entries}
-        assert identities in (historical, historical | {("AEROMEXICO", "2026Q3")})
+        from scripts.check_pages_publication import verifier_for
+
+        story = verifier_for(SITE_DIR, SITE_DIR.parent) == "src.publish.quarterly_story_scope"
+        complete_story = historical | {(entity, "2026Q3") for entity, _ in historical}
+        assert identities in (
+            (complete_story,) if story else (historical, historical | {("AEROMEXICO", "2026Q3")})
+        )
         assert len(entries) == len(replay["authorized"]) == len(replay["payloads"]) == len(identities)
         cohort_count = 2 if ("AEROMEXICO", "2026Q3") in identities else 1
         assert [_analysis_manifest_entry(a) for a in replay["authorized"]] == entries
-        assert replay_calls == [cohort["implementation_commit"] for cohort in replay["cohorts"]]
-        assert len(set(replay_calls)) == cohort_count
+        expected_calls = [
+            cohort["implementation_commit"]
+            for cohort in replay["cohorts"]
+            if not story or all(e["period_id"] == "2026Q2" for e in cohort["analysis_manifest"])
+        ]
+        assert replay_calls == expected_calls
+        assert len(set(replay_calls)) == (1 if story else cohort_count)
         for entry, payload in zip(entries, replay["payloads"]):
             actual = json.loads((DATA_DIR / manifest_mod.analysis_relative_path(entry)).read_bytes())
             assert _export_approved_entry(entry) == payload == actual
@@ -310,7 +315,14 @@ def test_site_flights_and_executive_data_match_a_fresh_export(
     out_dir = tmp_path / "data" / "v1"
     export_executive(published_executive, out_dir, skip_input_check=True)
     manifest = manifest_mod.load_manifest(SITE_DIR)
-    if any(e["period_id"] == "2026Q3" and "entity_key" not in e for e in manifest["analysis_manifest"]):
+    from scripts.check_pages_publication import verifier_for
+
+    if verifier_for(SITE_DIR, SITE_DIR.parent) == "src.publish.quarterly_story_scope":
+        from tests._quarterly_story_parity import replay_data
+
+        rebuilt = replay_data(SITE_DIR, SITE_DIR.parent)
+        assert len([name for name in rebuilt if name.startswith("data/v1/flights/")]) == 9
+    elif any(e["period_id"] == "2026Q3" and "entity_key" not in e for e in manifest["analysis_manifest"]):
         prefix = "data/v1/flights/"
         expected = {
             r["path"]: r
@@ -471,7 +483,12 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
             "document.getElementById('period-next').disabled === last && "
             "Object.entries(values).every(([key, value]) => "
             "document.getElementById('kpi-' + key + '-value').textContent.trim() === value)",
-            arg=[view["period_label"], period_id == period_ids[0], period_id == period_ids[-1], expected_values],
+            arg=[
+                view["period_label"],
+                period_id == period_ids[0],
+                period_id == period_ids[-1],
+                expected_values,
+            ],
         )
         observed = _kpi_values(site_page)
         for key in READER_KPI_KEYS:

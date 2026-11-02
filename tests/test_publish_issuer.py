@@ -175,7 +175,8 @@ def test_structural_scope_is_separate_from_output_hash(projected, mutation):
         projection.require_scope(baseline, after, "VIVA_AEROBUS", "2026Q3")
 
 
-def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch):
+@pytest.mark.parametrize("timeout", [False, True])
+def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch, timeout):
     spec = {"baseline_commit": "a" * 40}
     old = {"code_commit": "b" * 40, "files": []}
     monkeypatch.setattr(scope.transport, "baseline", lambda *a: (old, b'{"files":[]}'))
@@ -188,11 +189,31 @@ def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch):
             target = Path(command[-2])
             (target / "site").mkdir(parents=True)
             (target / "site/publication_manifest.json").write_bytes(b'{"files":[]}')
-        return SimpleNamespace(returncode=1 if "-m" in command else 0)
+        if "-m" in command and timeout:
+            assert kwargs["timeout"] == 600
+            raise scope.subprocess.TimeoutExpired(
+                command, 600,
+                output=b'{"valid":false,"problems":["exact historical failure"]}',
+                stderr=b"private replay detail",
+            )
+        return SimpleNamespace(
+            returncode=1 if "-m" in command else 0,
+            stdout='{"valid":false,"problems":["exact historical failure"]}',
+            stderr="private replay detail",
+        )
 
     monkeypatch.setattr(scope.subprocess, "run", run)
-    with pytest.raises(ValueError, match="own released verifier rejected"):
+    monkeypatch.setenv("CHAT_EVIDENCE_APPROVED_INDEX_SHA256", "do-not-stream-this")
+    expected = "timed out without a verdict" if timeout else "rejected its site"
+    with pytest.raises(ValueError, match=expected) as failure:
         scope.verify_historical_baseline(tmp_path, spec, tmp_path)
+    assert "private replay detail" not in str(failure.value)
+    assert "do-not-stream-this" not in str(failure.value)
+    report = json.loads(next((tmp_path / "tmp/approval-replay-diagnostics").glob("*.json")).read_bytes())
+    assert report["returncode"] == ("timeout" if timeout else 1)
+    assert report["stderr"] == "private replay detail"
+    assert json.loads(report["stdout"])["problems"] == ["exact historical failure"]
+    assert report["approval_pins"]["CHAT_EVIDENCE_APPROVED_INDEX_SHA256"] == "<unset-or-malformed>"
     assert any("src.publish.verify" in c for c in actions)
     assert actions[-1][1:3] == ["worktree", "remove"]
 
