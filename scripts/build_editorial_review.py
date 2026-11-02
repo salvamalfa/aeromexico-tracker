@@ -56,7 +56,10 @@ def build(spec, contexts):
             if set(TOKEN.findall(template)) != set(bindings):
                 raise ValueError("Unresolved/unused review binding")
             rendered, citations = template, []
-            for alias, binding in bindings.items():
+            # Immutable JSON sorts object keys. Preserve citations by their
+            # first occurrence in prose, independently of mapping insertion order.
+            for alias in dict.fromkeys(TOKEN.findall(template)):
+                binding = bindings[alias]
                 owner = binding.get("entity", entity)
                 package, calculations = contexts[owner]
                 if "key" in binding:

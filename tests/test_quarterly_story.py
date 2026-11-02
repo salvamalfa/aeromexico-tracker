@@ -1,6 +1,9 @@
 """Adversarial checks of the separate story profile and its source boundary."""
 
 import copy
+import json
+from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 
@@ -46,7 +49,7 @@ def frozen(monkeypatch):
         contexts[entity] = (package, calculations)
     monkeypatch.setattr(story, "_contexts", lambda selected: contexts)
     text = (
-        "La empresa reportó {{revenue}}. "
+        "La empresa reportó {{revenue}} y comparó {{reported}}. "
         + "El resultado requiere revisar ventas costos y capacidad durante el trimestre. " * 10
     )
     spec = dict(
@@ -59,7 +62,10 @@ def frozen(monkeypatch):
                         id="summary",
                         title="Resumen",
                         text=text,
-                        bindings={"revenue": dict(entity="AEROMEXICO", key="revenue", format="money")},
+                        bindings={
+                            "revenue": dict(entity="AEROMEXICO", key="revenue", format="money"),
+                            "reported": dict(entity="AEROMEXICO", key="revenue", format="reported"),
+                        },
                         summary=True,
                         type="observed_fact",
                     ),
@@ -67,7 +73,10 @@ def frozen(monkeypatch):
                         id="development",
                         title="Desarrollo",
                         text=text,
-                        bindings={"revenue": dict(entity="AEROMEXICO", key="revenue", format="money")},
+                        bindings={
+                            "revenue": dict(entity="AEROMEXICO", key="revenue", format="money"),
+                            "reported": dict(entity="AEROMEXICO", key="revenue", format="reported"),
+                        },
                         type="observed_fact",
                     ),
                 ],
@@ -141,3 +150,76 @@ def test_new_industry_q3_can_cite_primary_release_distributor():
         "globenewswire"
         not in analysis_schema_for("2026Q2", "INDUSTRY")["$defs"]["citation"]["properties"]["href"]["pattern"]
     )
+
+
+def test_immutable_json_round_trip_preserves_citations_and_calculation_identity(frozen):
+    from src.analysis_agent.evidence import canonical
+
+    package, calculations, _ = frozen
+    reread = json.loads(canonical(package))
+    assert list(package["review_spec"]["analyses"]["INDUSTRY"]["parts"][0]["bindings"]) == [
+        "revenue",
+        "reported",
+    ]
+    assert list(reread["review_spec"]["analyses"]["INDUSTRY"]["parts"][0]["bindings"]) == [
+        "reported",
+        "revenue",
+    ]
+    assert story.replay(reread) == json.loads(canonical(calculations))
+
+
+def test_import_lifecycle_and_public_payload_survive_immutable_serialization(frozen, tmp_path, monkeypatch):
+    from jsonschema import Draft202012Validator
+
+    from src.analysis_agent import issuer_quarter, lifecycle
+    from src.web_export.analysis import publication_payload
+
+    package, _, _ = frozen
+    original_criteria = story.PATHS.root / ".agents/skills/airline-quarterly-story/SKILL.md"
+    criteria = tmp_path / ".agents/skills/airline-quarterly-story/SKILL.md"
+    criteria.parent.mkdir(parents=True)
+    criteria.write_bytes(original_criteria.read_bytes())
+    monkeypatch.setattr(story, "PATHS", SimpleNamespace(root=tmp_path))
+    monkeypatch.setattr(issuer_quarter, "PATHS", SimpleNamespace(root=tmp_path))
+    monkeypatch.setattr(story, "code_version", lambda: "f" * 64)
+    path = story.import_draft(package)
+    record = story.read(path)
+    package, calculations, checks = story.verified_inputs(record)
+    ledger = tmp_path / "analysis_runs/lifecycle"
+    with pytest.raises(ValueError, match="no human approval"):
+        lifecycle.consumer_payload(record, root=ledger)
+    report = dict(
+        entity_key="INDUSTRY",
+        version=record["version"],
+        content_hash=record["content_hash"],
+        package_id=record["draft"]["package_id"],
+        calculation_fingerprint=record["draft"]["calculation_fingerprint"],
+        reviewer="independent_codex_agent",
+        reviewer_task="isolated-test-independent-reviewer",
+        model=None,
+        model_unavailable_reason="Synthetic isolated fixture",
+        decision="pass",
+        findings=[],
+        reviewed_claim_ids=[c["claim_id"] for c in record["draft"]["claims"]],
+        checks=[
+            dict(key=key, result="pass", detail="Synthetic isolated fixture") for key in lifecycle.CHECKS
+        ],
+    )
+    lifecycle.record_audit(record, report, root=ledger)
+    authorization = dict(
+        entity_key="INDUSTRY",
+        decision="approve_analysis",
+        version=record["version"],
+        content_hash=record["content_hash"],
+        human_name="isolated-test-owner",
+        verbatim_message="Synthetic isolated fixture consent",
+        conversation_reference="isolated-test",
+        authorized_at=datetime.now(UTC).isoformat(),
+    )
+    lifecycle.approve(record, authorization, root=ledger)
+    payload = publication_payload(
+        record, lifecycle.consumer_payload(record, root=ledger), package, calculations
+    )
+    Draft202012Validator(analysis_schema_for("2026Q3", "INDUSTRY")).validate(payload)
+    assert payload["summary"] == [checks["rendered"]["summary"]]
+    assert payload["claims"][1]["citations"][0]["value"] == "US$1.0 millones"
