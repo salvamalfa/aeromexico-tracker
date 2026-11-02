@@ -101,7 +101,7 @@ def anchor(repo=PATHS.root):
     return spec
 
 
-def verify_historical_baseline(repo, spec, site):
+def verify_historical_baseline(repo, spec, site, *, environment=None):
     """Use its released verifier: a runtime fingerprint failure is never ignored."""
     old, raw = transport.baseline(repo, spec)
     for item in old["files"]:
@@ -143,6 +143,7 @@ def verify_historical_baseline(repo, spec, site):
                     cwd=checkout,
                     capture_output=True,
                     text=True,
+                    env=environment,
                     # The released SourceData verifier recursively checks all
                     # earlier issuer editions; existing parity CI allows 600s.
                     timeout=600,
@@ -165,7 +166,7 @@ def verify_historical_baseline(repo, spec, site):
                             "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
                             "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
                         )
-                        for value in (os.environ.get(name, ""),)
+                        for value in ((os.environ if environment is None else environment).get(name, ""),)
                     },
                 }
                 folder = repo / "tmp/approval-replay-diagnostics"

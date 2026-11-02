@@ -27,8 +27,9 @@ from .quarterly_story_data import encoded
 from .quarterly_story_data import outputs as data_outputs
 from .quarterly_story_scope import ANCHOR, ENTITIES, PROOF, SCHEMA, analysis_slots, anchor, preserved_files
 from .records import _analysis_manifest_entry, load_records
-from .source_data_scope import pins, sha, verify_historical_baseline
+from .source_data_scope import pins, sha
 from .source_data_update import file_ref, physical_path
+from .story_historical_pins import verify_historical_baseline
 
 
 def request_inputs(path):

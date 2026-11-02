@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
 import { beforeEach, expect, it, vi } from "vitest";
 import { initPeriods } from "../../state/period";
 import type { ExecutiveDocument, MarketDocument, QuartersDocument } from "../../types/domain";
@@ -11,6 +13,7 @@ import { routeRegion } from "./regions";
 import { currentMapPeriod } from "./map-periods";
 import { renderQuarter } from "./quarter";
 import { renderNetworkPeriod } from "./network";
+import { routeDataMonths } from "./evidence-view";
 import Plotly from "../../lib/plotly";
 
 const controls = vi.hoisted(() => ({ entity: "AEROMEXICO" }));
@@ -18,7 +21,32 @@ vi.mock("../../lib/plotly", () => ({default: { react: vi.fn(async () => {}) }}))
 vi.mock("./map", () => ({renderFlowMap: vi.fn()}));
 vi.mock("./table", () => ({renderRouteOverview: vi.fn()}));
 vi.mock("../shell/carriers", async original => ({...await original<typeof import("../shell/carriers")>(), selection: () => [controls.entity]}));
-const data = <T>(name: string): T => JSON.parse(readFileSync(`../site/data/v1/${name}.json`,"utf8"));
+// Optional QA-only overlay of the nine native-generated review outputs. It
+// never writes site/ or changes approvals; normal CI reads the actual site.
+const overlay = process.env.ANAC_REPLAY_DATA_ROOT;
+const overlayFiles = new Set<string>();
+if (overlay) {
+  const receiptRaw = readFileSync(resolve(overlay, "../../receipt.json"));
+  expect(createHash("sha256").update(receiptRaw).digest("hex")).toBe("eeca6f4e977db29f97d2a283fa89f6ab6fbf7e1d1e4f5e31434bf09a9987c97f");
+  const receipt = JSON.parse(receiptRaw.toString());
+  expect(receipt.source_receipt_sha256).toBe("579aa7191969bc21c339d9691a32ce07786f295ceb28af9fccb9f301beec0e74");
+  expect(Object.keys(receipt.outputs)).toHaveLength(9);
+  const bytes: Record<string, number> = { "flights/quarters":648912 };
+  for (const [prefix, quarterBytes, julyBytes] of [["flights",129309,123765],["flights/entities/INDUSTRY",369735,364332]] as const) {
+    for (const [period,size] of [["2026Q3",quarterBytes],["2026M07",julyBytes],["2026M08",5398],["2026M09",5422]] as const) bytes[`${prefix}/international/${period}`]=size;
+  }
+  for (const [path, hash] of Object.entries(receipt.outputs)) {
+    const name = path.replaceAll("\\", "/").replace(/^data\/v1\//, "").replace(/\.json$/, "");
+    const raw = readFileSync(resolve(overlay, `${name}.json`));
+    expect(raw.length).toBe(bytes[name]);
+    expect(createHash("sha256").update(raw).digest("hex")).toBe(hash);
+    overlayFiles.add(name);
+  }
+  expect([...overlayFiles].sort()).toEqual(Object.keys(bytes).sort());
+}
+const sourcePath = (name: string) => overlayFiles.has(name) ? resolve(overlay!, `${name}.json`) : `../site/data/v1/${name}.json`;
+const data = <T>(name: string): T => JSON.parse(readFileSync(sourcePath(name),"utf8"));
+const hasAnac = data<{coverage_by_source:Record<string,string[]>}>("flights/entities/INDUSTRY/international/2026Q3").coverage_by_source["Brasil · ANAC"]?.includes("2026M09") ?? false;
 const executive = data<ExecutiveDocument>("executive"), quarters = data<QuartersDocument>("flights/quarters");
 beforeEach(() => {
   document.body.innerHTML = readFileSync("index.html","utf8");
@@ -26,11 +54,11 @@ beforeEach(() => {
   entityState.market = data<MarketDocument>("market");
   state.mapEntity = "AEROMEXICO"; state.baseAvailablePeriods = null; initState(structuredClone(quarters));
   state.domesticNetworks.clear(); state.domesticMonthlyNetworks.clear(); state.internationalNetworks.clear();
-  vi.stubGlobal("fetch", vi.fn(async (name: string) => ({ok:true,json:async () => JSON.parse(readFileSync(`../site/${name}`,"utf8"))})));
+  vi.stubGlobal("fetch", vi.fn(async (name: string) => ({ok:true,json:async () => data(name.replace(/^data\/v1\//,"" ).replace(/\.json$/,""))})));
   window.matchMedia = vi.fn().mockReturnValue({ matches: false });
 });
 for (const entity of ["AEROMEXICO","VIVA_AEROBUS","VOLARIS","INDUSTRY"]) {
-  it(`${entity}: direct Q3 and Q2→Q3 use real financial values, AFAC cuts and July-only maps`, async () => {
+  it(`${entity}: direct Q3 and Q2→Q3 use real financial values and source-specific map dates`, async () => {
     controls.entity = entity; setMapEntity(entity);
     for (const id of ["2026Q3","2026Q2","2026Q3","2026Q2"]) {
       initPeriods(executive.records.map(row => row.period_id),id);
@@ -55,9 +83,18 @@ for (const entity of ["AEROMEXICO","VIVA_AEROBUS","VOLARIS","INDUSTRY"]) {
         const international = data<{routes: {departures?: number|null}[]}>(`${prefix}/international/2026Q3`);
         expect(total(state.routes)).toBe(total(international.routes) - ({AEROMEXICO:840,VIVA_AEROBUS:162,VOLARIS:150,INDUSTRY:1152}[entity] ?? 0));
         expect(state.evidenceView).toBe("north_america_observed");
-        expect(state.network!.observed_months).toEqual(["2026M07"]);
-        expect(document.getElementById("flight-map-coverage-info")?.textContent).toContain("parcial: 1 de 3 meses");
-        expect(state.routes.some(route => (route.flight_components ?? []).some(row => row.period_id === "2026M09"))).toBe(false);
+        const brazil = hasAnac && ["AEROMEXICO","INDUSTRY"].includes(entity);
+        expect(state.network!.observed_months).toEqual(brazil ? ["2026M07","2026M08","2026M09"] : ["2026M07"]);
+        expect(document.getElementById("flight-map-coverage-info")?.textContent).toContain(brazil ? "meses con algún dato: 3 de 3 meses" : "parcial: 1 de 3 meses");
+        const northAmerica = state.routes.filter(route => routeRegion(route) === "norteamerica");
+        expect(routeDataMonths(northAmerica)).toEqual(["2026M07"]);
+        expect(northAmerica.every(route => (route.flight_components ?? []).every(row => row.kind === "observed" && row.period_id === "2026M07"))).toBe(true);
+        if (brazil) {
+          expect(international).toHaveProperty("coverage_by_source.Brasil · ANAC", ["2026M07","2026M08","2026M09"]);
+          const anac = state.routes.flatMap(route => route.flight_components ?? []).filter(component => component.source_label.includes("ANAC"));
+          expect(anac.every(component => component.kind === "observed")).toBe(true);
+          expect(anac.reduce((sum, component) => sum + component.departures, 0)).toBe(184);
+        }
       }
     }
     vi.unstubAllGlobals();
@@ -93,12 +130,18 @@ it("keeps real regional evidence and July-only dates coherent across Q2/Q3, scop
         expect(document.getElementById("network-observed-source")!.textContent).toContain("México–EE.UU.");
       }else if(region==="sudamerica"){
         expect(state.evidenceView).toBe("all");
-        expect(totals()).toEqual(period==="2026Q2"?{observed:182,estimated:669,scheduled:1975}:{estimated:891});
+        expect(totals()).toEqual(period==="2026Q2"?{observed:182,estimated:669,scheduled:1975}:hasAnac?{observed:184,estimated:832}:{estimated:891});
+        expect(state.network!.observed_months).toEqual(period === "2026Q3" && hasAnac ? ["2026M07","2026M08","2026M09"] : period === "2026Q3" ? ["2026M07"] : ["2026M04","2026M05","2026M06"]);
+        if (period === "2026Q3" && hasAnac) {
+          const vcp = state.routes.find(route => [route.origin.iata,route.destination.iata].includes("VCP"));
+          expect(vcp).toBeDefined(); expect(routeRegion(vcp!)).toBe("sudamerica");
+          expect(data<{coverage_by_source:Record<string,string[]>}>("flights/entities/INDUSTRY/international/2026Q3").coverage_by_source["Brasil · ANAC"]).toEqual(["2026M07","2026M08","2026M09"]);
+        }
       }else if(region==="europa")expect(totals()).toEqual(period==="2026Q2"?{estimated:1722,scheduled:1424}:{estimated:635});
       else if(region==="asia")expect(totals()).toEqual(period==="2026Q2"?{estimated:523,scheduled:182}:{estimated:175});
       else {
         expect(state.evidenceView).toBe("north_america_observed");
-        expect(totals().estimated).toBe(period==="2026Q2"?2914:1701);
+        expect(totals().estimated).toBe(period==="2026Q2"?2914:hasAnac?1642:1701);
         expect(state.routes.filter(route=>routeRegion(route)==="norteamerica").every(route=>flightTotals(route).estimated===undefined)).toBe(true);
       }
     }

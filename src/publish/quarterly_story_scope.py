@@ -11,7 +11,8 @@ from src.config import PATHS
 
 from . import editorial as transport
 from . import manifest as manifests
-from .issuer_scope import sha, verify_historical_baseline
+from .issuer_scope import sha
+from .story_historical_pins import verify_historical_baseline
 
 ANCHOR = "config/publish/quarterly-story-release.json"
 PROOF = "quarterly-story-publication.json"
