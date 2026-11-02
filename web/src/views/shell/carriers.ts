@@ -89,7 +89,7 @@ export function mountPicker(host: HTMLElement, spec: PickerSpec, onChange: Liste
   host.classList.add("chart-range-control", "carrier-control");
   if (!spec.multi) {
     host.innerHTML =
-      `<label for="${id}">${labelText}</label>` +
+      `<label class="sr-only" for="${id}">${labelText}</label>` +
       `<select id="${id}">` +
       ENTITY_KEYS.map((key) => `<option value="${key}">${ENTITY_LABELS[key]}</option>`).join("") +
       "</select>";
@@ -104,7 +104,7 @@ export function mountPicker(host: HTMLElement, spec: PickerSpec, onChange: Liste
     return initial;
   }
   host.innerHTML =
-    `<span id="${id}-label">${labelText}</span>` +
+    `<span class="sr-only" id="${id}-label">${labelText}</span>` +
     `<details class="carrier-picker" id="${id}">` +
     `<summary aria-describedby="${id}-label"></summary>` +
     '<div class="carrier-menu" role="group">' +

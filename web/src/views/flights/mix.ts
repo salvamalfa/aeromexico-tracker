@@ -1,6 +1,9 @@
+import { seriesMixTooltip, scheduleMixTooltip } from "./mix-tooltip";
+import { renderMixChartSource } from "./chart-sources";
 // The stacked domestic/international passenger bar chart with a total
 // line. Ported from src/dashboard/assets/flights.js::renderMix.
 
+import { renderPassengerCoverage } from "./passenger-coverage";
 import type { Data, Layout } from "plotly.js";
 import Plotly from "../../lib/plotly";
 import { $, dateLabel } from "./dom";
@@ -8,6 +11,7 @@ import { state } from "./state";
 import type { MonthlyPassengerPoint, QuarterRecord } from "../../types/domain";
 import { renderEntityMix } from "./carriers";
 import { selection } from "../shell/carriers";
+import { entityState } from "../executive/entities";
 
 function quarterForDate(iso: string): string {
   const year = iso.slice(0, 4);
@@ -25,7 +29,8 @@ interface QuarterPoint {
 }
 
 export function renderMix(record: QuarterRecord): void {
-  // Dashboard v2: anything but Aeroméxico alone reads AFAC by airline.
+  // The current AFAC dataset is shared by every airline, including Grupo
+  // Aeroméxico. The retained legacy series is only a fallback without market data.
   const entities = selection("mix");
   const source = $("mix-source-inline");
   const amOnly = !entities.length || (entities.length === 1 && entities[0] === "AEROMEXICO");
@@ -36,6 +41,7 @@ export function renderMix(record: QuarterRecord): void {
   const basisControl = $("passenger-basis-control");
   if (basisControl) basisControl.hidden = !corporateAvailable;
   const corporate = corporateAvailable && state.passengerBasis === "corporate";
+  renderMixChartSource(corporate ? corporateSeries! : undefined);
   const periodControl = $("passenger-period") as HTMLSelectElement | null;
   if (periodControl) {
     const quarter = periodControl.querySelector<HTMLOptionElement>('option[value="quarter"]');
@@ -45,9 +51,9 @@ export function renderMix(record: QuarterRecord): void {
     state.passengerPeriod = "month";
     if (periodControl) periodControl.value = "month";
   }
-  if (!corporate && entities.length && !(entities.length === 1 && entities[0] === "AEROMEXICO")) {
+  if (!corporate && (entityState.market || (entities.length && !amOnly))) {
     if (source) source.textContent = "AFAC · pasajeros por aerolínea (regular y fletamento)";
-    renderEntityMix(entities, record, state.passengerPeriod);
+    renderEntityMix(entities.length ? entities : ["AEROMEXICO"], record, state.passengerPeriod);
     return;
   }
   const booked = corporate && corporateSeries && "reporting_status" in corporateSeries;
@@ -104,47 +110,33 @@ export function renderMix(record: QuarterRecord): void {
       const expected = [0, 1, 2].map((offset) => `${quarter.period_id.slice(0, 4)}-${String(first + offset).padStart(2, "0")}`);
       return !incompleteQuarters.has(quarter.period_id) && months.length === 3 && new Set(months).size === 3 && expected.every((m) => months.includes(m));
     }) : monthlyPoints;
+  renderPassengerCoverage(record.period_id, state.passengerPeriod,
+    points.map(point => state.passengerPeriod === "quarter" ? (point as QuarterPoint).period_id : point.date.slice(0,7).replace("-", "M")), corporate ? "Reporte corporativo" : "AFAC",
+    monthlyPoints.filter(point => [point.domestic, point.international, point.total_segment_sum].every(Number.isFinite))
+      .map(point => point.date.slice(0,7).replace("-", "M")));
   if (!points.length) {
-    void Plotly.react("mix-chart", [], { annotations: [{ text: "No hay un trimestre con sus tres meses completos.", showarrow: false }] }, { displayModeBar: false, responsive: true });
+    scheduleMixTooltip(Plotly.react("mix-chart", [], { annotations: [{ text: "No hay un trimestre con sus tres meses completos.", showarrow: false }] }, { displayModeBar: false, responsive: true }),[],()=>null);
     return;
   }
   const narrow = window.matchMedia("(max-width: 736px)").matches;
   const veryNarrow = window.matchMedia("(max-width: 420px)").matches;
   const rangeStart = new Date(`${points[0]!.date}T00:00:00Z`);
   const rangeEnd = new Date(`${points[points.length - 1]!.date}T00:00:00Z`);
+  if (record.metrics.passengers.period_start < rangeStart.toISOString().slice(0,10)) rangeStart.setTime(Date.parse(record.metrics.passengers.period_start));
+  if (record.metrics.passengers.period_end > rangeEnd.toISOString().slice(0,10)) rangeEnd.setTime(Date.parse(record.metrics.passengers.period_end));
   const paddingDays = state.passengerPeriod === "quarter" ? 45 : 15;
   rangeStart.setUTCDate(rangeStart.getUTCDate() - paddingDays);
   rangeEnd.setUTCDate(rangeEnd.getUTCDate() + paddingDays);
-  const hoverData = points.map((point) => {
-    const heading =
-      state.passengerPeriod === "quarter"
-        ? (point as QuarterPoint).period_label
-        : new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" }).format(
-            new Date(`${point.date}T00:00:00Z`)
-          );
-    const total = corporate && "reported_total" in point ? Number(point.reported_total) : point.total_segment_sum;
-    return [heading, total, point.domestic, point.international, total ? point.domestic / total : 0, total ? point.international / total : 0];
-  });
-  const hoverTemplate = [
-    "<b>%{customdata[0]}</b>",
-    corporate
-      ? "<span style='color:#182233'>■</span> <b>Total reportado</b> %{customdata[1]:,.0f}"
-      : "<span style='color:#182233'>■</span> <b>Total</b> %{customdata[1]:,.0f}",
-    "<span style='color:#003087'>■</span> Nacional %{customdata[2]:,.0f} (%{customdata[4]:.1%})",
-    "<span style='color:#c99400'>■</span> Internacional %{customdata[3]:,.0f} (%{customdata[5]:.1%})",
-    ...(corporate ? ["Mes y comparativo anual de la misma edición; no son una serie histórica reconstruida.", "Componentes publicados redondeados; pueden diferir del total."] : []),
-    "<extra></extra>",
-  ].join("<br>");
   const traces: Data[] = [
     {
       type: "bar", x: points.map((point) => point.date), y: points.map((point) => point.domestic),
       name: "Nacional", marker: { color: "#003087" },
-      customdata: hoverData, hovertemplate: hoverTemplate,
+      hoverinfo: "none",
     },
     {
       type: "bar", x: points.map((point) => point.date), y: points.map((point) => point.international),
       name: "Internacional", marker: { color: "#c99400" },
-      customdata: hoverData, hovertemplate: hoverTemplate,
+      hoverinfo: "none",
     },
     {
       type: "scatter", mode: corporate ? "markers" : "lines+markers", x: points.map((point) => point.date),
@@ -152,7 +144,7 @@ export function renderMix(record: QuarterRecord): void {
       name: corporate ? "Total reportado" : "Total",
       connectgaps: false, line: { color: "#182233", width: 2.5 },
       marker: { color: "#fff", line: { color: "#182233", width: 1.5 }, size: 6 },
-      customdata: hoverData, hovertemplate: hoverTemplate,
+      hoverinfo: "none",
     } as Data,
   ];
   const layout: Partial<Layout> = {
@@ -167,17 +159,22 @@ export function renderMix(record: QuarterRecord): void {
       range: [rangeStart.toISOString(), rangeEnd.toISOString()], tickfont: { size: narrow ? 8 : 10 },
     },
     yaxis: { rangemode: "tozero", gridcolor: "#e7ebf1", tickformat: ".2s", title: { text: booked ? "Tramos de pasajero reservados" : "Pasajeros" } },
-    shapes: corporate ? [] : [{
+    shapes: [{
       type: "rect", xref: "x", yref: "paper", x0: record.metrics.passengers.period_start,
       x1: record.metrics.passengers.period_end, y0: 0, y1: 1,
       fillcolor: "rgba(0,48,135,.06)", line: { color: "rgba(0,48,135,.32)", width: 1, dash: "dot" }, layer: "below",
     }],
-    annotations: corporate ? [] : [{
+    annotations: [{
       x: record.metrics.passengers.period_start, y: 1, xref: "x", yref: "paper", xanchor: "left", yanchor: "bottom",
       text: record.period_label, showarrow: false, font: { size: 9, color: "#003087" },
     }],
     hovermode: "closest",
     hoverlabel: { align: "left", bgcolor: "#ffffff", bordercolor: "#b9c8d9", font: { color: "#182233", size: 11 } },
   };
-  void Plotly.react("mix-chart", traces, layout, { displayModeBar: false, responsive: true });
+  const grain=state.passengerPeriod;
+  scheduleMixTooltip(Plotly.react("mix-chart", traces, layout, { displayModeBar: false, responsive: true }),points.map(point=>point.date),(_key,index)=>{
+    const date=points[index]!.date;
+    const id=grain==="month"?date.slice(0,7).replace("-","M"):quarterForDate(date);
+    return seriesMixTooltip(points,id,grain,!!booked);
+  });
 }

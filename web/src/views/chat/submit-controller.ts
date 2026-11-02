@@ -37,13 +37,14 @@ export function createSubmitController(options: SubmitOptions) {
     const content = retry?.message.content ?? raw.trim();
     if (!content || content.length > MAX_INPUT || state.activeTurn) return;
     if (ledger.hasUnresolved && !retry) return;
+    const selectedContext = retry?.context ?? context(state.focusedCard);
     if (!retry && !state.conversationId) await ensureConversation();
     if (!state.conversationId) return;
     const message = retry?.message ?? {
       id: randomId(), role: "user" as const, content, created_at: new Date().toISOString(),
     };
     const submission = retry ?? {
-      message, conversationId: state.conversationId, clientMessageId: randomId(), context: context(state.focusedCard),
+      message, conversationId: state.conversationId, clientMessageId: randomId(), context: selectedContext,
     };
     if (!retry) {
       ledger.retain(submission);

@@ -18,19 +18,22 @@ CAA_URL = 'https://www.caa.co.uk/Documents/Download/26825/de96ee2c-f138-4043-b7d
 MANIFEST = PATHS.bronze / 'international_routes' / 'selection.json'
 AENA_URL = 'https://www.aena.es/es/estadisticas/consultas-personalizadas.html'
 
-def anac_content(client):
+def anac_content(client, *, cache_root=None, max_bytes=250_000_000):
     """Assemble the full original using HTTP ranges bound to one Last-Modified/ETag."""
     import re
     first=client.get(ANAC_URL,headers={'Range':'bytes=0-4194303','Accept-Encoding':'identity'})
     first.raise_for_status()
-    if first.status_code==200: return first.content, first.headers
+    if first.status_code==200:
+        if len(first.content)>max_bytes: raise ValueError('ANAC original exceeds reviewed byte bound')
+        return first.content, first.headers
     match=re.fullmatch(r'bytes 0-(\d+)/(\d+)',first.headers.get('content-range',''))
     if not match or len(first.content)!=int(match[1])+1: raise ValueError('Invalid initial range')
     size=int(match[2]); validator=first.headers.get('etag') or first.headers.get('last-modified')
+    if size>max_bytes: raise ValueError('ANAC original exceeds reviewed byte bound')
     if not validator: raise ValueError('Cannot bind ranged download to a version')
     from concurrent.futures import ThreadPoolExecutor
     import hashlib
-    cache=PATHS.root/'tmp'/'international_route_download'/hashlib.sha256(validator.encode()).hexdigest()
+    cache=(Path(cache_root) if cache_root is not None else PATHS.root/'tmp'/'international_route_download')/hashlib.sha256(validator.encode()).hexdigest()
     cache.mkdir(parents=True,exist_ok=True)
     def block(offset):
         end=min(offset+4194303,size-1);path=cache/f'{offset}-{end}.part'

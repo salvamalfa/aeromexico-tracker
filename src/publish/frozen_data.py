@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -86,17 +87,23 @@ def verify_baseline_approvals(
         base = Path(tmp)
         with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
             tar.extractall(base, filter="data")
-        (base / "analysis_runs").symlink_to(PATHS.root / "analysis_runs", target_is_directory=True)
-        (base / "data").symlink_to(PATHS.data, target_is_directory=True)
+        from .replay_directories import materialize_directory
+
+        materialize_directory(PATHS.root / "analysis_runs", base / "analysis_runs")
+        materialize_directory(PATHS.data, base / "data")
         from .issuer_replay_inputs import materialize_issuer_inputs
 
         materialize_issuer_inputs(record_paths, PATHS.root, base)
-        script = """import json,sys
+        script = """import json,sys,subprocess
 from pathlib import Path
 from src.analysis_agent import lifecycle
 from src.publish.gate import _verify_under_lock, _analysis_payload
 records=[json.loads(Path(p).read_bytes()) for p in json.loads(sys.argv[1])]
-entries=_verify_under_lock(records,Path(sys.argv[2]))
+try:
+ entries=_verify_under_lock(records,Path(sys.argv[2]))
+except subprocess.CalledProcessError as error:
+ sys.stderr.write(error.stderr or "")
+ raise
 value=[entry[1] for entry in entries]
 if sys.argv[3]=="public":
  value={"authorized":value,"payloads":[_analysis_payload(*entry) for entry in entries]}
@@ -115,8 +122,16 @@ print(json.dumps(value,ensure_ascii=False))
             cwd=base,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            env={**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"},
         )
         if result.returncode:
+            diagnostic = PATHS.root / "tmp/approval-replay-diagnostics"
+            diagnostic.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", suffix=".stderr.txt", dir=diagnostic, delete=False
+            ) as stream:
+                stream.write(result.stderr)
             # Do not echo arbitrary subprocess output or private records.
             raise gate.PublicationRefused(
                 "Trusted baseline refused an existing analysis approval; inspect private diagnostic evidence"

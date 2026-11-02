@@ -26,6 +26,8 @@ SCHEMA_VERSION = "publication_manifest_v1"
 MANIFEST_NAME = "publication_manifest.json"
 EDITORIAL_ANALYSIS_CONTRACT = "analysis_editorial.schema.json"
 EDITORIAL_ANALYSIS_PATH = "data/v1/analysis/2026Q3.json"
+INDUSTRY_STORY_CONTRACT = "analysis_industry_story.schema.json"
+INDUSTRY_STORY_PATH = "data/v1/analysis/INDUSTRY/2026Q3.json"
 ANALYSIS_ENTITIES = frozenset({"AEROMEXICO", "VOLARIS", "VIVA_AEROBUS", "INDUSTRY"})
 
 
@@ -67,6 +69,7 @@ CONTRACT_FILES = (
     "market_demand.schema.json",
     "analysis.schema.json",
     EDITORIAL_ANALYSIS_CONTRACT,
+    INDUSTRY_STORY_CONTRACT,
     "business_metrics.schema.json",
     "business_metrics_approval.schema.json",
     "news.schema.json",

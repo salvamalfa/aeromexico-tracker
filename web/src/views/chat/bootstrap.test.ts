@@ -357,6 +357,11 @@ describe("chat bootstrap audit", () => {
 
     const { mountChat } = await import("./bootstrap");
     disposeChat = mountChat();
+    const initialPanel = document.getElementById("airline-chat-panel")!;
+    expect(initialPanel.hidden).toBe(false);
+    expect(initialPanel.getAttribute("aria-modal")).toBe("true");
+    expect(document.activeElement).toBe(initialPanel.querySelector("[data-chat-close]"));
+    initialPanel.querySelector<HTMLButtonElement>("[data-chat-close]")!.click();
     const opener = card.querySelector<HTMLButtonElement>(".chat-card-action")!;
     opener.click();
     await flush();
@@ -374,4 +379,137 @@ describe("chat bootstrap audit", () => {
     expect(launcher.inert).toBe(false);
     expect(document.activeElement).toBe(opener);
   });
+  it("attaches a quarter snapshot explicitly without pasting or sending card text", async () => {
+    installFetch("local");
+    const { initPeriods } = await import("../../state/period");
+    initPeriods(["2026Q2","2026Q3"],"2026Q3");
+    document.body.innerHTML='<main class="page-shell"><div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-reading"></button></div><section id="panel-reading" role="tabpanel"><article class="narrative-card"><h2>Una tesis extensa</h2><p>Texto que no debe copiarse al chat.</p></article></section></main>';
+    const { mountChat } = await import("./bootstrap"); disposeChat=mountChat();
+    const input=document.querySelector<HTMLTextAreaElement>("#chat-input")!;
+    input.value="¿Qué explica este resultado?";
+    const ask=document.querySelector<HTMLButtonElement>(".chat-card-action")!;
+    expect(ask.textContent).toBe("Pregunta"); ask.click(); await flush();
+    expect(document.querySelector("[data-chat-attachment-label]")?.textContent).toBe("Lectura ejecutiva · 3T26");
+    expect(input.value).toBe("¿Qué explica este resultado?"); expect(postedBodies).toHaveLength(0);
+    initPeriods(["2026Q2","2026Q3"],"2026Q2");
+    document.querySelector(".narrative-card")!.dispatchEvent(new MouseEvent("click",{bubbles:true}));
+    expect(document.querySelector("[data-chat-attachment-label]")?.textContent).toBe("Lectura ejecutiva · 3T26");
+    document.querySelector<HTMLFormElement>("[data-chat-form]")!.requestSubmit(); await flush(50);
+    expect(postedBodies[0]?.content).toBe("¿Qué explica este resultado?");
+    expect(postedBodies[0]?.context).toMatchObject({period:"2026Q3",card_id:"reading-card",tab:"reading"});
+  });
+
+  it("replaces and removes an attached card without overwriting the question", async () => {
+    installFetch("local");
+    const { initPeriods } = await import("../../state/period");
+    initPeriods(["2026Q3"],"2026Q3");
+    document.body.innerHTML='<main class="page-shell"><div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-economy"></button></div><section id="panel-economy" role="tabpanel"><article class="kpi-card" data-kpi="rask_cents_per_km"><p class="kpi-label">RASK</p></article><article class="kpi-card" data-kpi="cask_cents_per_km"><p class="kpi-label">CASK</p></article></section></main>';
+    const { mountChat } = await import("./bootstrap"); disposeChat=mountChat();
+    const input=document.querySelector<HTMLTextAreaElement>("#chat-input")!; input.value="Compara este indicador";
+    document.querySelectorAll<HTMLButtonElement>(".chat-card-action")[0]!.click(); await flush();
+    expect(document.querySelector("[data-chat-attachment-label]")?.textContent).toContain("RASK");
+    document.querySelectorAll<HTMLButtonElement>(".chat-card-action")[1]!.click(); await flush();
+    expect(document.querySelector("[data-chat-attachment-label]")?.textContent).toContain("CASK");
+    document.querySelector<HTMLButtonElement>("[data-chat-attachment-remove]")!.click();
+    expect(document.querySelector<HTMLElement>("[data-chat-attachment]")?.hidden).toBe(true);
+    expect(input.value).toBe("Compara este indicador");expect(postedBodies).toHaveLength(0);
+    expect(document.querySelector("[data-chat-context]")?.textContent).toBe("Contexto: vista actual al enviar");
+  });
+
+  it("reopens the current view from the tab row without retaining an earlier card attachment", async () => {
+    installFetch("local");
+    const { initPeriods } = await import("../../state/period");
+    initPeriods(["2026Q2", "2026Q3"], "2026Q3");
+    document.body.innerHTML = '<main class="page-shell"><header class="hero"><div class="hero-grid"><div class="period-control"></div></div></header><div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-reading"></button></div><section id="panel-reading" role="tabpanel"><article class="narrative-card"><h2>Lectura</h2></article></section></main>';
+    const { mountChat } = await import("./bootstrap"); disposeChat = mountChat();
+    document.querySelector<HTMLButtonElement>(".chat-card-action")!.click(); await flush();
+    document.querySelector<HTMLButtonElement>("[data-chat-close]")!.click();
+    initPeriods(["2026Q2", "2026Q3"], "2026Q2");
+    const launcher = document.querySelector<HTMLButtonElement>(".reader-tabs-row .chat-launcher")!;
+    launcher.click(); await flush();
+    expect(document.querySelector<HTMLElement>("[data-chat-attachment]")!.hidden).toBe(true);
+    expect(launcher.getAttribute("aria-expanded")).toBe("true");
+    expect(postedBodies).toHaveLength(0);
+    const input = document.querySelector<HTMLTextAreaElement>("#chat-input")!;
+    input.value = "Explica la vista";
+    document.querySelector<HTMLFormElement>("[data-chat-form]")!.requestSubmit(); await flush(50);
+    expect(postedBodies[0]?.context).toMatchObject({ tab: "reading", period: "2026Q2" });
+    expect(postedBodies[0]?.context).not.toHaveProperty("card_id");
+  });
+
+  it("keeps the minimal icon actions accessible while sending and starting a conversation", async () => {
+    installFetch("local");
+    const { mountChat } = await import("./bootstrap"); disposeChat = mountChat();
+    const panel = document.getElementById("airline-chat-panel")!;
+    document.querySelector<HTMLButtonElement>(".chat-launcher")!.click(); await flush();
+    expect(panel.querySelector(".chat-header h2")?.textContent).toBe("Chat");
+    expect(panel.getAttribute("aria-label")).toBe("Ayuda con los datos");
+    expect(panel.querySelector(".chat-toolbar")).toBeNull();
+    expect(panel.querySelector("input[type=file]")).toBeNull();
+    expect(panel.querySelector<HTMLElement>("[data-chat-version]")!.hidden).toBe(true);
+    const fresh = panel.querySelector<HTMLButtonElement>("[data-chat-new]")!;
+    expect(fresh.getAttribute("aria-label")).toBe("Nueva conversación");
+    expect(fresh.querySelector("svg")).not.toBeNull();
+    expect(postedBodies).toHaveLength(0);
+    const send = panel.querySelector<HTMLButtonElement>("[data-chat-send]")!;
+    const input = panel.querySelector<HTMLTextAreaElement>("#chat-input")!;
+    expect(send.disabled).toBe(true);
+    input.value = "Explica el trimestre"; input.dispatchEvent(new Event("input"));
+    expect(send.disabled).toBe(false);
+    panel.querySelector<HTMLFormElement>("[data-chat-form]")!.requestSubmit(); await flush(50);
+    expect(send.getAttribute("aria-label")).toBe("En proceso");
+    expect(send.querySelector("svg")).not.toBeNull();
+    expect(send.disabled).toBe(true);
+    for (const stream of streams) stream.enqueue(frame(3, "turn.completed", { status: "completed" }));
+    await flush();
+    expect(send.getAttribute("aria-label")).toBe("Enviar pregunta");
+    fresh.click(); await flush();
+    expect(panel.querySelectorAll(".chat-message")).toHaveLength(0);
+    expect(postedBodies).toHaveLength(1);
+  });
+
+  it("opens by default without stealing desktop focus or sending, then exposes the tab-row reopen icon", async () => {
+    installFetch("local");
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    document.body.innerHTML = '<main class="page-shell"><header class="hero"><div class="hero-grid"><div class="period-control"></div></div></header><div class="reader-tabs" role="tablist"><button role="tab" aria-selected="true">Lectura ejecutiva</button></div></main>';
+    const focusedTab = document.querySelector<HTMLButtonElement>('[role="tab"]')!;
+    focusedTab.focus();
+    const { mountChat } = await import("./bootstrap"); disposeChat = mountChat();
+    await flush();
+    const panel = document.getElementById("airline-chat-panel")!;
+    const launcher = document.querySelector<HTMLButtonElement>(".reader-tabs-row > .chat-launcher")!;
+    expect(panel.hidden).toBe(false);
+    expect(document.activeElement).toBe(focusedTab);
+    expect(launcher.hidden).toBe(true);
+    expect(document.querySelector(".hero .chat-launcher")).toBeNull();
+    expect(postedBodies).toHaveLength(0);
+    panel.querySelector<HTMLButtonElement>("[data-chat-close]")!.click();
+    expect(panel.hidden).toBe(true);
+    expect(launcher.hidden).toBe(false);
+    expect(launcher.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(launcher);
+    launcher.click(); await flush();
+    expect(panel.hidden).toBe(false);
+    expect(launcher.hidden).toBe(true);
+    expect(document.activeElement).toBe(panel.querySelector("#chat-input"));
+    expect(postedBodies).toHaveLength(0);
+  });
+
+  it("moves focus inside the dialog when an open desktop chat becomes a mobile overlay", async () => {
+    installFetch("local");
+    let mobile = false;
+    vi.stubGlobal("matchMedia", () => ({ matches: mobile }));
+    document.body.innerHTML = '<main class="page-shell"><button id="outside">Dashboard</button></main>';
+    const outside = document.querySelector<HTMLButtonElement>("#outside")!; outside.focus();
+    const { mountChat } = await import("./bootstrap"); disposeChat = mountChat(); await flush();
+    const panel = document.getElementById("airline-chat-panel")!;
+    expect(document.activeElement).toBe(outside);
+    mobile = true; window.dispatchEvent(new Event("resize"));
+    expect(panel.getAttribute("aria-modal")).toBe("true");
+    expect(document.activeElement).toBe(panel.querySelector("[data-chat-close]"));
+    mobile = false; window.dispatchEvent(new Event("resize"));
+    expect(panel.hasAttribute("aria-modal")).toBe(false);
+    expect(document.querySelector<HTMLElement>(".page-shell")!.inert).toBe(false);
+  });
+
 });

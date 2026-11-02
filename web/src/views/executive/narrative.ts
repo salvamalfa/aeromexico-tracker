@@ -19,7 +19,7 @@ import { state } from "./state";
 import type { AnalysisCitation, AnalysisDocument, ExecutiveView } from "../../types/domain";
 import { isEntityKey } from "../shell/carriers";
 
-export function citationsByClaim(analysis: AnalysisDocument): Map<string, AnalysisCitation[]> {
+export function citationsByClaim(analysis: Pick<AnalysisDocument, "claims">): Map<string, AnalysisCitation[]> {
   return new Map(analysis.claims.map((claim) => [claim.claim_id, claim.citations]));
 }
 
@@ -118,7 +118,7 @@ export function validAnalysis(payload: unknown, entityKey: string, periodId: str
     p.sections.every((s) => s.claim_ids.every((id: string) => claimIds.has(id)));
 }
 
-async function fetchAnalysis(entityKey: string, periodId: string): Promise<AnalysisDocument | null> {
+export async function fetchAnalysis(entityKey: string, periodId: string): Promise<AnalysisDocument | null> {
   if (!isEntityKey(entityKey) || !/^\d{4}Q[1-4]$/.test(periodId)) return null;
   const key = JSON.stringify([state.dataRoot, entityKey, periodId]);
   if (cache.has(key)) return cache.get(key) ?? null;
@@ -134,7 +134,7 @@ async function fetchAnalysis(entityKey: string, periodId: string): Promise<Analy
 
 // Port of src/analysis_agent/analyst.py::emphasized: wraps the lead
 // sentence and any emphasis phrase in <strong>, escaping everything else.
-function emphasized(text: string, lead: string, phrases: string[] = []): string {
+export function emphasized(text: string, lead: string, phrases: string[] = []): string {
   const spans: Array<[number, number]> = [];
   for (const phrase of [lead, ...phrases]) {
     if (!phrase || !text.includes(phrase)) continue;

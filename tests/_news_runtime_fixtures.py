@@ -21,7 +21,7 @@ def _pin_approved_content(monkeypatch):
     )
     monkeypatch.setenv(
         "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
-        "1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f",
+        "9f8f12fc088cefce09f822d6647f5b46856e6ee7b600c5a1750db0c3e5f07005",
     )
 
 

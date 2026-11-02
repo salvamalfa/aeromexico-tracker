@@ -6,8 +6,8 @@ keep their source and kind even when their market is aggregated for the map.
 
 from __future__ import annotations
 
-from collections import defaultdict
 import math
+from collections import defaultdict
 
 import pandas as pd
 
@@ -274,13 +274,14 @@ def apply_flight_cells(network, cells, endpoint, *, previous_cells=None):
         route["observed_months"] = sorted({c["period_id"] for c in components if c["kind"] == "observed"})
         route["estimated_months"] = sorted({c["period_id"] for c in components if c["kind"] == "estimated"})
         route["scheduled_months"] = sorted({c["period_id"] for c in components if c["kind"] == "scheduled"})
-        route["coverage_note"] = (
-            route.get("coverage_note", "")
-            + " · Vuelos por celda operador/ruta/sentido/mes: "
-            + ", ".join(
-                f"{totals[kind]:g} {kind}" for kind in KINDS if any(c["kind"] == kind for c in components)
-            )
+        marker = "Vuelos por celda operador/ruta/sentido/mes: "
+        # A refreshed edition can start from a previously generated payload.
+        # Replace its derived note rather than appending another stale total.
+        base_note = route.get("coverage_note", "").split(marker, 1)[0].rstrip(" ·")
+        cell_note = marker + ", ".join(
+            f"{totals[kind]:g} {kind}" for kind in KINDS if any(c["kind"] == kind for c in components)
         )
+        route["coverage_note"] = " · ".join(part for part in (base_note, cell_note) if part)
         old_directions = {(d["origin_iata"], d["destination_iata"]): d for d in route.get("directions", [])}
         directions = defaultdict(float)
         for cell in selected:

@@ -17,7 +17,7 @@ const CARD_SELECTION: Record<string, string> = {
   "kpi-rask_cents_per_km": "kpis", "kpi-cask_cents_per_km": "kpis", "kpi-ask_km": "kpis",
   "kpi-unit_margin_cents_per_km": "kpis",
 };
-const SINGLE_SELECTIONS = new Set(["reading", "kpis", "flight-kpis", "map"]);
+const SINGLE_SELECTIONS = new Set(["reading", "kpis", "flight-kpis"]);
 
 function activeTab(): "reading" | "economy" | "flights" | "market" | "news" {
   const active = document.querySelector<HTMLButtonElement>('.reader-tabs [role="tab"][aria-selected="true"]');
@@ -33,9 +33,9 @@ function tabForCard(card: Element | null): "reading" | "economy" | "flights" | "
 
 function cardIdFrom(node: Element | null): string | undefined {
   if (!node || node.closest("[data-chat-unavailable]")) return undefined;
-  const card = node.closest<HTMLElement>(".chart-card, .flights-shell, .kpi-card, .flight-kpi, .narrative-card");
+  const card = node.closest<HTMLElement>(".chart-card, .panel.chart-panel, .panel.flow-map-panel, .kpi-card, .flight-kpi, .narrative-card");
   if (!card) return node.closest(".flights-view") ? "flights" : undefined;
-  if (card.id) return card.id;
+  if (card.id && card.id !== "map-panel") return card.id;
   if (card.classList.contains("narrative-card")) return "reading-card";
   const graphId = card.querySelector<HTMLElement>(".chart[id]")?.id;
   if (graphId) return graphId;
@@ -45,7 +45,9 @@ function cardIdFrom(node: Element | null): string | undefined {
   return kpi ? `kpi-${kpi}` : card.classList.contains("flights-shell") ? "flights-shell" : undefined;
 }
 
-function selectedEntities(cardId?: string): string | string[] {
+function selectedEntities(cardId?: string, tab = activeTab()): string | string[] {
+  if (tab === "reading") return "INDUSTRY";
+  if (tab === "market") return ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"];
   const selector = cardId ? CARD_SELECTION[cardId] :
     activeTab() === "reading" ? "reading" : activeTab() === "economy" ? "kpis" : activeTab() === "market" ? "market" : "flight-kpis";
   if (selector) {
@@ -58,31 +60,27 @@ function selectedEntities(cardId?: string): string | string[] {
   }
   if (selector === "mix" || selector === "map") {
     const picked = selection(selector);
-    if (picked.length) return selector === "map" ? picked[0]! : picked;
+    if (picked.length) return picked;
   }
   if (cardId?.startsWith("flight-") || cardId === "flights-shell" || activeTab() === "flights") return flightState.mapEntity;
   return "AEROMEXICO";
 }
 
 export function buildChatContext(cardElement?: Element | null): ChatContext {
-  const tab = activeTab();
+  const visualTab = activeTab();
   const focusedCard = cardElement ?? document.activeElement;
   const cardTab = tabForCard(focusedCard);
-  const cardId = cardTab && cardTab !== tab ? undefined : cardIdFrom(focusedCard);
+  const cardId = cardTab && cardTab !== visualTab ? undefined : cardIdFrom(focusedCard);
+  // The merged Mercado tab preserves the existing data contracts: map and
+  // financial flight cards are `flights`; the AFAC participation chart is `market`.
+  const tab = cardId === "market-card" || cardId === "market-chart" ? "market" : visualTab;
   const newsCompany = document.querySelector<HTMLSelectElement>("#news-company")?.value;
   const newsEntities: Record<string,string> = { "Aeroméxico":"AEROMEXICO", "Volaris":"VOLARIS", "Viva":"VIVA_AEROBUS" };
   const newsMonth = document.querySelector<HTMLSelectElement>("#news-month")?.value;
-  const readingSelect = document.querySelector<HTMLSelectElement>("#reading-period");
-  const readingPeriod = readingSelect && !readingSelect.disabled ? readingSelect.value : undefined;
-  const marketComparison = cardId === "market-card" && !focusedCard?.closest("#market-chart")
-    ? document.getElementById("market-card")?.dataset.comparisonPeriod : undefined;
-  const period = tab === "reading" && readingPeriod && /^\d{4}Q[1-4]$/.test(readingPeriod)
-    ? readingPeriod
-    : tab === "flights" && flightState.quarters[flightState.periodIndex]
-    ? flightState.quarters[flightState.periodIndex]!.period_id
-    : tab === "market" && marketComparison && /^\d{4}Q[1-4]$/.test(marketComparison) ? marketComparison
-    : tab === "news" ? newsMonth?.replace("-","M") ?? "" : currentPeriodId() ?? "";
-  const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId);
+  const period = tab === "flights"
+    ? currentPeriodId() ?? flightState.quarters[flightState.periodIndex]?.period_id ?? ""
+    : tab === "news" ? newsMonth?.replace("-","M") || "" : currentPeriodId() ?? "";
+  const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId, tab);
   const context: ChatContext = { tab, period, ...(picked !== undefined ? {entity:picked} : {}) };
   if (cardId) context.card_id = cardId;
   const filters: NonNullable<ChatContext["filters"]> = {};
@@ -96,6 +94,13 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
     const modelMonth = (month: string) => /^(\d{4})-(\d{2})$/.test(month) ? month.replace("-", "M") : month;
     if (flightState.networkMode === "domestic") filters.domestic_months = [...flightState.selectedDomesticMonths].sort().map(modelMonth);
     if (flightState.selectedRegion) filters.region = flightState.selectedRegion;
+    if ((!cardId || cardId === "route-flow-map" || cardId === "flow-map") && flightState.networkMode === "international" &&
+        (!flightState.selectedRegion || flightState.selectedRegion === "norteamerica") && flightState.evidenceView === "north_america_observed") {
+      filters.flight_evidence = "north_america_observed";
+    }
+    if (cardId === "route-flow-map" || cardId === "flow-map") {
+      const entities = selection("map"); if (entities.length) filters.entities = entities;
+    }
     if (cardId === "mix-chart") {
       const entities = selection("mix"); if (entities.length) filters.entities = entities;
       const quarter = period.match(/^(\d{4})Q([1-4])$/);
@@ -123,7 +128,7 @@ export function isEntityKeyList(value: unknown): value is EntityKey[] {
 }
 
 export function describeChatContext(context: ChatContext): string {
-  const tabLabels = { reading: "Lectura ejecutiva", economy: "Economía unitaria", flights: "Vuelos", market: "Mercado", news: "Noticias y estrategia" };
+  const tabLabels = { reading: "Lectura ejecutiva", economy: "Economía unitaria", flights: "Mercado", market: "Mercado", news: "Noticias" };
   const cardLabels: Record<string, string> = {
     "market-chart": "Participación de pasajeros", "market-card": "Participación de pasajeros",
     "unit-chart": "Economía unitaria", "volume-chart": "Pasajeros y RASK", "load-chart": "Ocupación y RASK",
@@ -139,5 +144,6 @@ export function describeChatContext(context: ChatContext): string {
       : entity
   ).join(", ") || "Sin aerolínea preseleccionada";
   const card = context.card_id ? cardLabels[context.card_id] : undefined;
-  return `${tabLabels[context.tab]} · ${period || "periodo disponible"} · ${entities}${card ? ` · ${card}` : ""}`;
+  const evidence = context.filters?.flight_evidence === "north_america_observed" ? " · Norteamérica: sólo vuelos observados" : "";
+  return `${tabLabels[context.tab]} · ${period || "periodo disponible"} · ${entities}${card ? ` · ${card}` : ""}${evidence}`;
 }

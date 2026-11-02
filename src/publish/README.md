@@ -616,3 +616,55 @@ para una sola aerolínea y conserva AFAC en comparaciones. Son tramos reservados
 incluido fletamento, con unidad, preliminar y atribución del reporte. Muestra el
 mes y su comparativo anual de la misma edición, con documento/captura y fuente;
 no activa una historia retrospectiva, acumulados ni un trimestre incompleto.
+
+## Sustitución explícita de fuentes y lecturas de 3T26
+
+`quarterly_story_release_v1` reúne cuatro nuevas lecturas y doce salidas de
+datos reproducidas: Industria financiera, AFAC de septiembre, las observaciones
+ANAC de Brasil y el archivo de noticias aprobado. Cada lectura conserva su
+versión, auditoría independiente y aprobación propias en el lifecycle normal.
+Las 23 noticias nuevas requieren además la decisión real del lote y los hashes
+de sus registros; el gate rechaza una preview o un índice anterior incompleto.
+Los indicadores financieros de los tres emisores se cotejan con las fuentes
+antes de calcular Industria. No se activan modelos ni estimaciones candidatas.
+
+El adaptador nuevo de Volaris conserva cuatro respuestas HTTP originales de SEC,
+sus fechas y SHA-256. Comprueba 446 celdas y 187 reconciliaciones. Distingue los
+bytes recibidos del documento cuyo tamaño declara el índice SEC: sólo admite el
+script vacío exacto observado al final de ambas respuestas y retiene una prueba
+separada de tamaños y hashes. Un script distinto, duplicado, con contenido o en
+otra posición bloquea. Los importadores de reconstrucciones Library y sus
+controles anteriores permanecen intactos.
+
+La sustitución no consume las tres lecturas Q3 anteriores como fuente. Conserva
+sus registros y aprobaciones históricos y los contrasta con Git y el ledger;
+declara expresamente que su fuente no se volvió a reproducir. La autoridad nueva
+debe nombrar las cuatro versiones, la sustitución y la proyección exactas. Las
+cuatro lecturas Q2 sí repiten la verificación original completa de fuentes,
+cálculos y aprobación y permanecen idénticas. Una revocación durante el build
+bloquea el intercambio, incluidas las aprobaciones Q2 conservadas.
+
+La preparación se ejecuta en un checkout limpio del commit real, con expediente
+privado restaurado y warehouse regenerado desde Gold. El extractor histórico de
+Industria Q2 requiere Linux por sus supuestos de rutas; no se modifica su cápsula
+fijada por hash para ejecutarla en Windows. El transporte puede copiar y cotejar
+bytes cuando Windows rechaza crear enlaces; eso no elimina las restricciones del
+extractor ni fabrica atributos Library.
+
+```bash
+python -m scripts.prepare_quarterly_story_release --descriptor <descriptor-privado.json> --output tmp/source-updates/story-release-final
+# Auditar las cuatro versiones y el scope; conservar la decisión auténtica.
+python -m src.publish.quarterly_story_update --prepare <request-autorizado.json>
+# Revisar y confirmar config/publish/quarterly-story-release.json.
+python -m src.publish --quarterly-story-request <request-autorizado.json> --out site/
+python -m src.publish.verify site/
+python scripts/check_pages_publication.py site/
+```
+
+La preparación sólo importa borradores y produce material para revisión. El gate
+exige código y ancla confirmados, autoridad y auditoría exactas, baseline remoto
+y servido, repetición de fuentes y aprobaciones y sustitución atómica. Pages
+selecciona `quarterly_story_scope` por su prueba declarada; un fallo no cae a otro
+verificador. El PR, CI del head final, revisión independiente, merge y comprobación
+HTTPS/navegador siguen siendo obligatorios. Un artifact de Actions acredita sólo
+lo que contienen sus hashes y recibos; no acredita una publicación servida.

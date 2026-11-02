@@ -1,0 +1,153 @@
+{
+  "reference_master": "3a299fbc",
+  "scope": "local_uncommitted_review_no_new_publication",
+  "web": {
+    "files": 46,
+    "passed": 318,
+    "node": "22",
+    "typecheck": "passed",
+    "vite_build": "passed"
+  },
+  "python_focused": {
+    "passed": 15,
+    "warehouse_tests_skipped": 3
+  },
+  "chat_contract_regression": {
+    "passed": 17
+  },
+  "python_broad": {
+    "passed": 202,
+    "failed": 1,
+    "deselected_by_normal_ci_profile": 106,
+    "complete": false,
+    "first_failure": "test_airport_group_independent.py::test_manual_gap_integral_replay_keeps_http_unknown_and_date_precision",
+    "reason": "Windows WinError 1314 creating a symbolic link; test unchanged",
+    "mode": "-X utf8; stopped at first failure; not a green full suite"
+  },
+  "browser": {
+    "economy_cases": 24,
+    "flights_cases": 32,
+    "general_cases": 10,
+    "requested_sizes": [
+      [
+        1440,
+        1050
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "production": false
+  },
+  "code_sha256": {
+    "contracts/web/README.md": "cb8879a5dea56c47b4c6a3579e35d9bc5bfbc2b9a2d49886c7c11c2517fd148d",
+    "scripts/audit_dashboard_periods.py": "1103b3b3d2f385078b855bf5eed0dc5392bdc087b878f745f8d4fa7123318dd0",
+    "src/dashboard/financial_periods.py": "11c8ae719e1103ae14088061ee94cabfa7ea21f3a76b06a95d288fc301ce0d6a",
+    "src/dashboard/industry_review.py": "dd8af12bbc4e7ac9fe060e8f90f66aaa08cfb80915931e3c4ccfe8903cc4400f",
+    "src/web_export/executive.py": "cf68c1d3045cc4b50c0e7ee3f4b2353cc15fd6f3afd4e88bd0a71a32af02ff63",
+    "web/src/state/coverage.ts": "cbb7111768cb16b41681998adf9ff78a9e4f82927d2730bfb9beaf6b557525e9",
+    "web/src/state/financial-period.ts": "1153a0635f5499ab6fe59dd1b00cc5f4d54199e439ca1ef1ca6bdebeb6dfd090",
+    "web/src/styles/base.css": "97136d6997e7c4829d3b24da991cab3cfdb4f03020719f9eaaa1fda015e93cb1",
+    "web/src/types/domain.ts": "df0ab87e0a95515cf90cb687d02e01e4cb49e0e73c040e1e883fee9978a60e43",
+    "web/src/views/chat/context.test.ts": "cebc1b2321d5b8f393cdd86952d09ee592d48e359eff9533f978b35304f60662",
+    "web/src/views/chat/context.ts": "c5b306ca4fc8e7ab71b4d73cc7da7db16c8baf79de5ec3a16d0871d2db234e42",
+    "web/src/views/economy/chart-common.ts": "7a864e8738cb11a9b8e1267246f69bb3c0d70d289fa8bdce93a71dce73627651",
+    "web/src/views/economy/charts.ts": "a213c3b0c7da888b0d6e40beaba6ce9c4f6839f567ae6d78d40367e04e899412",
+    "web/src/views/economy/compare.ts": "0390dfffac227f3042aea8bf72de66efdbf979cc850f67bd1c7e07ea0e76ffc8",
+    "web/src/views/economy/financial-note.test.ts": "5ff348109daa9369632437521cef7d6ce27e6cc0a4b2bbf9a9f2e20145885e12",
+    "web/src/views/economy/financial-note.ts": "f69dfa2db930a7057593083ec13e7263e5a5f333d9c311e7b9ae0682db655e67",
+    "web/src/views/economy/industry-review.test.ts": "05835b55670b706588a1429d478f8ce1bcc8d1aa5cdba15669a24548741c302f",
+    "web/src/views/economy/kpis.ts": "dbfe3069fd8b8d05c06c4fc9a1b3e62329ac08d002cdfe25c69ce31aa4a2a43e",
+    "web/src/views/economy/period-context.ts": "ddc3841edb8e810a0fa486f5c44b0d62d006560ee3fcc521be5699086ffe3f8b",
+    "web/src/views/economy/real-periods.test.ts": "b06f91f712fb5f0144fd1d26efc35a028d3c1a8e0fc743c5194f42907ae9be57",
+    "web/src/views/economy/table.ts": "9f500de9ac322e39465d5137fd0b9e88163727872eb373179a0857ad14f8e25f",
+    "web/src/views/executive/bootstrap.ts": "dfff5ed920ecf1fb5ec39f4bf485d2e6ea98c3b4744d601d3cc4a938fea60289",
+    "web/src/views/executive/market.test.ts": "8e5a68707458aca0d9d90b02f0c4437efec6f5178c41a14ac900b2bc97c1ac2b",
+    "web/src/views/executive/market.ts": "fa279c61a1d89047a84c4a3d09fa651ea8a839ea2ced8c6b9a146da15d72b7c7",
+    "web/src/views/executive/state.test.ts": "a5f2e06659c6007853c8adda6a2a76ed45bb002451985e591acaf63de0391a3c",
+    "web/src/views/executive/state.ts": "f71f14cda40342282a5cf379aa2a4570937e9ddd8fd846606e5b3677ae64cb46",
+    "web/src/views/flights/bootstrap.ts": "a2a83fae802f90259c19abc6d2ad3dbf776cb3f8e6acf79ae75c879bf5e624a2",
+    "web/src/views/flights/carriers.ts": "6ffb37b443861a10b83d373a22cd6ba73776d8ba189932f5eb4570c7495374db",
+    "web/src/views/flights/map-periods.test.ts": "96711d8904ba452c0534cda01d4f64bb8300c7acaa012caacf7f811c73c6a3c3",
+    "web/src/views/flights/map-periods.ts": "e2c54b555bd200da90a46df98a25531ec864bb26baf678eed30e6a971f2b79a0",
+    "web/src/views/flights/mix.test.ts": "4b4b68627f1b6a0408352e35ba0f01326742478bb5ca33e30c0de2aafee18add",
+    "web/src/views/flights/mix.ts": "d81e9fee0adb791c9be5d458e2dc341aca531659fa0080eeef695512f892e054",
+    "web/src/views/flights/network.ts": "23f1361eb49fb70f7021f983fe2d553967e5af566a67c14c960b201f4bb91040",
+    "web/src/views/flights/passenger-coverage.ts": "c498f7cf9e1613a2d55595c48ad983648a6522bb40f93f986b83238447c2d352",
+    "web/src/views/flights/quarter.test.ts": "96c55fa25c9c8bd59e59c4ed712ebda794c92e32f5dfd392b5616b32e04329fa",
+    "web/src/views/flights/quarter.ts": "e873a6c9cc4aacd53bfdd79fb7d52df3593bfb0f4d5b51deec44d9bdf28bde02",
+    "web/src/views/flights/real-periods.test.ts": "5bf7bcb5dad956672544743084427f6702a08d89e363ab21890555b4258f476e",
+    "web/src/views/flights/regions.ts": "f0117aa82125b23b0aab55af6a99d850eb2c86ae773823fe53cd35abcb6f2b80",
+    "web/src/views/flights/selected-period.ts": "7f116fbb931b0023c3e7fbf8dc6a12c4d1bbcb1809622f44043b80ac2dd77bcb",
+    "web/src/views/market/calculations.test.ts": "b1025a4bfca3941497e8426234def2ac29f677444d2b6fb9cf99d23faa000d63",
+    "web/src/views/market/calculations.ts": "16aac27241e446b9f66ac61efad69a7343407c5560e3e4a0638dc6e93ee2d124"
+  },
+  "site_and_original_schema_changed": false,
+  "data_activation": "none",
+  "industry_thesis_activation": "none",
+  "industry_review": {
+    "preview_only": true,
+    "production_activation": false,
+    "thesis_activation": false,
+    "browser_cases": 4,
+    "forced_tooltip_boxes": 0,
+    "payload_sha256": "4e587b95616434ef601bf5f50435e03cd28ba23803769762ff83abc382a4f6bd"
+  },
+  "reading_overview_local_20261101": {
+    "tests": 321,
+    "test_files": 47,
+    "typescript": "passed",
+    "vite_build": "passed",
+    "browser": "Q3 -> Q2 -> Q3; four real points; desktop and mobile; map only July inside global Q3",
+    "production_verified": false,
+    "publication_performed": false,
+    "approval_state_changed": false,
+    "source_sha256": {
+      "web/index.html": "cfb42b5de7280a86a7401797c6072d41750a4aefaf6a1267eb448694e8c3e407",
+      "web/src/views/executive/overview.ts": "465519526211b04cfee56124622f4702e67a1c7fb94a950ad4a105b38643a144",
+      "web/src/views/executive/overview.test.ts": "ed99fd4ebf3235752926d2e79157960ae621be66f02f8d233f7255e01f831346",
+      "web/src/views/executive/reading-periods.ts": "093ffd08490eeac971bf8913f2e82e868622ab3f8310901ef6dc32051b5a09f9",
+      "web/src/views/executive/bootstrap.ts": "1bc107ee4ef7588100139ba25a1867161bf6718a6e512db5078e0004b3ce1b62",
+      "web/src/views/chat/context.ts": "365c1518274129a77a21d66a788b5c1284b9b74bc74c19600112a5fdfc9698fe",
+      "web/src/views/flights/map-periods.ts": "435777762a15c5a97c7b69e78c081f59b043dad876c51af42b3a2ec6b605f26c"
+    }
+  },
+  "complete_analysis_local_20261101": {
+    "web_tests": 322,
+    "test_files": 47,
+    "typescript": "passed",
+    "build": "passed",
+    "full_analysis_paragraphs_q3": 20,
+    "full_analysis_entities_q3": [
+      "AEROMEXICO",
+      "VIVA_AEROBUS",
+      "VOLARIS"
+    ],
+    "paragraph_text_equality_to_approved_json": "passed",
+    "mobile_width": 375,
+    "mobile_document_width": 375,
+    "approval_changes": false,
+    "publication": false,
+    "source_sha256": {
+      "web/src/views/executive/overview.ts": "6a1e1c6c7a0b229fae2222049eb6ad989587a8daaed88cf252b3ad506b70e192",
+      "web/src/views/executive/overview.test.ts": "b28f4fb8a0ba41465027affcb583c6a689264abced0ee74e6070e9286bf56f35",
+      "web/src/views/executive/narrative.ts": "84ab5c07e4af6db5f88408c50442e5a868700d3795515c4d1ac6b0073475ded7",
+      "web/src/views/executive/executive.css": "dcf464684dedc57663c38b32fc17832610fb40e349847d0ea11fd597ef6d6d6b",
+      "web/index.html": "d14379688d8d6ccf73801f7cf356602dea04303da9c17a403320d9fd90e81554"
+    }
+  },
+  "narrative_preparation_local_20261101": {
+    "lifecycle_and_literal_tests": 30,
+    "skills_validated": [
+      "airline-quarterly-story",
+      "airline-update-coordinator"
+    ],
+    "historical_analysis_skill_unchanged": true,
+    "historical_analysis_skill_sha256": "5ec0b20a9f3ea3fc601eeba39740b2e1bb5b233f6814b3ff49a5dea4849ec870",
+    "approved_records_modified": false,
+    "calendar_executed": false,
+    "publication": false,
+    "examples_status": "local editorial review only; not imported or approved"
+  }
+}

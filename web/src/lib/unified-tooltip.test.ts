@@ -1,0 +1,45 @@
+import { afterEach,expect,it,vi } from "vitest";
+import { bindUnifiedTooltip,TOOLTIP_DOWN,TOOLTIP_UP } from "./unified-tooltip";
+afterEach(()=>{vi.useRealTimers();vi.restoreAllMocks();document.body.replaceChildren();});
+it("shows one date and comparison header for mouse/tap, and supports keyboard and repeated renders",()=>{
+  vi.useFakeTimers();document.body.innerHTML='<article><div id="chart"></div></article>';
+  const graph=document.getElementById("chart")!;
+  const events:Record<string,(event:unknown)=>void>={};
+  const on=vi.fn((name:string,callback:(event:unknown)=>void)=>{events[name]=callback;});
+  Object.assign(graph,{on});
+  const provider=(key:string)=>({heading:key,comparisonLabel:"vs. septiembre de 2025",rows:[{label:"Aeroméxico",value:"31% (2.3 millones)",change:"+4.2%",color:TOOLTIP_UP},{label:"Viva",value:"29% (2.1 millones)",change:"-1.2%",color:TOOLTIP_DOWN}]});
+  bindUnifiedTooltip("chart",["agosto de 2026","septiembre de 2026"],provider);
+  events.plotly_hover!({points:[{x:"agosto de 2026"}]});
+  const panel=document.getElementById("chart-detail")!;
+  expect(panel.parentElement).toBe(document.body);expect(panel.getAttribute("popover")).toBe("manual");
+  panel.showPopover=vi.fn();panel.hidePopover=vi.fn();
+  events.plotly_hover!({points:[{x:"agosto de 2026"}]});
+  expect(panel.showPopover).toHaveBeenCalledTimes(1);expect(panel.dataset.topLayerOpen).toBe("true");
+  expect(panel.hidden).toBe(false);expect(panel.querySelector("header b")?.textContent).toBe("agosto de 2026");
+  expect(panel.querySelectorAll("header")).toHaveLength(1);expect(panel.querySelectorAll("p")).toHaveLength(2);
+  expect(panel.querySelector("p span:last-child")?.getAttribute("style")).toContain("rgb(22, 93, 181)");
+  events.plotly_click!({points:[{x:"septiembre de 2026"}]});events.plotly_unhover!({});vi.advanceTimersByTime(200);expect(panel.hidden).toBe(false);
+  graph.focus();graph.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowLeft",bubbles:true}));
+  expect(panel.querySelector("header b")?.textContent).toBe("agosto de 2026");
+  const escaped=new KeyboardEvent("keydown",{key:"Escape",bubbles:true,cancelable:true});
+  graph.dispatchEvent(escaped);expect(panel.hidden).toBe(true);expect(escaped.defaultPrevented).toBe(true);
+  expect(panel.hidePopover).toHaveBeenCalledTimes(1);
+  bindUnifiedTooltip("chart",["septiembre de 2026"],provider);
+  expect(on).toHaveBeenCalledTimes(3);expect(document.querySelectorAll(".unified-tooltip")).toHaveLength(1);
+  events.plotly_click!({points:[{x:"septiembre de 2026"}]});
+  window.dispatchEvent(new CustomEvent("reader-tab-visible"));expect(panel.hidden).toBe(true);
+});
+
+it("clamps to the content viewport rather than covering the mobile scrollbar",()=>{
+  document.body.innerHTML='<article><div id="chart"></div></article>';
+  vi.spyOn(document.documentElement,"clientWidth","get").mockReturnValue(375);
+  vi.spyOn(document.documentElement,"clientHeight","get").mockReturnValue(844);
+  const graph=document.getElementById("chart")!,events:Record<string,(event:unknown)=>void>={};
+  Object.assign(graph,{on:(name:string,callback:(event:unknown)=>void)=>{events[name]=callback;}});
+  bindUnifiedTooltip("chart",["2026-09-01"],()=>({heading:"septiembre de 2026",comparisonLabel:"vs. septiembre de 2025",rows:[]}));
+  const panel=document.getElementById("chart-detail")!;
+  vi.spyOn(panel,"getBoundingClientRect").mockReturnValue({width:260,height:150} as DOMRect);
+  events.plotly_click!({points:[{x:"2026-09-01"}],event:new MouseEvent("click",{clientX:321,clientY:800})});
+  expect(panel.style.maxWidth).toBe("359px");
+  expect(panel.style.left).toBe("107px");expect(panel.style.top).toBe("686px");
+});

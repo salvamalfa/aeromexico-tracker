@@ -73,6 +73,9 @@ def code_version():
 
 
 def require_current_presentation(record):
+    if record["draft"].get("source_profile") == "quarterly_business_story_v1":
+        from .quarterly_story import require_current_presentation as require_story_presentation
+        return require_story_presentation(record)
     from .analyst import SKILL
 
     if record["code_version"] != code_version() or record["prompt_version"] != sha(SKILL):
@@ -338,6 +341,9 @@ def validate(draft, package, calculations):
 
 
 def verified_inputs(record):
+    if record["draft"].get("source_profile") == "quarterly_business_story_v1":
+        from .quarterly_story import verified_inputs as verify_story
+        return verify_story(record)
     if record["draft"].get("source_profile") == "issuer_quarter_v1":
         from .issuer_quarter import verified_inputs as verify_issuer
         return verify_issuer(record)

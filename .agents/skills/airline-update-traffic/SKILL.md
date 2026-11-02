@@ -63,6 +63,18 @@ Consultar cada producto de esta familia:
 
 Un 403, TLS, timeout o archivo inválido es un fallo de acceso/contenido; no prueba ausencia de publicación. Registrar pendiente y conservar el dato aceptado. Las fechas de publicación desconocidas siguen nulas.
 
+En AFAC, comprobar también el catálogo oficial Estadísticas y sus libros
+`sase` y `resumen` de la misma edición. DATATUR y su `DB_AFAC.zip` pueden ir
+rezagados: su corte no demuestra ausencia de un libro nuevo en AFAC. Capturar
+los enlaces reales con `collect`, retener ambos con roles `routes` y
+`carriers`, y certificar `afac_margins` con el mes que declara el contenido.
+Ese producto conserva por separado ruta de todas las aerolíneas y marginal
+por empresa; no inventa una celda ruta×empresa. El libro `resumen` admite el
+parser anual existente y `scripts.build_afac_market_review` para una proyección
+local revisable de Mercado. No sustituir silenciosamente el adaptador
+`afac_carriers`, que exige boletín/base, ni presentar un build de revisión
+como aprobación o publicación. Mantener la fecha de captura y recibo originales.
+
 ### Boletines candidatos de 2026
 
 `parse.afac` del coordinador exige el ZIP DATATUR verificado y los PDF de todos

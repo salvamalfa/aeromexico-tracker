@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { QuarterRecord } from "../../types/domain";
 import { state } from "./state";
 import { renderMix } from "./mix";
+import { entityState } from "../executive/entities";
 const mocks = vi.hoisted(() => ({ react: vi.fn(), entity: vi.fn(), entities: ["AEROMEXICO"] }));
 vi.mock("../../lib/plotly", () => ({ default: { react: mocks.react } }));
 vi.mock("./carriers", () => ({ renderEntityMix: mocks.entity }));
 vi.mock("../shell/carriers", () => ({ selection: () => mocks.entities }));
-const record = { period_label: "2T26", metrics: { passengers: {
+const record = { period_id: "2026Q2", period_label: "2T26", metrics: { passengers: {
   period_start: "2026-04-01", period_end: "2026-06-30",
 } } } as QuarterRecord;
 
@@ -15,6 +16,7 @@ describe("separate corporate monthly passenger basis", () => {
     mocks.react.mockClear(); mocks.entity.mockClear(); mocks.entities = ["AEROMEXICO"];
     document.body.innerHTML = '<p id="mix-source-inline"></p><label id="passenger-basis-control" hidden></label><select id="passenger-period"><option value="quarter">Trimestral</option><option value="month">Mensual</option></select><div id="mix-chart"></div>';
     window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    entityState.market = null;
     state.passengerPeriod = "quarter"; state.passengerBasis = "afac";
     state.corporatePeerMonthlyPassengers = {};
     state.monthlyPassengers = { records: ["04", "05", "06"].map((month) => ({ date: `2026-${month}-01`, domestic: 10, international: 5, total_segment_sum: 15 })) };
@@ -37,7 +39,7 @@ describe("separate corporate monthly passenger basis", () => {
     expect(traces[2].y).toEqual([1892000, 1853000]);
     expect(traces[2].x).toEqual(["2025-09-01", "2026-09-01"]);
     expect(traces[2].mode).toBe("markers");
-    expect(traces[2].hovertemplate).toContain("redondeados");
+    expect(traces.every((trace:{hoverinfo:string})=>trace.hoverinfo==="none")).toBe(true);
     expect(state.passengerPeriod).toBe("month");
     expect(document.querySelector<HTMLOptionElement>('option[value="quarter"]')?.disabled).toBe(true);
     expect(document.querySelector<HTMLAnchorElement>("#mix-source-inline a")?.href).toBe("https://ir.aeromexico.com/node/9131/html");
@@ -82,7 +84,7 @@ describe("separate corporate monthly passenger basis", () => {
     renderMix(record);
     expect(mocks.entity).not.toHaveBeenCalled();
     expect(mocks.react.mock.calls[0]![1][2].y).toEqual([1892000, 1853000]);
-    expect(mocks.react.mock.calls[0]![2].shapes).toEqual([]);
+    expect(mocks.react.mock.calls[0]![2].shapes[0]).toMatchObject({ x0: "2026-04-01", x1: "2026-06-30" });
     expect(mocks.react.mock.calls[0]![2].yaxis.title.text).toBe("Tramos de pasajero reservados");
     expect(document.getElementById("mix-source-inline")?.textContent).toContain("no pasajeros transportados");
     expect(document.getElementById("mix-source-inline")?.textContent).toContain("preliminar, no auditado");

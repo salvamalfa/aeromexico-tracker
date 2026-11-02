@@ -7,13 +7,18 @@ import { currentIndex, currentPeriodId, periodCount } from "../../state/period";
 import { monthsInQuarter, state } from "./state";
 import { renderMix } from "./mix";
 import { renderNetworkPeriod } from "./network";
+import { renderFlightKpiSources } from "./kpi-sources";
 import { renderEntityKpis } from "./carriers";
 import { selection } from "../shell/carriers";
+import { selectedFlightQuarter } from "./selected-period";
+import { state as executiveState } from "../executive/state";
 
 const KPI_KEYS = ["passengers", "asm_miles", "rpm_miles", "load_factor"] as const;
+let quarterRequest = 0;
 
 export async function renderQuarter(): Promise<void> {
-  const record = state.quarters[state.periodIndex]!;
+  const request = ++quarterRequest;
+  const record = selectedFlightQuarter();
   if (record.period_id !== state.domesticMonthsQuarterId) {
     // Cambio de trimestre global: descarta cualquier selección manual de
     // meses y vuelve a seleccionar automáticamente los meses del nuevo
@@ -24,15 +29,12 @@ export async function renderQuarter(): Promise<void> {
   const selected = currentPeriodId();
   const available = !selected || selected === record.period_id;
   if (available) $("period-display")!.textContent = record.period_label;
-  const cut = $("flight-data-period");
-  if (cut) cut.textContent = `Corte de vuelos: ${record.period_label}. El mapa conserva sus cortes mensuales por fuente.`
-    + (available ? "" : ` No hay datos de vuelos para ${selected}; los indicadores financieros conservan su trimestre seleccionado.`);
+  const kpiEntity = selection("flight-kpis")[0] ?? "AEROMEXICO";
   ($("period-prev") as HTMLButtonElement).disabled = currentIndex() === 0;
   ($("period-next") as HTMLButtonElement).disabled = currentIndex() === periodCount() - 1;
   const qoq = state.byPeriod.get(priorPeriod(record.period_id));
   const yoy = state.byPeriod.get(priorPeriod(record.period_id, 1));
-  const kpiEntity = selection("flight-kpis")[0];
-  if (kpiEntity && kpiEntity !== "AEROMEXICO") renderEntityKpis(kpiEntity, record.period_id);
+  if (executiveState.entities) renderEntityKpis(kpiEntity, record.period_id);
   else for (const key of KPI_KEYS) {
     const metric = record.metrics[key] as { value: number | null };
     $(`flight-kpi-${key}`)!.textContent = metricDisplay(key, metric.value);
@@ -45,9 +47,9 @@ export async function renderQuarter(): Promise<void> {
       deltaDisplay(metric.value, (yoy?.metrics[key] as { value: number | null } | undefined)?.value, key === "load_factor")
     );
   }
+  if (!executiveState.entities) renderFlightKpiSources(kpiEntity, record.period_id, record);
   renderMix(record);
   await renderNetworkPeriod(record.period_id);
-  $("live-status")!.textContent = available
-    ? `Trimestre actualizado a ${record.period_label}. La red usa los meses disponibles por fuente del trimestre.`
-    : `Vuelos muestra ${record.period_label}; los indicadores financieros conservan ${selected}.`;
+  if (request !== quarterRequest || (currentPeriodId() && currentPeriodId() !== record.period_id)) return;
+  $("live-status")!.textContent = `Selección: ${record.period_label}. Cada bloque de Vuelos declara su periodo y cobertura; un mes disponible no completa un trimestre.`;
 }

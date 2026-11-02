@@ -18,7 +18,12 @@ function block(key: EntityKey): EntityBlock | undefined {
 }
 
 export function entityRecords(key: EntityKey): ExecutiveRecord[] {
-  if (key === "AEROMEXICO") return state.records;
+  if (key === "AEROMEXICO") {
+    // The legacy AM timeline omits CASK ex-fuel. That metric is already
+    // exported in AM's entity block; join it by quarter for comparisons.
+    const exFuel = new Map((block(key)?.records ?? []).map(row => [row.period_id, row.cask_ex_fuel_cents_per_km]));
+    return state.records.map(row => ({ ...row, cask_ex_fuel_cents_per_km: exFuel.get(row.period_id) ?? null }));
+  }
   // Entity records name the ratio `load_factor` (it may be RPM/ASM when the
   // carrier does not report one); the v1 chart code reads
   // `load_factor_reported`, so expose the same value under both names.

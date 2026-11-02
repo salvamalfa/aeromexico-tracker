@@ -1,4 +1,5 @@
 import Plotly from "../../lib/plotly";
+import { CHAT_OVERLAY_QUERY } from "./modal-controls";
 
 export function resizeDashboardCharts(): void {
   window.requestAnimationFrame(() => {
@@ -16,7 +17,7 @@ export function mountPanelControls(
     if (panel.hidden) return;
     const key = event;
     if (key.key === "Escape") { key.preventDefault(); onClose(); return; }
-    if (key.key === "Tab" && window.matchMedia("(max-width: 760px)").matches) {
+    if (key.key === "Tab" && window.matchMedia(CHAT_OVERLAY_QUERY).matches) {
       const focusables = [...panel.querySelectorAll<HTMLElement>(
         'button:not([hidden]):not(:disabled),input:not([type="hidden"]):not(:disabled),textarea:not(:disabled),select:not(:disabled),a[href],[tabindex="0"]'
       )].filter((item) => item !== resizer && !item.closest("[hidden]") && getComputedStyle(item).visibility !== "hidden" && getComputedStyle(item).display !== "none");

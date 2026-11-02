@@ -6,7 +6,12 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard presenta cinco vistas integradas: Lectura ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Desde el Dashboard v2 (30 sep 2026), cada tarjeta tiene un selector de aerolínea: Industria, Aeroméxico, Volaris o Viva. Las fases están documentadas en `docs/etapas/dashboard-v2-*.md`.
+La revisión actual reúne cuatro vistas: Lectura, Mercado, Economía y Noticias.
+Mercado integra los indicadores de vuelos, el mapa existente, la participación y
+la mezcla AFAC; el trimestre superior es común. El código vive en `web/`
+(Vite + TypeScript) y se publica mediante el gate de GitHub Pages. La entrega
+sigue el cierre descrito en [Periodos del dashboard](docs/periodos-dashboard.md);
+la revisión local y un build no acreditan una nueva versión servida.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -157,14 +162,20 @@ Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos p
 
 ## Mercado
 
-Mercado reúne participación, tamaño, crecimiento interanual, contribución por
-aerolínea y cambios de participación del universo AFAC comparable. Un trimestre
-global controla el corte de la historia mensual; segmento y aerolíneas conservan
-su selección. Si falta el trimestre completo, las tarjetas y la tabla muestran
-el último trimestre completo anterior para ese segmento, con su periodo explícito
-y un aviso de los meses disponibles. Si no existe ninguno, se ocultan y se explica
-la ausencia. Los cambios de cobertura se explican junto a la gráfica, que separa
-las series. Fuente y otras salvedades están en el botón de información.
+La [guía de periodos del dashboard](docs/periodos-dashboard.md) explica la entrada
+en el último trimestre financiero verificable, los cortes independientes de
+Economía/Vuelos/Mercado, las pruebas reales y los vacíos pendientes de datos.
+La revisión local usa exclusivamente el trimestre global y reúne la lectura
+en cuatro puntos de Industria, Aeroméxico, Viva y Volaris, sin selectores propios.
+
+Mercado reúne participación, tamaño y cambios interanuales del universo AFAC.
+El trimestre global controla gráfica, tarjetas y tabla; las tres aerolíneas se
+muestran siempre y sólo se filtra el segmento. La revisión local incorpora el
+resumen oficial AFAC hasta septiembre de 2026, con Q3 completo. Cuando un trimestre
+sea parcial, compara exclusivamente los mismos meses del año anterior y muestra
+su cobertura en el icono de información amarillo; nunca sustituye otro trimestre.
+Los cambios positivos llevan signo y verde; los negativos, signo y rojo.
+La fuente y el último mes de la gráfica se consultan en el icono superior.
 Los datos aeroportuarios permanecen en su exportación.
 El [plan coordinado](docs/publicacion-mercado-noticias.md) documenta el gate y
 el orden de integración de Vuelos, Mercado y Noticias.

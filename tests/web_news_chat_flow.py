@@ -58,7 +58,7 @@ def news_chat_server(tmp_path_factory):
     monkey_env = pytest.MonkeyPatch()
     monkey_env.setenv(
         "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
-        "1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f",
+        "9f8f12fc088cefce09f822d6647f5b46856e6ee7b600c5a1750db0c3e5f07005",
     )
     (dist / "data/v1").mkdir(parents=True, exist_ok=True)
     (dist / "data/v1/news.json").write_text(json.dumps(build_news_payload()))
@@ -72,7 +72,7 @@ def news_chat_server(tmp_path_factory):
         CHAT_PROMPT_VERSION="r2-proposed",
         CHAT_ENABLE_EVIDENCE_TOOLS="true",
         CHAT_PROMPT_APPROVAL_RECEIPT_SHA256="0b5b87e1381decdac4289593877a59ff9e91d763e216e78b5977fe2b5fe687f9",
-        CHAT_EVIDENCE_APPROVED_INDEX_SHA256="1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f",
+        CHAT_EVIDENCE_APPROVED_INDEX_SHA256="9f8f12fc088cefce09f822d6647f5b46856e6ee7b600c5a1750db0c3e5f07005",
         CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256="644eb640124297fc63b306836607aea6e4b0be424b85e67b902cc9f5407153ae",
     )
     env.pop("OPENAI_API_KEY", None)

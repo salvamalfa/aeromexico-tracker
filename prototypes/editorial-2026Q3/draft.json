@@ -1,0 +1,485 @@
+{
+  "schema_version": "editorial_review_spec_v1",
+  "period_id": "2026Q3",
+  "analyses": {
+    "AEROMEXICO": {
+      "title": "La red internacional impulsa las ventas; el combustible y la contabilidad matizan el récord",
+      "parts": [
+        {
+          "id": "entry",
+          "title": "La lectura del trimestre",
+          "text": "Aeroméxico vendió mejor con menos pasajeros. Facturó {{revenue}}, un avance anual de {{growth}}, mientras la actividad internacional sostuvo el crecimiento. La mayor venta convivió con un margen operativo de {{margin}}, inferior al del año anterior. Además, {{breakage}} del ingreso provinieron de actualizar los puntos de lealtad que se espera que no se canjeen: ese ajuste importa al evaluar cuánto de la mejora comercial puede repetirse.",
+          "bindings": {
+            "revenue": {
+              "key": "revenue",
+              "format": "money"
+            },
+            "growth": {
+              "key": "revenue_yoy",
+              "format": "percent"
+            },
+            "margin": {
+              "key": "operating_margin",
+              "format": "percent"
+            },
+            "breakage": {
+              "key": "breakage",
+              "format": "money"
+            }
+          },
+          "lead": "Aeroméxico vendió mejor con menos pasajeros.",
+          "emphasis": [
+            "Aeroméxico vendió mejor con menos pasajeros."
+          ],
+          "summary": true,
+          "supports": [],
+          "type": "observed_fact"
+        },
+        {
+          "id": "commercial",
+          "title": "La historia está en la composición de las ventas",
+          "text": "La red internacional fue el principal apoyo comercial. Sus ingresos aumentaron {{intl}}, frente a {{domestic}} de los nacionales. Aeroméxico atribuye el resultado a la asignación selectiva de capacidad, precios y productos de mayor rendimiento. La comparación explica por qué una menor cantidad de pasajeros puede convivir con más ingresos: importan los mercados atendidos y lo que se obtiene por cada unidad de capacidad, además del volumen. El reporte identifica esos motores, aunque no separa una contribución exacta de cada iniciativa.",
+          "bindings": {
+            "intl": {
+              "key": "international_revenue_yoy",
+              "format": "percent"
+            },
+            "domestic": {
+              "key": "domestic_revenue_yoy",
+              "format": "percent"
+            }
+          },
+          "lead": "La red internacional fue el principal apoyo comercial.",
+          "emphasis": [
+            "La red internacional fue el principal apoyo comercial."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "AEROMEXICO",
+              "excerpt_id": "exc_5cebe6fbfe9f82a84969ecd1a52cd728e5f390d60aceb1a3988c341cb81ff0bc",
+              "span": "Selective growth in higher-yielding markets",
+              "anchor": "Aeroméxico atribuye el resultado"
+            }
+          ],
+          "type": "company_attribution"
+        },
+        {
+          "id": "profit",
+          "title": "El crecimiento encuentra una presión de costos",
+          "text": "El combustible absorbió parte de la mejora. El gasto en ese rubro llegó a {{fuel}}, {{fuel_growth}} más que un año antes. La compañía mantuvo una utilidad operativa de {{operating}} y una utilidad neta de {{net}}. Ambos resultados son positivos, pero el menor margen muestra que el avance de ventas dejó menos rentabilidad por dólar facturado. La presión del combustible ayuda a explicar el trimestre; no elimina la necesidad de revisar el resto de los gastos y el financiamiento.",
+          "bindings": {
+            "fuel": {
+              "key": "fuel",
+              "format": "money"
+            },
+            "fuel_growth": {
+              "key": "fuel_yoy",
+              "format": "percent"
+            },
+            "operating": {
+              "key": "operating_income",
+              "format": "money"
+            },
+            "net": {
+              "key": "net_income",
+              "format": "money"
+            }
+          },
+          "lead": "El combustible absorbió parte de la mejora.",
+          "emphasis": [
+            "El combustible absorbió parte de la mejora."
+          ],
+          "summary": false,
+          "supports": [],
+          "type": "observed_fact"
+        },
+        {
+          "id": "quality",
+          "title": "Qué parte del ingreso puede repetirse",
+          "text": "La calidad del ingreso completa la lectura. El ajuste de lealtad reconoció {{breakage}} y redujo una obligación diferida; no representa por sí mismo nuevos cobros del trimestre. Su presencia exige distinguir el desempeño comercial de la revisión contable. Para seguir el negocio, conviene observar si la red internacional y la monetización sostienen el ingreso mientras cede la presión de costos. La caja reportada de {{cash}} aporta respaldo financiero, pero su nivel no demuestra que esas presiones hayan desaparecido.",
+          "bindings": {
+            "breakage": {
+              "key": "breakage",
+              "format": "money"
+            },
+            "cash": {
+              "key": "cash",
+              "format": "money"
+            }
+          },
+          "lead": "La calidad del ingreso completa la lectura.",
+          "emphasis": [
+            "La calidad del ingreso completa la lectura."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "AEROMEXICO",
+              "excerpt_id": "exc_9b46c50c265ffc3a111f555d87ad243fcced7b60c9aacb5f50871e8dd2184119",
+              "span": "deferred liability",
+              "anchor": "redujo una obligación diferida"
+            }
+          ],
+          "type": "observed_fact"
+        }
+      ]
+    },
+    "VIVA_AEROBUS": {
+      "title": "Vender mejor convive con aviones en tierra y una recuperación estrecha",
+      "parts": [
+        {
+          "id": "entry",
+          "title": "La lectura del trimestre",
+          "text": "Viva mejoró sus ventas con una operación más pequeña. Sus ingresos aumentaron {{growth}}, hasta {{revenue}}, aunque redujo capacidad. La empresa reportó un promedio de {{grounded}} aviones en tierra por problemas de motores Pratt & Whitney. Esa restricción da contexto a una recuperación con poco margen: obtuvo una utilidad operativa de {{operating}}, pero cerró con una pérdida neta de {{net}}. La pregunta del trimestre es cuánto puede aprovechar la mejora comercial mientras recupera disponibilidad de flota y absorbe los mayores costos.",
+          "bindings": {
+            "growth": {
+              "key": "revenue_yoy",
+              "format": "percent"
+            },
+            "revenue": {
+              "key": "revenue",
+              "format": "money"
+            },
+            "grounded": {
+              "entity": "VIVA_AEROBUS",
+              "excerpt_id": "exc_9a8886c8ec5d73c42f2fe48b74a9d2fd7859c87782fe30ae7237c2a94dd4f34d",
+              "span": "average of 31.5 A320neo family aircraft on ground",
+              "value": "31.5"
+            },
+            "operating": {
+              "key": "operating_income",
+              "format": "money"
+            },
+            "net": {
+              "key": "net_income",
+              "format": "money"
+            }
+          },
+          "lead": "Viva mejoró sus ventas con una operación más pequeña.",
+          "emphasis": [
+            "Viva mejoró sus ventas con una operación más pequeña."
+          ],
+          "summary": true,
+          "supports": [],
+          "type": "observed_fact"
+        },
+        {
+          "id": "commercial",
+          "title": "Cómo vendió más con menos capacidad",
+          "text": "La ocupación y los ingresos adicionales sostuvieron la venta. Viva atribuye el avance a iniciativas comerciales, administración de capacidad y apreciación del peso. El ingreso por asiento disponible y milla volada, TRASM, llegó a {{trasm}} centavos de dólar. Esta medida permite ver cuánto ingreso genera la capacidad ofrecida, incluso cuando cambia el tamaño de la operación. La mejora comercial merece atención porque convive con restricciones operativas; por sí sola no garantiza una recuperación equivalente del margen.",
+          "bindings": {
+            "trasm": {
+              "key": "trasm",
+              "format": "unit"
+            }
+          },
+          "lead": "La ocupación y los ingresos adicionales sostuvieron la venta.",
+          "emphasis": [
+            "La ocupación y los ingresos adicionales sostuvieron la venta."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "VIVA_AEROBUS",
+              "excerpt_id": "exc_0d26a63e9ef51ffcbdf52a7d6d500a1f12598990d1d14909672aca887a55800c",
+              "span": "driven by higher load factors",
+              "anchor": "Viva atribuye el avance"
+            }
+          ],
+          "type": "company_attribution"
+        },
+        {
+          "id": "fleet",
+          "title": "Qué revela la restricción de flota",
+          "text": "La disponibilidad de aviones condiciona la operación. El reporte vincula los aviones en tierra con los motores Pratt & Whitney y señala presiones de utilización y gastos de flota. Conviene seguir esa restricción junto con la capacidad y el costo de operar, sin atribuirle automáticamente toda la pérdida. El promedio trimestral de aviones detenidos y la flota al cierre describen momentos distintos. Tampoco permiten inferir una tasa de cancelaciones: esa comparación requiere datos específicos de vuelos programados y cancelados.",
+          "bindings": {},
+          "lead": "La disponibilidad de aviones condiciona la operación.",
+          "emphasis": [
+            "La disponibilidad de aviones condiciona la operación."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "VIVA_AEROBUS",
+              "excerpt_id": "exc_0d26a63e9ef51ffcbdf52a7d6d500a1f12598990d1d14909672aca887a55800c",
+              "span": "utilization headwinds",
+              "anchor": "El reporte vincula"
+            }
+          ],
+          "type": "company_attribution"
+        },
+        {
+          "id": "counterpoint",
+          "title": "Qué debe acompañar la recuperación",
+          "text": "El costo unitario creció más deprisa que el ingreso. Viva terminó con un TRASM de {{trasm}} y un costo equivalente de {{casm}} centavos de dólar. La cercanía de ambos deja una diferencia operativa estrecha, antes de considerar todo lo que lleva al resultado neto. La historia del trimestre combina una venta más productiva con presión de costos y restricciones de flota. Dar seguimiento a esos tres elementos permite evaluar la recuperación con más claridad que observar únicamente el aumento de ingresos.",
+          "bindings": {
+            "trasm": {
+              "key": "trasm",
+              "format": "unit"
+            },
+            "casm": {
+              "key": "casm",
+              "format": "unit"
+            }
+          },
+          "lead": "El costo unitario creció más deprisa que el ingreso.",
+          "emphasis": [
+            "El costo unitario creció más deprisa que el ingreso."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "VIVA_AEROBUS",
+              "excerpt_id": "exc_b6efb9c9e9ea779cc510439e6d0138e5a6ea757809251000166afd553365ec6e",
+              "span": "CASM increased 22.5%",
+              "anchor": "El costo unitario creció más deprisa que el ingreso."
+            }
+          ],
+          "type": "observed_fact"
+        }
+      ]
+    },
+    "VOLARIS": {
+      "title": "Volaris cruza la barrera de ingresos y monetiza mejor cada vuelo",
+      "parts": [
+        {
+          "id": "entry",
+          "title": "La lectura del trimestre",
+          "text": "Volaris superó los mil millones de dólares de ingresos trimestrales. Facturó {{revenue}}, un aumento anual de {{growth}}. El ingreso por asiento disponible y milla volada, TRASM, alcanzó {{trasm}} centavos de dólar. La mejora tiene una composición reveladora: la tarifa base aportó {{fare}} y los servicios adicionales {{extra}}. Los complementarios fueron mayores que la tarifa base por pasajero con boleto, una pieza central de su modelo comercial. El avance convivió con una pérdida neta de {{net}}, por lo que vender más todavía dejó presión sobre el resultado final.",
+          "bindings": {
+            "revenue": {
+              "key": "revenue",
+              "format": "money"
+            },
+            "growth": {
+              "key": "revenue_yoy",
+              "format": "percent"
+            },
+            "trasm": {
+              "key": "trasm",
+              "format": "unit"
+            },
+            "fare": {
+              "key": "fare",
+              "format": "reported"
+            },
+            "extra": {
+              "key": "ancillary_per_passenger",
+              "format": "reported"
+            },
+            "net": {
+              "key": "net_income",
+              "format": "money"
+            }
+          },
+          "lead": "Volaris superó los mil millones de dólares de ingresos trimestrales.",
+          "emphasis": [
+            "Volaris superó los mil millones de dólares de ingresos trimestrales."
+          ],
+          "summary": true,
+          "supports": [],
+          "type": "observed_fact"
+        },
+        {
+          "id": "monetization",
+          "title": "La tarifa explica sólo una parte del cobro",
+          "text": "Los servicios adicionales ocupan un lugar central en el ingreso. Comparar la tarifa base con el cobro adicional por pasajero ayuda a entender por qué una aerolínea de bajo costo puede aumentar su monetización sin que todo el avance se refleje en la tarifa anunciada. Equipaje, selección de asientos y otros complementarios forman parte de esa lógica comercial, aunque el expediente no permite repartir el crecimiento entre cada servicio. El valor de la comparación está en entender la composición del ingreso, no en equiparar tarifa base e ingreso total.",
+          "bindings": {},
+          "lead": "Los servicios adicionales ocupan un lugar central en el ingreso.",
+          "emphasis": [
+            "Los servicios adicionales ocupan un lugar central en el ingreso."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "VOLARIS",
+              "excerpt_id": "exc_15f5df7d6ffcfea05b40d44f02f248547eddede05f6c7f7a106940f005631f2c",
+              "span": "Total ancillary revenue per passenger",
+              "anchor": "Comparar la tarifa base"
+            }
+          ],
+          "type": "hypothesis"
+        },
+        {
+          "id": "profit",
+          "title": "El contrapunto de la mejora comercial",
+          "text": "La mejora de ventas no se trasladó íntegra a la utilidad. El resultado operativo fue {{operating}}, frente a {{prior}} un año antes, mientras el costo por asiento disponible y milla volada terminó en {{casm}} centavos de dólar. La compañía ganó dinero en la operación, pero el resultado neto siguió negativo. Esa diferencia vuelve relevante seguir el costo unitario y el financiamiento junto con tarifas y complementarios, para evaluar cuánto del avance comercial se convierte en rentabilidad.",
+          "bindings": {
+            "operating": {
+              "key": "operating_income",
+              "format": "money"
+            },
+            "prior": {
+              "key": "operating_income",
+              "format": "money",
+              "period": "2025Q3"
+            },
+            "casm": {
+              "key": "casm",
+              "format": "unit"
+            }
+          },
+          "lead": "La mejora de ventas no se trasladó íntegra a la utilidad.",
+          "emphasis": [
+            "La mejora de ventas no se trasladó íntegra a la utilidad."
+          ],
+          "summary": false,
+          "supports": [],
+          "type": "observed_fact"
+        },
+        {
+          "id": "context",
+          "title": "Cómo comparar la monetización",
+          "text": "El ingreso unitario aporta contexto al volumen. El TRASM pasó de {{prior}} a {{current}} centavos de dólar frente al mismo trimestre del año anterior. Compararlo con otras aerolíneas exige usar el mismo periodo y denominador, además de considerar diferencias de red y producto. Un mayor ingreso por capacidad no acredita por sí solo mayor eficiencia o rentabilidad. Las cifras de Volaris conservan la procedencia del expediente: una reconstrucción visible autorizada del reporte SEC, sin certificar sus bytes originales.",
+          "bindings": {
+            "prior": {
+              "key": "trasm",
+              "format": "unit",
+              "period": "2025Q3"
+            },
+            "current": {
+              "key": "trasm",
+              "format": "unit"
+            }
+          },
+          "lead": "El ingreso unitario aporta contexto al volumen.",
+          "emphasis": [
+            "El ingreso unitario aporta contexto al volumen."
+          ],
+          "summary": false,
+          "supports": [],
+          "type": "observed_fact"
+        }
+      ]
+    },
+    "INDUSTRY": {
+      "title": "Mayores ingresos, rentabilidad bajo presión",
+      "parts": [
+        {
+          "id": "entry",
+          "title": "La lectura del trimestre",
+          "text": "La presión de costos fue compartida. Aeroméxico, Viva y Volaris mejoraron su ingreso por unidad de capacidad, mientras el costo equivalente aumentó más deprisa en cada una. Los caminos comerciales fueron distintos: Aeroméxico se apoyó en su red internacional; Viva buscó aprovechar una operación restringida por motores; Volaris combinó mayor volumen y monetización. El estado del trimestre se entiende en esa tensión: la venta avanzó, pero convertirla en rentabilidad siguió condicionado por combustible, flota y otros gastos.",
+          "bindings": {},
+          "lead": "La presión de costos fue compartida.",
+          "emphasis": [
+            "La presión de costos fue compartida."
+          ],
+          "summary": true,
+          "supports": [
+            {
+              "entity": "AEROMEXICO",
+              "excerpt_id": "exc_415996fd0de07c55d62f0f6e5d1c7a846437e7ed3008c7cb4b7c097b6a78075d",
+              "span": "Total cost / ASM",
+              "anchor": "La presión de costos fue compartida."
+            },
+            {
+              "entity": "VIVA_AEROBUS",
+              "excerpt_id": "exc_b6efb9c9e9ea779cc510439e6d0138e5a6ea757809251000166afd553365ec6e",
+              "span": "CASM increased 22.5%",
+              "anchor": "La presión de costos fue compartida."
+            },
+            {
+              "entity": "VOLARIS",
+              "excerpt_id": "exc_f83b08e4e27294d950dc551fa30af4e773ebb5e200b8eda8be08f4cb06dfadbb",
+              "span": "Operating expenses per ASM",
+              "anchor": "La presión de costos fue compartida."
+            }
+          ],
+          "type": "hypothesis"
+        },
+        {
+          "id": "comparison",
+          "title": "Una misma medida para modelos distintos",
+          "text": "El contraste entre modelos aparece en el ingreso por capacidad. En el mismo trimestre, el TRASM —ingreso por asiento disponible y milla volada— fue {{am}} centavos de dólar en Aeroméxico, {{viva}} en Viva y {{volaris}} en Volaris. La comparación usa un denominador y periodo comunes, aunque las redes, distancias y productos son diferentes. El nivel más alto no demuestra por sí solo mayor eficiencia: ayuda a situar cuánto ingreso obtiene cada modelo de la capacidad que ofrece.",
+          "bindings": {
+            "am": {
+              "key": "trasm",
+              "format": "unit",
+              "entity": "AEROMEXICO"
+            },
+            "viva": {
+              "key": "trasm",
+              "format": "unit",
+              "entity": "VIVA_AEROBUS"
+            },
+            "volaris": {
+              "key": "trasm",
+              "format": "unit",
+              "entity": "VOLARIS"
+            }
+          },
+          "lead": "El contraste entre modelos aparece en el ingreso por capacidad.",
+          "emphasis": [
+            "El contraste entre modelos aparece en el ingreso por capacidad."
+          ],
+          "summary": false,
+          "supports": [],
+          "type": "hypothesis"
+        },
+        {
+          "id": "different_paths",
+          "title": "Qué añade cada reporte a la historia común",
+          "text": "Los tres reportes cambian la explicación del trimestre. Aeroméxico aporta el peso de la red internacional y la necesidad de distinguir un ajuste de lealtad del desempeño comercial. Volaris añade la importancia de tarifas y complementarios, con un resultado operativo menor al del año anterior. Viva incorpora una restricción concreta de flota: un promedio de {{grounded}} aviones en tierra por problemas de motores. Juntas, estas lecturas explican por qué una mejora de ventas puede tener resultados diferentes según la mezcla comercial y la operación.",
+          "bindings": {
+            "grounded": {
+              "entity": "VIVA_AEROBUS",
+              "excerpt_id": "exc_9a8886c8ec5d73c42f2fe48b74a9d2fd7859c87782fe30ae7237c2a94dd4f34d",
+              "span": "average of 31.5 A320neo family aircraft on ground",
+              "value": "31.5"
+            }
+          },
+          "lead": "Los tres reportes cambian la explicación del trimestre.",
+          "emphasis": [
+            "Los tres reportes cambian la explicación del trimestre."
+          ],
+          "summary": false,
+          "supports": [
+            {
+              "entity": "AEROMEXICO",
+              "excerpt_id": "exc_9b46c50c265ffc3a111f555d87ad243fcced7b60c9aacb5f50871e8dd2184119",
+              "span": "loyalty program breakage",
+              "anchor": "Aeroméxico aporta"
+            },
+            {
+              "entity": "VOLARIS",
+              "excerpt_id": "exc_15f5df7d6ffcfea05b40d44f02f248547eddede05f6c7f7a106940f005631f2c",
+              "span": "Total ancillary revenue per passenger",
+              "anchor": "Volaris añade"
+            }
+          ],
+          "type": "hypothesis"
+        },
+        {
+          "id": "profit",
+          "title": "La rentabilidad diferencia a las compañías",
+          "text": "La operación y el resultado final ofrecen señales distintas. Aeroméxico reportó una utilidad neta de {{am}}, mientras Viva y Volaris cerraron con resultados netos de {{viva}} y {{volaris}}, respectivamente. La lectura de Industria se refiere a estas tres compañías y no convierte sus cifras en una estadística oficial de AFAC. Para seguir la recuperación importan el crecimiento del ingreso unitario, la presión de costos y la disponibilidad de flota. Los siguientes reportes deberán confirmar cómo evolucionan esos factores antes de extrapolar la historia.",
+          "bindings": {
+            "am": {
+              "key": "net_income",
+              "format": "money",
+              "entity": "AEROMEXICO"
+            },
+            "viva": {
+              "key": "net_income",
+              "format": "money",
+              "entity": "VIVA_AEROBUS"
+            },
+            "volaris": {
+              "key": "net_income",
+              "format": "money",
+              "entity": "VOLARIS"
+            }
+          },
+          "lead": "La operación y el resultado final ofrecen señales distintas.",
+          "emphasis": [
+            "La operación y el resultado final ofrecen señales distintas."
+          ],
+          "summary": false,
+          "supports": [],
+          "type": "hypothesis"
+        }
+      ]
+    }
+  }
+}

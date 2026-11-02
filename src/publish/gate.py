@@ -503,6 +503,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--record", type=Path, action="append", default=[], dest="records")
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
     publish_modes = parser.add_mutually_exclusive_group()
+    publish_modes.add_argument("--quarterly-story-request", type=Path,
+                               help="publish the reviewed Q3 original-source replacement")
     publish_modes.add_argument(
         "--financial-kpis-only",
         action="store_true",
@@ -547,7 +549,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        if args.financial_kpis_only:
+        if args.quarterly_story_request:
+            from .quarterly_story_update import publish_from_gate
+            result = publish_from_gate(args.quarterly_story_request, args.out)
+        elif args.financial_kpis_only:
             from .financial_update import publish_financial
 
             try:

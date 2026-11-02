@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-31 · Industria Q3 en preview y gráfica sin cuadros duplicados
+
+- Proyección explícita de revisión con los tres financieros reales, ponderada
+  por ASK. Completa tarjetas y gráficas locales de Industria Q3; no activa
+  datos en producción ni una tesis de Industria.
+- Se eliminan los tooltips automáticos duplicados y las etiquetas históricas
+  superpuestas de la dispersión; se conserva la marca del trimestre seleccionado.
+
+## 2026-10-31 · Coherencia de periodos, revisión local
+
+- Entrada en el último trimestre financiero publicado y verificable, con respeto
+  a enlaces históricos. Exportador y consumidor aplican el mismo criterio.
+- Economía redibuja todas las gráficas, marca el trimestre elegido y declara
+  ausencias por entidad; Industria Q3 conserva un candidato separado, no activado.
+- Vuelos elimina la conservación del índice anterior y los cambios silenciosos
+  de periodo del mapa. Tarjetas, AFAC y rutas declaran sus cortes; Q3 del mapa
+  tiene sólo julio. Mercado conserva agosto y la explicación del corte de julio.
+- Pruebas con los datos construidos, escritorio y móvil documentadas en
+  `docs/periodos-dashboard.md`. Cambios locales, sin publicación de esta entrega.
+
 ## 2026-10-31 · Corte mensual y trimestre disponible de Mercado
 
 - Mercado identifica los meses disponibles del trimestre seleccionado y muestra

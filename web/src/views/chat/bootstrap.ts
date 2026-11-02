@@ -1,15 +1,17 @@
-import type { ChatChart, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
+import type { ChatChart, ChatContext, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
 import { mountChatPrompt } from "./prompt";
 import { mountChatCardActions } from "./card-actions";
+import { attachChatCard } from "./attachment";
 import { buildChatContext, describeChatContext } from "./context";
 import { messageFromPayload, safeReferences } from "./markdown";
 import { mountChatModal } from "./modal-controls";
+import { mountChatLayout } from "./layout";
 import { mountPanelControls, resizeDashboardCharts } from "./panel-controls";
 import { renderMessages } from "./render";
 import { createTurnSettler } from "./settle-turn";
 import { ChatSubmissionLedger } from "./submission-ledger";
 import { createSubmitController } from "./submit-controller";
-import { MAX_INPUT, PANEL_HTML } from "./template";
+import { createChatPanel, MAX_INPUT } from "./template";
 import { ChatApiError, ChatTransport } from "./transport";
 import { errorText, randomId, storage } from "./util";
 import "./chat.css";
@@ -26,30 +28,18 @@ interface ChatUiState {
   activeTurn?: string;
   abort?: AbortController;
   lastSequence: number;
-  focusedCard?: Element;
 }
 
 export function mountChat(): () => void {
+  let attachedContext: ChatContext | undefined;
   let session: string | undefined;
   let authMode: "local" | "password" | undefined;
   const transport = new ChatTransport(API_URL, () => session);
   const state: ChatUiState = { messages: [], lastSequence: 0 };
-  const launcher = document.createElement("button");
-  launcher.type = "button";
-  launcher.className = "chat-launcher";
-  launcher.textContent = "Abrir chat";
-  launcher.setAttribute("aria-expanded", "false");
-  launcher.setAttribute("aria-controls", "airline-chat-panel");
-  launcher.setAttribute("aria-label", "Abrir Airline Tracker chat analítico");
-
-  const panel = document.createElement("aside");
-  panel.id = "airline-chat-panel";
-  panel.className = "chat-panel";
-  panel.hidden = true;
-  panel.setAttribute("aria-label", "Airline Tracker chat analítico");
-  panel.innerHTML = PANEL_HTML;
-  document.body.append(launcher, panel);
-  const modal = mountChatModal(panel, launcher, document.querySelector<HTMLElement>(".page-shell"));
+  const panel = createChatPanel();
+  const layout = mountChatLayout(panel);
+  const { launcher } = layout;
+  const modal = mountChatModal(panel, launcher, layout.background);
 
   const query = <T extends HTMLElement>(selector: string) => panel.querySelector<T>(selector)!;
   const messagesNode = query<HTMLOListElement>("[data-chat-messages]");
@@ -88,11 +78,13 @@ export function mountChat(): () => void {
     input.disabled = busy || submissions.hasUnresolved;
     newConversationButton.disabled = submissions.hasUnresolved;
     cancelButton.hidden = !busy;
-    sendButton.textContent = busy ? "En proceso" : "Enviar";
+    sendButton.setAttribute("aria-label", busy ? "En proceso" : "Enviar pregunta");
+    sendButton.title = busy ? "En proceso" : "Enviar pregunta";
   };
 
   const setContextLabel = () => {
-    query<HTMLElement>("[data-chat-context]").textContent = `Contexto: ${describeChatContext(buildChatContext(state.focusedCard))}`;
+    query<HTMLElement>("[data-chat-context]").textContent = attachedContext
+      ? `Contexto: ${describeChatContext(attachedContext)}` : "Contexto: vista actual al enviar";
   };
 
   const requireLogin = (message = "Ingresa la contraseña para preguntar.") => {
@@ -209,7 +201,7 @@ export function mountChat(): () => void {
 
   async function connectConversation(): Promise<void> {
     noticeNode.textContent = "";
-    statusNode.textContent = "Conectando con el servicio…";
+    statusNode.textContent = "";
     try {
       const health = await transport.health();
       authMode = health.auth;
@@ -238,11 +230,12 @@ export function mountChat(): () => void {
         noticeNode.textContent = `Los datos cambiaron desde esta conversación (${state.snapshotVersion} → ${health.snapshot_version}). Inicia una conversación nueva para consultar la versión actual.`;
       }
       paintMessages();
-      if (!state.activeTurn) statusNode.textContent = "Puedes preguntar sobre las métricas y fuentes disponibles.";
+      if (!state.activeTurn) statusNode.textContent = "";
     } catch (error) {
       statusNode.textContent = "";
       if (handleAuthError(error)) return;
-      noticeNode.textContent = `No se pudo conectar con Airline Tracker: ${errorText(error)}`;
+      noticeNode.textContent = "El chat no está disponible en este momento. Intenta de nuevo.";
+      noticeNode.title = errorText(error);
     }
   }
 
@@ -284,13 +277,16 @@ export function mountChat(): () => void {
   const submitMessage = createSubmitController({
     state, input, count: query<HTMLElement>("[data-chat-count]"), status: statusNode,
     ledger: submissions, send: (id, content, context, key) => transport.sendMessage(id, content, context, key),
-    context: buildChatContext, ensureConversation, listen, setBusy,
+    context: () => structuredClone(attachedContext ?? buildChatContext()), ensureConversation, listen, setBusy,
     handleAuthError, paint: paintMessages,
   });
 
   function resetConversation(forgetStored = true, preserveUnresolved = false): void {
     state.abort?.abort();
     setBusy(false);
+    attachedContext = undefined;
+    query<HTMLElement>("[data-chat-attachment]").hidden = true;
+    setContextLabel();
     state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined; state.lastSequence = 0;
     if (!preserveUnresolved) submissions.clear();
     if (forgetStored) storage((store) => store.removeItem(STORAGE_KEY));
@@ -324,20 +320,23 @@ export function mountChat(): () => void {
     requireLogin("Sesión cerrada.");
   });
 
-  async function openChat(card?: Element, opener?: HTMLElement): Promise<void> {
-    if (card) state.focusedCard = card;
-    modal.open(opener);
+  async function openChat(card?: Element, opener?: HTMLElement, initial = false): Promise<void> {
+    attachedContext = attachChatCard(panel, card);
     panel.hidden = false;
+    modal.open(opener);
     launcher.setAttribute("aria-expanded", "true");
+    launcher.hidden = true;
     document.body.classList.add("chat-open");
     setContextLabel();
     resizeDashboardCharts();
+    if (initial && panel.getAttribute("aria-modal") === "true") closeButton.focus();
     if (!state.conversationId) await ensureConversation();
-    if (accessForm.hidden) input.focus();
+    if (!initial && !panel.hidden && accessForm.hidden) input.focus();
   }
   function closeChat(): void {
     panel.hidden = true;
     launcher.setAttribute("aria-expanded", "false");
+    launcher.hidden = false;
     document.body.classList.remove("chat-open");
     resizeDashboardCharts();
     modal.close();
@@ -380,21 +379,22 @@ export function mountChat(): () => void {
     }
   });
 
-  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener), (card) => {
-    if (panel.contains(card) || launcher.contains(card)) return;
-    state.focusedCard = card;
-    setContextLabel();
+  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener));
+  query<HTMLButtonElement>("[data-chat-attachment-remove]").addEventListener("click", () => {
+    attachedContext = undefined;
+    query<HTMLElement>("[data-chat-attachment]").hidden = true;
+    setContextLabel(); input.focus();
   });
   const disposePanelControls = mountPanelControls(panel, resizer, closeChat);
   setContextLabel();
+  void openChat(undefined, launcher, true);
   return () => {
     state.abort?.abort();
     disposePrompt();
     modal.dispose();
     disposeCardActions();
     disposePanelControls();
-    panel.remove();
-    launcher.remove();
+    layout.dispose();
     document.body.classList.remove("chat-open");
   };
 }

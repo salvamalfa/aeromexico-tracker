@@ -1,6 +1,7 @@
 // Small DOM and formatting helpers shared by the Vuelos view modules.
-// Ported verbatim from src/dashboard/assets/flights.js (kept behaviourally
-// identical; see docs/etapas/vuelos-pasajeros-traspaso-20260913.md).
+// See docs/etapas/vuelos-pasajeros-traspaso-20260913.md.
+
+import { formatKpiNumber } from "../../lib/kpi-format";
 
 export const $ = (id: string): HTMLElement | null => document.getElementById(id);
 
@@ -36,9 +37,9 @@ export const dateLabel = (iso: string): string =>
 
 export function metricDisplay(key: string, value: unknown): string {
   if (!finite(value)) return "No disponible";
-  if (key === "load_factor") return percent.format(value);
-  if (key === "passengers") return `${(value / 1e6).toFixed(3)} M`;
-  return `${(value / 1e9).toFixed(3)} mil M`;
+  if (key === "load_factor") return formatKpiNumber(value * 100, { suffix: "%" });
+  if (key === "passengers") return formatKpiNumber(value / 1e6, { suffix: " M" });
+  return formatKpiNumber(value / 1e9, { suffix: " mil M" });
 }
 
 export function priorPeriod(periodId: string, years = 0): string {
@@ -58,9 +59,7 @@ export function deltaDisplay(current: unknown, previous: unknown, points = false
     return { text: "No disponible", className: "delta-na" };
   }
   const delta = points ? (current - previous) * 100 : (current / previous - 1) * 100;
-  const text = points
-    ? `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} pp`
-    : `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}%`;
+  const text = formatKpiNumber(delta, { signed: true, suffix: points ? " pp" : "%" });
   return {
     text,
     className: delta > 0.005 ? "delta-up" : delta < -0.005 ? "delta-down" : "delta-na",

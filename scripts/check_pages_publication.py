@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 VERIFIERS = (
+    ("quarterly-story-publication.json", "src.publish.quarterly_story_scope"),
     ("aerocivil-movements-publication.json", "src.publish.movements_scope"),
     ("source-data-publication.json", "src.publish.source_data_scope"),
     ("issuer-publication.json", "src.publish.issuer_scope"),
@@ -89,6 +90,7 @@ def verify_site(site, repo):
 
     module = verifier_for(site, repo)
     name = {
+        "src.publish.quarterly_story_scope": "verify_story",
         "src.publish.source_data_scope": "verify_source_data",
         "src.publish.issuer_scope": "verify_issuer",
         "src.publish.movements_scope": "verify_movements",

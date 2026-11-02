@@ -1,8 +1,8 @@
 # `web/`
 
 Vite + TypeScript front-end for the whole published page — shared header,
-period stepper, and the reader-tabs shell around three views (Lectura
-ejecutiva, Economía unitaria, Vuelos) — loading the v1 payload split by
+period stepper, and four visible tabs (Lectura ejecutiva, Mercado,
+Economía unitaria, Noticias) — loading the v1 payload split by
 `src/web_export/` via `fetch`. See
 `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` for the Vuelos entry guide.
 Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
@@ -64,6 +64,27 @@ Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
   analysis summary/dialog), `views/economy/economy.css` (KPI grid, chart
   cards, disclosure table) and `views/flights/flights.css` (scoped under `.flights-view`).
 
+### Formato de las tarjetas KPI
+
+Todas las tarjetas de indicadores, en cualquier pestaña actual o nueva, muestran
+como máximo un decimal en sus valores y comparativos. Los valores medidos,
+porcentajes, puntos porcentuales e importes en millones usan un decimal; los
+conteos discretos pueden ser enteros. Usa `src/lib/kpi-format.ts` al renderizar
+las tarjetas y sus etiquetas accesibles. Conserva unidades, signos y faltantes.
+El redondeo parte del valor numérico completo, nunca de otro texto redondeado.
+Los registros, cálculos, series y tablas de detalle conservan su precisión.
+Las pruebas `src/lib/kpi-format.test.ts`, `src/views/economy/kpis.test.ts` y
+`src/views/market/point-detail.test.ts` verifican el redondeo desde el valor completo,
+las etiquetas accesibles, los faltantes y la precisión conservada en las tablas.
+
+Los cuatro indicadores y las tres gráficas de Economía incluyen un icono con
+definición breve y fuentes financieras clicables. Cambian con la aerolínea;
+Industria enlaza los tres emisores y explica la ponderación por capacidad.
+Los gráficos históricos enlazan archivos oficiales de resultados. El icono y
+su panel se reutilizan al cambiar de periodo; la fuente queda fuera del título
+adjunto a «Pregunta». La regresión de interacción vive en
+`src/views/economy/sources.test.ts` y `src/views/market/source-info.test.ts`.
+
 ### Plotly
 
 `src/lib/plotly.ts` imports
@@ -95,11 +116,18 @@ happen to hold the same 22 quarters in the same order, and it meant
 `views/flights`' data (`quarters.json`, world geometry, network files)
 always loaded even for a reader who never opens the Vuelos tab.
 
-The reading card now uses its own selector, populated only by the approved
-identities in `publication_manifest.json`. `readingPeriod` selects that reading;
-it never adds observations to `executive.json` or moves financial/flight periods.
-The historical shared-store implementation below applies to indicators and
-flights; reading renders independently through `views/executive/reading-periods.ts`.
+The top stepper is the only quarter selector across the dashboard. Reading,
+financial cards, and charts follow `state/period.ts`. The reading page combines
+Industry and the three issuers in one sheet (`executive/overview.ts`), checking
+availability for that exact quarter against `publication_manifest.json`.
+Legacy `readingPeriod` and `sel_reading` parameters do not select another
+reading. Missing approved documents stay missing; no earlier quarter replaces
+them. Map controls offer monthly details only within the global quarter, never
+another quarter. Source coverage labels remain independent of the selection. The summary uses
+selective bold emphasis; a disclosure below it, inside the same reading card, renders the complete
+approved sections and citations, unchanged, for that same global quarter. It
+clears and closes on a quarter change. This presentation does not replace any
+canonical thesis or approval.
 
 That version was replaced with one shared store, `web/src/state/period.ts`: it
 owns the selected index and the *single* pair of click listeners on
@@ -337,14 +365,35 @@ La actualización de `site/` requiere el gate y la verificación de Pages;
 no copiar compilados a mano ni afirmar que el sitio usa el lockfile nuevo
 solo porque pasen las pruebas locales.
 
-### Mercado · candidato del PR #135
+### Mercado integrado · revisión local
 
-Mercado usa exclusivamente el trimestre global superior: indicadores y tabla
-comparan ese trimestre con el mismo del año anterior; la serie mensual termina
-al final del corte seleccionado. Segmento y aerolíneas conservan ese corte. El
-botón de información reúne universo, fuente y salvedades. La demanda por
-aeropuerto conserva su exportación y controles, pero ya no tiene sección en
-esta pestaña. Decisiones de revisión: `docs/etapas/mercado-ajustes-ui-20261018.md`.
+Mercado reúne las vistas anteriores de Mercado y Vuelos. Conserva exactamente
+las cuatro tarjetas financieras: pasajeros, ASM, RPM y ocupación, con sus
+comparativos. El orden es mapa de rutas, participación AFAC y mezcla nacional /
+internacional. Los identificadores internos de Vuelos se conservan para no
+romper la carga diferida ni los contratos del chat; los enlaces anteriores a
+Mercado o Vuelos abren la misma pestaña visible Mercado.
+
+Se retiraron las tres tarjetas AFAC y, por la instrucción posterior del dueño,
+el desplegable de datos por aerolínea. Su detalle mensual ahora se consulta al
+señalar o tocar la gráfica, o con el foco y las flechas del teclado. Muestra una
+fecha, tres aerolíneas, participación, pasajeros en millones y variación frente
+al mismo mes del año anterior. La base de comparación se nombra una sola vez;
+faltantes y bases cero quedan N/D. Los cambios positivos son azules y los
+negativos rojos. La fuente independiente muestra «Fuente: AFAC.» con AFAC como
+enlace; no atribuye a AFAC los KPI financieros superiores.
+
+La gráfica conserva toda la historia y ejes fijos hasta el último mes real,
+aunque cambie el trimestre global. Sólo se mueve la franja de selección.
+Total y Nacional parten de 15 %; Internacional baja a 8 % para incluir el mínimo
+histórico de Viva (8.87 %). El detalle responde al mes del punto, mientras
+«Pregunta» conserva el trimestre global y el segmento seleccionados.
+
+El detalle enriquecido compartido con la mezcla se monta fuera de las tarjetas
+y usa la capa superior nativa del navegador, encima del chat. Sus límites usan
+el área útil de pantalla, incluida la barra de desplazamiento. Escape cierra el
+detalle antes que el chat; cambiar de pestaña o tamaño lo cierra. Las ayudas de
+fuente también se cierran al cambiar de tamaño para evitar posiciones antiguas.
 
 ### Noticias · candidato del PR #136
 
@@ -369,3 +418,48 @@ trimestre financiero no existe en Vuelos, el panel retiene su corte real y lo
 identifica explícitamente; no sobrescribe la cabecera ni cambia los archivos del
 mapa. La suscripción de Vuelos actualiza esa advertencia también cuando ya estaba
 abierto en un trimestre anterior.
+
+### Revisión local de noviembre de 2026
+
+El modo desarrollo carga `web/.env.development`, con el botón de chat activo y
+la misma URL pública del servicio publicado. No contiene credenciales; conserva
+la autenticación y las restricciones de origen del servidor. Mostrar el panel
+no garantiza disponibilidad del servicio: health respondió 502 el 1 de noviembre.
+
+`?period=2026Q3&review=1` muestra la propuesta editorial local de los cuatro
+análisis desde `tmp/editorial-rerun/2026Q3.json`. El middleware existe sólo en
+Vite desarrollo; no exporta borradores al directorio público ni los aprueba.
+Los enlaces históricos sin esa propuesta usan el catálogo publicado.
+
+«Pregunta» permanece en la esquina superior derecha de cada componente. El hover
+sobre la tarjeta destaca sólo el botón. Al pulsarlo se adjunta una instantánea
+de contexto en el compositor; la pregunta se envía únicamente con Enviar.
+Sin adjunto se usa la vista actual al enviar. Los nombres de selectores siguen
+accesibles aunque no se dibujen títulos encima. El estado editorial continúa
+controlado por el lifecycle, con independencia de las leyendas de interfaz.
+
+
+En Vuelos, el mapa usa únicamente el trimestre global. Nacional/Internacional y
+los filtros de rutas están dentro de la barra de la tarjeta. La cobertura se
+presenta como mini indicador junto al volumen, con porcentaje sólo si existen
+representación y denominador AFAC comparables; la ayuda conserva los meses
+observados, rutas representadas/mostradas y límites de la fuente. La descripción
+accesible de la mezcla conserva cobertura sin un párrafo visible. Pregunta se
+adjunta por gráfica (mapa o mezcla), sin un botón en el contenedor de toda la vista.
+
+
+Todos los indicadores financieros de Vuelos y los mini indicadores del mapa
+usan la misma ayuda que Mercado: icono único junto al nombre y panel con fuente
+enlazada y una definición breve. Admite hover, foco y clic táctil; permite entrar
+en el enlace sin cerrar el panel. Las frecuencias estimadas enlazan AeroDataBox;
+AFAC se identifica como denominador de cobertura o atribución, según corresponda.
+
+
+La pestaña Mercado integra los cuatro KPI financieros, el mapa, participación
+AFAC y mezcla por segmento. La mezcla usa el AFAC vigente también para Grupo
+Aeroméxico (incluye Connect); el reporte corporativo sigue como alternativa.
+Su detalle muestra un periodo, la base del año anterior una vez, y pasajeros y
+variación anual por segmento. Si faltan base o meses comparables, conserva N/D.
+Norteamérica muestra sólo observados cuando existen; el filtro se aplica antes
+de totales y listados. Otras regiones mantienen sus tipos reales. El porcentaje
+AFAC no se reutiliza para una región o vista de evidencia distinta.

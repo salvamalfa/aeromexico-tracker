@@ -297,11 +297,20 @@ def verify(package):
 
 
 def calculate(package):
+    verify(package)
+    return calculate_verified(package)
+
+
+def calculate_verified(package):
+    """Pure arithmetic shared with separately verified original SEC packages.
+
+    Public entry points must verify their own source profile before calling it.
+    This helper establishes no source eligibility, audit or approval.
+    """
     from .analyst import formatted
     from .quantitative import calculate as operation
     from .quantitative import node
 
-    verify(package)
     nodes, lookup = [], {}
 
     def put(n):

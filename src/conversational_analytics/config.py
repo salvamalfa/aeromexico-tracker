@@ -15,6 +15,9 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 MODEL_CATALOG_PATH = Path(__file__).resolve().parents[2] / "config/chat/models.json"
+# Explicitly listed loopback Vite origins only; these are never enabled by
+# default and do not replace password sessions or the deployed HTTPS origin.
+DEVELOPMENT_ORIGINS = frozenset({"http://127.0.0.1:5173", "http://localhost:5173"})
 
 # These are the only capabilities recognized by the currently approved prompt.
 # Add to this map only when the exact compatible prompt is approved and pinned.
@@ -126,7 +129,7 @@ class ChatConfig:
         for origin in allowed_origins:
             parsed_origin = urlsplit(origin)
             if (
-                parsed_origin.scheme != "https"
+                (parsed_origin.scheme != "https" and origin not in DEVELOPMENT_ORIGINS)
                 or not parsed_origin.hostname
                 or parsed_origin.path
                 or parsed_origin.query
@@ -134,7 +137,10 @@ class ChatConfig:
                 or parsed_origin.username
                 or parsed_origin.password
             ):
-                raise ValueError("CHAT_ALLOWED_ORIGINS must contain HTTPS origins without paths")
+                raise ValueError(
+                    "CHAT_ALLOWED_ORIGINS must contain HTTPS origins without paths, "
+                    "or an explicit loopback development origin on port 5173"
+                )
         if auth_mode == "password" and not allowed_origins:
             raise ValueError("password mode requires explicit CHAT_ALLOWED_ORIGINS")
         from .auth import parse_trusted_proxy

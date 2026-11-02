@@ -41,7 +41,17 @@ CARD_IDS = {
     "flight-kpi-rpm_miles",
     "flight-kpi-load_factor",
 }
-FILTER_KEYS = {"segment", "start", "end", "entities", "network_mode", "domestic_months", "region", "range"}
+FILTER_KEYS = {
+    "segment",
+    "start",
+    "end",
+    "entities",
+    "network_mode",
+    "domestic_months",
+    "region",
+    "range",
+    "flight_evidence",
+}
 
 
 def validate_context(context: dict[str, Any] | None) -> dict[str, Any]:
@@ -112,6 +122,16 @@ def validate_context(context: dict[str, Any] | None) -> dict[str, Any]:
             if key == "range" and (not isinstance(value, str) or value not in {"all", "12", "8", "4"}):
                 raise PlanValidationError("range debe ser all, 12, 8 o 4")
             clean[key] = value
+        if "flight_evidence" in clean and (
+            clean["flight_evidence"] != "north_america_observed"
+            or tab != "flights"
+            or clean.get("network_mode") != "international"
+            or clean.get("region") not in {None, "norteamerica"}
+            or card not in {None, "route-flow-map", "flow-map"}
+        ):
+            raise PlanValidationError(
+                "flight_evidence sólo admite la vista internacional observada de Norteamérica"
+            )
         if "start" in clean and "end" in clean:
             if clean["start"] > clean["end"] or clean["start"][4] != clean["end"][4]:
                 raise PlanValidationError("Filtros start/end deben ser un rango cronológico del mismo grano")

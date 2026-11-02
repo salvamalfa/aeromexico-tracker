@@ -15,22 +15,45 @@ def main():
     parser.add_argument("--json", type=Path, required=True)
     parser.add_argument("--markdown", type=Path, required=True)
     args = parser.parse_args()
-    package = build_news_payload(args.candidate)["approval_package"]
+    if args.json.exists() or args.markdown.exists():
+        raise ValueError("Review packets are immutable; select new JSON and Markdown destinations")
+    preview = build_news_payload(args.candidate)
+    package = preview["approval_package"]
+    count = package["candidate_count"]
     lines = [
-        "# Noticias: una decisión sobre la pestaña y las once candidatas",
+        f"# Noticias: una decisión sobre las {count} candidatas",
         "",
-        "Estado: propuesta sin aprobar. No cambia el índice, los recibos, las tesis, el runtime ni la publicación.",
+        (
+            "Estado: propuesta sin aprobar. No cambia el índice, los recibos, las "
+            "tesis, el runtime ni la publicación."
+        ),
         "",
-        f"Paquete SHA-256: `{package['proposal_sha256']}`. El hash cubre el objeto canónico excluyendo el propio campo `proposal_sha256`.",
+        (
+            f"Paquete SHA-256: `{package['proposal_sha256']}`. El hash cubre el objeto "
+            f"canónico excluyendo el propio campo `proposal_sha256`."
+        ),
         f"Corte original SHA-256: `{package['candidate_file_sha256']}`.",
         "",
-        "El dueño puede aprobar la pestaña y las once fichas normalizadas en una sola decisión referida a este paquete. La implementación posterior generaría los once recibos internos con la misma decisión; no requiere once trámites del dueño. Integración, nueva presentación técnica y publicación conservan sus controles independientes.",
+        (
+            f"El dueño puede aprobar las {count} fichas normalizadas y sus procedencias "
+            f"en una sola decisión referida a este paquete. La implementación posterior "
+            f"generaría los recibos internos con la misma decisión; no requiere {count} "
+            f"trámites del dueño. Integración y publicación conservan sus controles "
+            f"independientes."
+        ),
         "",
-        "Opciones revisables: pestaña con las tres noticias ya aprobadas; pestaña más este corpus de once; o aplazar ambos. Esta propuesta no ejecuta ninguna opción.",
+        (
+            f"La preview conserva las noticias aprobadas y muestra estas {count} "
+            f"candidatas con su estado pendiente. Esta propuesta no activa ninguna "
+            f"candidata."
+        ),
         "",
         "## Fichas y fuentes",
         "",
-        "Las fechas de publicación, hecho y primera captura son distintas. Los resúmenes son originales y breves; no se incluyen artículos ni imágenes.",
+        (
+            "Las fechas de publicación, hecho y primera captura son distintas. Los "
+            "resúmenes son originales y breves; no se incluyen artículos ni imágenes."
+        ),
         "",
     ]
     hashes = {x["record"]["id"]: x["candidate_content_sha256"] for x in package["proposed_index_records"]}
@@ -45,22 +68,67 @@ def main():
             "",
             row["description"],
             "",
-            f"Publicación: {row['published_at']}. Hecho: {event}. Primera captura: {row['first_captured_at']}.",
+            (
+                f"Publicación: {row['published_at']}. Hecho: {event}. Primera captura: "
+                f"{row['first_captured_at']}."
+            ),
             "",
-            f"[Abrir fuente]({row['source']['url']}). SHA-256 de la fuente: `{row['source']['sha256']}`.",
+            (
+                f"[Abrir fuente]({row['source']['url']}). Identificador de evidencia: "
+                f"`{row['source']['sha256']}`."
+            ),
             f"Hash del registro normalizado propuesto: `{hashes[row['id']]}`.",
             "",
         ]
+        if row["source"].get("sha256_semantics") == "reviewed_observation_not_original_page_bytes":
+            lines += [
+                (
+                    "El identificador acredita la observación editorial registrada; no es un "
+                    "hash de bytes originales del artículo."
+                ),
+                "",
+            ]
+        for source in row.get("publisher_observations", []):
+            if source["url"] != row["source"]["url"]:
+                lines += [
+                    (
+                        f"Procedencia adicional: [{source['publisher']}]({source['url']}); publicada "
+                        f"{source['published_on']}."
+                    ),
+                    "",
+                ]
     lines += [
         "## Búsqueda y verificación",
         "",
-        "Hoy el índice aprobado contiene tres fichas (dos Aeroméxico y una Volaris); ninguna Viva. Las once anteriores solo se consultan en la simulación candidata explícita. El backend de producción no las carga sin índice aprobado y pin externo nuevos.",
+        (
+            "Las nuevas fichas solo se consultan en la preview candidata explícita. El "
+            "backend de producción no las carga sin los recibos de decisión, índice "
+            "aprobado y pin externo correspondientes."
+        ),
         "",
-        "El chat resuelve consultas completas a través de su herramienta existente, devuelve filtros de publicación/empresa/tema, referencias y destinos verificados. La navegación comprueba corpus, hash del índice, ID, título, fecha, URL y hash de fuente contra la tarjeta cargada. Hasta cinco resúmenes por llamada y hasta 50 identificadores para abrir el conjunto de fichas, con total explícito. La preview distingue la simulación sin modelo de la búsqueda aprobada.",
+        (
+            "El chat resuelve consultas completas a través de su herramienta existente, "
+            "devuelve filtros de publicación/empresa/tema, referencias y destinos "
+            "verificados. La navegación comprueba corpus, hash del índice, ID, título, "
+            "fecha, URL y hash de fuente contra la tarjeta cargada. Hasta cinco "
+            "resúmenes por llamada y hasta 50 identificadores para abrir el conjunto de "
+            "fichas, con total explícito. La preview distingue la simulación sin modelo "
+            "de la búsqueda aprobada."
+        ),
         "",
-        "Se prueba el recorrido HTTP API → worker → herramienta → historial/SSE → tarjeta con proveedor simulado y consultas completas en español, además de referencias inexistentes e inyección. No se acredita inferencia de un modelo real en esta sesión: la configuración local mantiene proveedor mock y carece del opt-in/modelo/runtime de producción; una clave presente no salta esos controles.",
+        (
+            "Se prueba el recorrido HTTP API → worker → herramienta → historial/SSE → "
+            "tarjeta con proveedor simulado y consultas completas en español, además de "
+            "referencias inexistentes e inyección. No se acredita inferencia de un "
+            "modelo real en esta sesión: la configuración local mantiene proveedor mock "
+            "y carece del opt-in/modelo/runtime de producción; una clave presente no "
+            "salta esos controles."
+        ),
         "",
-        "No se habilita cron ni actualización mensual. Las decisiones técnicas de presentación y del corpus son distintas de reaprobar tesis económicas.",
+        (
+            "No se habilita cron ni actualización mensual. Las decisiones técnicas de "
+            "presentación y del corpus son distintas de reaprobar tesis económicas."
+        ),
     ]
     args.json.parent.mkdir(parents=True, exist_ok=True)
     args.markdown.parent.mkdir(parents=True, exist_ok=True)

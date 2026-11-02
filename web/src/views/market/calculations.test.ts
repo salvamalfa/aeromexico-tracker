@@ -7,12 +7,12 @@ function period(id:string, values:number[]) {
  return {period_id:id,period_label:id,segments:{total:segment,domestic:segment,international:segment}};
 }
 describe("comparable market arithmetic",()=>{
- it("selects the latest usable quarter by segment without looking past the selected quarter", () => {
+ it("selects the exact global quarter by segment without borrowing another quarter", () => {
   const missing = period("2026Q2", [1, 2, 3, 4]);
   const rows = [period("2026Q3", [1,2,3,4]), missing, period("2026Q1", [1,2,3,4])] as MarketDocument["quarters"];
   rows[1]!.segments.international = { ...rows[1]!.segments.international, mexican_carriers_passengers: null };
   expect(comparisonQuarter(rows, "2026Q2", "total")?.period_id).toBe("2026Q2");
-  expect(comparisonQuarter(rows, "2026Q2", "international")?.period_id).toBe("2026Q1");
+  expect(comparisonQuarter(rows, "2026Q2", "international")).toBeUndefined();
   expect(comparisonQuarter(rows, "2025Q4", "total")).toBeUndefined();
  });
  it("reconciles contributions including the rest and uses same period last year",()=>{

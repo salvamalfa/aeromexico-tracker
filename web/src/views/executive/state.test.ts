@@ -4,7 +4,7 @@ describe("executive period deep links", () => {
   afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, "", "/"); });
   it("reads an available requested period and rejects unavailable or malformed requests", async () => {
     vi.resetModules();
-    const payload = { metadata: { default_period: "2026Q2" }, records: [{ period_id: "2026Q1" }, { period_id: "2026Q2" }], views: { "2026Q1": {}, "2026Q2": {} } };
+    const payload = { metadata: { default_period: "2026Q2" }, records: ["2026Q1", "2026Q2"].map(period_id => ({ period_id, passengers: 1, ask_km: 2, load_factor_reported: .5, rask_cents_per_km: 3, cask_cents_per_km: 2, unit_margin_cents_per_km: 1 })), views: { "2026Q1": {}, "2026Q2": {} } };
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => payload })));
     const { loadExecutive, state } = await import("./state");
     const { currentPeriodId } = await import("../../state/period");

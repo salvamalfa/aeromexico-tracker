@@ -10,6 +10,12 @@ against those same functions before exporting or publishing anything.
 
 ## Responsabilidad
 
+La [pauta narrativa trimestral](../../docs/analysis-agent/narrativa-trimestral.md)
+y la [skill de preparación](../../.agents/skills/airline-quarterly-story/SKILL.md)
+añaden investigación de ángulos antes de congelar el contexto. Las instrucciones
+históricas, los perfiles soportados y las aprobaciones se conservan; esta guía
+no es una migración de registros ni una nueva publicación.
+
 - Evidencia y expediente por trimestre (`evidence.py`, `flight_evidence.py`).
 - Cálculo cuantitativo trazable (`quantitative.py`) y su prototipo
   (`stage15_html.py`).
@@ -113,3 +119,26 @@ Cada tesis puede avanzar con su fuente propia validada. La nueva pauta de
 inmutable. El lifecycle conserva petición auténtica, auditoría independiente y
 aprobación exacta antes del handoff al agente de dashboard. No hay aprobación,
 activación de Gold ni publicación implícita por generar este contexto.
+
+### Perfil versionado de historias de negocio
+
+`quarterly_story.py` añade `quarterly_business_story_v1` para las cuatro historias
+3T26 revisadas. Su resumen y desarrollo suman entre 200 y 400 palabras; la pauta
+general de nuevas propuestas continúa prefiriendo 200–300. Los contratos de
+registros históricos no cambian. Toda cifra y atribución se resuelve desde los
+paquetes cerrados, con los verificadores nativos de las fuentes; una comparación
+estructural completa impide cambiar palabras, cifras, énfasis o colocación tras
+la importación. Las citas públicas sólo contienen URL, título, ancla y etiqueta.
+
+Volaris admite aquí el paquete separado `volaris_original_quarter_v1`, reproducido
+desde cuatro capturas HTTP de SEC. No transforma una reconstrucción anterior en
+un original ni hereda su aprobación. Una fuente o frase distinta genera otra
+identidad. La revisión y la autorización deben apuntar a esa versión exacta.
+El modelo se conserva como desconocido cuando el host no ofrece un identificador
+verificable; no se atribuye un modelo a un registro por el nombre del agente.
+
+La skill narrativa y su hash forman parte del borrador. El handoff normal de
+análisis entrega tanto la pauta original como los criterios nuevos con hashes
+reales; cada reporte vuelve a evaluar la tesis individual y una candidata de
+Industria del mismo trimestre. Esto prepara análisis y auditoría; no activa una
+tesis de Industria ni sustituye una autorización humana.

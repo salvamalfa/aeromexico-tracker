@@ -1,4 +1,4 @@
-const MOBILE_QUERY = "(max-width: 760px)";
+export const CHAT_OVERLAY_QUERY = "(max-width: 1000px)";
 
 export interface ChatModalControls {
   open(opener?: HTMLElement): void;
@@ -17,7 +17,7 @@ export function mountChatModal(
   let previousBackgroundInert = false;
   let previousLauncherInert = false;
 
-  const mobile = () => window.matchMedia?.(MOBILE_QUERY).matches ?? window.innerWidth <= 760;
+  const mobile = () => window.matchMedia?.(CHAT_OVERLAY_QUERY).matches ?? window.innerWidth <= 1000;
   const restoreInert = () => {
     if (!inertApplied) return;
     if (background) background.inert = previousBackgroundInert;
@@ -40,13 +40,15 @@ export function mountChatModal(
       launcher.inert = true;
       inertApplied = true;
     }
+    if (!panel.contains(document.activeElement)) panel.querySelector<HTMLElement>("[data-chat-close]")?.focus({ preventScroll: true });
   };
 
   return {
     open(opener?: HTMLElement) {
+      if (opener?.isConnected) focusReturn = opener;
       if (!open) {
         const active = document.activeElement;
-        focusReturn = opener?.isConnected ? opener : active instanceof HTMLElement ? active : launcher;
+        focusReturn ??= active instanceof HTMLElement ? active : launcher;
         open = true;
         window.addEventListener("resize", syncMode);
       }

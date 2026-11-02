@@ -1,0 +1,213 @@
+{
+  "source": "ANAC · normalización del archivo oficial capturado el 1 de noviembre de 2026; proyección pública por operador, sentido y mes",
+  "routes": [
+    {
+      "market_key": "GRU<>MEX",
+      "origin": {
+        "city": "São Paulo",
+        "iata": "GRU",
+        "lat": -23.431274,
+        "lon": -46.469954,
+        "name": "São Paulo/Guarulhos–Governor André Franco Montoro International Airport"
+      },
+      "destination": {
+        "city": "Mexico City",
+        "iata": "MEX",
+        "lat": 19.435822,
+        "lon": -99.07033,
+        "name": "Mexico City Benito Juárez International Airport"
+      },
+      "departures": 180.0,
+      "operation_status": "operated_observed",
+      "source_label": "Brasil · ANAC",
+      "flight_components": [
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 31.0,
+          "destination_iata": "MEX",
+          "kind": "observed",
+          "origin_iata": "GRU",
+          "period_id": "2026M07",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        },
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 30.0,
+          "destination_iata": "MEX",
+          "kind": "observed",
+          "origin_iata": "GRU",
+          "period_id": "2026M08",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        },
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 29.0,
+          "destination_iata": "MEX",
+          "kind": "observed",
+          "origin_iata": "GRU",
+          "period_id": "2026M09",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        },
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 31.0,
+          "destination_iata": "GRU",
+          "kind": "observed",
+          "origin_iata": "MEX",
+          "period_id": "2026M07",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        },
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 30.0,
+          "destination_iata": "GRU",
+          "kind": "observed",
+          "origin_iata": "MEX",
+          "period_id": "2026M08",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        },
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 29.0,
+          "destination_iata": "GRU",
+          "kind": "observed",
+          "origin_iata": "MEX",
+          "period_id": "2026M09",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        }
+      ]
+    },
+    {
+      "market_key": "CUN<>GRU",
+      "origin": {
+        "city": "Cancún",
+        "iata": "CUN",
+        "lat": 21.040817,
+        "lon": -86.87347,
+        "name": "Cancún International Airport"
+      },
+      "destination": {
+        "city": "São Paulo",
+        "iata": "GRU",
+        "lat": -23.431274,
+        "lon": -46.469954,
+        "name": "São Paulo/Guarulhos–Governor André Franco Montoro International Airport"
+      },
+      "departures": 1.0,
+      "operation_status": "operated_observed",
+      "source_label": "Brasil · ANAC",
+      "flight_components": [
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 1.0,
+          "destination_iata": "CUN",
+          "kind": "observed",
+          "origin_iata": "GRU",
+          "period_id": "2026M08",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        }
+      ]
+    },
+    {
+      "market_key": "GDL<>GRU",
+      "origin": {
+        "city": "Guadalajara",
+        "iata": "GDL",
+        "lat": 20.523342,
+        "lon": -103.310108,
+        "name": "Guadalajara International Airport"
+      },
+      "destination": {
+        "city": "São Paulo",
+        "iata": "GRU",
+        "lat": -23.431274,
+        "lon": -46.469954,
+        "name": "São Paulo/Guarulhos–Governor André Franco Montoro International Airport"
+      },
+      "departures": 1.0,
+      "operation_status": "operated_observed",
+      "source_label": "Brasil · ANAC",
+      "flight_components": [
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 1.0,
+          "destination_iata": "GDL",
+          "kind": "observed",
+          "origin_iata": "GRU",
+          "period_id": "2026M09",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        }
+      ]
+    },
+    {
+      "market_key": "MEX<>VCP",
+      "origin": {
+        "city": "Mexico City",
+        "iata": "MEX",
+        "lat": 19.435822,
+        "lon": -99.07033,
+        "name": "Mexico City Benito Juárez International Airport"
+      },
+      "destination": {
+        "city": "Campinas",
+        "iata": "VCP",
+        "lat": -23.007404,
+        "lon": -47.134502,
+        "name": "Viracopos International Airport"
+      },
+      "departures": 2.0,
+      "operation_status": "operated_observed",
+      "source_label": "Brasil · ANAC",
+      "flight_components": [
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 1.0,
+          "destination_iata": "VCP",
+          "kind": "observed",
+          "origin_iata": "MEX",
+          "period_id": "2026M08",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        },
+        {
+          "carrier_key": "AEROMEXICO",
+          "departures": 1.0,
+          "destination_iata": "VCP",
+          "kind": "observed",
+          "origin_iata": "MEX",
+          "period_id": "2026M09",
+          "source_hashes": [
+            "9d80d2866ef4ff5a51a008f8e11a99346a491b6e2e01b4ce6fc21ed5137e5baa"
+          ],
+          "source_label": "Brasil · ANAC"
+        }
+      ]
+    }
+  ]
+}

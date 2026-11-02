@@ -225,6 +225,7 @@ export interface PeriodNetworkDocument {
 
 export interface Comparison {
   available: boolean;
+  raw?: number | null;
   display: string;
   direction: "up" | "down" | "na" | string;
 }
@@ -233,6 +234,7 @@ export interface Kpi {
   key: string;
   label: string;
   display_value: string;
+  value?: number;
   qoq: Comparison;
   yoy: Comparison;
   vs_industry?: Comparison;

@@ -114,4 +114,26 @@ def test_data_version_ignores_interface_releases_but_tracks_data() -> None:
 
 def test_new_tabs_accept_context_without_expanding_metric_permissions():
     for tab in ["market", "news"]:
-        assert validate_context({"tab":tab,"period":"2026M09","entity":"INDUSTRY"})["tab"] == tab
+        assert validate_context({"tab": tab, "period": "2026M09", "entity": "INDUSTRY"})["tab"] == tab
+
+
+@pytest.mark.parametrize("card", ["market-kpi-passengers", "market-kpi-growth", "market-kpi-delta"])
+def test_retired_afac_market_cards_are_not_accepted_after_the_view_merge(card):
+    context = {"tab": "market", "period": "2026Q2", "card_id": card, "filters": {"segment": "international"}}
+    with pytest.raises(PlanValidationError, match="Tarjeta"):
+        validate_context(context)
+
+
+def test_observed_north_america_context_is_typed_and_scoped_to_the_international_map():
+    context = {
+        "tab": "flights",
+        "period": "2026Q3",
+        "card_id": "route-flow-map",
+        "filters": {"network_mode": "international", "flight_evidence": "north_america_observed"},
+    }
+    assert validate_context(context) == context
+    for update in [{"flight_evidence": "estimated"}, {"network_mode": "domestic"}, {"region": "europa"}]:
+        with pytest.raises(PlanValidationError, match="flight_evidence"):
+            validate_context({**context, "filters": {**context["filters"], **update}})
+    with pytest.raises(PlanValidationError, match="flight_evidence"):
+        validate_context({**context, "card_id": "mix-chart"})

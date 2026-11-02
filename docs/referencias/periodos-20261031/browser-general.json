@@ -1,0 +1,83 @@
+[
+  {
+    "size": "desktop",
+    "case": "clean-entry",
+    "url": "http://127.0.0.1:5173/",
+    "period": "3T26"
+  },
+  {
+    "size": "desktop",
+    "case": "market-Q3",
+    "coverage": "3T26: 2 de 3 meses disponibles; gráfica mensual hasta agosto de 2026. Las tarjetas y la tabla muestran 2T26, el último trimestre completo disponible para este segmento.",
+    "method": "Cambio de cobertura en nuestra integración de datos AFAC desde julio de 2026: el total incluye operadores mexicanos de vuelos chárter que podían faltar en el histórico. La línea se interrumpe para separar ambas coberturas; el corte no representa una caída de pasajeros.",
+    "kpis": "Pasajeros · aerolíneas mexicanas\n\n20,361,241\n\nCrecimiento interanual\n\n0.46%\n\nCambio de pasajeros vs. año anterior\n\n94,085",
+    "chart": {
+      "linePaths": 6,
+      "ticks": [
+        "2021",
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ]
+    }
+  },
+  {
+    "size": "desktop",
+    "case": "independent-historical-map",
+    "global": "3T26",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · enero 2015 · ventana mensual completa: 1 de 1 meses (enero) · BTS T-100: enero · Periodo general: 3T26; selección independiente del mapa"
+  },
+  {
+    "size": "desktop",
+    "case": "leave-historical-map-2T26",
+    "global": "2T26",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · vuelos AM programados: abril, mayo, junio · Estimación histórica: abril, mayo, junio · ANAC: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio"
+  },
+  {
+    "size": "desktop",
+    "case": "leave-historical-map-3T26",
+    "global": "3T26",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio"
+  },
+  {
+    "size": "mobile",
+    "case": "clean-entry",
+    "url": "http://127.0.0.1:5173/",
+    "period": "3T26"
+  },
+  {
+    "size": "mobile",
+    "case": "market-Q3",
+    "coverage": "3T26: 2 de 3 meses disponibles; gráfica mensual hasta agosto de 2026. Las tarjetas y la tabla muestran 2T26, el último trimestre completo disponible para este segmento.",
+    "method": "Cambio de cobertura en nuestra integración de datos AFAC desde julio de 2026: el total incluye operadores mexicanos de vuelos chárter que podían faltar en el histórico. La línea se interrumpe para separar ambas coberturas; el corte no representa una caída de pasajeros.",
+    "kpis": "Pasajeros · aerolíneas mexicanas\n\n20,361,241\n\nCrecimiento interanual\n\n0.46%\n\nCambio de pasajeros vs. año anterior\n\n94,085",
+    "chart": {
+      "linePaths": 6,
+      "ticks": [
+        "2022",
+        "2024",
+        "2026"
+      ]
+    }
+  },
+  {
+    "size": "mobile",
+    "case": "independent-historical-map",
+    "global": "3T26",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · enero 2015 · ventana mensual completa: 1 de 1 meses (enero) · BTS T-100: enero · Periodo general: 3T26; selección independiente del mapa"
+  },
+  {
+    "size": "mobile",
+    "case": "leave-historical-map-2T26",
+    "global": "2T26",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · vuelos AM programados: abril, mayo, junio · Estimación histórica: abril, mayo, junio · ANAC: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio"
+  },
+  {
+    "size": "mobile",
+    "case": "leave-historical-map-3T26",
+    "global": "3T26",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio"
+  }
+]

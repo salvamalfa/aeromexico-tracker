@@ -1,9 +1,9 @@
 """Vuelos map for Industria, Volaris and Viva (Dashboard v2, fase 3).
 
-Mexico–United States comes from each entity's own BTS T-100 routes; every
-other international market is the AFAC + AeroDataBox estimate, and the
-domestic map is the same estimate (see ``src.dashboard.route_entities`` for
-what each entity covers). Grupo Aeroméxico keeps its historical builders in
+Mexico–United States comes from each entity's own BTS T-100 routes. Industria
+also includes verified ANAC observations of Aerovías in Brazil; other available
+international and domestic cells retain their AFAC + AeroDataBox estimate
+(see ``src.dashboard.route_entities`` for each scope). Grupo Aeroméxico keeps its builders in
 ``flights.py``, ``international_routes.py`` and ``domestic_routes.py``.
 """
 
@@ -15,21 +15,29 @@ from typing import Any, Callable
 import pandas as pd
 
 from src.dashboard.domestic_routes import load_domestic_monthly_networks
-from src.dashboard.international_routes import ESTIMATE_TABLE, ROUTE_PAYLOAD_KEYS, _estimated_routes
-from src.dashboard.route_capacity import load_route_capacity
-from src.dashboard.map_periods import refresh_network_availability
 from src.dashboard.flight_cells import admitted_estimates, apply_flight_cells, international_cells
+from src.dashboard.international_routes import ESTIMATE_TABLE, ROUTE_PAYLOAD_KEYS, _estimated_routes
+from src.dashboard.map_periods import refresh_network_availability
+from src.dashboard.route_capacity import load_route_capacity
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES, RouteEntity, breakdown_totals
 
 
-def entity_international_networks(connection, networks, entity: RouteEntity, *, include_existing_us_estimates=False, allowed_us_estimate_cells=None):
+def entity_international_networks(
+    connection,
+    networks,
+    entity: RouteEntity,
+    *,
+    include_existing_us_estimates=False,
+    allowed_us_estimate_cells=None,
+):
     """International map of Volaris, Viva or Industria (Dashboard v2, fase 3).
 
     Mexico–United States comes from each entity's own BTS T-100 routes
     (``networks``, built by ``flights._load_routes`` for the entity); every
-    other market is the AFAC + AeroDataBox estimate, labelled as such. None
-    of Grupo Aeroméxico's own layers (authority observations, AICM, OMA,
-    Aena) apply; seats come from ``route_capacity`` (fleet gauge, fase 4).
+    other available market retains its AFAC + AeroDataBox estimate, labelled as such.
+    Industria also retains ANAC operator observations belonging to Aeroméxico.
+    AICM, OMA and Aena remain separate products; seats come from
+    ``route_capacity`` (fleet gauge, fase 4).
     """
     if entity.aeromexico_layers:
         raise ValueError("Grupo Aeroméxico keeps extend_networks()")
@@ -52,13 +60,35 @@ def entity_international_networks(connection, networks, entity: RouteEntity, *, 
         if pd.isna(a["latitude"]) or pd.isna(a["longitude"]):
             raise ValueError("Missing coordinates")
         return dict(
-            iata=code, name=a["name"], city=a["city"], country=a["country"],
-            lat=float(a["latitude"]), lon=float(a["longitude"]),
+            iata=code,
+            name=a["name"],
+            city=a["city"],
+            country=a["country"],
+            lat=float(a["latitude"]),
+            lon=float(a["longitude"]),
         )
 
-    estimates = admitted_estimates(estimates, endpoint, include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells)
+    estimates = admitted_estimates(
+        estimates,
+        endpoint,
+        include_us=include_existing_us_estimates,
+        allowed_us_estimate_cells=allowed_us_estimate_cells,
+    )
     label = entity.international_estimated_label
     capacity = load_route_capacity(connection, entity, "international")
+    authorities = pd.DataFrame()
+    if (
+        "AEROMEXICO" in entity.t100_carriers
+        and connection.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name='fact_international_route_observations'"
+        ).fetchone()[0]
+    ):
+        authorities = connection.execute(
+            "SELECT * FROM fact_international_route_observations "
+            "WHERE source_system='anac' AND operator_icao='AMX' "
+            "AND observation_scope='carrier_route'"
+        ).df()
     result = deepcopy(networks)
     for network in result.values():
         months = network["expected_months"]
@@ -67,8 +97,9 @@ def entity_international_networks(connection, networks, entity: RouteEntity, *, 
             route["source_label"] = "Estados Unidos · BTS T-100"
             route["observed_months"] = original_months
             route["coverage_note"] = "Meses: " + ", ".join(m[5:] for m in original_months) + " · BTS T-100"
-        for market, estimate in _estimated_routes(estimates, capacity, months, endpoint, entity,
-                                                 include_us=include_existing_us_estimates).items():
+        for market, estimate in _estimated_routes(
+            estimates, capacity, months, endpoint, entity, include_us=include_existing_us_estimates
+        ).items():
             if any(r["market_key"] == market for r in network["routes"]):
                 continue
             months_text = ", ".join(sorted({m["period_id"][5:] for m in estimate["monthly"]}))
@@ -95,17 +126,38 @@ def entity_international_networks(connection, networks, entity: RouteEntity, *, 
             if "carrier_breakdown" in estimate:
                 route["carrier_breakdown"] = estimate["carrier_breakdown"]
             network["routes"].append(route)
-        apply_flight_cells(network, international_cells(
-            connection, months, entity, estimates, endpoint,
-            include_us=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells), endpoint,
-            previous_cells=international_cells(connection, [f"{int(m[:4])-1}{m[4:]}" for m in months],
-                                              entity, pd.DataFrame(), endpoint))
+        apply_flight_cells(
+            network,
+            international_cells(
+                connection,
+                months,
+                entity,
+                estimates,
+                endpoint,
+                include_us=include_existing_us_estimates,
+                allowed_us_estimate_cells=allowed_us_estimate_cells,
+                authorities=authorities,
+            ),
+            endpoint,
+            previous_cells=international_cells(
+                connection,
+                [f"{int(m[:4]) - 1}{m[4:]}" for m in months],
+                entity,
+                pd.DataFrame(),
+                endpoint,
+                authorities=authorities,
+            ),
+        )
         network["aena_airport_activity"] = []
         aps = {e["iata"]: e for r in network["routes"] for e in (r["origin"], r["destination"])}
         network["airports"] = sorted(aps.values(), key=lambda a: a["iata"])
         network["route_count"] = len(network["routes"])
         network["airport_count"] = len(aps)
-        network["coverage"] = "México–EE. UU. observado por T-100; resto de la red internacional estimado"
+        network["coverage"] = (
+            "México–EE. UU. observado por T-100; Brasil observado por ANAC para Aeroméxico; resto estimado"
+            if not authorities.empty
+            else "México–EE. UU. observado por T-100; resto de la red internacional estimado"
+        )
         network["estimated_passenger_route_count"] = sum(
             bool(r.get("passengers_estimated")) for r in network["routes"]
         )
@@ -116,8 +168,12 @@ def entity_international_networks(connection, networks, entity: RouteEntity, *, 
 
 
 def build_entity_networks(
-    connection, quarters: list[dict[str, Any]], load_routes: Callable[..., dict[str, Any]], *,
-    include_existing_us_estimates=False, allowed_us_estimate_cells=None,
+    connection,
+    quarters: list[dict[str, Any]],
+    load_routes: Callable[..., dict[str, Any]],
+    *,
+    include_existing_us_estimates=False,
+    allowed_us_estimate_cells=None,
 ) -> dict[str, dict[str, Any]]:
     """International (quarterly) and domestic (monthly) maps per extra entity.
 
@@ -135,8 +191,13 @@ def build_entity_networks(
             t100[record["period_id"]] = network
         result[entity.key] = {
             "label": entity.label,
-            "route_networks": entity_international_networks(connection, t100, entity,
-                include_existing_us_estimates=include_existing_us_estimates, allowed_us_estimate_cells=allowed_us_estimate_cells),
+            "route_networks": entity_international_networks(
+                connection,
+                t100,
+                entity,
+                include_existing_us_estimates=include_existing_us_estimates,
+                allowed_us_estimate_cells=allowed_us_estimate_cells,
+            ),
             "domestic_monthly_networks": load_domestic_monthly_networks(connection, entity),
         }
     return result
@@ -151,8 +212,8 @@ def _add_t100_breakdown(connection, network: dict[str, Any], entity: RouteEntity
     rows = connection.execute(
         f"""SELECT market_key, carrier_key, SUM(passengers)
             FROM fact_route_traffic_summary
-            WHERE carrier_key IN ({', '.join('?' for _ in carriers)})
-              AND period_id IN ({', '.join('?' for _ in months)})
+            WHERE carrier_key IN ({", ".join("?" for _ in carriers)})
+              AND period_id IN ({", ".join("?" for _ in months)})
             GROUP BY market_key, carrier_key""",
         [*carriers, *months],
     ).fetchall()

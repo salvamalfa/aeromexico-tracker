@@ -1,9 +1,5 @@
-"""Deterministic route queries over the verified, published flight snapshot.
-
-This module is intentionally independent from the shared tool registry. The
-registry can compose ``ROUTE_TOOL_SPECS`` and delegate these two tool names to
-``RouteTools`` without coupling the route query contract to metric queries.
-"""
+"""Deterministic routes over the verified published snapshot. The registry
+composes ROUTE_TOOL_SPECS without coupling route queries to metric queries."""
 
 from __future__ import annotations
 
@@ -13,17 +9,18 @@ from typing import Any
 from urllib.parse import quote
 
 from src.conversational_analytics.semantic.plan import PlanValidationError
+from src.conversational_analytics.tools._route_comparison import comparability_reason
 from src.conversational_analytics.tools._route_contract import (
     AEROMEXICO_SCOPE,
-    AIRLINE_IDS as _AIRLINE_IDS,
-)
-from src.conversational_analytics.tools._route_contract import (
     ENTITY_IDS,
     METRICS,
     ROUTE_TOOL_SPECS,
     SEGMENTS,
     TOOL_NAMES,
     path_for,
+)
+from src.conversational_analytics.tools._route_contract import (
+    AIRLINE_IDS as _AIRLINE_IDS,
 )
 from src.conversational_analytics.tools._route_contract import (
     ENTITY_LABELS as _ENTITY_LABELS,
@@ -68,21 +65,23 @@ from src.conversational_analytics.tools._route_provenance import (
     metric_source_label as _metric_source_label,
 )
 from src.conversational_analytics.tools._route_provenance import value_kind as _value_kind
-from src.conversational_analytics.tools._route_comparison import comparability_reason
-from src.web_export.route_support import metric_support, route_metric_support_reason
 from src.conversational_analytics.tools._route_query_display import bound_route_query_result
 from src.conversational_analytics.tools._route_rollup import quarter_months, rollup_complete_quarter
 from src.conversational_analytics.tools._route_shared_display import bound_shared_result
 from src.conversational_analytics.tools._route_shared_metadata import (
     build_shared_carrier_metadata,
 )
+from src.conversational_analytics.tools._route_view import observed_north_america_view
+from src.web_export.route_support import metric_support, route_metric_support_reason
 
 
 class RouteTools:
     """Read-only route query adapter over a ``Snapshot``-like object."""
 
-    def __init__(self, snapshot: Any):
+    def __init__(self, snapshot: Any, *, evidence_view: str | None = None, region: str | None = None):
         self.snapshot = snapshot
+        self.evidence_view = evidence_view
+        self.region = region
 
     @staticmethod
     def tool_specs() -> list[dict[str, Any]]:
@@ -94,6 +93,12 @@ class RouteTools:
             network = self.snapshot.payload(path)
         except (ValueError, KeyError):
             network = None
+        if (
+            network is not None
+            and segment == "international"
+            and self.evidence_view == "north_america_observed"
+        ):
+            network = observed_north_america_view(network, self.region)
         # Keep the map's official programming separate from chat's monthly estimates.
         if network is not None and not (
             segment == "domestic" and "Q" in period and network.get("mode") == "scheduled_domestic"
@@ -146,13 +151,20 @@ class RouteTools:
                     }
                 )
         unique_refs = _deduplicate_source_references(refs)
-        return {
+        metadata = {
             "data_version": self.snapshot.version,
             "semantic_version": self.snapshot.semantic_version,
             "query": copy.deepcopy(query),
             "sources": unique_refs,
             "references": unique_refs,
         }
+        if self.evidence_view == "north_america_observed":
+            metadata["flight_evidence_scope"] = (
+                "Norteamérica: sólo vuelos observados; fuera de Norteamérica se conserva "
+                "el tipo de evidencia original. No representa toda la red "
+                "ni permite completar meses faltantes."
+            )
+        return metadata
 
     def query_routes(self, arguments: dict[str, Any]) -> dict[str, Any]:
         allowed = {
@@ -197,6 +209,9 @@ class RouteTools:
             "order_by": order_by,
             "comparison_period": comparison_period,
         }
+        if segment == "international" and self.evidence_view:
+            query["flight_evidence"] = self.evidence_view
+            query["region"] = self.region
         for key in ("origin_iata", "destination_iata"):
             value = arguments.get(key)
             if value is not None:
@@ -267,7 +282,9 @@ class RouteTools:
                 and value is not None
                 and previous_value is not None
                 and current_kind == previous_kind
-                and route_metric_support_reason(current_network, previous_network, route, previous_route, metric) is None
+                and route_metric_support_reason(
+                    current_network, previous_network, route, previous_route, metric
+                ) is None
                 and _metric_source_label(current_network, route, metric, entity_id)
                 == _metric_source_label(previous_network, previous_route, metric, entity_id)
             )
@@ -393,6 +410,9 @@ class RouteTools:
             "metric": metric,
             "top_n": top_n,
         }
+        if segment == "international" and self.evidence_view:
+            query["flight_evidence"] = self.evidence_view
+            query["region"] = self.region
         network_by_entity, paths = {}, {}
         for entity_id in entity_ids:
             network, path = self._load(entity_id, segment, period)
@@ -474,7 +494,10 @@ class RouteTools:
                     comparability_reasons.append("coverage_incomplete")
                 if len(expected_universes) != 1 or len(observed_universes) != 1:
                     comparability_reasons.append("period_universe_differs")
-                if any(metric_support(network_by_entity[e], route_maps[e][market_key], metric)[2] for e in entity_ids):
+                if any(
+                    metric_support(network_by_entity[e], route_maps[e][market_key], metric)[2]
+                    for e in entity_ids
+                ):
                     comparability_reasons.append("route_metric_coverage_incomplete")
                 if len(kinds) != 1:
                     comparability_reasons.append("value_kind_differs")

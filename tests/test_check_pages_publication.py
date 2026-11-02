@@ -44,7 +44,7 @@ def manifest(site, receipts):
         (["editorial-publication.json"], "src.publish.editorial"),
         (["editorial-publication.json", "financial-publication.json"], "src.publish.financial_scope"),
         (["issuer-publication.json"], "src.publish.issuer_scope"),
-        ([name for name, _ in reversed(VERIFIERS)], "src.publish.movements_scope"),
+        ([name for name, _ in reversed(VERIFIERS)], "src.publish.quarterly_story_scope"),
     ],
 )
 def test_declared_receipt_priority(tmp_path, receipts, expected):

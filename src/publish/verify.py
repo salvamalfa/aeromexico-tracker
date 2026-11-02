@@ -226,6 +226,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
     analysis_schema, market_schema = ANALYSIS_SCHEMA, MARKET_SCHEMA
     demand_schema = None
     editorial_schema = None
+    industry_story_schema = None
     try:
         expected_contracts = manifest_mod.contract_hashes(manifest_mod.CONTRACTS_DIR)
     except FileNotFoundError as error:
@@ -237,6 +238,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
         optional_payload_contracts = {
             manifest_mod.EDITORIAL_ANALYSIS_CONTRACT: manifest_mod.EDITORIAL_ANALYSIS_PATH,
+            manifest_mod.INDUSTRY_STORY_CONTRACT: manifest_mod.INDUSTRY_STORY_PATH,
             "market_demand.schema.json": "data/v1/market-demand.json",
             "news.schema.json": "data/v1/news.json",
         }
@@ -244,7 +246,9 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
             name: digest
             for name, digest in expected_contracts.items()
             if (has_business_metrics or name not in business_contracts)
-            and (name not in optional_payload_contracts or optional_payload_contracts[name] in listed_paths)
+            and (name not in optional_payload_contracts or optional_payload_contracts[name] in listed_paths
+                 or name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT
+                 and "data/v1/analysis/AEROMEXICO/2026Q3.json" in listed_paths)
         }
         if has_business_metrics and not business_contracts <= set(manifest_contracts):
             problems.append("business metrics files require both business-metrics contract hashes")
@@ -270,6 +274,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
                     analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
                     editorial_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == manifest_mod.INDUSTRY_STORY_CONTRACT:
+                    industry_story_schema = json.loads(resolved.read_text(encoding="utf-8"))
         for name in sorted(manifest_contracts):
             if name not in expected_contracts:
                 problems.append(f"contracts[{name!r}]: not a contract file this checkout expects")
@@ -305,8 +311,13 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         schema = _data_schema_for(
             rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema
         )
-        if rel == manifest_mod.EDITORIAL_ANALYSIS_PATH and editorial_schema is not None:
+        if editorial_schema is not None and (
+            rel == manifest_mod.EDITORIAL_ANALYSIS_PATH
+            or rel == "data/v1/analysis/AEROMEXICO/2026Q3.json"
+        ):
             schema = editorial_schema
+        if rel == manifest_mod.INDUSTRY_STORY_PATH and industry_story_schema is not None:
+            schema = industry_story_schema
         if schema is None:
             if is_data_file:
                 problems.append(
@@ -350,7 +361,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         for carrier in carriers:
             problems.append(f"{rel}: disallowed carrier_key: {carrier}")
         if (
-            (schema is analysis_schema or schema is editorial_schema)
+            (schema is analysis_schema or schema is editorial_schema or schema is industry_story_schema)
             and isinstance(payload, dict)
             and isinstance(payload.get("period_id"), str)
         ):
