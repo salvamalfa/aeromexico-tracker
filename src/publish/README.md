@@ -120,6 +120,14 @@ parte del sitio anterior. El sitio de cuatro tesis exige las cuatro identidades
 históricas; la quinta solo se exige cuando el manifiesto incorpora Aeroméxico
 3T26. Los artefactos del gate deben estar comprometidos antes de esa paridad.
 
+El perfil público explícito `--financial-publication-base` también comprueba una
+publicación SourceData intacta con su productor publicado, en un proceso aislado
+y sin red. Exige base exacta del historial de `origin/master`, todos los bytes e
+inventario de `site/`, autoridad y contratos conservados y el mismo lock Python.
+Una actualización de dependencias frontend no vuelve a aprobar el runtime nuevo:
+sus tipos, build y pruebas se comprueban aparte; el gate actual conserva su rechazo
+si la huella difiere del productor revisado. Un fallo histórico no tiene fallback.
+
 Never writes to the approval ledger, never approves/revokes/records
 anything. `web/` is the only implementation of each view, this gate its
 only publication path. `AGENTS.md` permanently authorizes agents to run this

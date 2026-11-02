@@ -13,22 +13,42 @@ BASE, CODE, HEAD = "a" * 40, "b" * 40, "c" * 40
 RUNTIME = "d" * 64
 
 
-@pytest.fixture
-def context(tmp_path, monkeypatch):
+@pytest.fixture(params=list(history.PROFILES))
+def context(tmp_path, monkeypatch, request):
+    module = request.param
+    selected_anchor = history.PROFILES[module][0]
     repo, site = tmp_path, tmp_path / "site"
     site.mkdir()
     (site / "payload.json").write_text('{"value":1}')
     manifest = json.dumps({"code_commit": CODE}).encode()
     (site / "publication_manifest.json").write_bytes(manifest)
     anchor = json.dumps({"producer_code_version": RUNTIME}).encode()
-    authority = {history.ANCHOR: anchor, "config/publish/revocations.json": b"{}"}
-    program = {**authority, "uv.lock": b"locked", "pyproject.toml": b"project", "src/__init__.py": b""}
+    authority = {
+        selected_anchor: anchor,
+        "config/publish/revocations.json": b"{}",
+        module.replace(".", "/") + ".py": b"# published strong verifier\n",
+        "contracts/web/manifest.schema.json": b"{}",
+        "scripts/check_pages_publication.py": b"# published selector\n",
+    }
+    program = {
+        **authority,
+        "uv.lock": b"locked",
+        "pyproject.toml": b"project",
+        "src/__init__.py": b"",
+        "web/package.json": b'{"devDependencies":{"@types/plotly.js":"old"}}',
+        "web/package-lock.json": b'{"locked":"old"}',
+    }
     for name, raw in program.items():
         path = repo / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
     expected = history.files.site_files(site)
-    state = {"authority": deepcopy(authority), "program": program}
+    state = {
+        "authority": deepcopy(authority),
+        "program": program,
+        "module": module,
+        "anchor": selected_anchor,
+    }
 
     def ancestor(root, before, after):
         if (before, after) not in {(BASE, HEAD), (CODE, BASE)}:
@@ -43,8 +63,8 @@ def context(tmp_path, monkeypatch):
     def git_files(root, commit, prefixes):
         if commit == CODE:
             return program
-        if prefixes == [history.ANCHOR, "site/publication_manifest.json"]:
-            return {history.ANCHOR: anchor, "site/publication_manifest.json": manifest}
+        if prefixes == [selected_anchor, "site/publication_manifest.json"]:
+            return {selected_anchor: anchor, "site/publication_manifest.json": manifest}
         return authority if commit == BASE else state["authority"]
 
     monkeypatch.setattr(history.files, "ancestor", ancestor)
@@ -55,9 +75,9 @@ def context(tmp_path, monkeypatch):
     return repo, site, state
 
 
-@pytest.mark.parametrize("base", ["master", "f" * 40, BASE])
+@pytest.mark.parametrize("base", ["master", "f" * 40, BASE, True])
 def test_history_requires_a_full_trusted_base_before_running_any_code(context, monkeypatch, base):
-    repo, site, _ = context
+    repo, site, state = context
     if base == BASE:
 
         def unprotected(root, *args):
@@ -67,12 +87,26 @@ def test_history_requires_a_full_trusted_base_before_running_any_code(context, m
 
         monkeypatch.setattr(history.files.transport, "_git", unprotected)
     monkeypatch.setattr(history.subprocess, "run", lambda *a, **k: pytest.fail("Untrusted code ran"))
-    assert history.verify_published(site, repo, base_commit=base)
+    assert history.verify_published(site, repo, base_commit=base, module=state["module"])
 
 
 @pytest.mark.parametrize(
     "change",
-    ["bytes", "extra", "symlink", "anchor", "revocation", "untracked_authority", "lock", "code_commit"],
+    [
+        "bytes",
+        "extra",
+        "symlink",
+        "anchor",
+        "revocation",
+        "untracked_authority",
+        "lock",
+        "code_commit",
+        "contract",
+        "missing_producer",
+        "missing_producer_anchor",
+        "selector",
+        "missing_producer_selector",
+    ],
 )
 def test_changed_public_inputs_block_before_archived_verification(context, monkeypatch, change):
     repo, site, state = context
@@ -83,7 +117,7 @@ def test_changed_public_inputs_block_before_archived_verification(context, monke
     elif change == "symlink":
         (site / "alias.json").symlink_to(site / "payload.json")
     elif change == "anchor":
-        (repo / history.ANCHOR).write_text("{}")
+        (repo / state["anchor"]).write_text("{}")
     elif change == "revocation":
         state["authority"]["config/publish/revocations.json"] = b'{"revoked":true}'
         (repo / "config/publish/revocations.json").write_bytes(
@@ -93,6 +127,16 @@ def test_changed_public_inputs_block_before_archived_verification(context, monke
         (repo / "config/publish/new-revocations.json").write_text('{"revoked":true}')
     elif change == "lock":
         (repo / "uv.lock").write_text("different dependencies")
+    elif change == "contract":
+        (repo / "contracts/web/manifest.schema.json").write_text('{"changed":true}')
+    elif change == "missing_producer":
+        state["program"].pop(state["module"].replace(".", "/") + ".py")
+    elif change == "missing_producer_anchor":
+        state["program"].pop(state["anchor"])
+    elif change == "selector":
+        (repo / "scripts/check_pages_publication.py").write_text("# changed selector\n")
+    elif change == "missing_producer_selector":
+        state["program"].pop("scripts/check_pages_publication.py")
     else:
         original = history.files.ancestor
 
@@ -103,7 +147,7 @@ def test_changed_public_inputs_block_before_archived_verification(context, monke
 
         monkeypatch.setattr(history.files, "ancestor", reject_unpublished_code)
     monkeypatch.setattr(history.subprocess, "run", lambda *a, **k: pytest.fail("Untrusted code ran"))
-    assert history.verify_published(site, repo, base_commit=BASE)
+    assert history.verify_published(site, repo, base_commit=BASE, module=state["module"])
 
 
 @pytest.mark.parametrize("failure", ["exit", "runtime", "verdict", "archive_changed", "site_changed"])
@@ -134,8 +178,51 @@ def test_verifier_failure_or_mutation_never_falls_back(context, monkeypatch, fai
     monkeypatch.setenv("PYTHONPATH", "/untrusted-head")
     monkeypatch.setenv("PYTHONHOME", "/untrusted-head")
     monkeypatch.setattr(history.subprocess, "run", run)
-    assert history.verify_published(site, repo, base_commit=BASE)
+    assert history.verify_published(site, repo, base_commit=BASE, module=state["module"])
     assert len(calls) == 1
+
+
+def test_frontend_dependency_change_uses_only_pinned_published_producer(context, monkeypatch):
+    repo, site, state = context
+    # This is outside the publication authority: the candidate is type-checked
+    # independently, while these exact BASE site bytes retain their old producer.
+    (repo / "web/package.json").write_text('{"devDependencies":{"@types/plotly.js":"new"}}')
+    (repo / "web/package-lock.json").write_text('{"lockfileVersion":3}')
+    calls = []
+
+    def run(command, **kwargs):
+        calls.append(command)
+        assert command[-2:] == [state["module"], history.PROFILES[state["module"]][1]]
+        assert kwargs["timeout"] == (600 if state["module"] == "src.publish.source_data_scope" else 120)
+        assert all((kwargs["cwd"] / k).read_bytes() == v for k, v in state["program"].items())
+        assert (kwargs["cwd"] / "web/package.json").read_bytes() == state["program"]["web/package.json"]
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"runtime": RUNTIME, "problems": []}))
+
+    monkeypatch.setattr(history.subprocess, "run", run)
+    assert history.verify_published(site, repo, base_commit=BASE, module=state["module"]) == []
+    assert len(calls) == 1
+
+
+def test_unknown_historical_profile_cannot_run_code(context, monkeypatch):
+    repo, site, _ = context
+    monkeypatch.setattr(history.subprocess, "run", lambda *a, **k: pytest.fail("Unknown profile ran"))
+    assert history.verify_published(site, repo, base_commit=BASE, module="src.publish.unknown")
+
+
+def test_candidate_source_runtime_still_requires_its_exact_reviewed_producer(monkeypatch, tmp_path):
+    from src.analysis_agent import entity_adapter
+    from src.publish import source_data_scope
+
+    monkeypatch.setattr(source_data_scope, "anchor", lambda _: {"producer_code_version": RUNTIME})
+    monkeypatch.setattr(entity_adapter, "code_version", lambda: "e" * 64)
+    monkeypatch.setattr(
+        source_data_scope,
+        "verify_historical_baseline",
+        lambda *a: pytest.fail("Mismatched runtime continued"),
+    )
+    assert source_data_scope.verify_source_data(tmp_path, tmp_path) == [
+        "Invalid selective source publication: Source runtime differs from its reviewed producer"
+    ]
 
 
 def test_local_and_historical_profiles_are_explicit_and_mutually_exclusive():

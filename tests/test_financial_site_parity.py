@@ -31,7 +31,9 @@ def financial_site(request):
         unavailable(request, "Financial 3Q26 candidate has not been assembled")
     spec = anchor(ROOT)
     checker = request.getfixturevalue("verify_financial_publication")
-    verify_current_publication(SITE, ROOT, checker)
+    verify_current_publication(
+        SITE, ROOT, checker, base_commit=request.config.getoption("--financial-publication-base")
+    )
     original = preserved_financial_projection(SITE, ROOT, spec)
     assert sha(encoded(original)) == spec["executive_sha256"]
     return spec

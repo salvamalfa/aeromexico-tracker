@@ -298,12 +298,14 @@ def test_incomplete_publication_artifacts_never_become_optional_missing_data(tmp
 
 @pytest.mark.parametrize("strict", [False, True])
 @pytest.mark.parametrize("failure", [None, "source projection changed", "missing source receipt"])
-def test_editorial_fixture_uses_the_strict_source_data_verifier(tmp_path, monkeypatch, strict, failure):
+@pytest.mark.parametrize("base", [None, "a" * 40])
+def test_editorial_fixture_uses_the_strict_source_data_verifier(tmp_path, monkeypatch, strict, failure, base):
     import hashlib
     from types import SimpleNamespace
 
     from scripts import check_pages_publication
     from src.publish import issuer_scope, source_data_scope, verify
+    from tests import _financial_publication_history as history
     from tests import _site_publication_parity as parity
 
     module = editorial_parity_module()
@@ -316,18 +318,38 @@ def test_editorial_fixture_uses_the_strict_source_data_verifier(tmp_path, monkey
     (module.SITE / "publication_manifest.json").write_text("{}")
     spec = {"analysis_bytes": len(payload), "analysis_sha256": hashlib.sha256(payload).hexdigest()}
     monkeypatch.setattr(module, "anchor", lambda root: spec)
-    monkeypatch.setattr(check_pages_publication, "verifier_for", lambda *args: "src.publish.source_data_scope")
+    monkeypatch.setattr(
+        check_pages_publication, "verifier_for", lambda *args: "src.publish.source_data_scope"
+    )
     monkeypatch.setattr(parity, "verifier_for", lambda *args: "src.publish.source_data_scope")
     calls = []
+
+    def verify_current(*args):
+        assert base is None, "Historical verification must not fall back to the current runtime"
+        calls.append(args)
+        return [] if failure is None else [failure]
+
+    def verify_historical(*args, **kwargs):
+        assert base is not None
+        assert kwargs == {"base_commit": base, "module": "src.publish.source_data_scope"}
+        calls.append(args)
+        return [] if failure is None else [failure]
+
     monkeypatch.setattr(
         source_data_scope,
         "verify_source_data",
-        lambda *args: calls.append(args) or ([] if failure is None else [failure]),
+        verify_current,
     )
+    monkeypatch.setattr(history, "verify_published", verify_historical)
     monkeypatch.setattr(issuer_scope, "verify_issuer", lambda *args: pytest.fail("issuer fallback"))
     monkeypatch.setattr(verify, "verify_site", lambda *args: pytest.fail("generic fallback"))
     request = SimpleNamespace(
-        config=SimpleNamespace(getoption=lambda name: strict),
+        config=SimpleNamespace(
+            getoption=lambda name: {
+                "--require-local-data": strict,
+                "--financial-publication-base": base,
+            }[name]
+        ),
         getfixturevalue=lambda name: lambda *args: pytest.fail("financial fallback"),
     )
     if failure is None:
@@ -346,7 +368,9 @@ def test_editorial_history_is_checked_by_source_data_preservation(tmp_path, monk
     module = editorial_parity_module()
     module.ROOT = tmp_path
     module.SITE = tmp_path / "site"
-    monkeypatch.setattr(check_pages_publication, "verifier_for", lambda *args: "src.publish.source_data_scope")
+    monkeypatch.setattr(
+        check_pages_publication, "verifier_for", lambda *args: "src.publish.source_data_scope"
+    )
     spec = {"baseline_commit": "a" * 40}
     monkeypatch.setattr(source_data_scope, "anchor", lambda root: spec)
     calls = []
