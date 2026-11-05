@@ -14,10 +14,10 @@ BASELINE = "089f48a656e301d2380c8d1a23aab5bb6ada728b"
 LABELS = ("Brasil · ANAC", "Estados Unidos · BTS T-100")
 
 
-def retained(period="2026M07", entity="INDUSTRY"):
+def retained(period="2026M07", entity="INDUSTRY", commit=BASELINE):
     prefix = "flights" if entity == "AEROMEXICO" else f"flights/entities/{entity}"
     name = f"site/data/v1/{prefix}/international/{period}.json"
-    return json.loads(subprocess.check_output(["git", "show", f"{BASELINE}:{name}"], cwd=PATHS.root))
+    return json.loads(subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=PATHS.root))
 
 
 def refresh(network, label, *, cells=None, previous=None):
@@ -93,22 +93,20 @@ def test_native_removal_requires_explicit_missing_value_review():
 def test_real_anac_arrival_preserves_every_bts_route_and_comparator():
     before = retained()
     label = LABELS[0]
+    current = retained(commit="5e09")
     cells = copy.deepcopy(
         [
             cell
-            for route in before["routes"]
+            for route in current["routes"]
             for cell in route.get("flight_components", [])
             if cell["source_label"] == label
         ]
     )
     assert cells
-    for cell in cells:
-        cell["departures"] += 1
+    changed = {"<>".join(sorted((cell["origin_iata"], cell["destination_iata"]))) for cell in cells}
     after = refresh(before, label, cells=cells)
     untouched = {
-        route["market_key"]: route
-        for route in before["routes"]
-        if not any(cell["source_label"] == label for cell in route.get("flight_components", []))
+        route["market_key"]: route for route in before["routes"] if route["market_key"] not in changed
     }
     assert {
         route["market_key"]: route for route in after["routes"] if route["market_key"] in untouched
