@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-05 · Verifica la huella histórica AFAC en su commit original
+
+- El verificador de la composición AFAC acepta cambios posteriores de runtime
+  solo si el `code_commit` del manifiesto conserva la misma ancla comprometida
+  y su árbol reproduce exactamente la huella de productor inspeccionada. Las
+  comprobaciones del padre, pruebas, payloads y sitio siguen ejecutándose.
+- La prueba negativa rechaza una huella histórica alterada o un commit que no
+  contiene el ancla actual.
+
 ## 2026-11-05 · Corrección histórica AFAC y comparativos BTS verificados
 
 - Nuevo perfil de publicación que conserva el padre trimestral original como
