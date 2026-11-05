@@ -2,10 +2,8 @@
 
 Denominator: the passengers AFAC reports for every Mexican carrier (regular
 and charter service), summed per month and segment. It is the universe the
-dashboard calls *Industria*'s market; foreign carriers on international
-routes are outside it because AFAC only publishes them as an aggregate, and
-the fase-0 report documents that difference
-(docs/etapas/dashboard-v2-fase0-datos-20260928.md).
+dashboard calls *Industria*'s market. Foreign carriers, also present in the
+native workbook by operator, are outside this chosen Mexican-carrier scope.
 
 A carrier row AFAC does not publish for a month is missing, not zero: that
 carrier's share and the industry total are ``None`` for that month. When any
@@ -227,8 +225,8 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
             "method_note": (
                 "La participación divide los pasajeros de cada aerolínea entre los de todas "
                 "las aerolíneas mexicanas del mismo mes y segmento. Aeroméxico incluye a "
-                "Aeroméxico Connect. Las aerolíneas extranjeras quedan fuera porque AFAC "
-                "pertenecen a otro universo. Los totales mexicanos se reconcilian con "
+                "Aeroméxico Connect. Las aerolíneas extranjeras publicadas por AFAC quedan "
+                "fuera del universo mexicano elegido para esta vista. Los totales se reconcilian con "
                 "servicio regular y de fletamento de los libros originales desde 2019. "
                 "Si falta una de las tres aerolíneas, la participación "
                 "de ese periodo queda N/D."
