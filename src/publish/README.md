@@ -696,6 +696,11 @@ El resto del sitio, incluidas las ocho lecturas y sus aprobaciones, permanece
 idéntico a B. Los contratos de los perfiles y sus proyecciones cierran el alcance;
 no se acepta una lista libre de parches o de adaptadores.
 
+El miembro AFAC exige además `native_dataset`, validado por el adaptador normal
+cerrado. Sus cinco Gold DATA canónicos deben coincidir por SHA tanto físicamente
+como en HEAD y forman parte del cierre de insumos; Gold de evaluación permanece
+separado e inmutable. Sin ese adaptador o sin el cierre, la inspección falla.
+
 El expediente original de B se restaura separado de Gold corregido: un inventario
 ordenado `afac_history_parent_inputs_v1` fija cada archivo por ruta, tamaño y SHA.
 No incluye código ni lifecycle. El ledger vigente se incorpora aparte para

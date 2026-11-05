@@ -293,3 +293,68 @@ def test_inventory_is_physical_and_contains_original_request(tmp_path):
     (root / "data/warehouse.db").write_bytes(b"tampered")
     with pytest.raises(ValueError, match="changed"):
         parent.parent_inventory(tmp_path, inputs)
+
+
+@pytest.fixture
+def canonical_gold_repo(tmp_path):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    expected = {}
+    for name in members.CANONICAL_GOLD:
+        path = tmp_path / f"data/gold/{name}.parquet"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Hash-boundary fixture, deliberately no claim that these bytes are
+        # native data or a parsed parquet dataset. The native adapter tests that.
+        raw = f"synthetic physical Gold DATA fixture {name}".encode()
+        path.write_bytes(raw)
+        expected[name] = contract.sha(raw)
+    subprocess.run(["git", "add", "data/gold"], cwd=tmp_path, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "synthetic canonical Gold hash fixture",
+        ],
+        cwd=tmp_path,
+        check=True,
+    )
+    units = [
+        {"product": members.COMPARISONS},
+        {
+            "product": contract.PRODUCT,
+            "source_binding": {"native_dataset": {"canonical_gold_sha256": expected}},
+        },
+    ]
+    return tmp_path, units
+
+
+def test_canonical_gold_data_closure_is_exact_physical_and_committed(canonical_gold_repo):
+    repo, units = canonical_gold_repo
+    observed = members.canonical_gold(repo, units)
+    assert set(observed) == {f"data/gold/{name}.parquet" for name in members.CANONICAL_GOLD}
+    assert {Path(name).stem: pin["sha256"] for name, pin in observed.items()} == units[1]["source_binding"][
+        "native_dataset"
+    ]["canonical_gold_sha256"]
+
+
+@pytest.mark.parametrize("mutation", ["physical", "head", "extra", "missing", "digest"])
+def test_canonical_gold_cannot_be_an_untracked_or_arbitrary_source_overwrite(canonical_gold_repo, mutation):
+    repo, units = canonical_gold_repo
+    expected = units[1]["source_binding"]["native_dataset"]["canonical_gold_sha256"]
+    path = repo / "data/gold/fact_carrier_metrics.parquet"
+    if mutation in {"physical", "head"}:
+        path.write_bytes(b"uncommitted new data")
+        if mutation == "head":
+            expected["fact_carrier_metrics"] = contract.sha(path.read_bytes())
+    elif mutation == "extra":
+        expected["frozen_model_evaluation_gold"] = "0" * 64
+    elif mutation == "missing":
+        del expected["fact_carrier_metrics"]
+    else:
+        expected["fact_carrier_metrics"] = "bad"
+    with pytest.raises(ValueError):
+        members.canonical_gold(repo, units)

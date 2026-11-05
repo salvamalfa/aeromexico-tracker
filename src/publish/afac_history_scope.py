@@ -174,6 +174,7 @@ def verify_parent_public(repo, parent):
 
 def preserved_files(site, repo, spec):
     scope = spec["scope"]
+    members.canonical_gold(repo, spec["members"])
     parent, _, before, parent_spec = parent_public(repo, scope["candidate_parent"])
     if (
         scope["baseline_commit"] != parent_spec["baseline_commit"]

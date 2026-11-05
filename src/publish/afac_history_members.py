@@ -25,9 +25,17 @@ from .afac_history_contract import (
     sha,
 )
 from .afac_history_parent import file_ref, identity, physical
+from .editorial import _git
 
 COMPARISONS = "bts_unchanged_source_comparisons"
 ORDER = (COMPARISONS, PRODUCT)
+CANONICAL_GOLD = (
+    "fact_carrier_metrics",
+    "dim_carrier",
+    "dim_period",
+    "dim_source_artifact",
+    "bridge_record_lineage",
+)
 BTS_TARGETS = {
     "data/v1/flights/international/2026M07.json",
     "data/v1/flights/entities/INDUSTRY/international/2026M07.json",
@@ -177,6 +185,26 @@ def target_names(units):
     return {name for unit in units for name in adapter(unit["product"]).TARGETS}
 
 
+def canonical_gold(repo, units):
+    """Gold DATA is an explicit physical source closure, never frozen EVAL."""
+    if [unit["product"] for unit in units] != list(ORDER):
+        raise ValueError("Canonical Gold requires the exact correction source members")
+    expected = units[1]["source_binding"]["native_dataset"]["canonical_gold_sha256"]
+    require_keys(expected, set(CANONICAL_GOLD), "canonical AFAC Gold DATA inventory")
+    result = {}
+    for name in CANONICAL_GOLD:
+        hex_digest(expected[name])
+        relative = f"data/gold/{name}.parquet"
+        observed = identity(physical(repo, relative))
+        if (
+            observed["sha256"] != expected[name]
+            or sha(_git(repo, "show", f"HEAD:{relative}")) != expected[name]
+        ):
+            raise ValueError("Canonical AFAC Gold DATA must match both its binding and committed HEAD")
+        result[relative] = observed
+    return result
+
+
 def replay(repo, request, parent_site, parent_files):
     units, inputs = [], {}
     for selection in selections(request):
@@ -200,4 +228,5 @@ def replay(repo, request, parent_site, parent_files):
         units.append(
             {"product": selection["product"], "source_binding": binding, "projection": value["projection"]}
         )
+    inputs.update(canonical_gold(repo, units))
     return units, compose(parent_files, units), inputs
