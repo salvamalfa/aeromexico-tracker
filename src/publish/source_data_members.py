@@ -61,6 +61,19 @@ def target_names(units, adapter):
     return set().union(*(set(adapter(u["product"]).TARGETS) for u in units))
 
 
+def initial_bytes(name, units, adapter):
+    """Only a reviewed adapter can introduce its explicitly declared new surface."""
+    modules = [adapter(u["product"]) for u in units if name in getattr(adapter(u["product"]), "ADDED_TARGETS", ())]
+    if len(modules) != 1:
+        raise ValueError("Missing historical target is not an explicitly reviewed new source surface")
+    return modules[0].initial_bytes(name)
+
+
+def baseline_bytes(baseline, units, adapter):
+    return {name: (baseline / name).read_bytes() if (baseline / name).is_file()
+            else initial_bytes(name, units, adapter) for name in target_names(units, adapter)}
+
+
 def compose(before, units, adapter):
     """Each adapter sees prior members' changes and must preserve unrelated rows."""
     outputs = {}

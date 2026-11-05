@@ -3,6 +3,12 @@ name: airline-update-traffic
 description: "Actualizar candidatos de la familia tráfico afac y bts de Airline Tracker; usar para capturar, validar y revisar esas fuentes sin activar ni publicar."
 ---
 
+Para el nuevo consumidor candidato AFAC O-D/BTS, seguir la
+[receta del mapa oficial](../../../docs/mapa-oficial.md). Preparar mediante
+`src.source_updates.official_routes`, con las fechas reales de ambas fuentes y
+F/G incluidos. La llegada conserva `source_dependency_assessment`: no activa
+fuentes ni concede autorización de exposición. No sustituir el histórico.
+
 # Tráfico AFAC y BTS
 
 Leer y aplicar [el contrato común](../source-updates-common.md).

@@ -3,6 +3,9 @@
 Cobertura de Vuelos por trimestre, fuentes y límites:
 [`docs/etapas/cobertura-vuelos-20261015.md`](docs/etapas/cobertura-vuelos-20261015.md).
 
+El [mapa oficial candidato](docs/mapa-oficial.md) tiene contrato, generador,
+geografía y gate propios; prepararlo no activa ni sustituye el histórico.
+
 Qué vive dónde, comandos clave y recetas paso a paso para los cambios más
 comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
 

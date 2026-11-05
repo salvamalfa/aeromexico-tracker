@@ -51,7 +51,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError
 
 from src.config import PATHS
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES
@@ -339,6 +339,13 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
             continue
         if isinstance(payload, dict):
             data_payloads[rel] = payload
+        if rel == "data/v1/official-routes.json":
+            from src.dashboard.official_routes_contract import validate as validate_official_routes
+
+            try:
+                validate_official_routes(payload)
+            except (ValueError, KeyError, TypeError, ValidationError) as error:
+                problems.append(f"{rel}: invalid official route surface: {error}")
         if rel == "data/v1/news.json" and rel not in preserved_approval_files:
             from src.web_export.news import news_export_payload
 

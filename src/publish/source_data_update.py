@@ -95,7 +95,7 @@ def _replay_one(request, profile, baseline, repo):
         request["period"],
     ):
         raise ValueError("Source replay names another product or period")
-    before = {name: (baseline / name).read_bytes() for name in module.TARGETS}
+    before = members.baseline_bytes(baseline, [request], adapter)
     outputs = module.public_outputs(before, value["projection"])
     if set(outputs) != set(module.TARGETS) or any(type(b) is not bytes or not b for b in outputs.values()):
         raise ValueError("Source adapter changed an undeclared surface")
@@ -126,7 +126,7 @@ def replay(request, profile, baseline, repo):
         )
         files.update(str(physical_path(p, repo)) for p in value["input_files"])
         files.add(str(path))
-    before = {name: (baseline / name).read_bytes() for name in members.target_names(units, adapter)}
+    before = members.baseline_bytes(baseline, units, adapter)
     outputs = members.compose(before, units, adapter)
     value = {k: units[0][k] for k in ("source_binding", "projection")}
     value["input_files"] = sorted(files)

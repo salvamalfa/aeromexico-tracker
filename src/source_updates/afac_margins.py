@@ -28,6 +28,10 @@ GRAIN = [
     "destination_country_as_reported",
 ]
 SOURCE_NOTE = "FUENTE: SICT, AFAC, DREE. Información proporcionada por las aerolíneas."
+ANNUAL_2025_NOTE = (
+    "* A partir de la fusión de operaciones de Sunwing Airlines y WestJet Airlines el 28 de mayo de 2025, "
+    "todas las operaciones de Sunwing serán reportadas por WestJet."
+)
 MONTH_HEADERS = [v.title() for v in MONTHS]
 
 
@@ -182,6 +186,8 @@ def footnotes(rows, year):
         text = row[0]
         if not isinstance(text, str) or not text.startswith("*"):
             continue
+        if year == 2025 and text == ANNUAL_2025_NOTE:
+            continue  # A reporting-company merger, not an estimated passenger/flight cell.
         match = re.fullmatch(r"\*+ Datos estimados de (.+?) para (.+?) (20\d{2})\.", text)
         if not match or int(match[3]) != year:
             raise ValueError("Unreviewed AFAC estimated-cell note")
@@ -278,12 +284,15 @@ def carriers(book, original, year, last):
                 if name.startswith(("EMPRESAS", "EN SERVICIO", "FUENTE:", "*")) or name in seen:
                     raise ValueError("AFAC carrier block unclosed/duplicate")
                 marker = re.search(r"\*+$", name)
+                merger_marker = year == 2025 and name == "Sunwing (Sunwing Airlines)*" and any(
+                    row[0] == ANNUAL_2025_NOTE for row in rows
+                )
                 applicable_rules = [
                     (fragment, months, note)
                     for fragment, months, note in rules
                     if fragment in folded(name) and marker and marker[0] == re.match(r"\*+", note)[0]
                 ]
-                if bool(marker) != bool(applicable_rules):
+                if bool(marker) != bool(applicable_rules) and not merger_marker:
                     raise ValueError("AFAC estimated carrier marker lacks matching source note")
                 matched_notes.update(note for _, _, note in applicable_rules)
                 seen.add(name)
@@ -313,7 +322,11 @@ def carriers(book, original, year, last):
             for trailing in rows[index + 1 : stop]:
                 if all(v is None for v in trailing):
                     continue
-                if trailing[0] == SOURCE_NOTE or trailing[0] in {note for _, _, note in rules}:
+                if (
+                    trailing[0] == SOURCE_NOTE
+                    or trailing[0] in {note for _, _, note in rules}
+                    or (year == 2025 and trailing[0] == ANNUAL_2025_NOTE)
+                ):
                     if any(v is not None for v in trailing[1:]):
                         raise ValueError("Numeric content attached to AFAC footer")
                     continue
@@ -334,7 +347,10 @@ def parse(inputs, period):
     with closing(load(route_bytes)) as route_book, closing(load(carrier_bytes)) as carrier_book:
         summary = list(carrier_book["Resumen"].values)
         captions = {v for row in summary for v in row if isinstance(v, str) and v.startswith("Acumulado\n")}
-        if summary[0][15] != year or captions != {f"Acumulado\nene-{MONTHS[last - 1].split('/')[0].lower()}"}:
+        expected_caption = f"Acumulado\nene-{MONTHS[last - 1].split('/')[0].lower()}"
+        if year == 2025 and last == 12:
+            expected_caption = "Acumulado\nanual"
+        if summary[0][15] != year or captions != {expected_caption}:
             raise ValueError("Carrier cumulative edition month/year not verified in content")
         route_rows, route_totals, route_checks = routes(route_book, route_original, year, last)
         carrier_rows, carrier_totals, carrier_checks, notes = carriers(

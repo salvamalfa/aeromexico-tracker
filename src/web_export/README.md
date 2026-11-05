@@ -1,5 +1,9 @@
 # `src/web_export`
 
+`official_routes.export_official_routes` exporta la nueva superficie candidata
+separada después de replay y validación. No altera el exportador histórico.
+Ver [mapa oficial](../../docs/mapa-oficial.md).
+
 Exportadores que dividen los payloads v1 (`contracts/web/`) en archivos por
 periodo, para que `web/` (Vite + TypeScript) los cargue con `fetch` en vez
 de recibirlos embebidos en el HTML.

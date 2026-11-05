@@ -75,10 +75,12 @@ def frozen_target_baseline(repo, spec):
         raise ValueError("Source recovery baseline requires a physical scratch directory")
     scratch.mkdir(parents=True, exist_ok=True)
     targets = members.target_names(members.members(spec), adapter)
+    old = json.loads(transport._git(repo, "show", f"{spec['baseline_commit']}:site/{manifests.MANIFEST_NAME}"))
+    old_names = {p["path"] for p in old["files"]}
     with tempfile.TemporaryDirectory(prefix="source-recovery-", dir=scratch) as directory:
         baseline = Path(directory)
         for name in sorted(targets):
-            raw = transport._git(repo, "show", f"{spec['baseline_commit']}:site/{name}")
+            raw = transport._git(repo, "show", f"{spec['baseline_commit']}:site/{name}") if name in old_names else members.initial_bytes(name, members.members(spec), adapter)
             path = baseline / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(raw)

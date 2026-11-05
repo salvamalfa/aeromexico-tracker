@@ -3,6 +3,11 @@ name: airline-update-dashboard
 description: Incorporar un producto validado y una tesis aprobada al dashboard, generar el sitio, integrar y comprobar la publicación servida con recuperación idempotente.
 ---
 
+Para el candidato `official_routes`, usar la [receta del mapa oficial](../../../docs/mapa-oficial.md)
+y `src.publish.official_routes_projection` dentro del gate selectivo. El JSON
+nuevo puede añadirse sólo con su contrato, perfil reproducido y autorización
+humana de su scope exacto. No trasladar aprobaciones AFAC carrier ni financieras.
+
 # Agente de actualización del dashboard
 
 Leer `AGENTS.md`, `REPO_MAP.md`, `src/publish/README.md`, `web/README.md` y
