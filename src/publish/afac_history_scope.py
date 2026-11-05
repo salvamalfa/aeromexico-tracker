@@ -8,8 +8,11 @@ preservation boundary; it never claims the upstream candidate was served.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
+import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -64,6 +67,67 @@ def producer_version(repo=PATHS.root):
             }
         )
     )
+
+
+def producer_version_at_commit(commit, repo=PATHS.root):
+    """Recompute the pinned producer from its committed tree, never current files."""
+    repo = Path(repo)
+    if not re.fullmatch("[a-f0-9]{40}", commit):
+        raise ValueError("Invalid historical producer commit")
+    transport._git(repo, "merge-base", "--is-ancestor", commit, "HEAD")
+    with tempfile.TemporaryDirectory(prefix="afac-history-producer-") as temporary:
+        checkout = Path(temporary) / "checkout"
+        subprocess.run(
+            ["git", "worktree", "add", "--detach", str(checkout), commit],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+        )
+        try:
+            environment = dict(os.environ)
+            environment["PYTHONPATH"] = str(checkout)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-c",
+                    "from src.publish.afac_history_scope import producer_version; print(producer_version())",
+                ],
+                cwd=checkout,
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            value = result.stdout.strip()
+            if not re.fullmatch("[a-f0-9]{64}", value):
+                raise ValueError("Historical producer did not return a valid fingerprint")
+            return value
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(checkout)],
+                cwd=repo,
+                check=True,
+                capture_output=True,
+            )
+
+
+def verify_producer_pin(repo, spec, manifest):
+    """Accept changed runtime code only when the exact published producer replays."""
+    expected = spec["scope"]["producer_code_version"]
+    if producer_version(repo) == expected:
+        return
+    commit = manifest.get("code_commit")
+    if not isinstance(commit, str) or not re.fullmatch("[a-f0-9]{40}", commit):
+        raise ValueError("Published manifest lacks its exact producer commit")
+    anchor_raw = (Path(repo) / ANCHOR).read_bytes()
+    if (
+        anchor_raw != transport._git(repo, "show", f"HEAD:{ANCHOR}")
+        or transport._git(repo, "show", f"{commit}:{ANCHOR}") != anchor_raw
+    ):
+        raise ValueError("Historical producer commit does not contain the committed history anchor")
+    if producer_version_at_commit(commit, repo) != expected:
+        raise ValueError("Historical producer differs from its inspected fingerprint")
 
 
 def validate_scope(scope):
@@ -220,8 +284,8 @@ def verify_afac_history(site, repo=PATHS.root):
 
     try:
         spec = anchor(repo)
-        if producer_version(repo) != spec["scope"]["producer_code_version"]:
-            raise ValueError("Current history producer differs from its inspected fingerprint")
+        manifest = manifests.load_manifest(site)
+        verify_producer_pin(repo, spec, manifest)
         verify_parent_public(repo, spec["scope"]["candidate_parent"])
         return _verify_site(site, preserved_approval_files=preserved_files(Path(site), repo, spec))
     except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as error:
