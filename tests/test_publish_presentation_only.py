@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
@@ -175,6 +176,84 @@ def test_dashboard_index_carries_one_canonical_release_marker(tmp_path) -> None:
     (site / "index.html").write_bytes(path.read_bytes() + path.read_bytes())
     with pytest.raises(ValueError, match="multiple"):
         release.read_presentation_receipt(site)
+
+
+def test_second_release_retains_original_afac_producer(tmp_path, monkeypatch) -> None:
+    producer_version = "d" * 64
+    previous = {
+        "schema_version": release.PRESENTATION_RECEIPT_SCHEMA,
+        "baseline_commit": "a" * 40,
+        "baseline_manifest_sha256": "b" * 64,
+        "source_producer_commit": "c" * 40,
+        "source_producer_code_version": producer_version,
+        "frontend_commit": "e" * 40,
+    }
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "publication_manifest.json").write_text('{"code_commit":"e"}', encoding="utf-8")
+    (site / "index.html").write_bytes(release.embed_presentation_receipt(b"<head></head>", previous))
+    monkeypatch.setattr(
+        afac_history_scope,
+        "anchor",
+        lambda *_: {"scope": {"producer_code_version": producer_version}},
+    )
+    monkeypatch.setattr(manifests, "current_commit", lambda *_: "f" * 40)
+
+    next_release = release.presentation_receipt(tmp_path, site, "f" * 40, {"code_commit": "e" * 40})
+
+    assert next_release["source_producer_commit"] == "c" * 40
+    assert next_release["source_producer_code_version"] == producer_version
+    assert next_release["frontend_commit"] == "f" * 40
+
+
+def test_second_release_verification_checks_prior_marker_chain(monkeypatch) -> None:
+    producer_version = "d" * 64
+    baseline_commit, producer_commit, previous_frontend, frontend = (
+        "a" * 40,
+        "c" * 40,
+        "e" * 40,
+        "f" * 40,
+    )
+    previous = {
+        "schema_version": release.PRESENTATION_RECEIPT_SCHEMA,
+        "baseline_commit": "1" * 40,
+        "baseline_manifest_sha256": "2" * 64,
+        "source_producer_commit": producer_commit,
+        "source_producer_code_version": producer_version,
+        "frontend_commit": previous_frontend,
+    }
+    baseline_manifest = json.dumps({"code_commit": previous_frontend}).encode()
+    baseline_index = release.embed_presentation_receipt(b"<head></head>", previous)
+    anchor_path = afac_history_scope.ANCHOR
+    anchor_bytes = Path(anchor_path).read_bytes()
+
+    def fake_run(command, *args, **kwargs):
+        if command[0:2] == ["git", "show"]:
+            ref = command[2]
+            if ref == f"{baseline_commit}:site/publication_manifest.json":
+                stdout = baseline_manifest
+            elif ref == f"{baseline_commit}:site/index.html":
+                stdout = baseline_index
+            elif ref in {f"HEAD:{anchor_path}", f"{producer_commit}:{anchor_path}"}:
+                stdout = anchor_bytes
+            else:
+                raise AssertionError(f"unexpected Git object request: {ref}")
+            return release.subprocess.CompletedProcess(command, 0, stdout=stdout, stderr=b"")
+        return release.subprocess.CompletedProcess(command, 0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(release.subprocess, "run", fake_run)
+    monkeypatch.setattr(afac_history_scope, "producer_version_at_commit", lambda *_: producer_version)
+    receipt = {
+        **previous,
+        "baseline_commit": baseline_commit,
+        "baseline_manifest_sha256": release._sha(baseline_manifest),
+        "frontend_commit": frontend,
+    }
+    manifest = {"code_commit": frontend}
+
+    release.verify_presentation_producer_pin(
+        Path("."), {"scope": {"producer_code_version": producer_version}}, manifest, receipt
+    )
 
 
 def test_presentation_release_keeps_every_nonfrontend_file(tmp_path, monkeypatch) -> None:

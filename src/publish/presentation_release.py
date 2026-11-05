@@ -43,13 +43,22 @@ def presentation_receipt(
     from . import afac_history_scope
 
     anchor = afac_history_scope.anchor(repo)
+    previous = read_presentation_receipt(out_dir)
+    producer_commit = current_manifest["code_commit"]
+    producer_version = anchor["scope"]["producer_code_version"]
+    if previous is not None:
+        if previous["source_producer_code_version"] != producer_version:
+            raise PublicationRefused(
+                "previous presentation release no longer matches the AFAC producer anchor"
+            )
+        producer_commit = previous["source_producer_commit"]
     manifest_raw = (out_dir / manifests.MANIFEST_NAME).read_bytes()
     return {
         "schema_version": PRESENTATION_RECEIPT_SCHEMA,
         "baseline_commit": trusted_commit,
         "baseline_manifest_sha256": _sha(manifest_raw),
-        "source_producer_commit": current_manifest["code_commit"],
-        "source_producer_code_version": anchor["scope"]["producer_code_version"],
+        "source_producer_commit": producer_commit,
+        "source_producer_code_version": producer_version,
         "frontend_commit": manifests.current_commit(repo),
     }
 
@@ -70,7 +79,10 @@ def embed_presentation_receipt(index_html: bytes, receipt: dict[str, Any]) -> by
 
 
 def read_presentation_receipt(site: Path) -> dict[str, Any] | None:
-    raw = (Path(site) / "index.html").read_bytes()
+    return read_presentation_receipt_html((Path(site) / "index.html").read_bytes())
+
+
+def read_presentation_receipt_html(raw: bytes) -> dict[str, Any] | None:
     matches = re.findall(rb"<!-- aeromexico-presentation-release:v1:([A-Za-z0-9_-]+) -->", raw)
     if not matches:
         return None
@@ -121,9 +133,22 @@ def verify_presentation_producer_pin(
     if _sha(baseline_raw) != receipt["baseline_manifest_sha256"]:
         raise ValueError("Presentation marker differs from the exact trusted served manifest")
     baseline_manifest = json.loads(baseline_raw)
+    baseline_index = subprocess.check_output(
+        ["git", "show", f"{receipt['baseline_commit']}:site/index.html"], cwd=repo
+    )
+    previous = read_presentation_receipt_html(baseline_index)
     producer_commit = baseline_manifest.get("code_commit")
-    if receipt["source_producer_commit"] != producer_commit:
-        raise ValueError("Presentation marker source producer differs from the trusted baseline")
+    if previous is None:
+        if receipt["source_producer_commit"] != producer_commit:
+            raise ValueError("Presentation marker source producer differs from the trusted baseline")
+    elif (
+        previous["frontend_commit"] != producer_commit
+        or previous["source_producer_commit"] != receipt["source_producer_commit"]
+        or previous["source_producer_code_version"] != receipt["source_producer_code_version"]
+    ):
+        raise ValueError("Presentation release changed its inherited AFAC producer identity")
+    else:
+        producer_commit = receipt["source_producer_commit"]
     anchor_path = afac_history_scope.ANCHOR
     anchor_raw = (Path(repo) / anchor_path).read_bytes()
     if anchor_raw != subprocess.check_output(
