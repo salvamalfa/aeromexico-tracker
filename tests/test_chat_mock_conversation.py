@@ -177,20 +177,43 @@ def test_omitted_period_uses_the_current_dashboard_selection(
     )
 
 
+@pytest.mark.parametrize(
+    "start,end,periods,available",
+    [
+        ("2019M01", "2019M03", ["2019M01", "2019M02", "2019M03"], True),
+        ("2026M10", "2026M12", ["2026M10", "2026M12"], False),
+    ],
+    ids=["reported-2019", "unpublished-after-september"],
+)
 def test_conversation_series_keeps_missing_values_null_and_uses_source_references(
     tmp_path: Path,
     published_snapshot: Snapshot,
+    start: str,
+    end: str,
+    periods: list[str],
+    available: bool,
 ) -> None:
     snapshot = published_snapshot
+    market = snapshot.payload("data/v1/market.json")
+    monthly = {row["period_id"]: row for row in market["months"]}
+    assert max(monthly) == "2026M09"
+    if available:
+        expected = [monthly[p]["segments"]["total"]["carriers"]["AEROMEXICO"]["passengers"] for p in periods]
+        assert all(value > 0 for value in expected)
+    else:
+        # Outside the published range the existing tool returns the two bounds;
+        # neither bound may acquire a zero, interpolation or invented month.
+        assert all(period not in monthly for period in periods)
+        expected = [None] * len(periods)
     provider = _RecordingMockProvider(snapshot)
     app = _app(tmp_path, snapshot, provider)
     context = {
         "tab": "reading",
-        "period": "2019M01",
+        "period": start,
         "entity": "AEROMEXICO",
         "filters": {"segment": "total"},
     }
-    question = "Muestra la serie de pasajeros AFAC total de Aeroméxico entre 2019M01 y 2019M03."
+    question = f"Muestra la serie de pasajeros AFAC total de Aeroméxico entre {start} y {end}."
 
     with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
         conversation = client.post("/api/chat/conversations")
@@ -204,20 +227,22 @@ def test_conversation_series_keeps_missing_values_null_and_uses_source_reference
         assert tool_events[0]["name"] == "get_time_series"
         result = tool_events[0]["result"]
         rows = result["rows"]
-        assert [row["period"] for row in rows] == ["2019M01", "2019M02", "2019M03"]
-        assert all(row["availability"] == "missing" for row in rows)
-        assert all(row["value"] is None and row["display_value"] is None for row in rows)
-        assert result["chart"]["series"][0]["y"] == [None, None, None]
+        assert [row["period"] for row in rows] == periods
+        assert all(row["availability"] == ("available" if available else "missing") for row in rows)
+        assert [row["value"] for row in rows] == expected
+        assert [row["display_value"] for row in rows] == expected
+        assert result["chart"]["series"][0]["y"] == expected
         assert result["references"]
         allowed_urls = {ref["url"] for row in rows for ref in row["source_references"]}
         assert set(ref["url"] for ref in result["references"]) <= allowed_urls
         assert all(url.startswith("https://") for url in allowed_urls)
 
         message_event = next(event for event in events if event["type"] == "message.completed")
-        assert message_event["chart"]["series"][0]["y"] == [None, None, None]
+        assert message_event["chart"]["series"][0]["y"] == expected
         assert message_event["references"] == result["references"]
-        assert message_event["content"].count("sin dato publicado") == 3
-        assert "0 pasajeros" not in message_event["content"]
+        assert message_event["content"].count("sin dato publicado") == (0 if available else len(periods))
+        if not available:
+            assert "0 pasajeros" not in message_event["content"]
 
 
 def test_explicit_entity_overrides_dashboard_context_and_all_carriers_uses_afac_denominator(

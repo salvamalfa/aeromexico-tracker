@@ -8,10 +8,18 @@ from src.dashboard.data import data_as_of, query_df
 
 
 def test_afac_freshness_uses_real_source_date() -> None:
+    latest_observation = query_df(
+        "SELECT MAX(period_end_date)::DATE AS date "
+        "FROM fact_carrier_metrics WHERE source_system='afac'"
+    ).iloc[0, 0]
+    expected_date = pd.Timestamp(latest_observation).date().isoformat()
+    assert expected_date == "2026-09-30"
     result = check("afac", max_age_days=62)
-    assert result["last_date"] == "2026-06-30"
+    assert result["last_date"] == expected_date
     assert result["age_days"] >= 0
     assert isinstance(result["is_stale"], bool)
+    assert result["is_stale"] == (result["age_days"] > 62)
+    assert result["reason"] == ("age_exceeded" if result["is_stale"] else "current")
 
 
 def test_dashboard_cutoff_uses_latest_preserved_artifact_not_future_period_end() -> None:
