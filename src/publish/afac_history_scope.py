@@ -112,8 +112,17 @@ def producer_version_at_commit(commit, repo=PATHS.root):
             )
 
 
-def verify_producer_pin(repo, spec, manifest):
+def verify_producer_pin(repo, spec, manifest, site=None):
     """Accept changed runtime code only when the exact published producer replays."""
+    # A presentation release records the frontend commit in the manifest. Its
+    # AFAC producer remains the source producer recorded by the signed marker.
+    # Keep the legacy path below strict for every release without that marker.
+    from . import presentation_release
+
+    receipt = presentation_release.read_presentation_receipt(Path(site or Path(repo) / "site"))
+    if receipt is not None:
+        presentation_release.verify_presentation_producer_pin(repo, spec, manifest, receipt)
+        return
     expected = spec["scope"]["producer_code_version"]
     if producer_version(repo) == expected:
         return
@@ -306,10 +315,7 @@ def verify_afac_history(site, repo=PATHS.root):
         spec = anchor(repo)
         manifest = manifests.load_manifest(site)
         receipt = presentation_release.read_presentation_receipt(Path(site))
-        if receipt is None:
-            verify_producer_pin(repo, spec, manifest)
-        else:
-            presentation_release.verify_presentation_producer_pin(repo, spec, manifest, receipt)
+        verify_producer_pin(repo, spec, manifest, site)
         verify_parent_public(repo, spec["scope"]["candidate_parent"])
         return _verify_site(
             site,
