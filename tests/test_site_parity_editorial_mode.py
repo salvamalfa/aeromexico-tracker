@@ -1,12 +1,46 @@
 """Public regressions for selecting financial parity by publication mode."""
 
+import hashlib
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from src.publish import editorial
+
+EDITORIAL_FIXTURE_COMMIT = "3a299fbc3ea5c709a209b794e79565a69e4af714"
+
+
+def declared_editorial_site(site):
+    """Exercise the real selector with a single witnessed synthetic proof."""
+    subprocess.run(["git", "init", "-q", str(site.parent)], check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=Parity Fixture", "-c", "user.email=fixture@example.invalid",
+         "commit", "--allow-empty", "-qm", "synthetic selection baseline"],
+        cwd=site.parent, check=True,
+    )
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=site.parent, check=True, capture_output=True,
+    ).stdout.decode().strip()
+    raw = json.dumps({"remote_witness": {"baseline_commit": commit}}).encode()
+    (site / editorial.PROOF).write_bytes(raw)
+    (site / "publication_manifest.json").write_bytes(json.dumps({"analysis_manifest": [], "files": [{
+        "path": editorial.PROOF, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
+    }]}).encode())
+    return commit
+
+
+def historical_editorial_payload(root):
+    """The current publication may legitimately remove this legacy output path."""
+    raw = subprocess.check_output(
+        ["git", "show", f"{EDITORIAL_FIXTURE_COMMIT}:site/{editorial.ANALYSIS}"], cwd=root,
+    )
+    spec = editorial.anchor(root)
+    assert len(raw) == spec["analysis_bytes"]
+    assert hashlib.sha256(raw).hexdigest() == spec["analysis_sha256"]
+    return raw
 
 
 def parity_module():
@@ -34,17 +68,17 @@ def test_editorial_financial_parity_requires_verified_baseline_not_quarterly_rea
     module = parity_module()
     module.SITE_DIR = tmp_path / "site"
     module.SITE_DIR.mkdir()
-    (module.SITE_DIR / editorial.PROOF).write_text("{}")
+    baseline_commit = declared_editorial_site(module.SITE_DIR)
     baseline = {"records": [{"period_id": "2026Q2"}], "views": {"2026Q2": {}}}
     monkeypatch.setattr(
         editorial, "verify_editorial", lambda site, repo: [] if valid else ["Historical bytes changed"]
     )
-    monkeypatch.setattr(editorial, "anchor", lambda repo: {"baseline_commit": "a" * 40})
+    monkeypatch.setattr(editorial, "anchor", lambda repo: {"baseline_commit": baseline_commit})
     calls = []
 
     def git_read(args, **kwargs):
         calls.append(args)
-        assert args == ["git", "show", "a" * 40 + ":site/data/v1/executive.json"]
+        assert args == ["git", "show", baseline_commit + ":site/data/v1/executive.json"]
         return json.dumps(baseline).encode()
 
     monkeypatch.setattr(module.subprocess, "check_output", git_read)
@@ -82,6 +116,9 @@ def test_reading_only_financial_parity_survives_ui_transition(tmp_path, monkeypa
         published["records"][0]["unauthorized"] = True
     target.write_bytes(json.dumps(published).encode())
     entry = {"period_id": "2026Q3", "version": "reading"}
+    (module.SITE_DIR / "publication_manifest.json").write_bytes(
+        json.dumps({"files": [], "analysis_manifest": [entry]}).encode()
+    )
     monkeypatch.setattr(module.manifest_mod, "load_manifest", lambda site: {"analysis_manifest": [entry]})
     verification = []
 
@@ -173,7 +210,8 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
     manifest_path = site / "publication_manifest.json"
     manifest = json.loads(manifest_path.read_bytes())
     entry = dict(editorial.anchor(root)["analysis_entry"])
-    payload = json.loads((root / "site" / editorial.ANALYSIS).read_bytes())
+    historical_payload = historical_editorial_payload(root)
+    payload = json.loads(historical_payload)
     if damage == "pending_reading":
         entry["version"] = "pending"
         payload["version"] = "pending"
@@ -183,7 +221,7 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
     if damage in {"unapproved_text", "pending_reading"}:
         new_path.write_text(json.dumps(payload), encoding="utf-8")
     else:
-        new_path.write_bytes((root / "site" / editorial.ANALYSIS).read_bytes())
+        new_path.write_bytes(historical_payload)
     manifest["analysis_manifest"].append(entry)
     manifest["contracts"][editorial.manifests.EDITORIAL_ANALYSIS_CONTRACT] = hashlib.sha256(
         (root / "contracts/web" / editorial.manifests.EDITORIAL_ANALYSIS_CONTRACT).read_bytes()
