@@ -6,16 +6,22 @@ bounded retries and the exclusive filesystem writer remain the existing ones.
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import os
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 from src.source_updates import calendar
 from src.source_updates.catalog import ROOT, plan
 from src.source_updates.collection import safe_workspace, writer
+from src.source_updates.coordinator_consumers import (
+    bind_existing,
+    finalize_preparation,
+    preparation_options,
+    prompt_delta,
+    require_existing_id,
+)
 from src.source_updates.global_readiness import REQUIRED
 
 
@@ -69,6 +75,7 @@ def install_events(state: dict, rounds: list[dict]) -> None:
 
 
 def prepare(request: dict) -> dict:
+    conditional_products, consumer_options = preparation_options(request)
     cutoff = calendar.local_time(request["as_of"])
     start = date.fromisoformat(request["start"] + "-01")
     count = request["months"]
@@ -99,7 +106,8 @@ def prepare(request: dict) -> dict:
                 continue
             cadence = product.get("target_cadence", product["cadence"])
             period = product.get("target_period", product.get("period"))
-            selected = product["id"] in REQUIRED[cadence] or product["id"] == "editorial_news"
+            selected = (product["id"] in REQUIRED[cadence] or product["id"] == "editorial_news"
+                        or (cadence == "monthly" and product["id"] in conditional_products))
             key = f"{cadence}:{period}:{product['id']}"
             tasks[key] = {
                 "cadence": cadence,
@@ -139,7 +147,7 @@ def prepare(request: dict) -> dict:
         "events": {},
     }
     install_events(state, rounds)
-    return state
+    return finalize_preparation(state, consumer_options, cutoff)
 
 
 def trigger(state: dict, now: str) -> dict:
@@ -210,6 +218,7 @@ def trigger(state: dict, now: str) -> dict:
         "timing_mode": "flexible_schedule",
         "default_timezone": "America/Mexico_City",
     }
+    payload["prompt"] += prompt_delta(state)
     return {**result, "payload": payload}
 
 
@@ -299,7 +308,12 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
                     del state["events"][event_id]
             install_events(state, [*untouched, {"kind": "quarterly", **quarter}])
         return
+    if kind == "bind_existing_automation":
+        bind_existing(state, action)
+        return
     if kind == "activation_intent":
+        if state.get("continuation"):
+            raise ValueError("Continuation must bind_existing_automation after native read/update; never create another")
         if action.get("activation_authorized") is not True:
             raise ValueError("Explicit activation authorization is required")
         reference = text_field(action, "authorization_reference")
@@ -351,6 +365,7 @@ def transition(state: dict, action: dict, workspace: Path) -> None:
                 raise ValueError("Uncertain creation must not be repeated")
             state["automation_creation"] = None
         else:
+            require_existing_id(state, text_field(action, "automation_id"))
             state["automation_id"] = text_field(action, "automation_id")
             creation.update(outcome="bound", reconciliation_reference=reference)
         return
@@ -532,7 +547,7 @@ def run(workspace: Path, *, request: dict | None = None, action: dict | None = N
                 if target.exists():
                     state = load(target)
                     if state["request_sha256"] != digest(request):
-                        raise ValueError("Existing ledger cannot be replaced or counters reset")
+                        raise ValueError("Existing ledger cannot be replaced or counters reset; prepare a NEW run_id/workspace with a versioned continuation")
                 else:
                     state = prepare(request)
                     state["workspace"] = str(workspace)
@@ -575,25 +590,9 @@ def run(workspace: Path, *, request: dict | None = None, action: dict | None = N
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--workspace", type=Path, required=True)
-    operation = parser.add_mutually_exclusive_group()
-    operation.add_argument("--prepare", type=Path, help="Write private plan once; never activate")
-    operation.add_argument("--record", type=Path, help="Record an observed action; never send it")
-    parser.add_argument("--now", default=datetime.now(UTC).isoformat())
-    args = parser.parse_args()
-    try:
-        output = run(
-            args.workspace,
-            request=load(args.prepare) if args.prepare else None,
-            action=load(args.record) if args.record else None,
-            now=args.now,
-        )
-        print(json.dumps(output, ensure_ascii=False, indent=2))
-        return 0
-    except (KeyError, ValueError, OSError, TypeError) as exc:
-        print(json.dumps({"status": "blocked", "reason": str(exc), "scheduled_executions": 0}))
-        return 1
+    from src.source_updates.coordinator_cli import coordinator_main
+
+    return coordinator_main(run, load, __doc__)
 
 
 if __name__ == "__main__":

@@ -373,7 +373,73 @@ ni crea una regla permanente de aprobación. Noticias y tesis de Industria no
 se admiten en esta entrega. Esa continuación no cambia cadencia, fechas ni ID,
 ni implica modificar la automatización activa al generar el payload.
 
-### Activación realizada y recuperación de su creación
+### Continuación explícita para el mapa oficial
+
+El calendario por defecto conserva su selección histórica: `afac_margins`
+permanece **CONDITIONAL** y AFAC/BTS sólo evalúan dependencias del mapa. Para
+el consumidor [oficial](mapa-oficial.md), preparar **otro checkpoint privado**
+con las fechas de la ronda vigente, un `run_id` nuevo y estos campos adicionales:
+
+```json
+{
+  "run_id": "<continuacion-nueva>",
+  "conditional_products": ["afac_margins"],
+  "consumers": ["official_routes"],
+  "continuation": {
+    "previous_state": {"path": "<state.json-absoluto-anterior>", "sha256": "<sha-real>"}
+  }
+}
+```
+
+Se añaden a la solicitud normal de `--prepare`; no reemplazan `as_of`,
+`start`, `months`, `quarter` o `releases`. Se conserva el checkpoint anterior
+sin editar ni borrar tareas, reintentos o recibos. Una solicitud distinta
+sobre el mismo workspace falla sin modificar sus bytes. La continuación
+requiere el ID ya vinculado, ningún envío activo o pendiente de reconciliar y
+las mismas fechas para tareas compartidas. Las rondas vencidas deben
+reconciliarse antes; no se convierten en ejecuciones nuevas.
+
+Después de publicar y verificar el mapa, leer la configuración **actual** de
+la misma automatización. Comparar su prompt, ID, horario, zona, vigencia y
+cadencia con el checkpoint; conservarlos al añadir únicamente el consumidor
+oficial y la referencia al checkpoint nuevo. El delta concreto de prompt está
+en `src.source_updates.coordinator_consumers.PROMPT_DELTA` y se añade sólo al
+payload de una continuación que seleccionó ese consumidor. Generarlo no hace
+una llamada nativa. Si la herramienta sólo muestra una tarjeta y no devuelve
+el texto/configuración, conservar ese límite y obtener la configuración real
+antes de actualizar; un recibo histórico no prueba el estado actual.
+
+Registrar después `bind_existing_automation`, con `automation_id` idéntico al
+anterior, `authorization_reference` de la instrucción vigente y
+`reconciliation_reference` de la lectura/actualización nativa real. La acción
+sólo concilia ese resultado: no crea otra tarea ni concede publicación.
+`activation_intent` está prohibido en una continuación. El outbox del consumidor
+también usa otro workspace; sus observaciones pueden reutilizar candidatos
+retenidos mediante `recovery_from_validated_result`, conservando sus fechas y
+hashes originales. No presentar esa recuperación como captura programada nueva.
+
+La selección explícita genera un handoff `official_routes` de `source_data`
+para AFAC SASE/resumen o BTS; el resto de productos conserva su ruta. El worker
+prepara/reproduce ambos originales y sus periodos reales, incluidos años BTS
+revisados, con el preparador del mapa. Un candidato de mes futuro puede
+prepararse y validarse cuando exista la fuente; no queda aprobado por ello.
+`candidate`, `checks_passed` y `source_dependency_assessment` no cierran ese
+handoff. `finish` exige el gate real del producto oficial, autorización exacta,
+perfil y baseline, ambos originales reproducidos, cobertura y hashes de salida
+aprobados. Un periodo nuevo conserva la aprobación normal; el calendario no
+promete autopublicación.
+
+Para `no_visual_change`, producir el comprobante mediante
+`src.source_updates.official_routes_handoff.verify_nochange(source, profile_path, root)`
+y conservar su JSON como `equivalence_proof`, junto con `source_profile`
+físico/SHA. Se liga el original de la fuente al perfil, se reproduce
+`data/v1/official-routes.json` completo y se cotejan `dataset_version`, hashes,
+todos los ámbitos y meses con el baseline servido confiable. No se recurre al
+mapa legacy. Un original revisado con cifras iguales exige esta evaluación;
+un cambio de bytes del mapa requiere revisión, aunque sólo cambien metadatos.
+El build y su recibo siguen separados del HTTP/SHA de `served`.
+
+### Recuperación histórica de la creación
 
 La capacidad nativa conocida crea tareas habilitadas y no admite crearlas
 apagadas. La creación del 29/oct ya está confirmada y vinculada; no ejecutar
@@ -417,6 +483,7 @@ posterior al corte `--now`. Campos adicionales por acción:
 | `refresh_reports` | `releases`; confirma fechas antes de activar o despachar, sin certificar cifras. |
 | `activation_intent` | `activation_authorized=true`, referencia de autorización y de condiciones verificadas; guarda intención incierta, sin llamar a la herramienta. Con autorización condicional exige booleanos exactos de Viva, datos requeridos, despacho nativo y coordinador único. |
 | `bind_authorized_automation` | `intent_id`, `automation_id`, `reconciliation_reference`; liga el resultado real de aquella creación. |
+| `bind_existing_automation` | Sólo continuación nueva: mismo `automation_id`, `authorization_reference` y `reconciliation_reference` de lectura/actualización real; no crea ni publica. |
 | `activation_not_created` | `intent_id`, `confirmed_not_created=true`, `reconciliation_reference`; solo tras probar que no se creó. |
 | `dispatch_intent` | `automation_id`, `task_key`, `event_id` y dueño; exige fecha y miembros exactos y persiste `running` antes del envío. Para paralelo: `execution_mode=isolated_skill_worker` y `worker_workspace` disjunto. |
 | `acknowledge` | Tarea/dueño y IDs reales de mensaje/turno, o `native_task_name` con `native_response_sha256` si el host solo devuelve ese identificador; los IDs no expuestos permanecen nulos. |
@@ -459,9 +526,14 @@ fechas, festivos, 2027 bloqueado, corte México, clave por periodo, identidad
 del evento combinado tras cierres parciales, exclusión mutua, operaciones
 repetidas, recibo ajeno o alterado, creación/envío inciertos y dos reintentos
 compartidos. No prueban disponibilidad de fuentes ni ejecutan una automatización.
+Las regresiones del consumidor oficial cubren selección/continuación, igualdad
+exacta del plan y prompt legacy contra K2, checkpoint anterior intacto, revisión
+de originales con cifras iguales, mes nuevo, autoridad ausente, gate rechazado y
+equivalencia del JSON oficial completo. Sus fixtures no acreditan una publicación.
 
 ```bash
 python -m pytest tests/test_source_update_coordinator_state.py tests/test_source_update_calendar.py tests/test_source_update_calendar_adversarial.py -q
+python -m pytest tests/test_source_update_official_calendar.py tests/test_source_update_official_handoff.py -q
 ```
 
 Cierre documental: conservar el script y sus regresiones como contrato de
@@ -471,8 +543,15 @@ conservan fuera del diff y no se suben al repositorio. Estos CLI no modifican
 originales, Gold activo, sitio o aprobaciones; esos cambios tienen los gates y
 recibos separados de sus skills. No se retiran documentos ni se duplican guías.
 
+<!-- document-lifecycle:v1
+{"files":[{"path":".agents/skills/airline-update-coordinator/SKILL.md","disposition":"update","reason":"Conecta la continuación explícita al mismo calendario y sus límites de autoridad."},{"path":".agents/skills/airline-update-dashboard/SKILL.md","disposition":"update","reason":"Describe el cierre y equivalencia oficiales para el worker existente."},{"path":".agents/skills/airline-update-traffic/SKILL.md","disposition":"update","reason":"Distingue evaluación por defecto y consumidor oficial seleccionado."},{"path":"docs/calendario-ejecucion.md","disposition":"update","reason":"Guía canónica de continuación, delta de prompt y activación operativa pendiente."},{"path":"scripts/source_update_coordinator.py","disposition":"update","reason":"Selecciona condicionales explícitos en nuevos checkpoints preservando el flujo legacy."},{"path":"scripts/source_update_handoff_nochange.py","disposition":"update","reason":"Enruta equivalencia oficial sin recurrir al mapa legacy."},{"path":"scripts/source_update_handoffs.py","disposition":"update","reason":"Conserva selección y revisiones originales en el outbox existente."},{"path":"scripts/source_update_monthly_handoff.py","disposition":"update","reason":"Conecta el consumidor seleccionado al verificador de publicación real."},{"path":"src/source_updates/coordinator_cli.py","disposition":"keep","reason":"Extrae entradas CLI sin cambiar argumentos ni salidas para respetar el presupuesto de módulos."},{"path":"src/source_updates/coordinator_consumers.py","disposition":"keep","reason":"Valida una continuación versionada y prepara el delta sin llamadas nativas."},{"path":"src/source_updates/official_routes_handoff.py","disposition":"keep","reason":"Vincula fuentes, perfil, cobertura, autoridad y gate oficiales con comprobantes físicos."},{"path":"tests/test_source_update_official_calendar.py","disposition":"keep","reason":"Prueba continuidad, identidad legacy y rechazo de reinicios con fixtures sintéticos."},{"path":"tests/test_source_update_official_handoff.py","disposition":"keep","reason":"Prueba límites de aprobación, originales y equivalencia oficial sin publicar datos."}]}
+-->
+
 ## Pendientes
 
+- Aplicar el delta del mapa a la **misma** automatización sólo después de su
+  publicación y lectura de la configuración nativa actual. El código y su
+  comprobante sintético no acreditan esa actualización operativa.
 - Integrar y ejecutar los nuevos handoffs con revisión y CI del head final.
   Conservar recibos por fuente, análisis, datos y publicación servida; distinguir
   continuación de evidencia previa y ejecución automática real.

@@ -41,6 +41,25 @@ El calendario ya tiene un ID vinculado en su estado privado: no crearlo otra
 vez, adelantar la corrida del 30/oct ni cambiar su cadencia. Cargar siempre el
 último checkpoint privado y conciliar intenciones nativas antes de operar.
 
+Para incorporar el mapa oficial al ciclo, seguir la
+[continuación explícita](../../../docs/calendario-ejecucion.md#continuación-explícita-para-el-mapa-oficial):
+nuevo checkpoint/run_id y outbox, selección `conditional_products=["afac_margins"]`
+y `consumers=["official_routes"]`, referencia SHA del checkpoint anterior y
+el mismo ID nativo. No cambiar un checkpoint preparado con tareas sin seleccionar.
+Primero publicar/verificar el mapa y leer la configuración nativa actual; sólo
+después aplicar el delta a su prompt y registrar `bind_existing_automation`.
+Un card renderizado o recibo antiguo no permite sobrescribir una configuración
+que no se leyó. Conservar fechas, zona, vigencia y cadencia, sin otro job ni
+permisos repetidos. La continuación reutiliza fuentes mediante recuperación
+explícita y no rejuvenece capturas ni elimina el estado anterior.
+
+Con el consumidor seleccionado, la llegada de AFAC SASE/resumen o BTS genera
+un trabajo `source_data` oficial. Preparar y verificar candidatos con ambos
+originales, fechas y años revisados; no completar desde readiness o evaluación
+de dependencias. `finish` comprueba autoridad exacta y gate real del mapa;
+un periodo nuevo sigue necesitando aprobación normal. `no_visual_change`
+reproduce el JSON oficial completo y el baseline confiable, sin fallback legacy.
+
 Aplicar el [contrato ejecutable por producto](../../../docs/calendario-ejecucion.md#handoff-por-fuente-producto-y-periodo)
 y `python -m scripts.source_update_handoffs --help`. El agente coordinador debe
 ejecutar este ciclo después de cada resultado válido, aunque otras fuentes

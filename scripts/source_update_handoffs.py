@@ -3,7 +3,6 @@ approval, publication, worker spawning or additional schedule is performed here.
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import math
@@ -15,6 +14,7 @@ from scripts import source_update_handoff_routing as routing
 from scripts import source_update_monthly_handoff as monthly
 from scripts import source_update_semantic_identity as semantic
 from scripts.source_update_coordinator import digest, load, persist
+from src.source_updates import official_routes_handoff as official
 from src.source_updates import readiness
 from src.source_updates.calendar import local_time
 from src.source_updates.catalog import ROOT
@@ -217,7 +217,8 @@ def observe(state: dict, observation: dict, workspace: Path):
     key = f"{item['product']}:{item['period']}"
     previous_id = state["heads"].get(key)
     prior = state["sources"].get(previous_id)
-    if prior and semantic.same_observation(
+    official.same_mode(prior, verified)
+    if prior and official.same_originals(prior, verified) and semantic.same_observation(
         prior, verified, lambda binding: verify_candidate(binding, workspace)
     ):
         # New availability/capture evidence is retained without creating another thesis.
@@ -232,6 +233,7 @@ def observe(state: dict, observation: dict, workspace: Path):
             "previous_source_id": previous_id,
         }
     )
+    consumers = official.CODE if official.selected(verified) else CONSUMERS
     state["sources"][source_id] = {
         **verified,
         "product": item["product"],
@@ -239,10 +241,10 @@ def observe(state: dict, observation: dict, workspace: Path):
         "observations": [observation],
         "previous_source_id": state["heads"].get(key),
         "public_impact": {
-            "status": monthly.impact_status(item["product"])
+            "status": monthly.impact_status(item["product"], verified)
             if item["product"] in monthly.IMPACTS
             else routing.impact_status(item["product"]),
-            "consumer_code": {name: file_hash(ROOT / name) for name in CONSUMERS},
+            "consumer_code": {name: file_hash(ROOT / name) for name in consumers},
         },
     }
     state["heads"][key] = source_id
@@ -257,7 +259,7 @@ def observe(state: dict, observation: dict, workspace: Path):
             "dashboard",
             source_id,
             monthly.entity(item["product"]),
-            release_kind=monthly.release_kind(item["product"]),
+            release_kind=monthly.release_kind(item["product"], verified),
         )
     # Macro inputs currently have no public chart consumer. Preserve the result
     # without inventing a dashboard job or forcing an unrelated thesis rewrite.
@@ -283,7 +285,7 @@ def envelope(state: dict, job: dict) -> dict:
             "VIVA_AEROBUS, VOLARIS and the existing INDUSTRY aggregate; preserve seven theses; "
             "no new periods, source values, Industry editorial or unrelated products"
             if source["product"] == "aerocivil"
-            else monthly.scope_or_financial(source["product"])
+            else monthly.scope_or_financial(source["product"], source)
         ),
         "dependency_result": state["jobs"][job["dependency"]]["result"] if job["dependency"] else None,
     }
@@ -581,17 +583,9 @@ def run(workspace: Path, *, action: dict | None = None) -> dict:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--workspace", required=True, type=Path)
-    parser.add_argument("--record", type=Path)
-    args = parser.parse_args(argv)
-    try:
-        result = run(args.workspace, action=load(args.record) if args.record else None)
-        print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
-        return 0
-    except (KeyError, ValueError, OSError, TypeError, ImportError) as exc:
-        print(json.dumps({"status": "blocked", "reason": str(exc), "native_sends": 0}))
-        return 1
+    from src.source_updates.coordinator_cli import handoffs_main
+
+    return handoffs_main(run, load, __doc__, argv)
 
 
 if __name__ == "__main__":
