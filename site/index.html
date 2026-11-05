@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Airlines Tracker</title>
-  <script type="module" crossorigin src="./assets/dashboard-C6w-2jZT.js"></script>
+  <script type="module" crossorigin src="./assets/dashboard-CmvXY8L0.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="./assets/plotly-ZECNwRsR.js">
   <link rel="stylesheet" crossorigin href="./assets/plotly-DFvSk16B.css">
-  <link rel="stylesheet" crossorigin href="./assets/dashboard-BN_zl-rX.css">
+  <link rel="stylesheet" crossorigin href="./assets/dashboard-E5-seDTU.css">
 </head>
 <body>
   <main class="page-shell" data-testid="executive-summary-root">
@@ -223,19 +223,18 @@
           </section>
 
           <section aria-labelledby="network-title">
-            <div class="section-heading network-heading">
-              <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
-              <div id="pick-map"></div>
-            </div>
             <div class="network-layout">
               <article class="panel flow-map-panel" id="map-panel">
+                <div class="official-map-heading network-heading"><h2 id="network-title"><span class="official-map-title-text">Rutas · Nacional</span> <button type="button" class="kpi-info" id="official-map-source" aria-label="Fuente y cobertura del mapa"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor"/><circle cx="8" cy="4.8" r=".8" fill="currentColor"/><path d="M8 7v4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button></h2><div id="official-map-source-note"></div></div>
                 <div class="map-route-toolbar">
-                  <div class="map-network-controls">
+                  <div class="map-network-controls" id="official-map-controls">
                     <div class="network-mode-switch" role="radiogroup" aria-label="Tipo de red">
-                      <button type="button" id="network-mode-domestic" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
-                      <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
+                      <button type="button" data-map-scope="national" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
+                      <button type="button" data-map-scope="us" role="radio" aria-checked="false" aria-pressed="false" tabindex="-1">EE. UU.</button>
+                      <button type="button" data-map-scope="international" role="radio" aria-checked="false" aria-pressed="false" tabindex="-1">Internacional</button>
                     </div>
-                    <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
+                    <details class="official-map-carriers" id="official-map-carriers" hidden></details>
+                    <label id="official-map-region-control" hidden><span class="sr-only">Región internacional</span><select id="official-map-region"><option value="">Todas</option><option value="canada">Canadá</option><option value="central_america_caribbean">Centroamérica</option><option value="south_america">Sudamérica</option><option value="europe">Europa</option><option value="asia">Asia</option></select></label>
                   </div>
                   <div class="map-route-switch" role="group" aria-label="Rutas visibles en el mapa">
                     <button type="button" id="map-routes-featured" aria-pressed="true">Más vuelos</button>
@@ -248,8 +247,18 @@
                     <div class="chart flow-map" id="route-flow-map" role="img" aria-label="Mapa de rutas por fuente y tipo de observación"></div>
                   </div>
                   <div class="route-detail-column" id="route-detail-column">
-                    <div class="network-volume" id="network-volume" hidden></div>
-                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Resumen trimestral de rutas"></aside>
+                    <div class="network-volume official-map-summary"><span>Vuelos regulares</span><strong id="official-map-total">N/D</strong><span id="official-map-months">0/3 meses</span></div>
+                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Resumen trimestral de rutas">
+                      <div class="official-list-heading"><h3 id="official-route-heading">Rutas destacadas</h3><div class="official-list-tools"><small id="official-map-route-count"></small><button type="button" class="airport-search-toggle" id="official-map-search-toggle" aria-label="Buscar ruta" aria-expanded="false" aria-controls="official-map-search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg></button></div></div>
+                      <div class="official-map-search-box" id="official-map-search-box" hidden>
+                        <label class="sr-only" for="official-map-search">Buscar ciudad o aeropuerto en toda la selección</label>
+                        <input type="search" id="official-map-search" placeholder="Buscar ciudad o aeropuerto" autocomplete="off">
+                        <div id="official-map-search-results" aria-live="polite"></div>
+                      </div>
+                      <button type="button" id="official-map-back" class="route-overview-back" hidden>← Toda la red</button>
+                      <div class="official-list-columns"><span>Ruta</span><span>Vuelos</span></div>
+                      <ol id="official-route-list" class="official-route-list"></ol>
+                    </aside>
                   </div>
                 </div>
               </article>
