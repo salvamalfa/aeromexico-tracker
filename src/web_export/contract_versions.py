@@ -31,7 +31,7 @@ ARCHIVED_CONTRACTS = {
 def resolve_contract(contracts_dir: Path, name: str, expected_sha256: str) -> Path:
     """Return only an in-tree, non-symlink contract matching the requested hash."""
 
-    if not re.fullmatch(r"[a-z][a-z0-9_.]*\.(?:json|yaml)", name):
+    if not re.fullmatch(r"[a-z][a-z0-9_.-]*\.(?:json|yaml)", name):
         raise ValueError(f"Unsafe contract name: {name!r}")
     if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
         raise ValueError(f"Invalid contract SHA-256: {name}")
