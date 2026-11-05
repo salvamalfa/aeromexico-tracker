@@ -121,6 +121,10 @@ def test_actual_native_archives_restore_77_only_and_leave_charter_unavailable(tm
         broken["crosswalk"]["sha256"] = "a" * 64
         with pytest.raises(ValueError, match="crosswalk changed"):
             repair.replay(broken, PATHS.root / "site")
+        collision = deepcopy(profile)
+        collision["previous"] = deepcopy(collision["current"])
+        with pytest.raises(ValueError, match="year/month differs"):
+            repair.replay(collision, PATHS.root / "site")
         assert PATHS.root / "config/carrier_crosswalk.csv" in result["input_files"]
         before = {name: (PATHS.root / "site" / name).read_bytes() for name in repair.TARGETS}
         outputs = result["outputs"]
