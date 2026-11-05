@@ -19,7 +19,7 @@ from jsonschema import Draft202012Validator
 
 from src.config import PATHS
 from src.dashboard.market import build_market_payload
-from src.parse.afac.market_scope import TOTAL_FORMULA, TOTAL_KEY, market_cells
+from src.parse.afac.market_scope import TOTAL_FORMULA, TOTAL_KEY, cells_sha256, market_cells
 from src.parse.afac.monthly_stats import _load_crosswalk, parse_annual_passenger_workbook
 from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.schemas import split_flight_schemas
@@ -68,7 +68,7 @@ def _time(value):
 def read_sources(profile, repo=PATHS.root):
     if (
         not isinstance(profile, dict)
-        or set(profile) != {"schema_version", "candidate_as_of", "crosswalk", "sources"}
+        or set(profile) != {"schema_version", "candidate_as_of", "crosswalk", "sources", "native_dataset"}
         or profile["schema_version"] != PROFILE
         or not isinstance(profile["sources"], list)
         or any(not isinstance(row, dict) for row in profile["sources"])
@@ -238,6 +238,11 @@ def _validate_projection(projection):
                 values[(TOTAL_KEY, period, s)] for s in ("domestic", "international")
             ):
                 raise ValueError("Mexican passenger market segments do not reconcile")
+            for carrier in {key for key, selected, _ in values if selected == period}:
+                if values.get((carrier, period, "total"), 0) != sum(
+                    values.get((carrier, period, segment), 0) for segment in ("domestic", "international")
+                ):
+                    raise ValueError("Each native operator's total must reconcile with its two segments")
     return values, editions
 
 
@@ -350,11 +355,40 @@ def public_outputs(before, projection):
     return {TARGETS[0]: encoded(result), TARGETS[1]: encoded(market)}
 
 
-def replay(profile, candidate_parent):
+def _replay(profile, candidate_parent, *, canonical):
+    from src.source_updates import afac_native_dataset
+
     loaded, files = read_sources(profile)
+    dataset = (
+        afac_native_dataset.replay(profile["native_dataset"], PATHS.root)
+        if canonical
+        else afac_native_dataset.audit_candidate(profile["native_dataset"], PATHS.root)
+    )
+    if not isinstance(dataset, dict) or set(dataset) != {"binding", "input_files"}:
+        raise ValueError("AFAC correction requires its closed canonical dataset replay")
+    afac_native_dataset.validate_binding(dataset["binding"])
+    source_identities = [
+        {
+            "year": source["year"],
+            "through": source["through"],
+            "source_file": metadata["source_file"],
+            "sha256": source["workbook"]["sha256"],
+            "metadata_sha256": source["metadata"]["sha256"],
+            "capture_entry_sha256": sha(encoded(metadata)),
+        }
+        for source, metadata, _, _ in loaded
+    ]
+    if source_identities != dataset["binding"]["source_identities"]:
+        raise ValueError("Canonical Gold and the AFAC projection selected different original source editions")
+    native_cells = {key: value for _, _, cells, _ in loaded for key, value in cells.items()}
+    if cells_sha256(native_cells) != dataset["binding"]["market_cells_sha256"]:
+        raise ValueError("Native AFAC source cells differ from the canonical Gold/warehouse projection")
     projection = _projection(loaded, profile["candidate_as_of"])
     before = {name: (Path(candidate_parent) / name).read_bytes() for name in TARGETS}
     outputs = public_outputs(before, projection)
+    canonical_market, _, _ = afac_native_dataset.load_outputs(profile["native_dataset"], PATHS.root)
+    if encoded(canonical_market) != outputs[TARGETS[1]]:
+        raise ValueError("Normal canonical Gold export differs from the native AFAC public projection")
     native_sha = sha(encoded(projection))
     receipt = sha(
         encoded(
@@ -372,8 +406,19 @@ def replay(profile, candidate_parent):
             "receipt_id": receipt,
             "candidate_as_of": profile["candidate_as_of"],
             "output_sha256": {"afac_history_native_cells": native_sha},
+            "native_dataset": dataset["binding"],
         },
         "projection": projection,
-        "input_files": files,
+        "input_files": sorted({*files, *(str(path) for path in dataset["input_files"])}),
         "outputs": outputs,
     }
+
+
+def replay(profile, candidate_parent):
+    """Publication replay always requires the exact five committed canonical Gold tables."""
+    return _replay(profile, candidate_parent, canonical=True)
+
+
+def prepare_candidate(profile, candidate_parent):
+    """Review native outputs before importing Gold; never called by the publication gate."""
+    return _replay(profile, candidate_parent, canonical=False)

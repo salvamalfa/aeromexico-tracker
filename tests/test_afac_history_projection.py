@@ -107,6 +107,7 @@ def test_native_projection_changes_only_the_declared_afac_surfaces(before, proje
         "foreign",
         "missing_group",
         "wrong_total",
+        "compensating_operator_totals",
         "nonfinite",
         "negative",
         "bool",
@@ -136,6 +137,12 @@ def test_partial_ambiguous_or_unscoped_native_projections_are_rejected(before, p
         ]
     elif mutation == "wrong_total":
         next(r for r in value["cells"] if r["carrier_key"] == TOTAL_KEY)["value"] += 1
+    elif mutation == "compensating_operator_totals":
+        for carrier, change in (("AEROMEXICO", 1), ("OTHER_AFAC_MX_" + "a" * 16, -1)):
+            next(
+                row for row in value["cells"]
+                if (row["carrier_key"], row["period_id"], row["segment"]) == (carrier, "2019M01", "total")
+            )["value"] += change
     else:
         value["cells"][0]["value"] = {"nonfinite": float("nan"), "negative": -1, "bool": True}[mutation]
     with pytest.raises(ValueError):
