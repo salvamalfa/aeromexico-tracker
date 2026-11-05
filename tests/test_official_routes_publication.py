@@ -4,6 +4,7 @@ from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -178,3 +179,35 @@ def test_public_preservation_guard_stays_closed(published, tmp_path, monkeypatch
         path.write_bytes(scope.encoded(value))
     with pytest.raises((ValueError, KeyError)):
         scope.preserved_files(site, tmp_path, spec)
+
+
+@pytest.mark.parametrize("edition", ["absent", "present", "listed_missing", "bad_manifest", "missing_manifest", "bad_commit"])
+def test_added_target_recovery_uses_only_a_valid_frozen_git_edition(published, tmp_path, edition):
+    from src.publish.source_data_nochange import frozen_target_baseline
+    repo = tmp_path / "recovery"
+    site, unit, _ = published
+    target = repo / "site" / projection.PUBLIC_PATH
+    target.parent.mkdir(parents=True)
+    manifest = repo / "site" / scope.manifests.MANIFEST_NAME
+    names = [projection.PUBLIC_PATH] if edition in {"present", "listed_missing"} else []
+    if edition != "missing_manifest":
+        manifest.write_bytes(b"invalid json" if edition == "bad_manifest" else encoded({"files": [{"path": n} for n in names]}))
+    if edition == "present":
+        target.write_bytes(b"exact frozen original")
+    (repo / "site/retained.txt").write_bytes(b"retained baseline")
+    for args in (["init", "-q"], ["add", "site"],
+                 ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "synthetic baseline"]):
+        subprocess.run(["git", *args], cwd=repo, check=True)
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    spec = dict(product=unit["product"], period_id=unit["period"], source_binding=unit["source_binding"],
+                projection=unit["projection"], baseline_commit="f" * 40 if edition == "bad_commit" else commit)
+    target.write_bytes(b"already changed current site")
+    if edition in {"absent", "present"}:
+        with frozen_target_baseline(repo, spec) as baseline:
+            expected = b"{}\n" if edition == "absent" else b"exact frozen original"
+            assert (baseline / projection.PUBLIC_PATH).read_bytes() == expected
+            assert target.read_bytes() == b"already changed current site"
+    else:
+        with pytest.raises((ValueError, subprocess.CalledProcessError)):
+            with frozen_target_baseline(repo, spec):
+                pytest.fail("An invalid frozen source baseline must never fall back to the current site")
