@@ -405,7 +405,9 @@ otros trimestres se conservan en un elemento `details` con total y meses a la
 vista, y su lista se puede abrir con teclado o puntero. Una fecha inválida se
 conserva en el grupo sin fecha verificable. La navegación desde el chat mantiene
 la validación de corpus y cita, y abre la sección de fuera del periodo si el
-resultado no pertenece al trimestre elegido. Decisiones de revisión:
+resultado no pertenece al trimestre elegido. El contexto adjunto al chat recibe
+el mismo trimestre global; no depende de un selector mensual que la vista ya
+no tiene. Decisiones de revisión:
 `docs/etapas/noticias-ajustes-ui-20261018.md`.
 
 ### Corte financiero Aeroméxico 3T26

@@ -154,6 +154,26 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         page.wait_for_function("document.getElementById('airline-chat-panel') || document.getElementById('live-status').textContent.includes('No se pudo cargar')")
         assert page.locator("#airline-chat-panel").count() == 1, (page.locator("#live-status").text_content(), errors)
         page.locator("#airline-chat-panel").wait_for(state="visible")
+        page.locator("[data-chat-close]").click()
+        archive = httpx.get(news_chat_server + "/data/v1/news.json").json()
+        q2_stories = [record for record in archive["records"] if record["published_at"][:7] in {"2026-04", "2026-05", "2026-06"}]
+        outside_stories = [record for record in archive["records"] if record not in q2_stories]
+        page.get_by_role("tab", name="Noticias").click()
+        page.wait_for_function("document.querySelector('#news-count')?.textContent?.includes('2T26')")
+        assert page.locator("#news-stories .news-card").count() == len(q2_stories)
+        assert page.locator("#news-coverage").is_visible()
+        summary = page.locator("#news-outside summary")
+        assert str(len(outside_stories)) in summary.inner_text()
+        summary.focus()
+        page.keyboard.press("Enter")
+        assert page.locator("#news-outside").evaluate("el => el.open")
+        visible_outside_dates = page.locator("#news-outside-stories .news-date").all_inner_texts()
+        assert len(visible_outside_dates) == len(outside_stories)
+        assert all(record["published_at"] in " ".join(visible_outside_dates) for record in outside_stories)
+        columns = page.locator("#news-stories").evaluate("el => getComputedStyle(el).gridTemplateColumns.split(' ').length")
+        assert columns == (1 if width == 390 else 3)
+        assert page.locator("#panel-news").evaluate("el => el.scrollWidth <= el.clientWidth")
+        launcher.click()
         def ask(question):
             previous = page.locator(".chat-message-assistant").count()
             page.get_by_label("Pregunta sobre los datos publicados").fill(question)
@@ -169,6 +189,7 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         def open_verified(answer, title, identifier, month):
             answer.get_by_role("button", name=f"Ver ficha: {title}", exact=False).click()
             page.wait_for_selector(f'#panel-news:not([hidden]) .news-card[data-news-id="{identifier}"]')
+            page.wait_for_function("document.querySelectorAll('.news-card').length === 1")
             assert page.locator(".news-card").count() == 1
             record = records[identifier]
             assert record["published_at"].startswith(month) and record["review_status"] == "owner_approved"
