@@ -95,6 +95,39 @@ def test_official_sources_use_existing_dependency_assessment_without_publication
     assert plan["scopes"] == ["national", "international"] and plan["activation"] == "none"
 
 
+@pytest.mark.parametrize("primary,extra", [("official_routes", "am_traffic_ir"), ("am_traffic_ir", "official_routes")])
+def test_official_map_cannot_coalesce_in_either_source_order(primary, extra):
+    request = dict(product=primary, period="2026M09", source_profile={}, additional_sources=[
+        dict(product=extra, period="2026M09", source_profile={})])
+    with pytest.raises(ValueError, match="cannot coalesce"):
+        source_data_members.selections(request)
+
+
+@pytest.mark.parametrize("extra", [None, "wrong"])
+def test_malformed_extra_source_is_a_controlled_rejection(extra):
+    request = dict(product="am_traffic_ir", period="2026M09", source_profile={}, additional_sources=[extra])
+    with pytest.raises(ValueError, match="source"):
+        source_data_members.selections(request)
+
+
+def test_minimal_legacy_nochange_request_keeps_ordinary_approval_route(monkeypatch, tmp_path):
+    from src.publish import source_data_update as update
+
+    monkeypatch.setattr(update, "ordinary_approval_cohorts", lambda *args: {"ordinary": True})
+    request = dict(product="am_traffic_ir", period="2026M09", authorization=None)
+    assert update.source_approvals(request, tmp_path, [], tmp_path, "baseline", {}, tmp_path) == {"ordinary": True}
+
+
+def test_minimal_official_nochange_request_uses_closed_continuity_route(monkeypatch, tmp_path):
+    from src.publish import official_routes_approvals, source_data_update as update
+
+    profile = tmp_path / "profile.json"
+    profile.write_text('{"retained_approvals":null}')
+    monkeypatch.setattr(official_routes_approvals, "verify", lambda *args: {"official": True})
+    request = dict(product="official_routes", period="2026M09", authorization=None)
+    assert update.source_approvals(request, profile, [], tmp_path, "baseline", {}, tmp_path) == {"official": True}
+
+
 def test_retained_real_package_and_geographic_extract_replay_exactly():
     from src.source_updates.official_routes_sources import replay
     from src.dashboard.official_routes_contract import encoded

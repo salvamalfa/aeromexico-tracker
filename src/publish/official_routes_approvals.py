@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from src.publish.afac_history_parent import ledger_inventory, parent_inventory
@@ -37,8 +38,14 @@ def verify(records, repo, baseline_commit, baseline, ledger_root, profile):
     from src.publish.afac_history_scope import replay_retained_approvals
 
     retained_files(profile, repo)
-    if profile["retained_approvals"]["baseline_commit"] != baseline_commit:
-        raise ValueError("Retained approvals name another actually served baseline")
+    original = profile["retained_approvals"]["baseline_commit"]
+    subprocess.run(["git", "merge-base", "--is-ancestor", original, baseline_commit],
+                   cwd=repo, check=True, capture_output=True)
+    frozen = json.loads(subprocess.check_output(
+        ["git", "show", f"{original}:site/publication_manifest.json"], cwd=repo,
+    ))
+    if frozen["analysis_manifest"] != baseline["analysis_manifest"]:
+        raise ValueError("Retained approval identities differ from the actually served baseline")
     if {Path(p).resolve() for p in records} != {p.resolve() for p in record_paths(profile, baseline, repo)}:
         raise ValueError("Official map requires every exact retained baseline record")
     site = Path(repo) / "site"

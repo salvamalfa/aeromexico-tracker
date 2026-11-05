@@ -86,7 +86,12 @@ def request_inputs(path, repo):
 
 
 def source_approvals(request, profile_path, records, repo, baseline_commit, baseline, ledger_root):
-    selected = members.selections(request)
+    if "source_profile" in request:
+        selected = members.selections(request)
+    else:
+        if request.get("additional_sources"):
+            raise ValueError("A minimal no-change request cannot coalesce source profiles")
+        selected = [request]
     if any(u["product"] == "official_routes" for u in selected) and len(selected) != 1:
         raise ValueError("Official map exposure cannot coalesce unrelated source surfaces")
     if request["product"] != "official_routes":
