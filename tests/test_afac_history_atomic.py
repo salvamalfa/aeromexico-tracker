@@ -133,7 +133,19 @@ def test_success_retains_frontend_and_writes_normal_local_receipts(publication):
 
 @pytest.mark.parametrize(
     "race",
-    ["native_source", "ledger", "scope", "members", "authority", "HEAD", "remote", "witness", "validation"],
+    [
+        "native_source",
+        "ledger",
+        "pre_swap_source",
+        "pre_swap_revocation",
+        "scope",
+        "members",
+        "authority",
+        "HEAD",
+        "remote",
+        "witness",
+        "validation",
+    ],
 )
 def test_any_late_source_revocation_or_code_race_aborts_without_swap(publication, monkeypatch, race):
     value = publication
@@ -148,6 +160,10 @@ def test_any_late_source_revocation_or_code_race_aborts_without_swap(publication
                 result["scope"]["unapproved_scope"] = True
             elif race == "members":
                 result["members"] = ["another projection"]
+        if value.calls["evaluate"] == 3 and race in {"pre_swap_source", "pre_swap_revocation"}:
+            result["state"]["native_source" if race == "pre_swap_source" else "ledger"] = (
+                "changed after validation"
+            )
         return result
 
     monkeypatch.setattr(update, "evaluate", changed)
