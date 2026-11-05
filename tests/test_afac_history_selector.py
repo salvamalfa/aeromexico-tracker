@@ -2,6 +2,9 @@
 
 import copy
 import json
+import os
+import subprocess
+import sys
 
 import pytest
 
@@ -124,3 +127,71 @@ def test_selected_composition_executes_its_exact_verifier_and_preserves_failure(
     assert selection.main([str(site)]) == 17
     assert calls[0][0][1:3] == ["-m", "src.publish.afac_history_scope"]
     assert calls[0][1]["cwd"] == ROOT
+
+
+@pytest.mark.parametrize("exit_code,deny", [(0, False), (17, False), (0, True)])
+def test_real_cli_uses_pinned_contract_and_verifier_without_pythonpath(tmp_path, exit_code, deny):
+    # This is only the execution boundary fixture. The tests above independently
+    # exercise the real DAG against B's immutable public Git tree and all refusals.
+    preview = tmp_path / "pinned"
+    package = preview / "src/publish"
+    package.mkdir(parents=True)
+    (preview / "src/__init__.py").touch()
+    (package / "__init__.py").touch()
+    (package / "afac_history_contract.py").write_text(
+        "from pathlib import Path\n"
+        "def proof_parent(repo,site,manifest,proof):\n"
+        "    assert repo == Path.cwd() and site.is_absolute()\n"
+        "    Path('contract-selection.txt').write_text(str(Path(__file__).resolve()))\n"
+        "    if proof.get('deny'): raise ValueError('synthetic pinned DAG refusal')\n"
+        "    return 'quarterly-story-publication.json', {}\n",
+        encoding="utf-8",
+    )
+    (package / "afac_history_scope.py").write_text(
+        "from pathlib import Path\n"
+        "Path('executed.txt').write_text(str(Path(__file__).resolve()))\n"
+        f"raise SystemExit({exit_code})\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-q", str(preview)], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "pinned execution fixture",
+        ],
+        cwd=preview,
+        check=True,
+    )
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=preview, text=True).strip()
+    site = preview / "site"
+    site.mkdir()
+    files = {
+        name: contract.encoded({"remote_witness": {"baseline_commit": commit}, "deny": deny})
+        for name in (contract.PARENT_PROOF, contract.PROOF)
+    }
+    for name, raw in files.items():
+        (site / name).write_bytes(raw)
+    (site / "publication_manifest.json").write_bytes(contract.encoded({"files": contract.pins(files)}))
+    environment = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/check_pages_publication.py"), "site/"],
+        cwd=preview,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+    assert (preview / "contract-selection.txt").read_text() == str(package / "afac_history_contract.py")
+    if deny:
+        assert result.returncode == 1
+        assert "synthetic pinned DAG refusal" in result.stderr
+        assert not (preview / "executed.txt").exists()
+    else:
+        assert result.returncode == exit_code
+        assert (preview / "executed.txt").read_text() == str(package / "afac_history_scope.py")

@@ -21,6 +21,32 @@ VERIFIERS = (
 )
 
 
+def composition_parent(site, repo, manifest, proof):
+    # Script execution puts scripts/, not cwd, on sys.path. Run the DAG check
+    # with -c in the selected checkout so even master's preview helper cannot
+    # import master's already-loaded modules or need an ambient PYTHONPATH.
+    program = (
+        "import json,sys; from pathlib import Path; "
+        "from src.publish.afac_history_contract import proof_parent; "
+        "manifest,proof=json.load(sys.stdin); "
+        "parent,_=proof_parent(Path.cwd(),Path(sys.argv[1]),manifest,proof); "
+        "print(json.dumps({'upstream':parent}))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", program, str(site.resolve())],
+        cwd=repo,
+        input=json.dumps([manifest, proof]),
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise ValueError("Composition parent rejected by its pinned checkout: " + result.stderr[-600:])
+    value = json.loads(result.stdout)
+    if value != {"upstream": "quarterly-story-publication.json"}:
+        raise ValueError("Pinned composition verifier returned another dependency kind")
+    return value["upstream"]
+
+
 def verifier_for(site: Path, repo: Path | None = None) -> str:
     manifest = json.loads((site / "publication_manifest.json").read_text(encoding="utf-8"))
     files = manifest.get("files")
@@ -51,8 +77,6 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
         # This one new profile composes an explicitly unserved parent. Its
         # exact proof remains upstream evidence, not a competing final root.
         # Every older profile keeps the original strict precedence rules.
-        from src.publish.afac_history_contract import proof_parent
-
         path = site / "afac-history-publication.json"
         pin = next(item for item in files if item["path"] == path.name)
         if path.is_symlink():
@@ -64,7 +88,7 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
             or hashlib.sha256(raw).hexdigest() != pin.get("sha256")
         ):
             raise ValueError("Composition selection proof differs from its manifest pin")
-        upstream, _ = proof_parent(repo, site, manifest, json.loads(raw))
+        upstream = composition_parent(site, repo, manifest, json.loads(raw))
         selected = [(receipt, module) for receipt, module in selected if receipt != upstream]
     commits = {}
     for receipt, module in selected:
