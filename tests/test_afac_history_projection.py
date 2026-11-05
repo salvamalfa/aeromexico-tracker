@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -12,11 +13,27 @@ from src.pipeline.offline import block_network
 from src.publish.afac_history_projection import PROJECTION, TARGETS, public_outputs
 
 ROOT = Path(__file__).resolve().parents[1]
+PARENT = "842d140a983f785e9d39e7d3d378fdfebe79981e"
+PARENT_MANIFEST_SHA256 = "61f6fab632088ee4c316515da397b78969cfada6c9ec098a8407ad3d9aef7729"
 
 
 @pytest.fixture
 def before():
-    return {name: (ROOT / "site" / name).read_bytes() for name in TARGETS}
+    # This one-time correction consumes the original unpublished B, not the
+    # already corrected C that now lives in site/. Keep its bytes and boundary.
+    def retained(name):
+        return subprocess.check_output(["git", "show", f"{PARENT}:site/{name}"], cwd=ROOT)
+
+    manifest_raw = retained("publication_manifest.json")
+    assert hashlib.sha256(manifest_raw).hexdigest() == PARENT_MANIFEST_SHA256
+    pins = {row["path"]: row for row in json.loads(manifest_raw)["files"]}
+    result = {name: retained(name) for name in TARGETS}
+    for name, raw in result.items():
+        assert len(raw) == pins[name]["bytes"]
+        assert hashlib.sha256(raw).hexdigest() == pins[name]["sha256"]
+    records = json.loads(result[TARGETS[0]])["monthly_passengers"]["records"]
+    assert len(records) == 140 and max(row["period_id"] for row in records) == "2026M08"
+    return result
 
 
 @pytest.fixture
