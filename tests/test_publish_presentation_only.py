@@ -16,6 +16,8 @@ def _site(path: Path) -> dict:
     (path / "assets").mkdir(parents=True, exist_ok=True)
     (path / "data/v1").mkdir(parents=True, exist_ok=True)
     (path / "index.html").write_text("before", encoding="utf-8")
+    (path / "access.html").write_text("private access page", encoding="utf-8")
+    (path / "review.html").write_text("review page", encoding="utf-8")
     (path / "assets/app-old.js").write_text("old frontend", encoding="utf-8")
     (path / "data/v1/news.json").write_text('{"items":[1]}', encoding="utf-8")
     (path / "data/v1/analysis.json").write_text('{"approved":true}', encoding="utf-8")
@@ -63,6 +65,8 @@ def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None
         (dist / "assets").mkdir()
         (dist / "assets/app-new.js").write_text("new frontend", encoding="utf-8")
         (dist / "index.html").write_text("after", encoding="utf-8")
+        (dist / "access.html").write_text("rebuilt private access page", encoding="utf-8")
+        (dist / "review.html").write_text("rebuilt review page", encoding="utf-8")
         if build_change == "data_tamper":
             (dist / "data/v1/news.json").write_text('{"items":[2]}', encoding="utf-8")
         elif build_change == "data_omission":
@@ -77,6 +81,9 @@ def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None
         candidate = tmp_path / "candidate"
         shutil.rmtree(candidate, ignore_errors=True)
         shutil.copytree(dist, candidate)
+        assert (candidate / "access.html").read_text(encoding="utf-8") == "private access page"
+        assert (candidate / "review.html").read_text(encoding="utf-8") == "review page"
+        assert (candidate / "assets/app-old.js").read_text(encoding="utf-8") == "old frontend"
         if candidate_change == "omit_evidence":
             (candidate / "afac-history-publication.json").unlink()
         manifest = manifests.build_manifest(
@@ -143,7 +150,7 @@ def test_presentation_release_keeps_every_nonfrontend_file(tmp_path, monkeypatch
     after = {row["path"]: (row["sha256"], row["bytes"]) for row in manifests.file_entries(site)}
     before = {row["path"]: (row["sha256"], row["bytes"]) for row in baseline["files"]}
     assert release._preserved_map(before) == release._preserved_map(after)
-    assert "assets/app-old.js" not in after
+    assert "assets/app-old.js" in after
     assert "assets/app-new.js" in after
     assert result["receipt"] == {"written": True}
     assert state["replays"] == 2 and state["assembled"]

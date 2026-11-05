@@ -43,7 +43,9 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   parent, and reproduces the AFAC source/audit chain using the pinned published
   producer and private request. It checks those chains
   before and after the frontend build under the lifecycle writer lock. The
-  candidate may change only `index.html` and `assets/**`; every other site path,
+  candidate may change only the dashboard `index.html` and `assets/**`; other
+  HTML entrypoints such as `access.html` and `review.html` remain byte-identical
+  to the served baseline, and their existing assets are retained. Every other site path,
   byte count, and SHA-256 must match the trusted served baseline, including
   data, contract pins, source records, receipts, and evidence. A missing,
   changed, unknown, or revoked authority/source fails closed. The historical

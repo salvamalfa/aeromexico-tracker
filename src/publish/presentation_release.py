@@ -284,6 +284,14 @@ def publish_presentation_only(
     built_files = _public_file_map(dist_dir)
     if {path: value for path, value in built_files.items() if path.startswith("data/v1/")} != source_data:
         raise PublicationRefused("frontend build changed or omitted a public data file")
+    unexpected_build_files = {
+        name
+        for name in built_files
+        if not name.startswith(("assets/", "data/v1/"))
+        and name not in {"index.html", "access.html", "review.html"}
+    }
+    if unexpected_build_files or "index.html" not in built_files:
+        raise PublicationRefused("frontend build emitted unexpected or missing public files")
 
     expected_preserved = _preserved_map(baseline_files)
 
@@ -301,9 +309,20 @@ def publish_presentation_only(
 
     with tempfile.TemporaryDirectory(prefix="presentation-site-") as temporary:
         staged_dist = Path(temporary) / "dist"
-        shutil.copytree(dist_dir, staged_dist)
-        if any(path.is_symlink() for path in staged_dist.rglob("*")):
+        shutil.copytree(out_dir, staged_dist)
+        if any(path.is_symlink() for path in dist_dir.rglob("*")):
             raise PublicationRefused("frontend build contains a symlink")
+        shutil.copyfile(dist_dir / "index.html", staged_dist / "index.html")
+        for asset in sorted((dist_dir / "assets").rglob("*")):
+            if not asset.is_file():
+                continue
+            name = asset.relative_to(dist_dir).as_posix()
+            target = staged_dist / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() and target.read_bytes() != asset.read_bytes():
+                raise PublicationRefused(f"frontend build reused an asset path with different bytes: {name}")
+            if not target.exists():
+                shutil.copyfile(asset, target)
         for name, expected in expected_preserved.items():
             target = staged_dist / name
             if target.exists() or target.is_symlink():
