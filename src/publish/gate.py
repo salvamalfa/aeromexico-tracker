@@ -39,6 +39,7 @@ from src.web_export.writer import write_json
 
 from . import manifest as manifest_mod
 from . import receipts as receipt_mod
+from .official_routes_preservation import require_preserved_release
 from .records import (
     ANALYSIS_MANIFEST_FIELDS as ANALYSIS_MANIFEST_FIELDS,
     PublicationRefused as PublicationRefused,
@@ -281,7 +282,7 @@ def assemble_site(
         manifest_mod.write_manifest(tmp_dir, manifest)
         if validate_candidate is not None:
             validate_candidate(tmp_dir)
-
+        require_preserved_release(out_dir, manifest)
         previous = None
         if out_dir.exists():
             previous = parent / (
@@ -325,9 +326,7 @@ def publish(
     already ran."""
 
     root = Path(root)
-    # Deliberately not `root` (that's the analysis ledger root, which tests
-    # and CI point at an unrelated tmp directory): the build-inputs check
-    # always looks at the actual code checkout, PATHS.root.
+    # Check the actual code checkout, separate from the analysis ledger root.
     try:
         manifest_mod.refuse_if_build_inputs_dirty()
     except RuntimeError as error:

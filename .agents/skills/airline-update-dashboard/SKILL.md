@@ -218,7 +218,8 @@ no dividirlos entre dos ni convertir un faltante en cero.
    permanecer idéntico; todos los demás archivos de datos se conservan byte a byte.
    Para una modificación real de interfaz, usar el modo aplicable de `src.publish`
    y revisar el diff; no editar HTML compilado manualmente ni borrar recibos.
-7. Para una actualización general que sí requiere fuentes/warehouse completos,
+7. Mientras el baseline no contenga el mapa oficial, para una actualización
+   general que sí requiere fuentes/warehouse completos,
    restaurar solo insumos privados verificados conforme a `docs/cloud-development.md`.
    Tras cambios de Vuelos, ejecutar primero `python -m src.dashboard.build_flights`;
    exportar `python -m src.web_export --out web/public/data/v1 --analysis-manifest <manifest-exacto>`.
@@ -226,6 +227,11 @@ no dividirlos entre dos ni convertir un faltante en cero.
    y `python -m src.publish.verify site/`. `--allow-missing-analysis` es solo de
    desarrollo y no publica un expediente incompleto. Nunca usar `--ui-only` para
    introducir datos nuevos.
+   Una vez publicado el mapa oficial, usar los tramos selectivos documentados
+   arriba para finanzas/lecturas, movimientos o datos de fuentes. El ensamblado
+   rechaza reemplazar ese sitio con una salida que pierda el JSON, su pin de
+   contrato o el recibo `source-data-publication.json`. Para otros cambios,
+   preparar un candidato y revisar su gate de preservación antes de publicar.
 
 ## Publicar la corrección de movimientos Aerocivil
 
