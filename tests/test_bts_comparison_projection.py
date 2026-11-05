@@ -74,6 +74,10 @@ def test_actual_native_archives_restore_77_only_and_leave_charter_unavailable(tm
     # Native parser and original hash verification are real, including the
     # bundled official dictionary and exact six-field operator crosswalk.
     profile = dict(schema_version="bts_comparison_source_v1", historical_baseline=repair.HISTORICAL_BASELINE)
+    profile["crosswalk"] = dict(
+        path="config/carrier_crosswalk.csv",
+        sha256=hashlib.sha256((PATHS.root / "config/carrier_crosswalk.csv").read_bytes()).hexdigest(),
+    )
     files = []
     for role, year, tag in (("current", 2026, "20261017"), ("previous", 2025, "20260824")):
         source = next((archive / str(year)).glob(f"*{tag}*.zip"))
@@ -111,6 +115,11 @@ def test_actual_native_archives_restore_77_only_and_leave_charter_unavailable(tm
         broken["previous"]["sha256"] = "a" * 64
         with pytest.raises(ValueError, match="hashes"):
             repair.replay(broken, PATHS.root / "site")
+        broken = deepcopy(profile)
+        broken["crosswalk"]["sha256"] = "a" * 64
+        with pytest.raises(ValueError, match="crosswalk changed"):
+            repair.replay(broken, PATHS.root / "site")
+        assert PATHS.root / "config/carrier_crosswalk.csv" in result["input_files"]
         before = {name: (PATHS.root / "site" / name).read_bytes() for name in repair.TARGETS}
         outputs = result["outputs"]
         for name in repair.TARGETS:
@@ -121,3 +130,20 @@ def test_actual_native_archives_restore_77_only_and_leave_charter_unavailable(tm
                 route["previous"]["departures"] = prior["previous"]["departures"]
             assert after == old
         assert repair.public_outputs(outputs, projection) == outputs
+
+
+def test_native_identity_mapping_cannot_change_behind_its_profile(tmp_path, monkeypatch):
+    canonical = (PATHS.root / "config/carrier_crosswalk.csv").read_bytes()
+    changed = tmp_path / "config/carrier_crosswalk.csv"
+    changed.parent.mkdir()
+    changed.write_bytes(canonical + b"\n")
+    monkeypatch.setattr(repair.bts_native, "ROOT", tmp_path)
+    profile = dict(
+        schema_version="bts_comparison_source_v1",
+        historical_baseline=repair.HISTORICAL_BASELINE,
+        current={},
+        previous={},
+        crosswalk={"path": "config/carrier_crosswalk.csv", "sha256": hashlib.sha256(canonical).hexdigest()},
+    )
+    with pytest.raises(ValueError, match="crosswalk changed"):
+        repair.replay(profile, PATHS.root / "site", repo=tmp_path)

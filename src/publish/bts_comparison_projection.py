@@ -8,6 +8,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 from src.config import PATHS
+from src.source_updates import bts_native
 from src.source_updates.bts_native import read
 from src.web_export.route_support import comparable_previous_departures
 
@@ -44,7 +45,9 @@ def _original(reference, year, repo):
         hashlib.sha256(raw).hexdigest() != reference["sha256"]
         or meta["sha256"] != reference["sha256"]
         or hashlib.sha256(meta_raw).hexdigest() != reference["metadata_sha256"]
-        or meta["source_system"] != "bts_t100" or meta["http_status"] != 200 or meta["bytes"] != len(raw)
+        or meta["source_system"] != "bts_t100"
+        or meta["http_status"] != 200
+        or meta["bytes"] != len(raw)
     ):
         raise ValueError("BTS comparison capture hashes or source identity differ")
     # Reuse the strict native dictionary, units, grain, closed months, all-six-
@@ -90,11 +93,21 @@ def context(network):
 
 def replay(profile, candidate_parent_site, repo=PATHS.root):
     if (
-        set(profile) != {"schema_version", "current", "previous", "historical_baseline"}
+        set(profile) != {"schema_version", "current", "previous", "historical_baseline", "crosswalk"}
         or profile["schema_version"] != "bts_comparison_source_v1"
         or profile["historical_baseline"] != HISTORICAL_BASELINE
     ):
         raise ValueError("Unsupported BTS comparison repair source profile")
+    crosswalk = profile["crosswalk"]
+    identity_path = repo / "config/carrier_crosswalk.csv"
+    if (
+        set(crosswalk) != {"path", "sha256"}
+        or crosswalk["path"] != "config/carrier_crosswalk.csv"
+        or identity_path.resolve() != (bts_native.ROOT / crosswalk["path"]).resolve()
+        or identity_path.is_symlink()
+        or hashlib.sha256(identity_path.read_bytes()).hexdigest() != crosswalk["sha256"]
+    ):
+        raise ValueError("BTS exact native identity crosswalk changed or names another runtime input")
     current, current_meta, current_files = _original(profile["current"], 2026, repo)
     previous, previous_meta, previous_files = _original(profile["previous"], 2025, repo)
     # Gold route-source hashes use the canonical SHA of the distinct raw set.
@@ -178,9 +191,10 @@ def replay(profile, candidate_parent_site, repo=PATHS.root):
             "current": profile["current"],
             "previous": profile["previous"],
             "historical_baseline": HISTORICAL_BASELINE,
+            "crosswalk": crosswalk,
         },
         projection=projection,
-        input_files=[*current_files, *previous_files],
+        input_files=[*current_files, *previous_files, identity_path],
         outputs=outputs,
     )
 
