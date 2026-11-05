@@ -919,3 +919,11 @@ editorial `708bedf9…` no cubre por sí sola esos nuevos datos. El código aisl
 sus pruebas no activan fuentes ni levantan el bloqueo de calidad de la historia.
 Faltan el cierre Gold AFAC derivado, la reproducción completa en Linux y la
 revisión independiente del candidato final antes de publicar.
+
+El generador de revisión ANAC usa la actualización selectiva compartida de
+Vuelos: un no-op conserva todos los comparativos y una llegada sólo recalcula
+el comparativo de mercados modificados contra el archivo físico del mismo
+periodo del año anterior. Sin soporte compatible conserva el faltante, sin
+rehacer rutas de BTS u otras fuentes. La prueba usa los JSON retenidos del
+baseline anterior a la regresión; la reparación tipada D del baseline B
+se verifica por separado. No hay activación ni elegibilidad heredada nueva.

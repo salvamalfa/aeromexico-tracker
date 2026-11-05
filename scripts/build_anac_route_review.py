@@ -15,10 +15,8 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from src.dashboard.flight_cells import apply_flight_cells, international_cells, resolve_cells
-from src.dashboard.flights_html import integration_flight_payload
-from src.dashboard.map_periods import period_label, period_months, refresh_network_availability
-from src.dashboard.recorded_movements import LABEL as MOVEMENT_LABEL
+from src.dashboard.flight_cells import international_cells, resolve_cells
+from src.dashboard.map_periods import period_label, period_months
 from src.dashboard.route_entities import AEROMEXICO_ROUTES, INDUSTRY_ROUTES
 from src.ingest.stage4_common import write_parquet_atomic
 from src.source_updates.authorities import json_objects
@@ -33,6 +31,7 @@ from src.transform.stage9_lineage import (
 )
 from src.transform.validate_stage9 import validate_lineage_frames
 from src.web_export.flights import _validate
+from src.web_export.observed_refresh import refresh_observed_network
 from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.schemas import NETWORK_FILE_SCHEMA, QUARTERS_FILE_SCHEMA
 from src.web_export.writer import write_json
@@ -206,42 +205,24 @@ def build(candidate, baseline_data, out, quarter):
                 current = international_cells(
                     connection, selected_months, entity, pd.DataFrame(), endpoint, authorities=gold
                 )
-                resolved = resolve_revision(network, current)
                 if not current:
                     continue
-                apply_flight_cells(network, resolved, endpoint)
-                movement_months = {
-                    month
+                previous_path = source_path.with_name(f"{int(selected[:4]) - 1}{selected[4:]}.json")
+                previous = None
+                if previous_path.is_file():
+                    previous = json.loads(previous_path.read_bytes())
+                    inputs[str(previous_path)] = sha(previous_path)
+                endpoints = {
+                    point["iata"]: point
                     for route in network["routes"]
-                    for month in route.get("recorded_movements", {}).get("observed_months", [])
+                    for point in (route["origin"], route["destination"])
                 }
-                if movement_months:
-                    network["coverage_by_source"][MOVEMENT_LABEL] = sorted(movement_months)
-                network["observed_months"] = sorted(
-                    {cell["period_id"] for cell in resolved if cell["kind"] == "observed"}
+                for cell in current:
+                    for key in ("origin_iata", "destination_iata"):
+                        endpoints[cell[key]] = endpoint(cell[key])
+                network = refresh_observed_network(
+                    network, current, selected_months, "Brasil · ANAC", endpoints, selected, previous
                 )
-                network["airports"] = sorted(
-                    {
-                        point["iata"]: point
-                        for route in network["routes"]
-                        for point in (route["origin"], route["destination"])
-                    }.values(),
-                    key=lambda point: point["iata"],
-                )
-                refresh_network_availability(network)
-                # Apply the same public-field whitelist as every normal Vuelos
-                # export, including the distinction between observed/estimated
-                # flight components and passenger provenance.
-                network = integration_flight_payload(
-                    dict(
-                        schema_version="flight_dashboard_payload_v1",
-                        metadata={},
-                        quarters=[],
-                        monthly_passengers=[],
-                        route_network={"world_geometry": {}},
-                        route_networks={selected: network},
-                    )
-                )["route_networks"][selected]
                 _validate(NETWORK_FILE_SCHEMA, network, what="ANAC source review")
                 check_privacy(network, load_privacy_rules())
                 paths.append(
