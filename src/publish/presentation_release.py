@@ -7,8 +7,10 @@ then permits only compiled frontend files to differ from the served baseline.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -26,10 +28,120 @@ PROFILE_SCHEMA = "presentation_release_v1"
 AFAC_PRODUCER_COMMIT = "00a4353afe560ea81cd0a07190bb46c7cda2a3fa"
 PRESENTATION_FILES = ("index.html",)
 PRESENTATION_PREFIXES = ("assets/",)
+PRESENTATION_MARKER = "aeromexico-presentation-release:v1:"
+PRESENTATION_RECEIPT_SCHEMA = "presentation_release_v1"
 
 
 def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def presentation_receipt(
+    repo: Path, out_dir: Path, trusted_commit: str, current_manifest: dict[str, Any]
+) -> dict:
+    """Bind a rebuilt dashboard to its served baseline and AFAC data producer."""
+    from . import afac_history_scope
+
+    anchor = afac_history_scope.anchor(repo)
+    manifest_raw = (out_dir / manifests.MANIFEST_NAME).read_bytes()
+    return {
+        "schema_version": PRESENTATION_RECEIPT_SCHEMA,
+        "baseline_commit": trusted_commit,
+        "baseline_manifest_sha256": _sha(manifest_raw),
+        "source_producer_commit": current_manifest["code_commit"],
+        "source_producer_code_version": anchor["scope"]["producer_code_version"],
+        "frontend_commit": manifests.current_commit(repo),
+    }
+
+
+def _encode_presentation_receipt(receipt: dict[str, Any]) -> str:
+    raw = json.dumps(receipt, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode()
+    return PRESENTATION_MARKER + base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+def embed_presentation_receipt(index_html: bytes, receipt: dict[str, Any]) -> bytes:
+    if PRESENTATION_MARKER.encode() in index_html:
+        raise PublicationRefused("frontend index already contains a presentation release marker")
+    close_head = re.search(rb"</head\s*>", index_html, re.IGNORECASE)
+    if not close_head:
+        raise PublicationRefused("frontend dashboard index has no closing head element")
+    marker = f"<!-- {_encode_presentation_receipt(receipt)} -->\n".encode()
+    return index_html[: close_head.start()] + marker + index_html[close_head.start() :]
+
+
+def read_presentation_receipt(site: Path) -> dict[str, Any] | None:
+    raw = (Path(site) / "index.html").read_bytes()
+    matches = re.findall(rb"<!-- aeromexico-presentation-release:v1:([A-Za-z0-9_-]+) -->", raw)
+    if not matches:
+        return None
+    if len(matches) != 1:
+        raise ValueError("Dashboard index has multiple presentation release markers")
+    token = matches[0]
+    try:
+        value = json.loads(base64.urlsafe_b64decode(token + b"=" * (-len(token) % 4)))
+    except (ValueError, json.JSONDecodeError) as error:
+        raise ValueError("Dashboard presentation release marker is malformed") from error
+    expected_keys = {
+        "schema_version",
+        "baseline_commit",
+        "baseline_manifest_sha256",
+        "source_producer_commit",
+        "source_producer_code_version",
+        "frontend_commit",
+    }
+    if (
+        not isinstance(value, dict)
+        or set(value) != expected_keys
+        or value["schema_version"] != PRESENTATION_RECEIPT_SCHEMA
+    ):
+        raise ValueError("Dashboard presentation release marker has an unknown schema")
+    return value
+
+
+def verify_presentation_producer_pin(
+    repo: Path, spec: dict[str, Any], manifest: dict[str, Any], receipt: dict[str, Any]
+) -> None:
+    """Verify historical AFAC authority separately from the frontend build commit."""
+    from . import afac_history_scope
+
+    for key in ("baseline_commit", "source_producer_commit", "frontend_commit"):
+        if not re.fullmatch(r"[a-f0-9]{40}", receipt[key]):
+            raise ValueError(f"Presentation marker has an invalid {key}")
+    for key in ("baseline_manifest_sha256", "source_producer_code_version"):
+        if not re.fullmatch(r"[a-f0-9]{64}", receipt[key]):
+            raise ValueError(f"Presentation marker has an invalid {key}")
+    if receipt["frontend_commit"] != manifest.get("code_commit"):
+        raise ValueError("Presentation marker does not identify the manifest frontend commit")
+    expected = spec["scope"]["producer_code_version"]
+    if receipt["source_producer_code_version"] != expected:
+        raise ValueError("Presentation marker changes the pinned AFAC source producer")
+    baseline_raw = subprocess.check_output(
+        ["git", "show", f"{receipt['baseline_commit']}:site/{manifests.MANIFEST_NAME}"], cwd=repo
+    )
+    if _sha(baseline_raw) != receipt["baseline_manifest_sha256"]:
+        raise ValueError("Presentation marker differs from the exact trusted served manifest")
+    baseline_manifest = json.loads(baseline_raw)
+    producer_commit = baseline_manifest.get("code_commit")
+    if receipt["source_producer_commit"] != producer_commit:
+        raise ValueError("Presentation marker source producer differs from the trusted baseline")
+    anchor_path = afac_history_scope.ANCHOR
+    anchor_raw = (Path(repo) / anchor_path).read_bytes()
+    if anchor_raw != subprocess.check_output(
+        ["git", "show", f"HEAD:{anchor_path}"], cwd=repo
+    ) or anchor_raw != subprocess.check_output(["git", "show", f"{producer_commit}:{anchor_path}"], cwd=repo):
+        raise ValueError("Trusted AFAC producer commit does not contain the exact history anchor")
+    if afac_history_scope.producer_version_at_commit(producer_commit, repo) != expected:
+        raise ValueError("Trusted served AFAC producer does not match the anchored fingerprint")
+    for commit in (receipt["baseline_commit"], receipt["frontend_commit"]):
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", commit, "HEAD"], cwd=repo, check=True, capture_output=True
+        )
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", receipt["baseline_commit"], receipt["frontend_commit"]],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
 
 
 def load_profile(repo: Path) -> dict[str, Any]:
@@ -265,6 +377,7 @@ def publish_presentation_only(
     verify_presentation_only_site(out_dir, repo)
 
     current_manifest = manifests.load_manifest(out_dir)
+    release_marker = presentation_receipt(repo, out_dir, trusted_commit, current_manifest)
     baseline_files = _public_file_map(out_dir)
     if not any(path.startswith("data/v1/") for path in baseline_files):
         raise PublicationRefused("trusted site has no public data payload to preserve")
@@ -312,7 +425,9 @@ def publish_presentation_only(
         shutil.copytree(out_dir, staged_dist)
         if any(path.is_symlink() for path in dist_dir.rglob("*")):
             raise PublicationRefused("frontend build contains a symlink")
-        shutil.copyfile(dist_dir / "index.html", staged_dist / "index.html")
+        (staged_dist / "index.html").write_bytes(
+            embed_presentation_receipt((dist_dir / "index.html").read_bytes(), release_marker)
+        )
         for asset in sorted((dist_dir / "assets").rglob("*")):
             if not asset.is_file():
                 continue

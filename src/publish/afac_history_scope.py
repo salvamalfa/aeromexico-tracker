@@ -236,7 +236,7 @@ def verify_parent_public(repo, parent):
     return manifest, raw, files
 
 
-def preserved_files(site, repo, spec):
+def preserved_files(site, repo, spec, *, presentation_only=False):
     scope = spec["scope"]
     members.canonical_gold(repo, spec["members"])
     parent, _, before, parent_spec = parent_public(repo, scope["candidate_parent"])
@@ -265,11 +265,30 @@ def preserved_files(site, repo, spec):
     declared = {p["path"]: p for p in manifest["files"]}
     actual = manifests.file_entries(site)
     if (
-        set(declared) != set(expected) | {PROOF}
-        or len(declared) != len(manifest["files"])
+        len(declared) != len(manifest["files"])
         or {p["path"]: p for p in actual} != declared
         or any(p.is_symlink() for p in Path(site).rglob("*"))
     ):
+        raise ValueError("History candidate has unmanifested, missing, duplicate or symlink files")
+    if presentation_only:
+
+        def is_ui(name):
+            return name == "index.html" or name.startswith("assets/")
+
+        protected_expected = {name: raw for name, raw in expected.items() if not is_ui(name)}
+        protected_expected[PROOF] = (Path(site) / PROOF).read_bytes()
+        protected_actual = {name: raw for name, raw in declared.items() if not is_ui(name)}
+        if (
+            protected_actual.keys() != protected_expected.keys()
+            or any(name not in expected and name != PROOF and not is_ui(name) for name in declared)
+            or "index.html" not in declared
+        ):
+            raise ValueError("Presentation composition changed the protected history file inventory")
+        for name, raw in protected_expected.items():
+            if (Path(site) / name).read_bytes() != raw:
+                raise ValueError(f"Presentation composition changed protected history bytes: {name}")
+        return frozenset(name for name in before if name not in outputs)
+    if set(declared) != set(expected) | {PROOF}:
         raise ValueError("History candidate has unmanifested, missing, duplicate or symlink files")
     for name, raw in expected.items():
         if (Path(site) / name).read_bytes() != raw:
@@ -280,14 +299,24 @@ def preserved_files(site, repo, spec):
 
 
 def verify_afac_history(site, repo=PATHS.root):
+    from . import presentation_release
     from .verify import _verify_site
 
     try:
         spec = anchor(repo)
         manifest = manifests.load_manifest(site)
-        verify_producer_pin(repo, spec, manifest)
+        receipt = presentation_release.read_presentation_receipt(Path(site))
+        if receipt is None:
+            verify_producer_pin(repo, spec, manifest)
+        else:
+            presentation_release.verify_presentation_producer_pin(repo, spec, manifest, receipt)
         verify_parent_public(repo, spec["scope"]["candidate_parent"])
-        return _verify_site(site, preserved_approval_files=preserved_files(Path(site), repo, spec))
+        return _verify_site(
+            site,
+            preserved_approval_files=preserved_files(
+                Path(site), repo, spec, presentation_only=receipt is not None
+            ),
+        )
     except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as error:
         return [f"Invalid native history composition: {error}"]
 

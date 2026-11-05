@@ -64,7 +64,7 @@ def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None
         shutil.copytree(web_data, dist / "data/v1")
         (dist / "assets").mkdir()
         (dist / "assets/app-new.js").write_text("new frontend", encoding="utf-8")
-        (dist / "index.html").write_text("after", encoding="utf-8")
+        (dist / "index.html").write_text("<html><head></head><body>after</body></html>", encoding="utf-8")
         (dist / "access.html").write_text("rebuilt private access page", encoding="utf-8")
         (dist / "review.html").write_text("rebuilt review page", encoding="utf-8")
         if build_change == "data_tamper":
@@ -107,6 +107,18 @@ def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None
     monkeypatch.setattr(manifests, "file_entries", manifests.file_entries)
     monkeypatch.setattr(release, "load_records", lambda _paths: [{"record": 1}])
     monkeypatch.setattr(release, "_replay_release", replay)
+    monkeypatch.setattr(
+        release,
+        "presentation_receipt",
+        lambda *_: {
+            "schema_version": release.PRESENTATION_RECEIPT_SCHEMA,
+            "baseline_commit": "a" * 40,
+            "baseline_manifest_sha256": "b" * 64,
+            "source_producer_commit": "c" * 40,
+            "source_producer_code_version": "d" * 64,
+            "frontend_commit": "e" * 40,
+        },
+    )
     monkeypatch.setattr(release, "verify_presentation_only_site", lambda *_: None)
     monkeypatch.setattr(release, "flow", SimpleNamespace(writer=writer))
 
@@ -143,6 +155,26 @@ def test_only_frontend_paths_are_allowed_to_differ() -> None:
     assert release._preserved_map(before) == release._preserved_map(changed)
     changed["data/v1/news.json"] = ("tampered", 1)
     assert release._preserved_map(before) != release._preserved_map(changed)
+
+
+def test_dashboard_index_carries_one_canonical_release_marker(tmp_path) -> None:
+    receipt = {
+        "schema_version": release.PRESENTATION_RECEIPT_SCHEMA,
+        "baseline_commit": "a" * 40,
+        "baseline_manifest_sha256": "b" * 64,
+        "source_producer_commit": "c" * 40,
+        "source_producer_code_version": "d" * 64,
+        "frontend_commit": "e" * 40,
+    }
+    path = tmp_path / "index.html"
+    path.write_bytes(release.embed_presentation_receipt(b"<html><head></head></html>", receipt))
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_bytes(path.read_bytes())
+    assert release.read_presentation_receipt(site) == receipt
+    (site / "index.html").write_bytes(path.read_bytes() + path.read_bytes())
+    with pytest.raises(ValueError, match="multiple"):
+        release.read_presentation_receipt(site)
 
 
 def test_presentation_release_keeps_every_nonfrontend_file(tmp_path, monkeypatch) -> None:
