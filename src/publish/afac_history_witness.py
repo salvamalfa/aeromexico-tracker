@@ -17,7 +17,7 @@ from email.utils import parsedate_to_datetime
 from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from . import editorial as transport
 from . import manifest as manifests
@@ -28,6 +28,17 @@ MAX_ATTEMPTS = 3
 RETRY_AFTER_CAP_SECONDS = 10.0
 REQUEST_TIMEOUT_SECONDS = 45
 LOG = logging.getLogger(__name__)
+
+
+class RejectRedirect(HTTPRedirectHandler):
+    """Reject before urllib can send a follow-up GET to any other URL."""
+
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        raise HTTPError(request.full_url, code, "Native witness refuses redirects", headers, response)
+
+
+def urlopen(request, *, timeout):
+    return build_opener(RejectRedirect()).open(request, timeout=timeout)
 
 
 def retryable(error):

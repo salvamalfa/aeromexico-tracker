@@ -2,6 +2,8 @@
 
 from email.message import Message
 from http.client import IncompleteRead
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
 from urllib.error import HTTPError, URLError
 
 import pytest
@@ -81,6 +83,52 @@ def test_nontransient_http_status_is_not_retried(monkeypatch, status):
     with pytest.raises(ValueError, match="after 1 attempt"):
         witness.get_verified("data/v1/market.json", b"correct")
     assert len(calls) == 1 and delays == []
+
+
+def test_actual_302_to_another_origin_never_emits_second_get_or_retries(monkeypatch):
+    from types import SimpleNamespace
+
+    calls, delays = [], []
+
+    class Destination(BaseHTTPRequestHandler):
+        def do_GET(self):
+            calls.append("outside_origin")
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"correct")
+
+        def log_message(self, *args):
+            pass
+
+    target = ThreadingHTTPServer(("127.0.0.1", 0), Destination)
+
+    class Origin(Destination):
+        def do_GET(self):
+            calls.append("origin")
+            self.send_response(302)
+            self.send_header("Location", f"http://127.0.0.1:{target.server_port}/outside")
+            self.end_headers()
+
+    source = ThreadingHTTPServer(("127.0.0.1", 0), Origin)
+    threads = [
+        Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
+        for server in (source, target)
+    ]
+    for thread in threads:
+        thread.start()
+    monkeypatch.setattr(witness.transport, "ORIGIN", f"http://127.0.0.1:{source.server_port}")
+    monkeypatch.setattr(witness, "time", SimpleNamespace(sleep=delays.append))
+    try:
+        with pytest.raises(ValueError, match="after 1 attempt"):
+            witness.get_verified("data/v1/market.json", b"correct")
+        assert calls == ["origin"]
+        assert delays == []
+    finally:
+        for server in (source, target):
+            server.shutdown()
+            server.server_close()
+        for thread in threads:
+            thread.join(timeout=1)
 
 
 @pytest.mark.parametrize("error", [TimeoutError(), IncompleteRead(b"part", 7), URLError(TimeoutError())])
