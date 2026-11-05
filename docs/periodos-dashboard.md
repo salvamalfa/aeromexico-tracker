@@ -805,9 +805,16 @@ La captura AFAC de septiembre, SHA-256
 contiene 15.844.349 pasajeros domésticos regulares y 17.415 de fletamento:
 15.861.764 en total. Aeroméxico conserva 3.856.840 pasajeros; la cuota es
 0,24315328358182609 frente a la referencia anterior 0,24337659436582212,
-cuyo denominador era 15.847.210. El mercado aprobado `6421acaf` conserva
-estos datos. No se reescribe Gold ni la evaluación congelada; ambas auditorías
-mantienen el denominador de calidad en cero y dos casos pendientes de modelo.
+cuyo denominador era 15.847.210. El mercado de B `6421acaf` conserva estos
+datos. La corrección nativa C conserva esos valores de 2026 y corrige también
+el denominador doméstico de 2T25: 15.952.449, frente a los 15.936.290 de la
+referencia anterior, con los mismos 4.039.797 pasajeros de Aeroméxico. Su cuota
+es 0,2532399257317795, frente a 0,25349670469099145. Los dos IDs de auditoría
+siguen discrepando de la referencia congelada; el caso relativo anual ahora
+expone las dos celdas corregidas. El nuevo mercado tiene pin `10abb8b8`.
+No se reescribe la referencia Gold de evaluación; el Gold estadístico se
+versiona por separado mediante el pipeline normal. Ambas auditorías mantienen
+el denominador de calidad en cero y dos casos pendientes de modelo.
 
 El consumidor de cobertura F2.9 deriva cálculos y rótulos de los periodos que
 efectivamente consultó, con regresiones de 3T26 y otro trimestre. Los límites y

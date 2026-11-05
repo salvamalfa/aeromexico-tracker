@@ -124,9 +124,18 @@ def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewritin
     payload = json.loads(fixture_bytes)
     root = Path(__file__).resolve().parents[1]
     market_raw = (root / "site/data/v1/market.json").read_bytes()
-    anchor = json.loads((root / "config/publish/quarterly-story-release.json").read_bytes())
+    from scripts.check_pages_publication import verifier_for
+
+    profile = verifier_for(root / "site", root)
+    native = profile == "src.publish.afac_history_scope"
+    assert native or profile == "src.publish.quarterly_story_scope"
+    anchor_name = "afac-history-release.json" if native else "quarterly-story-release.json"
+    anchor = json.loads((root / "config/publish" / anchor_name).read_bytes())
     pin = next(row for row in anchor["scope"]["data_files"] if row["path"] == "data/v1/market.json")
-    assert pin["sha256"] == "6421acaf6b424b6dfa2684e5dedc77294ab9a5887a33675dee64d4785cda30e0"
+    assert pin["sha256"] == (
+        "10abb8b86ae0f4a7153691e479d9c8da1fc163badf625d172a6197646a096b88" if native
+        else "6421acaf6b424b6dfa2684e5dedc77294ab9a5887a33675dee64d4785cda30e0"
+    )
     assert hashlib.sha256(market_raw).hexdigest() == pin["sha256"]
     market = json.loads(market_raw)
     months = [
@@ -140,6 +149,11 @@ def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewritin
     current = passengers / denominator
     frozen = passengers / 15_847_210
     assert current == 0.24315328358182609 and frozen == 0.24337659436582212
+    previous = next(row for row in market["quarters"] if row["period_id"] == "2025Q2")["segments"]["domestic"]
+    assert previous["carriers"]["AEROMEXICO"]["passengers"] == 4_039_797
+    assert previous["mexican_carriers_passengers"] == (15_952_449 if native else 15_936_290)
+    previous_share = 4_039_797 / previous["mexican_carriers_passengers"]
+    frozen_previous = 4_039_797 / 15_936_290
     snapshot = Snapshot(root / "site")
     report = audit_snapshot(snapshot, payload["cases"], expected_versions=payload["expected_versions"])
     assert report["snapshot_cases_checked"] == 13
@@ -147,9 +161,13 @@ def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewritin
     assert set(report["fixture_version_mismatches"]) == {"data_version", "semantic_version"}
     failures = report["snapshot_cases_failed"]
     assert failures[0] == {"id": "fixture-version", "failures": report["fixture_version_mismatches"]}
+    current_failure = f"valor incorrecto para market_share: {current} != {frozen}"
+    previous_failure = f"valor incorrecto para market_share: {previous_share} != {frozen_previous}"
     assert failures[1:] == [
-        {"id": case_id, "failures": (f"valor incorrecto para market_share: {current} != {frozen}",)}
-        for case_id in ("en_relative_share_change", "es_am_market_share")
+        {"id": "en_relative_share_change", "failures": (
+            (previous_failure, current_failure) if native else (current_failure,)
+        )},
+        {"id": "es_am_market_share", "failures": (current_failure,)},
     ]
     assert set(report["model_quality_cases_pending"]) == {"N20", "es_ratio_average"}
     assert report["quality_denominator"] == 0
