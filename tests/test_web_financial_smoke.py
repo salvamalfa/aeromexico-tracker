@@ -110,29 +110,37 @@ def test_financial_q3_updates_existing_cards_graphs_and_returns_to_q2(web_server
         page.wait_for_function("document.getElementById('period-display').textContent==='3T26'")
         page.click("#tab-economy")
         for key, value in [
-            ("rask_cents_per_km", "10.69 ¢ USD"),
-            ("cask_cents_per_km", "9.38 ¢ USD"),
-            ("ask_km", "15.12 mil M"),
-            ("unit_margin_cents_per_km", "+1.30 ¢ USD"),
+            ("rask_cents_per_km", "10.7 ¢ USD"),
+            ("cask_cents_per_km", "9.4 ¢ USD"),
+            ("ask_km", "15.1 mil M"),
+            ("unit_margin_cents_per_km", "+1.3 ¢ USD"),
         ]:
             assert page.inner_text(f"#kpi-{key}-value") == value
         assert page.locator(".reader-economy-kpis .kpi-card").count() == 4
         assert page.inner_text("#kpi-rask_cents_per_km-yoy") == "+12.2%"
         assert page.inner_text("#kpi-cask_cents_per_km-yoy") == "+19.4%"
-        assert "88,2%" in page.locator("#financial-comparison-note").text_content()
+        assert page.locator("#financial-comparison-note").count() == 0
+        page.get_by_role("button", name="Definición y fuente de RASK", exact=True).click()
+        source = page.locator("#economy-source-rask_cents_per_km")
+        assert source.is_visible()
+        assert "RASK = ingreso total / ASK" in source.inner_text()
+        assert source.locator("a").get_attribute("href") == "https://ir.aeromexico.com/financial-information/quarterly-results"
+        page.keyboard.press("Escape")
         for graph in ["unit-chart", "volume-chart", "load-chart"]:
             page.wait_for_function(
                 "id=>{const g=document.getElementById(id);return g?.data?.some(t=>JSON.stringify(t).includes('3T26'))}",
                 arg=graph,
             )
         assert "3T26" in page.locator(".disclosure-body tbody").text_content()
+        assert page.evaluate("document.getElementById('load-chart').data.at(-1).x") == [88.3]
+        assert page.evaluate("document.getElementById('load-chart').data.at(-1).y") == [doc["records"][-1]["rask_cents_per_km"]]
         page.click("#period-prev")
         page.wait_for_function("document.getElementById('period-display').textContent==='2T26'")
         expected = next(
-            k["display_value"] for k in doc["views"]["2026Q2"]["kpis"] if k["key"] == "rask_cents_per_km"
+            f"{k['value']:.1f} ¢ USD" for k in doc["views"]["2026Q2"]["kpis"] if k["key"] == "rask_cents_per_km"
         )
         assert page.inner_text("#kpi-rask_cents_per_km-value") == expected
-        assert page.locator("#financial-comparison-note").is_hidden()
+        assert page.locator("#financial-comparison-note").count() == 0
         assert errors == []
         browser.close()
 
@@ -161,13 +169,12 @@ def test_lazy_flights_retain_their_real_cut_without_overwriting_q3_finance(web_s
         page.goto(web_server + "?period=2026Q3&sel_kpis=AEROMEXICO")
         page.wait_for_function("document.getElementById('period-display').textContent==='3T26'")
         page.click("#tab-flights")
-        page.wait_for_selector("#flight-data-period")
-        page.wait_for_function(
-            "document.getElementById('flight-data-period').textContent.includes('No hay datos de vuelos para 2026Q3')"
-        )
+        page.wait_for_selector("#network-volume:not([hidden])")
+        page.wait_for_function("document.getElementById('flight-map-coverage-info').textContent.includes('3T26')")
+        assert "sin datos: 0 de 3 meses" in page.locator("#flight-map-coverage-info").text_content()
+        assert page.locator("#route-flow-map .scattergeo .js-line").count() == 0
         assert page.inner_text("#period-display") == "3T26"
-        assert "Corte de vuelos: 2T26" in page.inner_text("#flight-data-period")
         page.click("#tab-economy")
-        assert page.inner_text("#kpi-rask_cents_per_km-value") == "10.69 ¢ USD"
+        assert page.inner_text("#kpi-rask_cents_per_km-value") == "10.7 ¢ USD"
         assert errors == []
         browser.close()

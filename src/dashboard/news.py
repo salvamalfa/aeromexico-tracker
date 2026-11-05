@@ -15,24 +15,26 @@ from urllib.parse import urlsplit
 
 from src.config import PATHS
 from src.conversational_analytics.evidence_index import EvidenceIndex
-from src.conversational_analytics.news_projection import COMPANIES, project
+from src.conversational_analytics.news_projection import COMPANIES, NEWS_PUBLISHER_HOSTS, project
 from src.web_export.writer import write_json
 
-CANDIDATE_HOSTS = {
-    "ir.aeromexico.com",
-    "investorcloud.s3.amazonaws.com",
-    "filemanager-cdn.mziq.com",
-    "api.mziq.com",
-    "www.aeroroutes.com",
-}
-
+CANDIDATE_HOSTS = NEWS_PUBLISHER_HOSTS
 
 
 def build_news_payload(candidate: Path | None = None) -> dict[str, Any]:
     index = EvidenceIndex(PATHS.root / "config/chat/evidence/approved-index.json")
     records = [{**r, "review_status": "owner_approved"} for r in index.records if r.get("kind") == "news"]
-    counts = {company:sum(company in ["Viva" if c=="Viva Aerobus" else c for c in row["companies"]] for row in records) for company in sorted(COMPANIES)}
-    coverage = f"Archivo aprobado parcial: {len(records)} noticias. " + "; ".join(f"{company}: {count}" for company,count in counts.items()) + ". Cero fichas no demuestra ausencia de noticias."
+    counts = {
+        company: sum(
+            company in ["Viva" if c == "Viva Aerobus" else c for c in row["companies"]] for row in records
+        )
+        for company in sorted(COMPANIES)
+    }
+    coverage = (
+        f"Archivo aprobado parcial: {len(records)} noticias. "
+        + "; ".join(f"{company}: {count}" for company, count in counts.items())
+        + ". Cero fichas no demuestra ausencia de noticias."
+    )
     candidate_hash = None
     approval_package = None
     default_month = None
@@ -63,25 +65,67 @@ def build_news_payload(candidate: Path | None = None) -> dict[str, Any]:
         year, month = map(int, cut_month.split("-"))
         default_month = f"{year - 1}-12" if month == 1 else f"{year}-{month - 1:02d}"
         coverage = (
-            payload["coverage"]
-            + " Los candidatos requieren aprobación independiente y no están disponibles para búsqueda del chat."
+            payload["coverage"] + " Los candidatos requieren aprobación independiente "
+            "y no están disponibles para búsqueda del chat."
         )
         candidate_hash = hashlib.sha256(candidate.read_bytes()).hexdigest()
         approval_package = {
-            "schema": "monthly_news_batch_approval_proposal_v1", "status": "owner_review_required",
-            "candidate_file_sha256": candidate_hash, "candidate_count": len(payload["records"]),
-            "scope": "Approve the News tab and these eleven short news records for approved chat search in one decision; no thesis, metric, scheduler or publication approval is implied.",
-            "decision_required": "One explicit owner decision bound to this complete candidate hash and its item content hashes; no approval is recorded by this proposal.",
+            "schema": "monthly_news_batch_approval_proposal_v1",
+            "status": "owner_review_required",
+            "candidate_file_sha256": candidate_hash,
+            "candidate_count": len(payload["records"]),
+            "scope": (
+                f"Review these {len(payload['records'])} short news records and their publisher provenance "
+                "for the News tab and approved chat search in one decision; no thesis, metric, scheduler "
+                "or publication approval is implied."
+            ),
+            "decision_required": (
+                "One explicit owner decision bound to this complete candidate hash "
+                "and its item content hashes; no approval is recorded by this proposal."
+            ),
             "records": payload["records"],
             "proposed_index_records": [
                 {"record": normalized, "candidate_content_sha256": candidate_content_sha256(normalized)}
                 for row in payload["records"]
-                for normalized in [{key: row[key] for key in (
-                    "id", "story_id", "kind", "published_at", "publisher", "title", "description", "companies", "topics", "source", "event_date", "event_end_date", "first_captured_at"
-                )}]
+                for normalized in [
+                    {
+                        key: row[key]
+                        for key in (
+                            "id",
+                            "story_id",
+                            "kind",
+                            "published_at",
+                            "publisher",
+                            "title",
+                            "description",
+                            "companies",
+                            "topics",
+                            "source",
+                            "event_date",
+                            "event_end_date",
+                            "first_captured_at",
+                        )
+                    }
+                    | {
+                        key: row[key]
+                        for key in (
+                            "publisher_observations",
+                            "summary_kind",
+                            "impact_note",
+                            "publication_precision",
+                            "publication_date_basis",
+                            "first_capture_scope",
+                            "event_first_observed_at",
+                            "first_reported_on",
+                        )
+                        if key in row
+                    }
+                ]
             ],
         }
-        approval_package["proposal_sha256"] = hashlib.sha256(json.dumps(approval_package,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+        approval_package["proposal_sha256"] = hashlib.sha256(
+            json.dumps(approval_package, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
     stories = project(records)
     return {
         "schema_version": "monthly_news_v1",

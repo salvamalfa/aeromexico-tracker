@@ -220,7 +220,7 @@ tables:
       - name: homogeneous_scd2_history
         kind: scd2_history
         key_columns: [carrier_key, period_id, metric_key, segment, source_system]
-        value_columns: [value]
+        value_columns: [value, derivation_formula, is_estimated]
     columns:
       record_id: {type: string, nullable: false, unique: true, regex: '^rec_[0-9a-f]{64}$', description: Identificador estable calculado con la tabla y su grano natural.}
       carrier_key: {type: string, nullable: false, description: Aerolínea o grupo.}

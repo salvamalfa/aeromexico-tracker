@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -28,6 +29,10 @@ def encoded(value):
 
 def sha(raw):
     return hashlib.sha256(raw).hexdigest()
+
+
+def _diagnostic_text(value):
+    return value.decode("utf-8", errors="replace") if isinstance(value, bytes) else value
 
 
 def anchor(repo=PATHS.root):
@@ -96,7 +101,7 @@ def anchor(repo=PATHS.root):
     return spec
 
 
-def verify_historical_baseline(repo, spec, site):
+def verify_historical_baseline(repo, spec, site, *, environment=None):
     """Use its released verifier: a runtime fingerprint failure is never ignored."""
     old, raw = transport.baseline(repo, spec)
     for item in old["files"]:
@@ -132,15 +137,53 @@ def verify_historical_baseline(repo, spec, site):
             from scripts.check_pages_publication import verifier_for
 
             module = verifier_for(original, checkout)
-            outcome = subprocess.run(
-                [sys.executable, "-B", "-m", module, str(original)],
-                cwd=checkout,
-                capture_output=True,
-                text=True,
-                timeout=240,
-            )
+            try:
+                outcome = subprocess.run(
+                    [sys.executable, "-B", "-m", module, str(original)],
+                    cwd=checkout,
+                    capture_output=True,
+                    text=True,
+                    env=environment,
+                    # The released SourceData verifier recursively checks all
+                    # earlier issuer editions; existing parity CI allows 600s.
+                    timeout=600,
+                )
+            except subprocess.TimeoutExpired as error:
+                outcome = error
+                outcome.returncode = "timeout"
             if outcome.returncode:
-                raise ValueError("The trusted baseline's own released verifier rejected its site")
+                diagnostics = {
+                    "module": module,
+                    "code_commit": commit,
+                    "returncode": outcome.returncode,
+                    "stdout": _diagnostic_text(getattr(outcome, "stdout", "")),
+                    "stderr": _diagnostic_text(getattr(outcome, "stderr", "")),
+                    "approval_pins": {
+                        name: (
+                            value if re.fullmatch("[a-f0-9]{64}", value) else "<unset-or-malformed>"
+                        )
+                        for name in (
+                            "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
+                            "CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256",
+                        )
+                        for value in ((os.environ if environment is None else environment).get(name, ""),)
+                    },
+                }
+                folder = repo / "tmp/approval-replay-diagnostics"
+                folder.mkdir(parents=True, exist_ok=True)
+                with tempfile.NamedTemporaryFile(
+                    mode="w", encoding="utf-8", suffix=".json", dir=folder, delete=False
+                ) as report:
+                    json.dump(diagnostics, report, ensure_ascii=False)
+                raise ValueError(
+                    (
+                        "The trusted baseline's own released verifier timed out without a verdict: "
+                        if outcome.returncode == "timeout"
+                        else "The trusted baseline's own released verifier rejected its site: "
+                    )
+                    + f"module={module}, code_commit={commit}, returncode={outcome.returncode}; "
+                    f"private diagnostics={Path(report.name).relative_to(repo).as_posix()}"
+                )
         finally:
             subprocess.run(
                 ["git", "worktree", "remove", str(checkout)],

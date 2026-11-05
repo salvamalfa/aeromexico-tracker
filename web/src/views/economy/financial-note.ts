@@ -1,19 +1,27 @@
-import { entityLabel, entityView } from "../executive/entities";
+import { entityLabel, entityView, entityRecords } from "../executive/entities";
 import type { EntityKey } from "../shell/carriers";
 
 export function renderFinancialNote(entity: EntityKey, period: string): void {
   const host = document.getElementById("financial-comparison-note");
   if (!host) return;
   host.replaceChildren();
-  host.hidden = period !== "2026Q3";
-  if (host.hidden) return;
   const view = entityView(entity, period);
+  host.hidden = !!view && period !== "2026Q3";
+  if (host.hidden) return;
   if (!view) {
-    host.textContent = `Los indicadores 3T26 de ${entityLabel(entity)} conservan su propio corte; los faltantes se muestran como No disponible.`;
+    const latest = entityRecords(entity).map(row => row.period_id).sort().at(-1);
+    const label = (id: string) => `${id.slice(-1)}T${id.slice(2,4)}`;
+    host.textContent = `${entityLabel(entity)}: No disponible para ${label(period)}.${latest ? ` Último trimestre financiero publicado: ${label(latest)}.` : ""}`
+      + (entity === "INDUSTRY" ? " El agregado de Industria está pendiente de actualización y validación con las tres aerolíneas; disponer de sus reportes individuales no actualiza automáticamente el agregado." : "");
     return;
   }
   const notes = view.narrative?.paragraphs ?? [];
   if (!notes.length) { host.hidden = true; return; }
+  if (view.narrative?.headline === "Industria calculada · vista previa para revisión") {
+    const label = document.createElement("p");
+    label.textContent = "Industria calculada con los tres reportes financieros · vista previa para revisión.";
+    host.append(label);
+  }
   const details = document.createElement("details");
   const summary = document.createElement("summary");
   summary.textContent = `Fuente y bases de comparación · ${entityLabel(entity)} 3T26`;

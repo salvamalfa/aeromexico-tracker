@@ -1,14 +1,13 @@
-// Reading availability comes from the publication's approved identities, never
-// from financial observations. Selecting a reading does not touch their store.
-import { state } from "./state";
+// The global quarter controls reading dates; the approved catalog controls availability.
+import { currentPeriodId } from "../../state/period";
 import { isEntityKey } from "../shell/carriers";
 
 let periods = new Map<string, string[]>();
-const selected = new Map<string, string>();
-let currentEntity = "AEROMEXICO";
+let paths = new Map<string, string>();
 
 export async function loadReadingPeriods(dataRoot: string): Promise<void> {
-  periods = new Map(); selected.clear();
+  periods = new Map();
+  paths = new Map();
   const url = new URL("../../publication_manifest.json", new URL(`${dataRoot.replace(/\/$/, "")}/`, document.baseURI));
   const response = await fetch(url);
   if (!response.ok) throw new Error("No se pudo verificar el catálogo de lecturas publicadas.");
@@ -17,39 +16,29 @@ export async function loadReadingPeriods(dataRoot: string): Promise<void> {
     throw new Error("Catálogo de lecturas inválido.");
   }
   for (const entry of manifest.analysis_manifest) {
-    const entity = entry.entity_key ?? "AEROMEXICO";
+    const entity = entry.entity_key === undefined ? "AEROMEXICO" : entry.entity_key;
     if (!isEntityKey(entity) || typeof entry.period_id !== "string" || !/^\d{4}Q[1-4]$/.test(entry.period_id) || typeof entry.approval_event !== "string" || !entry.approval_event) {
       throw new Error("Identidad de lectura inválida.");
     }
     const values = periods.get(entity) ?? [];
     if (values.includes(entry.period_id)) throw new Error("Lectura duplicada.");
     periods.set(entity, [...values, entry.period_id].sort());
+    // Explicit entity records use their namespace, including Aeroméxico.
+    // Historical entries without entity_key retain the original public path.
+    paths.set(`${entity}/${entry.period_id}`, entry.entity_key === undefined
+      ? entry.period_id : `${entity}/${entry.period_id}`);
   }
 }
 
-export function selectReadingPeriod(period: string): void {
-  if (!periods.get(currentEntity)?.includes(period)) return;
-  selected.set(currentEntity, period);
-  const params = new URLSearchParams(window.location.search);
-  params.set("readingPeriod", period);
-  window.history.replaceState(null, "", `${window.location.pathname}?${params}${window.location.hash}`);
+export function publishedAnalysisPath(entity: string, period: string): string | undefined {
+  return paths.get(`${entity}/${period}`);
 }
 
+// Availability is checked for the global quarter only. Never silently substitute
+// the latest approved reading, or honor a legacy readingPeriod URL override.
 export function selectedReading(entity: string): { period_id: string; period_label: string } | undefined {
-  currentEntity = entity;
-  const values = periods.get(entity) ?? [];
-  const requested = new URLSearchParams(window.location.search).get("readingPeriod");
-  const period = selected.get(entity) ?? (requested && values.includes(requested) ? requested : values.at(-1));
-  const select = document.getElementById("reading-period") as HTMLSelectElement | null;
-  const label = (id: string) => `${id.slice(-1)}T${id.slice(2, 4)}`;
-  if (select) {
-    select.replaceChildren(...values.map((id) => new Option(label(id), id)));
-    select.disabled = !period;
-    if (period) select.value = period;
-  }
-  // Existing entities with no approved reading retain their ordinary pending
-  // message for the financial period; no other issuer's reading is substituted.
-  const fallback = state.records[state.periodIndex]?.period_id;
-  const id = period ?? fallback;
-  return id ? { period_id: id, period_label: label(id) } : undefined;
+  const id = currentPeriodId();
+  return id && periods.get(entity)?.includes(id)
+    ? { period_id: id, period_label: `${id.slice(-1)}T${id.slice(2, 4)}` }
+    : undefined;
 }

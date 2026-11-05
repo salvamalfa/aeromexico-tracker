@@ -19,6 +19,7 @@ from src.conversational_analytics.evidence_index import (
 from src.conversational_analytics.providers._openai_references import references_from_results
 from src.conversational_analytics.tools.evidence import dispatch_evidence_tool, evidence_tool_specs
 from src.conversational_analytics.tools.registry import ToolRegistry
+from tests._news_legacy_fixtures import legacy_news_index as legacy_news_index
 
 FIXTURE = Path("tests/fixtures/chat_evidence/index.json")
 
@@ -53,7 +54,10 @@ def test_report_search_is_deterministic_filtered_and_cited() -> None:
     assert result["count"] == 1
     row = result["results"][0]
     assert (row["company"], row["period"], row["section"], row["page"]) == (
-        "Aeroméxico", "2026Q2", "Combustible", 12
+        "Aeroméxico",
+        "2026Q2",
+        "Combustible",
+        12,
     )
     assert row["citation"]["source_sha256"] == "a" * 64
     assert row["citation"]["url"].startswith("https://www.sec.gov/")
@@ -103,10 +107,12 @@ def test_news_search_returns_bounded_ficha_and_date_citation() -> None:
     assert row["description"] == "Nota sobre precios del combustible en el sector aéreo."
     assert "body" not in row and "full_text" not in row
     assert row["citation"]["source_sha256"] == "c" * 64
-    assert row["references"] == [{
-        "label": "Fuente pública fixture · Combustible y aerolíneas (2026-06-15)",
-        "url": "https://www.sec.gov/Archives/edgar/data/1/news.htm",
-    }]
+    assert row["references"] == [
+        {
+            "label": "Fuente pública fixture · Combustible y aerolíneas (2026-06-15)",
+            "url": "https://www.sec.gov/Archives/edgar/data/1/news.htm",
+        }
+    ]
     assert index.search_news("combustible", "2026-07-01", "2026-07-31", "Aeroméxico")["count"] == 0
 
 
@@ -135,7 +141,8 @@ def test_contract_maximum_field_lengths_remain_searchable_at_exact_boundaries(
     news["source"]["url"] = "https://www.sec.gov/" + ("v" * (1000 - len("https://www.sec.gov/")))
     _refresh_receipt(news)
     payload["records"] = [
-        record for record in payload["records"]
+        record
+        for record in payload["records"]
         if record.get("review", {}).get("decision") == "owner_approved"
     ]
 
@@ -197,8 +204,7 @@ def test_over_contract_search_fields_are_rejected(
     target[field_path[-1]] = value
     _refresh_receipt(record)
     payload["records"] = [
-        item for item in payload["records"]
-        if item.get("review", {}).get("decision") == "owner_approved"
+        item for item in payload["records"] if item.get("review", {}).get("decision") == "owner_approved"
     ]
     schema = json.loads(Path("contracts/chat/evidence-index.schema.json").read_text(encoding="utf-8"))
     assert list(Draft202012Validator(schema).iter_errors(payload))
@@ -233,10 +239,14 @@ def test_registry_evidence_hits_reach_provider_references_with_exact_urls(
         "search_reports", {"query": "aumentó", "company": "Aeroméxico", "period": "2026Q2", "limit": 5}
     )
     news = registry.invoke(
-        "search_news", {
-            "query": "combustible costos", "start_date": "2026-06-01", "end_date": "2026-06-30",
-            "company": "Aeroméxico", "limit": 5,
-        }
+        "search_news",
+        {
+            "query": "combustible costos",
+            "start_date": "2026-06-01",
+            "end_date": "2026-06-30",
+            "company": "Aeroméxico",
+            "limit": 5,
+        },
     )
     refs = references_from_results([report, news])
     assert refs == [
@@ -293,8 +303,10 @@ def test_receipt_must_bind_all_semantic_citation_and_search_metadata(
         ("report-approved", ("company",), "Volaris", "report"),
         ("report-approved", ("period",), "2025Q2", "report"),
         (
-            "report-approved", ("source", "url"),
-            "https://www.sec.gov/Archives/edgar/data/1/other.htm", "report",
+            "report-approved",
+            ("source", "url"),
+            "https://www.sec.gov/Archives/edgar/data/1/other.htm",
+            "report",
         ),
         ("report-approved", ("section",), "Ingresos", "report"),
         ("news-approved", ("title",), "Titular modificado", "news"),
@@ -395,9 +407,9 @@ def test_registry_fails_before_registering_tools_for_rehashed_forged_index(
     index_path = tmp_path / "config/chat/evidence/approved-index.json"
     index_path.parent.mkdir(parents=True)
     index_path.write_text(json.dumps(payload), encoding="utf-8")
-    monkeypatch.setenv(APPROVED_INDEX_SHA256_ENV, canonical_index_sha256(
-        json.loads(FIXTURE.read_text(encoding="utf-8"))
-    ))
+    monkeypatch.setenv(
+        APPROVED_INDEX_SHA256_ENV, canonical_index_sha256(json.loads(FIXTURE.read_text(encoding="utf-8")))
+    )
 
     snapshot = Snapshot(Path("tests/fixtures/chat/site"))
     snapshot.project_root = tmp_path
@@ -407,6 +419,7 @@ def test_registry_fails_before_registering_tools_for_rehashed_forged_index(
 
 def test_candidate_files_remain_proposals_while_approved_index_has_pinned_content(
     monkeypatch: pytest.MonkeyPatch,
+    legacy_news_index,
 ) -> None:
     candidate_path = Path("config/chat/evidence/candidates/reports-candidate.json")
     payload = json.loads(candidate_path.read_text(encoding="utf-8"))
@@ -418,7 +431,7 @@ def test_candidate_files_remain_proposals_while_approved_index_has_pinned_conten
     volaris = [row for row in payload["records"] if row["company"] == "Volaris"]
     assert all(row["source"]["identity_status"] == "byte_identity_mismatch_pending_review" for row in volaris)
 
-    approved_path = Path("config/chat/evidence/approved-index.json")
+    approved_path = legacy_news_index.path
     approved = json.loads(approved_path.read_text(encoding="utf-8"))
     assert len(approved["records"]) == 10
     assert sum(row["kind"] == "report" for row in approved["records"]) == 7

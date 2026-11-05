@@ -84,6 +84,51 @@ resumen informativo no actualiza sus tarjetas ni autoriza una tesis. La salida
 pública existente sigue mostrando solo noticias aprobadas; estos archivos son
 candidatos para ese circuito, sin autoaprobación.
 
+### Pasar la revisión al consumidor y a una decisión concreta
+
+`editorial_news` ya produce `monthly_news_candidate_v1`, el contrato de entrada
+de `src.dashboard.news`. Conservar sus registros completos, hashes y
+`publisher_observations`; los hashes editoriales identifican lecturas
+registradas, no bytes originales del editor. El proyector comparte la lista
+acotada de editores admitidos, conserva todas las procedencias y expone sólo
+metadatos públicos de las citas. El paquete normalizado conserva la semántica
+del hash y las observaciones bajo el hash de contenido de cada ficha.
+
+Con el pin externo **del índice ya aprobado**, preparar una versión nueva:
+
+```bash
+python -m scripts.news.prepare_review_package --candidate <corte-revisado.json> --json <paquete-nuevo.json> --markdown <revision-completa-nueva.md>
+python -m src.dashboard.news --candidate <corte-revisado.json> --out web/public/data/v1/news.json
+```
+
+La segunda orden es exclusivamente la preview local explícita: muestra las
+fichas nuevas como «Pendiente de aprobación» junto con las existentes. El
+contrato de publicación rechaza esa preview. El paquete muestra el número
+real de fichas, todos los títulos, resúmenes propios, fuentes, fechas, hashes
+de contenido y fingerprint del lote; no tiene un número fijo de once.
+Para una revisión que reúna varios meses, conservar las identidades y las
+procedencias de cada candidato mensual y evitar repetir hechos ya incluidos.
+
+Obtener una única decisión explícita del dueño vinculada a ese paquete y sus
+fichas antes de emitir los recibos correspondientes o cambiar el índice/pin
+aprobado. No exigir un trámite por ficha. Pedir la decisión sólo después de
+mostrar el contenido revisable completo y la preview. Tras formular la
+pregunta, no reescribir el paquete; cualquier cambio requiere otra versión.
+Ni el comando de certificación ni la allowlist de un editor constituyen esa
+decisión. El exportador público sigue cargando únicamente el índice aprobado.
+
+Cuando exista esa respuesta real, `scripts.news.approve_review_package`
+valida el fingerprint del paquete, los hashes de **todas** sus fichas, el
+índice anterior explícitamente fijado y el documento separado de la decisión
+con pregunta/respuesta literal y hora real de registro. Su modo por defecto
+es de validación sin escrituras; `--execute` conserva el índice anterior,
+emite recibos inmutables por ficha y añade sólo las noticias aprobadas. El
+modo `--check` reproduce la transición completa. No sirve para aprobar
+lecturas analíticas ni autoriza otros registros candidatos.
+El hash externo `CHAT_EVIDENCE_APPROVED_INDEX_SHA256` es de JSON **canónico**;
+el hash del archivo que informa el servicio es de **bytes**. Registrarlos por
+separado y coordinar sus cambios de entorno con el dueño de publicación.
+
 ## Proveedores opcionales y lectores anteriores
 
 ```bash

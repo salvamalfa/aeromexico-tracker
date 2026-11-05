@@ -281,3 +281,73 @@ personalizados](https://docs.railway.com/builds/dockerfiles#custom-dockerfile-pa
 [restart policy](https://docs.railway.com/deployments/restart-policy),
 [Serverless](https://docs.railway.com/guides/cut-idle-costs-serverless) y
 [volúmenes](https://docs.railway.com/volumes).
+
+
+### Origen exacto de la preview local (revisión del 1 de noviembre de 2026)
+
+El endpoint `/api/chat/health` respondió 200 sin Origin. La misma petición con
+`Origin: http://127.0.0.1:5173` respondió 403 y `origin not allowed`. Por tanto,
+la preview local queda fuera de la lista permitida del servicio; no demuestra
+que falte una clave del proveedor ni que se necesite otra.
+
+En la misma revisión, el origen publicado `https://salvamalfa.github.io`
+recibió 200 en salud y en el preflight de conversaciones, con
+`Access-Control-Allow-Origin` exacto. La lectura de conversaciones sin sesión
+recibió 401 (`login required`). El worker estaba activo con contraseña,
+R2/Sol low y admisión abierta. Esta comprobación no envió preguntas al modelo.
+
+El código preparado admite exclusivamente `http://127.0.0.1:5173` y
+`http://localhost:5173` como excepciones HTTP cuando están escritos de forma
+explícita en `CHAT_ALLOWED_ORIGINS`. No se habilitan por defecto. Otros puertos,
+hosts parecidos, rutas y comodines siguen rechazados. Se conserva la sesión
+con contraseña y la lista HTTPS del dashboard publicado.
+
+Para completar el despliegue normal:
+
+1. Integrar la entrega revisada por el PR habitual y esperar el despliegue
+   automático de Railway del commit integrado. No cargar el árbol local ni
+   reutilizar una imagen anterior. Antes de integrar, la prueba de archivos
+   Docker debe cargar el snapshot desde el contenido aislado de la imagen.
+   Los exportadores se cargan cuando se solicitan para que el lector del chat
+   no dependa de los generadores del pipeline.
+2. Confirmar en GitHub el estado `success` de `soothing-possibility / production`
+   para ese commit y comprobar que salud devuelve el `snapshot_version` esperado
+   del sitio nuevo. El último despliegue observado antes de esta entrega era
+   `7cd54fa4ebd646042c4987c4f139a0ae19c10ac0`, marcado exitoso por
+   `railway-app[bot]` el 31 de octubre. Esto no acredita el despliegue de los
+   cambios locales del 1 de noviembre.
+3. Para permitir también la preview local, reconectar el plugin Railway. La
+   consulta `list_projects` devolvió `UNAUTHORIZED` y exige reautenticación.
+   No había CLI Railway ni autenticación local configurada. Este bloqueo impide
+   leer o cambiar la lista remota; el origen publicado ya está permitido.
+4. Leer el valor actual de `CHAT_ALLOWED_ORIGINS`, conservar todos sus orígenes
+   y añadir `http://127.0.0.1:5173,http://localhost:5173`. Conservar también
+   `https://salvamalfa.github.io`. No modificar contraseñas, autenticación,
+   proveedor, modelo, cuotas ni otras variables. El backend anterior rechaza
+   HTTP incluso si se añade al entorno, por lo que la variable sola no resuelve
+   el problema.
+5. Verificar preflight 200 desde los orígenes admitidos, 401 en conversaciones
+   sin sesión y GET de salud 403 desde otro puerto o dominio. Un preflight
+   rechazado devuelve 400. Confirmar después el login con la sesión habitual
+   del dueño; no se hizo una consulta pagada para este cambio.
+
+La compilación normal de Pages lee `web/.env.production`, con
+`VITE_CHAT_ENABLED=true` y
+`VITE_CHAT_API_URL=https://aeromexico-tracker-production.up.railway.app/api/chat`.
+Las variables de la shell siguen teniendo precedencia. El índice de evidencia
+del chat y su pin externo tienen aprobación propia: publicar noticias en el
+dashboard no activa sus candidatos en el corpus del chat. El dueño aprobó las
+23 noticias del lote `907971ca`; incorporar ese lote al corpus exige conservar
+su recibo exacto y actualizar el pin mediante el proceso normal de publicación.
+
+El campo de salud `evidence_index_sha256` mide los bytes del archivo; el pin
+`CHAT_EVIDENCE_APPROVED_INDEX_SHA256` mide el JSON canónico. Son identidades
+distintas: el índice anterior de diez registros tenía hash de bytes
+`5fba922f7b6186a5ee0c31d9f678c3222a11fb50e9cf7d5b2f26b62212516672`
+y pin canónico
+`1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f`.
+Compara cada valor con su referencia correspondiente después del despliegue.
+
+Esta configuración está preparada y probada localmente. No se desplegó, no se
+amplió la lista remota y no se crearon credenciales. Responsable del pendiente:
+el coordinador de la entrega, tras reconectar Railway y cerrar la revisión.

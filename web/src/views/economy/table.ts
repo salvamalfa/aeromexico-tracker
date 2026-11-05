@@ -4,6 +4,7 @@
 // web/public/data/v1/executive.json loads, since every quarter's row is
 // shown at once regardless of the active period).
 
+import { currentPeriodId } from "../../state/period";
 import { entityRecords, entityView } from "../executive/entities";
 import type { EntityKey } from "../shell/carriers";
 import type { Comparison } from "../../types/domain";
@@ -33,7 +34,7 @@ export function renderQuarterTable(entity: EntityKey = "AEROMEXICO"): void {
     const kpis = new Map(view.kpis.map((item) => [item.key === "load_factor" ? "load_factor_reported" : item.key, item]));
     const rowClass = String(record.period_id).endsWith("Q4") ? ' class="year-separator"' : "";
     return (
-      `<tr${rowClass}>` +
+      `<tr${rowClass} data-period="${record.period_id}"${record.period_id === currentPeriodId() ? ' aria-current="true"' : ""}>` +
       `<td>${record.period_label}</td>` +
       `<td>${metricCell(record.rask_cents_per_km.toFixed(2), kpis.get("rask_cents_per_km")!.qoq)}</td>` +
       `<td>${metricCell(record.cask_cents_per_km.toFixed(2), kpis.get("cask_cents_per_km")!.qoq)}</td>` +

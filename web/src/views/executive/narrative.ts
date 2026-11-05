@@ -18,8 +18,9 @@ import { $ } from "../flights/dom";
 import { state } from "./state";
 import type { AnalysisCitation, AnalysisDocument, ExecutiveView } from "../../types/domain";
 import { isEntityKey } from "../shell/carriers";
+import { publishedAnalysisPath } from "./reading-periods";
 
-export function citationsByClaim(analysis: AnalysisDocument): Map<string, AnalysisCitation[]> {
+export function citationsByClaim(analysis: Pick<AnalysisDocument, "claims">): Map<string, AnalysisCitation[]> {
   return new Map(analysis.claims.map((claim) => [claim.claim_id, claim.citations]));
 }
 
@@ -118,11 +119,12 @@ export function validAnalysis(payload: unknown, entityKey: string, periodId: str
     p.sections.every((s) => s.claim_ids.every((id: string) => claimIds.has(id)));
 }
 
-async function fetchAnalysis(entityKey: string, periodId: string): Promise<AnalysisDocument | null> {
+export async function fetchAnalysis(entityKey: string, periodId: string): Promise<AnalysisDocument | null> {
   if (!isEntityKey(entityKey) || !/^\d{4}Q[1-4]$/.test(periodId)) return null;
-  const key = JSON.stringify([state.dataRoot, entityKey, periodId]);
+  const path = publishedAnalysisPath(entityKey, periodId)
+    ?? (entityKey === "AEROMEXICO" ? periodId : `${entityKey}/${periodId}`);
+  const key = JSON.stringify([state.dataRoot, entityKey, periodId, path]);
   if (cache.has(key)) return cache.get(key) ?? null;
-  const path = entityKey === "AEROMEXICO" ? periodId : `${entityKey}/${periodId}`;
   try {
     const response = await fetch(`${state.dataRoot}/analysis/${path}.json`);
     const raw: unknown = response.ok ? await response.json() : null;
@@ -134,7 +136,7 @@ async function fetchAnalysis(entityKey: string, periodId: string): Promise<Analy
 
 // Port of src/analysis_agent/analyst.py::emphasized: wraps the lead
 // sentence and any emphasis phrase in <strong>, escaping everything else.
-function emphasized(text: string, lead: string, phrases: string[] = []): string {
+export function emphasized(text: string, lead: string, phrases: string[] = []): string {
   const spans: Array<[number, number]> = [];
   for (const phrase of [lead, ...phrases]) {
     if (!phrase || !text.includes(phrase)) continue;

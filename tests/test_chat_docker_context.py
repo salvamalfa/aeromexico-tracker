@@ -90,11 +90,14 @@ def test_packaged_files_load_the_public_snapshot_without_checkout_fallback(tmp_p
     assert not (tmp_path / "analysis_runs").exists()
     assert not (tmp_path / "data").exists()
     assert not (tmp_path / "src/publish/gate.py").exists()
+    assert not (tmp_path / "src/dashboard/financial_periods.py").exists()
     environment = {**os.environ, "PYTHONPATH": str(tmp_path)}
     environment.pop("OPENAI_API_KEY", None)
     code = (
-        "from pathlib import Path; from src.config import PATHS; "
+        "import sys; from pathlib import Path; from src.config import PATHS; "
         "from src.conversational_analytics.data.snapshot import Snapshot; "
+        "assert 'src.web_export.executive' not in sys.modules; "
+        "assert 'src.web_export.flights' not in sys.modules; "
         "assert PATHS.root == Path.cwd(); "
         "print(Snapshot(Path('site')).version)"
     )
@@ -104,10 +107,34 @@ def test_packaged_files_load_the_public_snapshot_without_checkout_fallback(tmp_p
         env=environment,
         capture_output=True,
         text=True,
-        check=True,
+        check=False,
     )
+    assert result.returncode == 0, result.stderr
     expected = data_version(json.loads((ROOT / "site/publication_manifest.json").read_text()))
     assert result.stdout.strip() == expected
+
+
+def test_package_public_exports_remain_available():
+    """Lazy loading preserves the package's existing public import contract."""
+    from src.web_export import (
+        MissingWebInput,
+        PrivacyViolation,
+        check_privacy,
+        export_executive,
+        export_flights,
+        export_market,
+        recombine_flights,
+        require_inputs,
+    )
+    from src.web_export.executive import export_executive as direct_executive
+    from src.web_export.inputs import MissingWebInput as direct_missing_input
+
+    assert export_executive is direct_executive
+    assert MissingWebInput is direct_missing_input
+    assert issubclass(PrivacyViolation, Exception)
+    assert all(callable(value) for value in (
+        check_privacy, export_flights, export_market, recombine_flights, require_inputs
+    ))
 
 
 def test_chat_runtime_configuration_is_reincluded_in_docker_context():

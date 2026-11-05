@@ -6,6 +6,7 @@
 import type { Data } from "plotly.js";
 import Plotly from "../../lib/plotly";
 import { $ } from "../flights/dom";
+import { economyPeriodContext } from "./period-context";
 import { state } from "../executive/state";
 import { entityLabel, entityRecords } from "../executive/entities";
 import { CARRIER_KEYS, ENTITY_COLORS, type EntityKey } from "../shell/carriers";
@@ -56,6 +57,7 @@ export function renderUnitComparison(entities: EntityKey[], rangeValue: string):
       zeroline: metric === "unit_margin_cents_per_km", zerolinecolor: colors.ink,
     },
   });
+  economyPeriodContext("unit-chart", layout, entities, true);
   Plotly.react("unit-chart", traces, layout, plotConfig).then(() => {
     bindDefaultHover("unit-chart");
     selectedHover("unit-chart");
@@ -71,7 +73,7 @@ export function renderIndustryVolume(): void {
     const byPeriod = new Map(entityRecords(key).map((record) => [record.period_id, record]));
     return {
       x: labels,
-      y: industry.map((record) => (byPeriod.get(record.period_id)?.passengers ?? 0) / 1_000_000),
+      y: industry.map((record) => (byPeriod.get(record.period_id)?.passengers == null ? null : byPeriod.get(record.period_id)!.passengers / 1_000_000)),
       name: entityLabel(key),
       type: "bar",
       marker: { color: ENTITY_COLORS[key], opacity: 0.78, line: { color: "#ffffff", width: 1 } },
@@ -98,6 +100,7 @@ export function renderIndustryVolume(): void {
     yaxis: { title: { text: "Pasajeros (M)", font: { size: 10 } }, rangemode: "tozero", gridcolor: colors.grid, tickformat: ".1f" },
     yaxis2: { title: { text: "RASK (¢ USD)", font: { size: 10 } }, overlaying: "y", side: "right", tickmode: "auto", showgrid: false, tickformat: ".1f" },
   });
+  economyPeriodContext("volume-chart", layout, ["INDUSTRY"], true);
   Plotly.react("volume-chart", traces, layout, plotConfig).then(() => {
     bindDefaultHover("volume-chart");
     selectedHover("volume-chart");
@@ -132,6 +135,7 @@ export function renderVolumeComparison(entities: EntityKey[]): void {
     xaxis: { categoryorder: "array", categoryarray: labels, tickangle: -45, tickfont: { size: 8 }, showgrid: false },
     yaxis: { title: { text: "Pasajeros (M)", font: { size: 10 } }, rangemode: "tozero", gridcolor: colors.grid, tickformat: ".1f" },
   });
+  economyPeriodContext("volume-chart", layout, entities, true);
   Plotly.react("volume-chart", traces, layout, plotConfig).then(() => bindDefaultHover("volume-chart"));
 }
 
@@ -172,5 +176,6 @@ export function renderLoadComparison(periodId: string, loadEntities: EntityKey[]
     xaxis: { title: { text: "Factor de ocupación (%)", font: { size: 10 } }, gridcolor: colors.grid, ticksuffix: "%" },
     yaxis: { title: { text: "RASK (¢ USD por ASK-km)", font: { size: 10 } }, gridcolor: colors.grid, tickformat: ".1f", hoverformat: ".2f" },
   });
+  economyPeriodContext("load-chart", layout, loadEntities, false);
   Plotly.react("load-chart", traces, layout, plotConfig);
 }

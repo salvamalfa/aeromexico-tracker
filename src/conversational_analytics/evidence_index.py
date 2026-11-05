@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from .news_projection import NEWS_PUBLISHER_HOSTS
+
 INDEX_SCHEMA = "chat_evidence_index_v1"
 APPROVED_INDEX_SHA256_ENV = "CHAT_EVIDENCE_APPROVED_INDEX_SHA256"
 APPROVED_OWNER_ID = "salvamalfa"
@@ -25,7 +27,7 @@ MAX_RESULTS = 5
 MAX_EXCERPT_CHARS = 480
 MAX_NEWS_DESCRIPTION_CHARS = 320
 MAX_NEWS_QUOTE_CHARS = 200
-ALLOWED_HOSTS = frozenset(
+ALLOWED_HOSTS = NEWS_PUBLISHER_HOSTS | frozenset(
     {"sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
      "investorcloud.s3.amazonaws.com", "filemanager-cdn.mziq.com", "api.mziq.com", "www.aeroroutes.com"}
 )
@@ -284,7 +286,7 @@ class EvidenceIndex:
             raise EvidenceIndexError("start_date no puede ser posterior a end_date")
         company_filter = _optional_filter(company, "company", 100)
         limit = _limit(limit)
-        from .news_query import resolve_news_query, news_match
+        from .news_query import news_match, resolve_news_query
         try:
             intent = resolve_news_query(query, start_date, end_date, company_filter)
         except ValueError as error:

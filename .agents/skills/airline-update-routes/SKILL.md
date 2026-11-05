@@ -29,6 +29,34 @@ Si la familia es trimestral, usar `--round quarterly --quarter 2026Q3`.
 La fecha del ejemplo solo reproduce el corte; cambiarla deliberadamente.
 Pasos existentes disponibles: comandos dedicados para snapshots retenidos y Aerocivil; no se añade un parser universal de novedades al build genérico.
 
+Para una actualización pública de ANAC, usar `python -m
+scripts.refresh_anac_routes --workspace tmp/source-updates/<lote-nuevo>
+--dry-run` y después `--execute`. Reutiliza el descargador de rangos HTTP
+ligados a una sola edición ETag/Last-Modified, con límite de 250 MB y 187
+solicitudes, conserva el original completo y ejecuta retención,
+certificación Silver/Gold/linaje y replay del adaptador existente. La descarga
+única puede cortarse aunque el archivo exista: no confundir ese fallo con
+junio como último mes publicado. El mes objetivo se lee de todos los registros
+del original, nunca del nombre 2021–2030 ni de una noticia agregada. Un intento
+incompleto sin Bronze ni candidato puede continuarse con `--resume`; conserva
+el recibo previo y vuelve a comprobar el validador de versión. Un candidato
+ya escrito es inmutable. Este proceso no integra Gold activo ni publica mapas.
+
+Después de certificar la fuente, generar la revisión de consumidor mediante
+`python -m scripts.build_anac_route_review --candidate <lote>/candidate
+--baseline-data web/public/data/v1 --quarter <trimestre-cerrado>
+--out tmp/source-updates/<revision-nueva>`. Reutiliza normalización, linaje,
+resolución por operador/sentido/mes y exportación normal con contratos de
+privacidad. Comprueba igualdad exacta contra las observaciones certificadas,
+conserva los componentes de otras fuentes y rechaza trimestres posteriores
+a la disponibilidad o revisiones que retirarían un mercado sin tratamiento
+explícito de faltantes. Añade solo periodos realmente generados al manifiesto.
+Industria incluye las observaciones ANAC verificadas de Aerovías; Viva y
+Volaris no heredan esos vuelos. El recibo fija originales, baseline, dimensión,
+código y outputs. La vista local, la activación de Gold y la publicación son
+estados distintos. No reconstruir toda la web desde un warehouse antiguo
+para incorporar una fuente nueva; comprobar antes la semántica de cada tabla.
+
 Consultar `src/source_updates/catalog.py` para subproductos y brechas.
 No confundir esos pasos disponibles con un adaptador aprobado para cualquier
 formato o periodo nuevo. Entregar recibos y periodos realmente comprobados.
@@ -124,7 +152,8 @@ contactar al proveedor sin autorización expresa.
 Aplicar el [flujo común](../source-updates-common.md#originales-retenidos-y-lote-offline).
 ANAC exige `json`, consume todos los arrays y conserva compañía literal, par
 dirigido, servicio regular y métricas separadas. La edición retenida llega a
-junio: meses/operadores ausentes no son cero ni prueba de cobertura completa.
+junio; ese corte histórico no describe una descarga nueva. Meses/operadores
+ausentes no son cero ni prueba de cobertura completa.
 CAA exige `csv`; separa vuelos cotejados, no cotejados y cancelados por llegada/
 salida, sin renombrarlos como todos los vuelos realizados.
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from src.conversational_analytics.evaluation import verify_observation
 
 
@@ -68,26 +70,31 @@ def test_stage2_fixture_is_frozen_to_budget_and_preserves_source_lineage() -> No
 
 
 def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch,
 ) -> None:
-    from src.conversational_analytics.data.snapshot import Snapshot
     from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH, audit_snapshot
-    from tests._pre_financial_snapshot import copy_pre_financial_snapshot
+    from tests._news_runtime_fixtures import _pin_approved_content
+    from tests._stage2_historical_snapshot import historical_stage2_snapshot
 
+    _pin_approved_content(monkeypatch)
+    fixture_bytes = STAGE2_PILOT_FIXTURE_PATH.read_bytes()
     payload = json.loads(STAGE2_PILOT_FIXTURE_PATH.read_text(encoding="utf-8"))
-    snapshot = Snapshot(copy_pre_financial_snapshot(tmp_path / "pre-financial"))
-    assert snapshot.version != payload["expected_versions"]["data_version"]
-    report = audit_snapshot(
-        snapshot,
-        payload["cases"],
-        expected_versions=payload["expected_versions"],
-    )
+    with historical_stage2_snapshot(tmp_path / "historical-stage2") as snapshot:
+        assert snapshot.version != payload["expected_versions"]["data_version"]
+        report = audit_snapshot(snapshot, payload["cases"], expected_versions=payload["expected_versions"])
+
+    from src.conversational_analytics.evidence_index import EvidenceIndex, EvidenceIndexError
+
+    # The historical exception ends with the exact audit; today's trusted pin
+    # must reject the old index outside that context.
+    with pytest.raises(EvidenceIndexError, match="SHA-256"):
+        EvidenceIndex(snapshot.project_root / "config/chat/evidence/approved-index.json")
 
     assert report["mode"] == "offline-snapshot-audit"
     assert report["cases_total"] == 15
     assert report["snapshot_cases_checked"] == report["snapshot_cases_passed"] == 13
-    # The original cases remain numerically reproducible, while the published
-    # narratives/contracts have a newer identity than the frozen campaign.
+    # A pinned historical publication preserves all thirteen frozen numeric
+    # references. Its identity still differs from the earlier campaign fixture.
     mismatch = {
         "data_version": {
             "expected": payload["expected_versions"]["data_version"],
@@ -102,6 +109,69 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
     assert report["fixture_version_mismatches"] == mismatch
     assert set(report["model_quality_cases_pending"]) == {"N20", "es_ratio_average"}
     assert report["quality_denominator"] == 0
+    assert STAGE2_PILOT_FIXTURE_PATH.read_bytes() == fixture_bytes
+
+
+def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewriting_gold(monkeypatch):
+    import hashlib
+
+    from src.conversational_analytics.data.snapshot import Snapshot
+    from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH, audit_snapshot
+    from tests._news_runtime_fixtures import _pin_approved_content
+
+    _pin_approved_content(monkeypatch)
+    fixture_bytes = STAGE2_PILOT_FIXTURE_PATH.read_bytes()
+    payload = json.loads(fixture_bytes)
+    root = Path(__file__).resolve().parents[1]
+    market_raw = (root / "site/data/v1/market.json").read_bytes()
+    from scripts.check_pages_publication import verifier_for
+
+    profile = verifier_for(root / "site", root)
+    native = profile == "src.publish.afac_history_scope"
+    assert native or profile == "src.publish.quarterly_story_scope"
+    anchor_name = "afac-history-release.json" if native else "quarterly-story-release.json"
+    anchor = json.loads((root / "config/publish" / anchor_name).read_bytes())
+    pin = next(row for row in anchor["scope"]["data_files"] if row["path"] == "data/v1/market.json")
+    assert pin["sha256"] == (
+        "10abb8b86ae0f4a7153691e479d9c8da1fc163badf625d172a6197646a096b88" if native
+        else "6421acaf6b424b6dfa2684e5dedc77294ab9a5887a33675dee64d4785cda30e0"
+    )
+    assert hashlib.sha256(market_raw).hexdigest() == pin["sha256"]
+    market = json.loads(market_raw)
+    months = [
+        row["segments"]["domestic"] for row in market["months"]
+        if row["period_id"] in {"2026M04", "2026M05", "2026M06"}
+    ]
+    assert len(months) == 3
+    denominator = sum(row["mexican_carriers_passengers"] for row in months)
+    passengers = sum(row["carriers"]["AEROMEXICO"]["passengers"] for row in months)
+    assert denominator == 15_861_764 and passengers == 3_856_840
+    current = passengers / denominator
+    frozen = passengers / 15_847_210
+    assert current == 0.24315328358182609 and frozen == 0.24337659436582212
+    previous = next(row for row in market["quarters"] if row["period_id"] == "2025Q2")["segments"]["domestic"]
+    assert previous["carriers"]["AEROMEXICO"]["passengers"] == 4_039_797
+    assert previous["mexican_carriers_passengers"] == (15_952_449 if native else 15_936_290)
+    previous_share = 4_039_797 / previous["mexican_carriers_passengers"]
+    frozen_previous = 4_039_797 / 15_936_290
+    snapshot = Snapshot(root / "site")
+    report = audit_snapshot(snapshot, payload["cases"], expected_versions=payload["expected_versions"])
+    assert report["snapshot_cases_checked"] == 13
+    assert report["snapshot_cases_passed"] == 11
+    assert set(report["fixture_version_mismatches"]) == {"data_version", "semantic_version"}
+    failures = report["snapshot_cases_failed"]
+    assert failures[0] == {"id": "fixture-version", "failures": report["fixture_version_mismatches"]}
+    current_failure = f"valor incorrecto para market_share: {current} != {frozen}"
+    previous_failure = f"valor incorrecto para market_share: {previous_share} != {frozen_previous}"
+    assert failures[1:] == [
+        {"id": "en_relative_share_change", "failures": (
+            (previous_failure, current_failure) if native else (current_failure,)
+        )},
+        {"id": "es_am_market_share", "failures": (current_failure,)},
+    ]
+    assert set(report["model_quality_cases_pending"]) == {"N20", "es_ratio_average"}
+    assert report["quality_denominator"] == 0
+    assert STAGE2_PILOT_FIXTURE_PATH.read_bytes() == fixture_bytes
 
 
 def test_clarification_accepts_imperatives_without_invented_numeric_answers() -> None:

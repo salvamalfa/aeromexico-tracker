@@ -8,21 +8,21 @@ from pathlib import Path
 
 import pytest
 
+from src.conversational_analytics.data.snapshot import Snapshot
+from src.conversational_analytics.evaluation_stage3_coverage import (
+    CAMPAIGN_CANDIDATE,
+    STAGE3_PROMPT_PATH,
+    STAGE3_PROMPT_SHA256,
+    _extract_evidence,
+    derive_stage3_coverage,
+    validate_receipt_scope,
+)
 from src.conversational_analytics.evidence_index import (
     APPROVED_INDEX_SHA256_ENV,
     EvidenceIndex,
     canonical_index_sha256,
 )
 from src.conversational_analytics.providers import _openai_prompt
-from src.conversational_analytics.data.snapshot import Snapshot
-from src.conversational_analytics.evaluation_stage3_coverage import (
-    CAMPAIGN_CANDIDATE,
-    STAGE3_PROMPT_SHA256,
-    STAGE3_PROMPT_PATH,
-    _extract_evidence,
-    derive_stage3_coverage,
-    validate_receipt_scope,
-)
 from src.web_export.business_metrics_approval import (
     APPROVAL_RECEIPT_SHA256_ENV,
     canonical_receipt_sha256,
@@ -93,9 +93,10 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     # This separate field describes the currently published dashboard, whose
     # financial quarter can advance while market/routes keep their own cuts.
     executive = json.loads(Path("site/data/v1/executive.json").read_text())
+    market_doc = json.loads(Path("site/data/v1/market.json").read_bytes())
     assert report["current_dashboard_period"] == {
         "economic": max(row["period_id"] for row in executive["records"]),
-        "market": "2026Q2",
+        "market": max(row["period_id"] for row in market_doc["quarters"]),
         "domestic_routes": ["2026M07"],
     }
     assert report["runtime_capabilities"]["candidate"] == CAMPAIGN_CANDIDATE
@@ -123,12 +124,14 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
     )
 
     market = cases["N07"]["calls"][0]["result"]
-    row_2026q2 = next(
-        row for row in market["rows"] if row["period"] == "2026Q2" and row["entity_id"] == "VOLARIS"
+    current_market = report["current_dashboard_period"]["market"]
+    prior_market = f"{int(current_market[:4]) - 1}{current_market[4:]}"
+    assert cases["N07"]["calls"][0]["arguments"]["periods"] == [prior_market, current_market]
+    current_row = next(
+        row for row in market["rows"] if row["period"] == current_market and row["entity_id"] == "VOLARIS"
     )
-    market_doc = json.loads(Path("site/data/v1/market.json").read_text())
-    source_row = next(item for item in market_doc["quarters"] if item["period_id"] == "2026Q2")
-    assert row_2026q2["value"] == source_row["segments"]["domestic"]["carriers"]["VOLARIS"]["share"]
+    source_row = next(item for item in market_doc["quarters"] if item["period_id"] == current_market)
+    assert current_row["value"] == source_row["segments"]["domestic"]["carriers"]["VOLARIS"]["share"]
     assert cases["N07"]["status"] == "supported"
     n07_rows = cases["N07"]["calls"][0]["result"]["rows"]
     am_share = {
@@ -138,12 +141,25 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
         item for item in cases["N07"]["derived_calculations"]
         if item["calculation"] == "AEROMEXICO_share_change"
     )
-    assert am_delta["value"] == (am_share["2026Q2"] - am_share["2025Q2"]) * 100
+    assert am_delta["periods"] == [prior_market, current_market]
+    assert am_delta["value"] == (am_share[current_market] - am_share[prior_market]) * 100
+    for row in cases["N11"]["derived_calculations"]:
+        entity = row["calculation"].removesuffix("_load_factor_change")
+        values = {r["period_id"]: r["load_factor"] for r in executive["entities"][entity]["records"]}
+        prior, current = cases["N11"]["calls"][0]["arguments"]["periods"]
+        assert row["periods"] == [prior, current]
+        assert row["value"] == pytest.approx((values[current] - values[prior]) * 100)
+    assert len(cases["N11"]["derived_calculations"]) == 3
+    n03 = cases["N03"]["derived_calculations"]
+    assert len(n03) == 1 and n03[0]["period"] == report["current_dashboard_period"]["economic"]
     assert cases["N05"]["status"] == "coverage_missing"
     assert "más grande" in cases["N05"]["limitation"]
     assert "no cubre todas las aerolíneas" in cases["N05"]["limitation"]
     assert cases["N08"]["status"] == "coverage_missing"
-    assert "2T25 frente a 2T26" in cases["N08"]["limitation"]
+    assert (
+        f"{prior_market[-1]}T{prior_market[2:4]} frente a {current_market[-1]}T{current_market[2:4]}"
+        in cases["N08"]["limitation"]
+    )
     for case in cases.values():
         if case["status"] == "supported":
             assert case["tool_execution_complete"] is True
@@ -193,13 +209,16 @@ def test_stage3_derives_all_30_cases_from_real_tools_and_current_snapshot(monkey
         assert len(urls) == len(set(urls))
     evidence_index = report["published_capabilities"]["report_evidence_index"]
     assert evidence_index["status"] == "published"
-    assert evidence_index["record_count"] == 10
+    approved_records = json.loads(Path("config/chat/evidence/approved-index.json").read_bytes())["records"]
+    assert evidence_index["record_count"] == len(approved_records)
     assert evidence_index["report_search_available"] is True
     assert evidence_index["news_search_available"] is True
 
     index = EvidenceIndex("config/chat/evidence/approved-index.json")
-    assert sum(record["kind"] == "report" for record in index.records) == 7
-    assert sum(record["kind"] == "news" for record in index.records) == 3
+    for kind in ("report", "news"):
+        assert sum(record["kind"] == kind for record in index.records) == sum(
+            record["kind"] == kind for record in approved_records
+        )
     report_search = cases["N16"]["calls"][0]["result"]
     assert report_search["count"] == 3
     assert {row["period"] for row in report_search["results"]} == {"2026Q1", "2026Q2"}

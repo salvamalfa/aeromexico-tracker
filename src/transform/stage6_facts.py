@@ -423,69 +423,9 @@ def _build_afac_aggregate_history(
 
 
 def _afac_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
-    source = pd.read_parquet(PATHS.silver / "afac_monthly_stats.parquet")
-    exceptions = source[source["carrier_key"].isna()].groupby(["source_system", "source_carrier_name"], dropna=False).agg(
-        rows=("value", "size"), first_period=("period_id", "min"), last_period=("period_id", "max"), passengers=("value", "sum")
-    ).reset_index()
-    exceptions["reason"] = "Nombre fuera del alcance del crosswalk de entidades prioritarias; se conserva en silver y participa en el denominador de mercado."
-    mapped = source.dropna(subset=["carrier_key"]).copy()
-    aggregate = _build_afac_aggregate_history(
-        mapped,
-        ["carrier_key", "period_id", "market"],
-    )
-    total = _build_afac_aggregate_history(
-        mapped,
-        ["carrier_key", "period_id"],
-    )
-    total["market"] = "total"
-    aggregate = pd.concat([aggregate, total], ignore_index=True)
-    market = _build_afac_aggregate_history(source, ["period_id", "market"])
-    market_total = _build_afac_aggregate_history(source, ["period_id"])
-    market_total["market"] = "total"
-    market = pd.concat([market, market_total], ignore_index=True)
-    market["carrier_key"] = "MARKET_TOTAL_MX"
-    aggregate = pd.concat([aggregate, market[aggregate.columns]], ignore_index=True)
-    ingested = pd.to_datetime(aggregate["ingested_at"], utc=True).dt.tz_convert(None)
-    rows = pd.DataFrame(
-        {
-            "carrier_key": aggregate["carrier_key"],
-            "period_id": aggregate["period_id"],
-            "calendar_period_id": aggregate["period_id"],
-            "fiscal_period_id": aggregate["period_id"],
-            "period_type": "month",
-            "period_start_date": pd.to_datetime(aggregate["period_start_date"]).dt.date,
-            "period_end_date": pd.to_datetime(aggregate["period_end_date"]).dt.date,
-            "metric_key": "passengers_afac",
-            "segment": aggregate["market"],
-            "value": aggregate["value"].astype(float),
-            "value_metric": np.nan,
-            "value_imperial": np.nan,
-            "value_as_reported": aggregate["value"].astype(float),
-            "unit_as_reported": "passengers",
-            "unit_normalized": "count",
-            "currency": None,
-            "value_original_currency": np.nan,
-            "value_usd": np.nan,
-            "fx_rate_used": np.nan,
-            "fx_rate_type": None,
-            "is_derived": True,
-            "is_preliminary": aggregate["is_preliminary"],
-            "is_estimated": aggregate["is_estimated"],
-            "derivation_formula": "SUM(AFAC passengers) across service_type for carrier, period and market",
-            "source_system": "afac",
-            "source_file": "silver/afac_monthly_stats.parquet",
-            "source_hash": aggregate["source_hash"],
-            "ingested_at": ingested,
-            "confidence": 1.0,
-        }
-    )
-    # The aggregate helper already assigned version intervals. Preserve them
-    # while mapping the source-neutral snapshot to the Gold fact schema.
-    rows["valid_from"] = aggregate["valid_from"].to_numpy()
-    rows["valid_to"] = aggregate["valid_to"].to_numpy()
-    rows["is_current"] = aggregate["is_current"].to_numpy()
-    rows["restatement_count"] = aggregate["restatement_count"].to_numpy()
-    return rows[FACT_COLUMNS], exceptions
+    from src.transform.afac_facts import build_afac_rows
+
+    return build_afac_rows()
 
 
 def _derived_row(template: pd.Series, metric_key: str, value: float | None, unit: str, formula: str, *, value_metric: float | None = None, value_imperial: float | None = None) -> dict[str, Any]:

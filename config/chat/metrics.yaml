@@ -94,8 +94,8 @@ metrics:
     weighting: Conteos reportados; INDUSTRY suma solo las tres compañías y no es el denominador AFAC de todas las aerolíneas mexicanas.
     dimensions: [entity, period, segment]
     period_grains: [month, quarter]
-    coverage: {months: '2019M01–2026M06', quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
-    absence: null es dato no publicado, nunca cero; Internacional/total 2019–2020 tienen cobertura incompleta.
+    coverage: {months: 'Según market.months del snapshot publicado', quarters: 'Trimestres completos de market.quarters del snapshot publicado', segments: [total, domestic, international]}
+    absence: null identifica una observación no disponible en el snapshot, nunca cero; validar el periodo y segmento en el payload.
     quality: Reportado AFAC.
     references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
   - id: afac_market_passengers
@@ -111,8 +111,8 @@ metrics:
     weighting: Suma de conteos AFAC. No dividir entre tres ni sustituir por pasajeros de INDUSTRY.
     dimensions: [entity, period, segment]
     period_grains: [month, quarter]
-    coverage: {months: '2019M01–2026M06', quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
-    absence: null es dato no publicado, nunca cero; internacional/total 2019–2020 tiene faltantes.
+    coverage: {months: 'Según market.months del snapshot publicado', quarters: 'Trimestres completos de market.quarters del snapshot publicado', segments: [total, domestic, international]}
+    absence: null identifica una observación no disponible en el snapshot, nunca cero; validar el periodo y segmento en el payload.
     quality: Reportado AFAC.
     references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
   - id: ask_km
@@ -213,9 +213,9 @@ metrics:
     weighting: Recalcular solo como pasajeros sumados / denominador sumado; no promediar porcentajes mensuales o empresariales.
     dimensions: [entity, period, segment]
     period_grains: [month, quarter]
-    coverage: {months: '2019M01–2026M06', complete_quarters: '2019Q1–2026Q2', segments: [total, domestic, international]}
-    absence: N/D o null representa dato no publicado/no comparable, no cero. Internacional/total 2019–2020 tienen vacíos AFAC.
-    quality: Reportado AFAC, razón determinista. No representa participación mundial; excluye aerolíneas extranjeras porque AFAC no las publica por aerolínea.
+    coverage: {months: 'Según market.months del snapshot publicado', complete_quarters: 'Trimestres completos de market.quarters del snapshot publicado', segments: [total, domestic, international]}
+    absence: N/D o null identifica una observación no disponible o no comparable en el snapshot, nunca cero; validar los periodos y segmentos efectivos.
+    quality: Razón determinista sobre el universo AFAC de empresas mexicanas, incluidas sus operaciones internacionales; las empresas extranjeras permanecen separadas de este denominador.
     references: [https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404]
   - id: market_share_change_qoq_pp
     label: Cambio de participación trimestral

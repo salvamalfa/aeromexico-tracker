@@ -23,11 +23,13 @@ def export_market(
     out_dir: Path,
     *,
     skip_input_check: bool = False,
+    include_demand: bool = True,
+    input_root: Path | None = None,
 ) -> list[Path]:
     """Write out_dir/market.json. Returns the single path written, as a list."""
 
     if not skip_input_check:
-        require_inputs("market")
+        require_inputs("market", root=input_root)
 
     validator = Draft202012Validator(MARKET_SCHEMA)
     errors = [f"{list(e.path)}: {e.message}" for e in validator.iter_errors(payload)]
@@ -38,8 +40,9 @@ def export_market(
     from src.dashboard.market_demand import build_market_demand
 
     written = [write_json(out_dir / "market.json", payload)]
-    if not skip_input_check:
+    if not skip_input_check and include_demand:
         import json
+
         from src.config import PATHS
 
         demand = build_market_demand()

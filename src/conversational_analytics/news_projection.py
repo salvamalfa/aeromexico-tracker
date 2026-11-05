@@ -1,11 +1,85 @@
 """Pure shared news/card projection used by both the bounded chat runtime and exporter."""
 
 from __future__ import annotations
+
+import hashlib
+import json
 from datetime import date
 from typing import Any
-from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 COMPANIES = {"Aeroméxico", "Aeroméxico Connect", "Volaris", "Viva"}
+NEWS_PUBLISHER_HOSTS = frozenset(
+    {
+        "ir.aeromexico.com",
+        "investorcloud.s3.amazonaws.com",
+        "cdn.investorcloud.net",
+        "filemanager-cdn.mziq.com",
+        "api.mziq.com",
+        "www.aeroroutes.com",
+        "www.sec.gov",
+        "cms.volaris.com",
+        "www.bmv.com.mx",
+        "www.globenewswire.com",
+        "acapulco.gob.mx",
+        "www.gob.mx",
+        "noticias.oma.aero",
+        "www.eleconomista.com.mx",
+        "aerolatinnews.com",
+        "www.aviacionline.com",
+    }
+)
+
+
+def public_sources(record: dict[str, Any]) -> list[dict[str, str]]:
+    """Project citation metadata only, retaining native editorial provenance.
+
+    The editorial hash identifies a recorded reading, not downloaded article
+    bytes. Its complete semantics stay in the hash-bound approval record.
+    """
+    source = record["source"]
+    result = [{**{key: source[key] for key in ("id", "url", "sha256")}, "publisher": record["publisher"]}]
+    observations = record.get("publisher_observations", [])
+    if not isinstance(observations, list):
+        raise ValueError("Publisher observations must be a list")
+    primary_verified = False
+    for observation in observations:
+        url = observation["url"]
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname not in NEWS_PUBLISHER_HOSTS
+            or parsed.username
+            or parsed.password
+        ):
+            raise ValueError("Editorial provenance outside bounded publisher list")
+        if (
+            observation.get("representation") != "reviewed_web_observation_not_original_publisher_bytes"
+            or observation.get("original_page_sha256") is not None
+            or observation.get("publisher_page_read") is not True
+        ):
+            raise ValueError("Editorial provenance must describe an actual recorded native reading")
+        encoded = (
+            json.dumps(observation, ensure_ascii=False, sort_keys=True, allow_nan=False, indent=2) + "\n"
+        ).encode()
+        digest = hashlib.sha256(encoded).hexdigest()
+        if canonical_news_url(url) == canonical_news_url(source["url"]):
+            primary_verified = digest == source["sha256"]
+            continue
+        result.append(
+            {
+                "id": "web_observation_" + digest[:20],
+                "url": url,
+                "sha256": digest,
+                "publisher": observation["publisher"],
+            }
+        )
+    if (
+        source.get("sha256_semantics") == "reviewed_observation_not_original_page_bytes"
+        and not primary_verified
+    ):
+        raise ValueError("Selected editorial observation differs from its recorded source hash")
+    return result
 
 
 def canonical_news_url(value: str) -> str:
@@ -53,7 +127,8 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
         if require_known_companies and not set(companies).issubset(COMPANIES):
             raise ValueError("Unknown company")
         topics = record.get("topics", [])
-        source = {**record["source"], "publisher": record["publisher"]}
+        sources = public_sources(record)
+        source = sources[0]
         url = canonical_news_url(source["url"])
         story = record.get("story_id", record["id"])
         metadata = _review_metadata(record)
@@ -73,10 +148,10 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
         date.fromisoformat(published)
         if story in stories:
             if set(stories[story]["companies"]) != set(companies):
-                raise ValueError(
-                    "Conflicting company attribution within one story; review source grouping"
-                )
-            stories[story]["sources"].append(source)
+                raise ValueError("Conflicting company attribution within one story; review source grouping")
+            for source in sources:
+                if source not in stories[story]["sources"]:
+                    stories[story]["sources"].append(source)
             # Mixed operator attribution cannot silently become a shared card.
             # Consistent company sets keep topic filters searchable per source.
             stories[story]["topics"] = sorted(set(stories[story]["topics"]) | set(topics))
@@ -100,7 +175,7 @@ def project(records: list[dict[str, Any]], *, require_known_companies: bool = Tr
             "event_date": record.get("event_date"),
             "event_end_date": record.get("event_end_date"),
             "first_captured_at": record.get("first_captured_at"),
-            "sources": [source],
+            "sources": sources,
             "review_status": record["review_status"],
         }
     return sorted(stories.values(), key=lambda row: (row["published_at"], row["id"]), reverse=True)

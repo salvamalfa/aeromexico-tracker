@@ -1,0 +1,180 @@
+{
+  "approval_scope": "only_the_reviewed_news_items_no_analysis_or_map_approval",
+  "approved_index_canonical_sha256": "9f8f12fc088cefce09f822d6647f5b46856e6ee7b600c5a1750db0c3e5f07005",
+  "approved_index_raw_sha256": "b9980be0fbd456fc50fce482b03377b69f4faae92d0b96f1d217ad3a85451356",
+  "approved_items": [
+    {
+      "candidate_content_sha256": "220fcf1ad7d6a142ef93fed7d8cf84dd1efd4a3c6b43bc911211050796c51673",
+      "id": "editorial_51e09773ed15e500bdc4d890",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_51e09773ed15e500bdc4d890"
+    },
+    {
+      "candidate_content_sha256": "1ce0cf6ff6ffd1039b2d5fa0243845a24b851491355cac5b40e162add270e9e0",
+      "id": "editorial_b74281c018382f67fc5c04e2",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_b74281c018382f67fc5c04e2"
+    },
+    {
+      "candidate_content_sha256": "fcdadd52f7641d1261ac6bc94743a76e209095d2ffbb91ed22b0ac3f29eaaeb0",
+      "id": "editorial_d593642a1379cea2eb0ffc51",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_d593642a1379cea2eb0ffc51"
+    },
+    {
+      "candidate_content_sha256": "b5ead0a9584e84004abf948778615b8b9df28f0784ddfed85b8cec5f635912ea",
+      "id": "editorial_0aa3039f376de7c15a2dd4e0",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_0aa3039f376de7c15a2dd4e0"
+    },
+    {
+      "candidate_content_sha256": "74262f05f9d9549ee40c41bc8401eded1852f26515a23bc87673b38b5bc65469",
+      "id": "editorial_0d08e581248efca2dfd579e6",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_0d08e581248efca2dfd579e6"
+    },
+    {
+      "candidate_content_sha256": "6e254c4cf6bd9a9c9b9f830422eed0626a49952574641bc4ac1a6c9a520f08fd",
+      "id": "editorial_c8b26f6830ed36a782f0b1e2",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_c8b26f6830ed36a782f0b1e2"
+    },
+    {
+      "candidate_content_sha256": "67e19bc87eae70bbfdf264eae0a2a604bce741915a182cd007d2cac40b9de42b",
+      "id": "editorial_271661e530e6ae1737f1c268",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_271661e530e6ae1737f1c268"
+    },
+    {
+      "candidate_content_sha256": "8a731c8f2bce19ad50f9f1d4a2ee01dc954fc40b896942e228df99640c775602",
+      "id": "editorial_064e3505206a45920defc8ae",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_064e3505206a45920defc8ae"
+    },
+    {
+      "candidate_content_sha256": "74beea4c4a9faabbeeedb209f83e69a84fbcdfcab3ab5f3ed5b7356bda3babab",
+      "id": "editorial_58f74da21cf55cffe3be414a",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_58f74da21cf55cffe3be414a"
+    },
+    {
+      "candidate_content_sha256": "cbf068c67b88a35a7ecfd43792b17522d1b1c52afbfaac4a5f26c27623364b85",
+      "id": "editorial_e2141a7189bcb2d2b2d77899",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_e2141a7189bcb2d2b2d77899"
+    },
+    {
+      "candidate_content_sha256": "fd24abfb821bf6473a52d8af65260e5cb5a82c488b38f92d922c5686227169c8",
+      "id": "editorial_ad5a64a03cbdaf2038432486",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_ad5a64a03cbdaf2038432486"
+    },
+    {
+      "candidate_content_sha256": "02c5b4e8a2ec73d596e7fd5ba415f5f5fce366d01ae1bc405f3ae1cc1af9d871",
+      "id": "editorial_fbbabf0a8f0931f5451622c3",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_fbbabf0a8f0931f5451622c3"
+    },
+    {
+      "candidate_content_sha256": "1173eafe0179f71fd8bc529c8b85618cf9fdfcb9d7eec52a8fbd51924b328d6a",
+      "id": "editorial_4d6cc8d903291c6eb46d9ed3",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_4d6cc8d903291c6eb46d9ed3"
+    },
+    {
+      "candidate_content_sha256": "faafe8826f8e44498d459e6e92a7f52242c550d80aeafc4d8707c09cc2369ecd",
+      "id": "editorial_6547a7c3b748f62e68020911",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_6547a7c3b748f62e68020911"
+    },
+    {
+      "candidate_content_sha256": "27e953826b0c81b9e43461934f83770e42153df2a45971857942d91eaf833e71",
+      "id": "editorial_09221a96ac03dbc7c069c199",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_09221a96ac03dbc7c069c199"
+    },
+    {
+      "candidate_content_sha256": "45901c4ca8b82dce54392f857ad0cd3753d8bc8f23046317d175f789f706cb3a",
+      "id": "editorial_c893377485071c9743ca850a",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_c893377485071c9743ca850a"
+    },
+    {
+      "candidate_content_sha256": "63a7fd27fa0a20de5f84db7ba70d35dad244633b2cd673049d247f8b639b51f2",
+      "id": "editorial_01329ffbccedbf01f512fb03",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_01329ffbccedbf01f512fb03"
+    },
+    {
+      "candidate_content_sha256": "e104269bacc9052ef30bbfb3e9efea9bedede3e9b8f2ef3a4bd35fc8453487a1",
+      "id": "editorial_383b248d86946760d248012d",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_383b248d86946760d248012d"
+    },
+    {
+      "candidate_content_sha256": "495470112e9ea8d1d343287fa4bea8ae5ec5c743dcea1f3e0cff18faa60e2678",
+      "id": "editorial_53a00808b94cdacc5dd2ec51",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_53a00808b94cdacc5dd2ec51"
+    },
+    {
+      "candidate_content_sha256": "637cefc708cfadc0333d1b530c8baa78e265f759fb2ea85e0318de7877e6397f",
+      "id": "editorial_bc86116f256517f37034fadc",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_bc86116f256517f37034fadc"
+    },
+    {
+      "candidate_content_sha256": "734293ae48e12e5cfe3b7987de8e5808436a39a32e1fe0ec991e8ad1fb0b03dd",
+      "id": "editorial_8ed0909b1e10069493ddf3f3",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_8ed0909b1e10069493ddf3f3"
+    },
+    {
+      "candidate_content_sha256": "5f10a7e6fca7f3a15416fa74e8032703d1abf9b120ee4976982f20ef142252fd",
+      "id": "editorial_f98a534f5be8bcdfba813c3a",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_f98a534f5be8bcdfba813c3a"
+    },
+    {
+      "candidate_content_sha256": "c40f009931d1c32923d09ef6c860aceaaa4ac85755e390ee6aa7e854108e9745",
+      "id": "editorial_aa0905b2d3112fcf1401bfc6",
+      "receipt_id": "owner-news-907971ca7e811a91:editorial_aa0905b2d3112fcf1401bfc6"
+    }
+  ],
+  "decision": {
+    "approved_item_hashes": {
+      "editorial_01329ffbccedbf01f512fb03": "63a7fd27fa0a20de5f84db7ba70d35dad244633b2cd673049d247f8b639b51f2",
+      "editorial_064e3505206a45920defc8ae": "8a731c8f2bce19ad50f9f1d4a2ee01dc954fc40b896942e228df99640c775602",
+      "editorial_09221a96ac03dbc7c069c199": "27e953826b0c81b9e43461934f83770e42153df2a45971857942d91eaf833e71",
+      "editorial_0aa3039f376de7c15a2dd4e0": "b5ead0a9584e84004abf948778615b8b9df28f0784ddfed85b8cec5f635912ea",
+      "editorial_0d08e581248efca2dfd579e6": "74262f05f9d9549ee40c41bc8401eded1852f26515a23bc87673b38b5bc65469",
+      "editorial_271661e530e6ae1737f1c268": "67e19bc87eae70bbfdf264eae0a2a604bce741915a182cd007d2cac40b9de42b",
+      "editorial_383b248d86946760d248012d": "e104269bacc9052ef30bbfb3e9efea9bedede3e9b8f2ef3a4bd35fc8453487a1",
+      "editorial_4d6cc8d903291c6eb46d9ed3": "1173eafe0179f71fd8bc529c8b85618cf9fdfcb9d7eec52a8fbd51924b328d6a",
+      "editorial_51e09773ed15e500bdc4d890": "220fcf1ad7d6a142ef93fed7d8cf84dd1efd4a3c6b43bc911211050796c51673",
+      "editorial_53a00808b94cdacc5dd2ec51": "495470112e9ea8d1d343287fa4bea8ae5ec5c743dcea1f3e0cff18faa60e2678",
+      "editorial_58f74da21cf55cffe3be414a": "74beea4c4a9faabbeeedb209f83e69a84fbcdfcab3ab5f3ed5b7356bda3babab",
+      "editorial_6547a7c3b748f62e68020911": "faafe8826f8e44498d459e6e92a7f52242c550d80aeafc4d8707c09cc2369ecd",
+      "editorial_8ed0909b1e10069493ddf3f3": "734293ae48e12e5cfe3b7987de8e5808436a39a32e1fe0ec991e8ad1fb0b03dd",
+      "editorial_aa0905b2d3112fcf1401bfc6": "c40f009931d1c32923d09ef6c860aceaaa4ac85755e390ee6aa7e854108e9745",
+      "editorial_ad5a64a03cbdaf2038432486": "fd24abfb821bf6473a52d8af65260e5cb5a82c488b38f92d922c5686227169c8",
+      "editorial_b74281c018382f67fc5c04e2": "1ce0cf6ff6ffd1039b2d5fa0243845a24b851491355cac5b40e162add270e9e0",
+      "editorial_bc86116f256517f37034fadc": "637cefc708cfadc0333d1b530c8baa78e265f759fb2ea85e0318de7877e6397f",
+      "editorial_c893377485071c9743ca850a": "45901c4ca8b82dce54392f857ad0cd3753d8bc8f23046317d175f789f706cb3a",
+      "editorial_c8b26f6830ed36a782f0b1e2": "6e254c4cf6bd9a9c9b9f830422eed0626a49952574641bc4ac1a6c9a520f08fd",
+      "editorial_d593642a1379cea2eb0ffc51": "fcdadd52f7641d1261ac6bc94743a76e209095d2ffbb91ed22b0ac3f29eaaeb0",
+      "editorial_e2141a7189bcb2d2b2d77899": "cbf068c67b88a35a7ecfd43792b17522d1b1c52afbfaac4a5f26c27623364b85",
+      "editorial_f98a534f5be8bcdfba813c3a": "5f10a7e6fca7f3a15416fa74e8032703d1abf9b120ee4976982f20ef142252fd",
+      "editorial_fbbabf0a8f0931f5451622c3": "02c5b4e8a2ec73d596e7fd5ba415f5f5fce366d01ae1bc405f3ae1cc1af9d871"
+    },
+    "base_index_canonical_sha256": "1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f",
+    "base_index_raw_sha256": "5fba922f7b6186a5ee0c31d9f678c3222a11fb50e9cf7d5b2f26b62212516672",
+    "decision": "owner_approved",
+    "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+    "owner_id": "salvamalfa",
+    "owner_name": "Salva",
+    "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+    "question": "¿Apruebas integrar y publicar las 23 noticias del paquete 907971ca, ya visibles en Noticias y detalladas en el paquete de revisión?",
+    "quoted_response": "Aprobar las 23 noticias para integrar y publicar",
+    "recorded_at": "2026-11-02T01:33:13Z",
+    "response_evidence": "Exact asynchronous owner answer relayed by Codex coordinator /root in this chat; no file attribute is used as actor proof.",
+    "response_origin": "explicit_owner_chat_response",
+    "schema": "news_owner_decision_v1",
+    "scope": "Only these 23 reviewed news records and their publisher provenance; does not approve four new analysis stories or the future map.",
+    "time_basis": "UTC registration time read from clock tool; not an assertion of the exact human response instant"
+  },
+  "index_records": 33,
+  "news_records": 26,
+  "preserved_record_ids": [
+    "aeromexico-2026q1-fuel-attribution",
+    "aeromexico-2026q2-fuel-attribution",
+    "aeromexico-2026q2-fuel-expense-metric",
+    "viva-2026q1-fuel-and-cost-attribution",
+    "viva-2026q2-fuel-environment-attribution",
+    "volaris-2026q1-economic-fuel-cost",
+    "volaris-2026q2-economic-fuel-cost",
+    "flightglobal-aeromexico-fuel-2026-04-30",
+    "flightglobal-aeromexico-q2-2026-07-15",
+    "flightglobal-volaris-q2-2026-07-22"
+  ],
+  "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+  "schema": "news_batch_approval_v1"
+}

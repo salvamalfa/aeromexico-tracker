@@ -1,3 +1,4 @@
+import { currentMapPeriod } from "./map-periods";
 // International region grouping and the region switch UI. Ported from
 // src/dashboard/assets/flights.js (REGION_MEMBERS, REGIONS, airportRegion,
 // isMexican, routeRegion, regionRoutes, renderRegionSwitch).
@@ -10,7 +11,7 @@ import type { Airport, Route } from "../../types/domain";
 const REGION_MEMBERS: Record<string, string[]> = {
   asia: ["ICN", "NRT"],
   europa: ["AMS", "BCN", "CDG", "FCO", "LHR", "MAD"],
-  sudamerica: ["BOG", "CLO", "CTG", "EZE", "GRU", "LIM", "MDE", "SCL", "UIO"],
+  sudamerica: ["BOG", "CLO", "CTG", "EZE", "GRU", "LIM", "MDE", "SCL", "UIO", "VCP"],
 };
 
 export interface RegionDefinition {
@@ -74,7 +75,7 @@ export function renderRegionSwitch(): void {
     button.addEventListener("click", async () => {
       const id = (button as HTMLElement).dataset.region ?? null;
       state.selectedRegion = state.selectedRegion === id ? null : id;
-      await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
+      await renderNetworkPeriod(currentMapPeriod());
     })
   );
 }

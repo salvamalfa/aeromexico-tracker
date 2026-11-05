@@ -4,9 +4,11 @@ Grupo Aeroméxico keeps every source and layer the page has always shown.
 Volaris, Viva and Industria (the three together) show, by the owner's
 decision of 30 Sep 2026: domestic routes estimated from AFAC + AeroDataBox
 (IPF), Mexico–United States observed by BTS T-100, and the rest of the
-international network estimated. They carry no Aeroméxico-only layer
-(AICM slots, AIFA single-operator markets, OMA releases, ANAC/Aerocivil/
-CAA/Aena authority observations). Their seat capacity (fase 4) is the
+international network estimated. The owner's subsequent public-source update
+also includes verified Aerovías ANAC observations in Industria, retaining their
+operator and observed months; these never leak into Viva or Volaris. Other
+Aeroméxico-only layers (AICM slots, AIFA single-operator markets, OMA releases,
+Aerocivil/CAA/Aena products) remain separate. Their seat capacity (fase 4) is the
 fleet-average estimate of ``src.analytics.fleet_capacity``.
 """
 

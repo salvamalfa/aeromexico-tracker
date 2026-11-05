@@ -24,12 +24,19 @@ test("bulk navigation fails closed for invented or candidate identifiers",async(
  expect(await news.openNewsMatches({...result,matching_ids:["known"]})).toBe(true);
  expect(document.querySelectorAll(".news-card")).toHaveLength(1);
 });
-test("news chat button sends selected filters without searchable instruction boilerplate",async()=>{
+test("archive renders every story without filters and keeps only title, summary and source links",async()=>{
+ document.querySelector(".news-filters")?.remove();document.getElementById("news-chat")?.remove();
+ const response=await fetch("");const payload=await response.json();
+ payload.records.push({...payload.records[0],id:"later",story_id:"later",published_at:"2026-08-20",review_status:"candidate_unapproved"});
+ vi.stubGlobal("fetch",vi.fn().mockResolvedValue({ok:true,json:async()=>payload}));
  const news=await import("./bootstrap");await news.mountNews("data/v1");
- const received=vi.fn();window.addEventListener("airline-chat-prompt",received,{once:true});
- (document.getElementById("news-query") as HTMLInputElement).value="unicornios";
- document.getElementById("news-chat")!.click();
- expect(received.mock.calls[0]![0].detail.text).toBe("Busca noticias publicadas en 2026-04 sobre unicornios.");
+ expect(document.querySelectorAll(".news-card")).toHaveLength(2);
+ expect(document.querySelectorAll(".news-card h3")).toHaveLength(2);
+ expect(document.querySelectorAll(".news-card a")).toHaveLength(2);
+ expect(document.querySelector(".news-card a")?.getAttribute("href")).toBe(item.source_url);
+ expect(document.querySelectorAll(".news-card dl,.news-card details,.news-hash,.news-kicker,.news-topics")).toHaveLength(0);
+ expect(document.querySelectorAll(".news-status")).toHaveLength(1);
+ expect(document.querySelector(".news-status")?.textContent).toBe("Pendiente de aprobación");
 });
 test("secondary source target opens the primary story card with its verified citation",async()=>{
  const response=await fetch("");const payload=await response.json();
@@ -40,4 +47,14 @@ test("secondary source target opens the primary story card with its verified cit
  expect(await news.openNewsResult(result,{...item,publisher:secondary.publisher,source_url:secondary.url,source_sha256:secondary.sha256})).toBe(true);
  expect(document.querySelectorAll(".news-card")).toHaveLength(1);
  expect(document.querySelectorAll(".news-card a")).toHaveLength(2);
+});
+
+test("archive heading has one contextual question action without an extra filter block",async()=>{
+ document.body.innerHTML='<main class="page-shell"><div id="news-heading" class="section-heading news-heading"><h2>Archivo mensual</h2></div><p id="news-count"></p><div id="news-stories"></div></main>';
+ const news=await import("./bootstrap");await news.mountNews("data/v1");
+ const {mountChatCardActions}=await import("../chat/card-actions");const open=vi.fn();const dispose=mountChatCardActions(open);
+ const action=document.querySelector<HTMLButtonElement>("#news-heading > .chat-card-action")!;
+ expect(action.textContent).toBe("Pregunta");expect(action.getAttribute("aria-label")).toBe("Preguntar sobre Archivo mensual");
+ expect(document.querySelector(".news-filters")).toBeNull();expect(document.querySelector("#news-review-status")).toBeNull();
+ action.click();expect(open).toHaveBeenCalledWith(document.getElementById("news-heading"),action);dispose();
 });

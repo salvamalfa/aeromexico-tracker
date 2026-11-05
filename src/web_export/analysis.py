@@ -230,6 +230,9 @@ def _claim_citations(
     number, in the same summary-then-sections document order — see
     ``_citations_by_claim``)."""
 
+    if package.get("source_profile") == "quarterly_business_story_v1":
+        from src.analysis_agent.quarterly_story import citations
+        return citations(claim, calculations, numbers)
     if package.get("schema_version") in ("entity_evidence_v1", "quarterly_release_v1"):
         return _entity_claim_citations(claim, package, calculations, numbers, rendered_text, business=business)
     nodes = {n["calculation_id"]: n for n in calculations["nodes"]}

@@ -1,5 +1,5 @@
-// Mercado: monthly share through the globally selected quarter,
-// with quarterly comparisons over all Mexican
+// Mercado: complete observed monthly share history, with the selected
+// quarter highlighted and quarterly comparisons over all Mexican
 // carriers, from market.json (src/dashboard/market.py). Industria is the
 // sum of the three and is drawn dashed; a month AFAC does not publish for a
 // carrier is a gap, never zero.
@@ -9,15 +9,13 @@ import Plotly from "../../lib/plotly";
 import { $ } from "../flights/dom";
 import { entityState, entityLabel } from "./entities";
 import { ENTITY_COLORS, type EntityKey } from "../shell/carriers";
-import { marketSnapshot, formatMarketNumber } from "../market/calculations";
 import { currentPeriodId } from "../../state/period";
 import type { MarketSegmentKey } from "../../types/domain";
+import { bindSourceInfo, setAfacSource } from "../market/source-info";
+import { bindUnifiedTooltip } from "../../lib/unified-tooltip";
+import { marketPointDetail } from "../market/point-detail";
 
-let marketEntities: EntityKey[] = ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"];
-
-export function setMarketEntities(entities: EntityKey[]): void {
-  marketEntities = entities;
-}
+const marketEntities: EntityKey[] = ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"];
 
 function monthDate(periodId: string): string {
   return `${periodId.slice(0, 4)}-${periodId.slice(5, 7)}-01`;
@@ -30,6 +28,11 @@ function quarterBounds(periodId: string): [string, string] {
   return [`${year}-${String(start).padStart(2, "0")}-01`, new Date(Date.UTC(Number(year), start + 2, 1)).toISOString().slice(0,10)];
 }
 
+function monthLabel(id: string): string {
+  return new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" })
+    .format(new Date(monthDate(id)));
+}
+
 export function renderMarket(periodId: string | undefined): void {
   const market = entityState.market;
   const host = $("market-chart");
@@ -40,35 +43,34 @@ export function renderMarket(periodId: string | undefined): void {
   }
   const segment = (($("market-segment") as HTMLSelectElement | null)?.value ?? "total") as MarketSegmentKey;
   const selected = periodId ?? currentPeriodId() ?? market.metadata.default_quarter;
-  renderComparison(marketSnapshot(market.quarters, selected, segment));
-  const [, quarterEnd] = quarterBounds(selected);
-  const throughCut = market.months.filter(row => monthDate(row.period_id) < quarterEnd);
-  const firstAvailable = throughCut.findIndex(row => row.segments[segment].mexican_carriers_passengers != null);
-  const months = firstAvailable < 0 ? throughCut : throughCut.slice(firstAvailable);
-  host.setAttribute("aria-label", `Participación mensual de pasajeros por aerolínea hasta ${selected}`);
+  const card = document.getElementById("market-card");
+  if (card) card.dataset.comparisonPeriod = selected;
+  // The global quarter controls the band and comparisons, not the history.
+  // Retain internal gaps, bounded by the segment's first and last real month.
+  const firstAvailable = market.months.findIndex(row => row.segments[segment].mexican_carriers_passengers != null);
+  const lastAvailable = market.months.reduce((last,row,index) => row.segments[segment].mexican_carriers_passengers != null ? index : last, -1);
+  const months = firstAvailable < 0 ? [] : market.months.slice(firstAvailable, lastAvailable + 1);
+  host.setAttribute("aria-label", `Participación mensual de pasajeros por aerolínea; historia hasta ${months.at(-1)?.period_id ?? "sin observaciones"}; trimestre seleccionado ${selected}`);
   const source = document.getElementById("market-source");
   if (source) {
-    const note = `Fuente: AFAC. Universo: aerolíneas mexicanas; Aeroméxico incluye Connect. Pasajeros por tramo, no personas únicas. Comparaciones del trimestre ${selected} contra el mismo trimestre del año anterior; N/D indica falta de base comparable. Contribución: cambio de pasajeros de la aerolínea / total mexicano un año antes × 100. Última observación: ${market.metadata.last_period}; captura: ${market.metadata.data_as_of ?? "N/D"}. ${market.metadata.method_note}`;
-    source.title = note;
+    const note = `Fuente: Agencia Federal de Aviación Civil (AFAC). Participación calculada con los pasajeros reportados por aerolíneas mexicanas en vuelos regulares y de fletamento. Aeroméxico incluye Connect. Último mes disponible en esta gráfica: ${months.length ? monthLabel(months.at(-1)!.period_id) : "sin observaciones"}.`;
+    source.removeAttribute("title");
     source.setAttribute("aria-label", "Fuente y alcance del mercado");
     const detail = document.getElementById("market-source-note");
-    if (detail) detail.textContent = note;
+    if (detail) {
+      setAfacSource(detail, note.replace("Fuente: Agencia Federal de Aviación Civil (AFAC). ", ""));
+      bindSourceInfo(source, detail);
+    }
   }
-  const breaks = new Set(Array.isArray(market.metadata.method_breaks)
-    ? market.metadata.method_breaks.filter((value): value is string => typeof value === "string") : []);
-  // A source-universe change is not a business trend. Keep the first new point
-  // while breaking the line that would join it to the prior methodology.
-  const points = months.flatMap(month => breaks.has(month.period_id)
-    ? [{ date: monthDate(month.period_id), row: null }, { date: monthDate(month.period_id), row: month }]
-    : [{ date: monthDate(month.period_id), row: month }]);
-  const x = points.map(point => point.date);
+  // Draw each reported observation once. Provenance metadata must not inject
+  // artificial missing observations into the monthly AFAC series.
+  const x = months.map(month => monthDate(month.period_id));
   const traces: Data[] = marketEntities.map((key) => {
     const color = ENTITY_COLORS[key];
     return {
       x,
-      y: points.map((point) => {
-        if (!point.row) return null;
-        const block = point.row.segments[segment];
+      y: months.map((month) => {
+        const block = month.segments[segment];
         const item = key === "INDUSTRY" ? block.industry : block.carriers[key];
         return item?.share == null ? null : item.share * 100;
       }),
@@ -77,15 +79,19 @@ export function renderMarket(periodId: string | undefined): void {
       mode: "lines",
       connectgaps: false,
       line: key === "INDUSTRY" ? { color, width: 2.2, dash: "dash" } : { color, width: 2.4 },
-      hovertemplate: `${entityLabel(key)} %{y:.1f}%<extra>%{x|%b %Y}</extra>`,
+      hoverinfo: "none",
     } as Data;
   });
   const shapes: Layout["shapes"] = [];
-  for (const month of months.filter(row => breaks.has(row.period_id))) {
-    const date = monthDate(month.period_id);
-    shapes.push({ type: "line", xref: "x", yref: "paper", x0: date, x1: date,
-      y0: 0, y1: 1, line: { color: "#a66d21", width: 1.5, dash: "dot" } });
-  }
+  const shares = months.flatMap(month => marketEntities.flatMap(key => {
+    const share = month.segments[segment].carriers[key]?.share;
+    return share == null || !Number.isFinite(share) ? [] : [share * 100];
+  }));
+  // Total and domestic start at 15%; expand for international observations
+  // below 15% rather than cutting off Viva's historical market share.
+  const minimumShare = shares.length ? Math.min(...shares) : 15;
+  const lower = minimumShare < 15 ? Math.max(0, Math.floor(minimumShare)) : 15;
+  const upper = shares.length ? Math.max(lower + 5, Math.ceil(Math.max(...shares) / 5) * 5) : 100;
   if (selected) {
     const [x0, x1] = quarterBounds(selected);
     shapes.push({
@@ -102,29 +108,13 @@ export function renderMarket(periodId: string | undefined): void {
     legend: { orientation: "h", x: 0, y: 1.1, font: { size: 10 } },
     margin: { l: 48, r: 18, t: 30, b: 36 },
     hovermode: "x unified",
-    xaxis: { type: "date", showgrid: false, tickformat: "%Y" },
-    yaxis: { ticksuffix: "%", rangemode: "tozero", gridcolor: "#e8edf4", tickformat: ".0f" },
+    xaxis: { type: "date", range: x.length ? [x[0]!, x.at(-1)!] : undefined, autorange: false, showgrid: false, tickformat: "%Y", ticks: "outside", ticklen: 8, automargin: true },
+    yaxis: { ticksuffix: "%", range: [lower, upper], gridcolor: "#e8edf4", tickformat: ".0f", ticks: "outside", ticklen: 8, automargin: true },
     shapes,
   };
-  void Plotly.react("market-chart", traces, layout, { displayModeBar: false, responsive: true });
-}
-
-function renderComparison(snapshot: ReturnType<typeof marketSnapshot>): void {
-  const host = document.getElementById("market-comparison");
-  const kpis = document.getElementById("market-kpis");
-  const fmt = formatMarketNumber;
-  if (!host || !kpis) return;
-  host.replaceChildren(...snapshot.rows.map(row => {
-    const tr = document.createElement("tr");
-    for (const text of [row.label, fmt(row.passengers), fmt(row.growth, "%"), fmt(row.share, "%"), fmt(row.shareChange, " pp"), fmt(row.contribution, " pp")]) {
-      const td = document.createElement("td"); td.textContent = text; tr.append(td);
-    }
-    return tr;
-  }));
-  kpis.replaceChildren(...[["Pasajeros · aerolíneas mexicanas", fmt(snapshot.total)], ["Crecimiento interanual", fmt(snapshot.growth, "%")], ["Cambio de pasajeros vs. año anterior", fmt(snapshot.delta)]].map(([label, value]) => {
-    const item = document.createElement("div"); const title = document.createElement("p"); title.textContent = label!;
-    const strong = document.createElement("strong"); strong.textContent = value!; item.append(title,strong); return item;
-  }));
+  void Promise.resolve(Plotly.react("market-chart", traces, layout, { displayModeBar: false, responsive: true })).then(()=>{
+    bindUnifiedTooltip("market-chart",x,(_key,index)=>marketPointDetail(market,segment,months[index]!.period_id));
+  });
 }
 
 export function mountMarketControls(): void {

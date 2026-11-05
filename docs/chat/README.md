@@ -10,6 +10,30 @@ plan estructurado, hace los cálculos deterministas y entrega valores con unidad
 disponibilidad y referencias. El proveedor solo redacta y puede pedir las
 herramientas permitidas.
 
+## Interfaz del dashboard
+
+El chat abre por defecto con la vista actual, sin enviar preguntas ni enfocar el
+cuadro de escritura. Al cerrarlo aparece un icono de interrogación a la derecha
+de la fila de pestañas para volver a abrirlo. El botón «Pregunta» de una tarjeta añade una instantánea de esa tarjeta,
+entidad, filtros y trimestre como chip dentro del cuadro de escritura. No copia
+el texto ni envía una consulta. El chip se puede quitar; abrir desde la fila de pestañas
+vuelve al contexto de la vista actual.
+
+En escritorio, dashboard y chat forman un conjunto centrado, separado por
+20 píxeles. El chat empieza a la altura de la cabecera, acompaña el desplazamiento
+y termina dentro del límite del contenido. Su altura no supera la ventana ni
+alarga una lectura breve. Conserva el ajuste de ancho por arrastre o teclado.
+Hasta 1000 píxeles de ancho se abre como diálogo, con el fondo desactivado,
+foco contenido y devolución del foco al cerrar.
+En móvil, la apertura inicial enfoca el cierre y mantiene oculto el teclado.
+
+La barra superior es blanca y compacta, con el título «Chat» e iconos de nueva conversación y cierre.
+El compositor contiene el cuadro de texto y la flecha de envío, con etiqueta y
+contador accesibles. Un fallo de conexión se muestra como aviso breve; la
+interfaz no presenta respuestas ni conexión simuladas.
+
+## Datos y contexto
+
 La interfaz y el backend deben tomar la pestaña, tarjeta y filtros como contexto
 no confiable y validado. El contexto puede resolver una pregunta, pero nunca
 concede permisos o amplía cobertura. Los filtros propios de una tarjeta tienen

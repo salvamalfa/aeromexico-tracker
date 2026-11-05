@@ -40,7 +40,7 @@ def load_web_inputs_config(path: Path | None = None) -> dict[str, Any]:
     return config
 
 
-def require_inputs(view: str, config: dict[str, Any] | None = None) -> None:
+def require_inputs(view: str, config: dict[str, Any] | None = None, *, root: Path | None = None) -> None:
     """Raise MissingWebInput naming every absent file the view needs to publish.
 
     Optional-for-development files are never checked here: their absence is
@@ -55,13 +55,14 @@ def require_inputs(view: str, config: dict[str, Any] | None = None) -> None:
             f"{view!r} is not declared in {WEB_INPUTS_PATH}; add it under 'views' before exporting it."
         )
     required = views[view].get("required_for_publish", [])
-    missing = [rel for rel in required if not (PATHS.root / rel).exists()]
+    input_root = PATHS.root if root is None else root
+    missing = [rel for rel in required if not (input_root / rel).exists()]
     if missing:
         lines = [
             f"web_export cannot publish '{view}': {len(missing)} required Gold "
             f"input(s) declared in {WEB_INPUTS_PATH} are absent:"
         ]
         for rel in missing:
-            path = PATHS.root / rel
+            path = input_root / rel
             lines.append(f"  - {rel}\n    {RESTORE_HINT.format(path=path)}")
         raise MissingWebInput("\n".join(lines))

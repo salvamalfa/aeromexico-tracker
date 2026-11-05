@@ -17,6 +17,7 @@ beforeEach(() => {
   state.availablePeriods = { domestic: [], domestic_monthly: ["2026M04", "2026M05", "2026M06"], international: ["2026Q2", "2026M04", "2026M05", "2026M06"] };
   state.selectedDomesticMonths = new Set(["2026M04", "2026M05", "2026M06"]);
   state.networkMode = "domestic"; state.domesticLayer = "estimated";
+  state.evidenceView = "all"; state.selectedRegion = null;
   document.body.innerHTML = '<p id="flight-map-coverage"></p><p id="flight-map-coverage-info"></p>';
 });
 it.each([
@@ -50,11 +51,16 @@ it("missing period, scope, denominator and zero total denominator are unavailabl
     expect(coverageRatio({ ...data, rows: data.rows.map((r) => ({ ...r, official_regular })) }, ["AEROMEXICO"], ["2026Q2"])).toBeNull();
   }
 });
-it("scope, geography and top12 crops keep the explicitly total-network card", () => {
+it("retains the full-network ratio for rankings but does not reuse it for a regional or observed-only view", () => {
   renderMapCoverage(); const before = document.getElementById("flight-map-coverage")!.textContent;
-  state.networkMode = "international"; state.selectedRegion = "Europe"; state.routeView = "all"; state.routes = [];
-  renderMapCoverage(); expect(document.getElementById("flight-map-coverage")!.textContent).toBe(before);
+  state.routeView = "all"; renderMapCoverage(); expect(document.getElementById("flight-map-coverage")!.textContent).toBe(before);
   expect(document.getElementById("flight-map-coverage-info")!.textContent).toMatch(/Nacional \+ internacional.*observados regulares \+ estimados.*Todas las rutas/);
+  state.networkMode = "international"; state.selectedRegion = "europa";
+  renderMapCoverage(); expect(document.getElementById("flight-map-coverage")!.textContent).toBe("No disponible");
+  expect(document.getElementById("flight-map-coverage-info")!.textContent).toContain("Sin denominador AFAC comparable para la región");
+  state.selectedRegion = null; state.evidenceView = "north_america_observed";
+  renderMapCoverage(); expect(document.getElementById("flight-map-coverage")!.textContent).toBe("No disponible");
+  expect(document.getElementById("flight-map-coverage-info")!.textContent).toContain("sólo observados México–EE.UU.");
 });
 it("filters months, and programming or absent data is unavailable", () => {
   state.mapEntity = "AEROMEXICO"; state.selectedDomesticMonths = new Set(["2026M04"]); renderMapCoverage();
@@ -67,4 +73,18 @@ it("filters months, and programming or absent data is unavailable", () => {
 
 it("rejects overlapping quarter/month calendars instead of counting twice", () => {
   expect(coverageRatio(data, ["AEROMEXICO"], ["2026Q2", "2026M04"])).toBeNull();
+});
+
+it("puts represented/shown routes and incomplete quarter information in coverage help", () => {
+  state.network = {observed_months:["2026M04"], routes:[]} as unknown as typeof state.network;
+  state.routes = Array.from({length:20}, (_, index) => ({market_key:String(index)})) as typeof state.routes;
+  state.presenceOnlyRouteCount = 2;
+  renderMapCoverage(12);
+  const help = document.getElementById("flight-map-coverage-info")!.textContent!;
+  expect(help).toContain("parcial: 1 de 3 meses"); expect(help).toContain("con cifra en la selección geográfica: 20; rutas mostradas: 12");
+  expect(help).toContain("2 rutas sin número de vuelos");
+  renderMapCoverage(20); expect(document.getElementById("flight-map-coverage-info")!.textContent).toContain("rutas mostradas: 20");
+  state.mapCoverage = null; renderMapCoverage(20);
+  expect(document.getElementById("flight-map-coverage")!.textContent).toBe("No disponible");
+  expect(document.getElementById("flight-map-coverage-info")!.textContent).toContain("Sin denominador y representación comparables AFAC");
 });

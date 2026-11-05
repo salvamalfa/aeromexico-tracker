@@ -407,7 +407,13 @@ class ToolRegistry:
         if not isinstance(arguments, dict):
             raise PlanValidationError("arguments debe ser un objeto")
         if name in ROUTE_TOOL_NAMES:
-            return RouteTools(self.snapshot).invoke(name, arguments)
+            route_context = self._validate_context(context)
+            view_filters = route_context.get("filters", {})
+            return RouteTools(
+                self.snapshot,
+                evidence_view=view_filters.get("flight_evidence"),
+                region=view_filters.get("region"),
+            ).invoke(name, arguments)
         if name in BUSINESS_METRIC_TOOL_NAMES:
             from src.conversational_analytics.tools.business_metrics import dispatch_business_metric_tool
 

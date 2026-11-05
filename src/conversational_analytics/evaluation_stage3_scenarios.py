@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from typing import Any
 
 
@@ -115,10 +116,16 @@ def _scenario_calls(
             query("market_share", ["AEROMEXICO", "VOLARIS"], selected, "domestic")
             actions.append(("get_source_references", {"metric_ids": ["market_share"]}))
         if case_id == "N08":
-            scope_limit = (
-                "Se comparan trimestres equivalentes: 2T25 frente a 2T26, con cambio expresado en "
-                "puntos porcentuales. Esto no compara años calendario completos ni otros trimestres."
-            )
+            if prior_market and latest_market:
+                prior_label = f"{prior_market[-1]}T{prior_market[2:4]}"
+                current_label = f"{latest_market[-1]}T{latest_market[2:4]}"
+                scope_limit = (
+                    f"Se comparan trimestres equivalentes: {prior_label} frente a {current_label}, "
+                    "con cambio expresado en puntos porcentuales. Esto no compara años calendario "
+                    "completos ni otros trimestres."
+                )
+            else:
+                scope_limit = "Falta un trimestre equivalente del año previo para comparar participación."
     elif case_id == "N09":
         if latest_flight:
             prior = _latest_prior(dom_monthly or intl, latest_flight)
@@ -308,7 +315,10 @@ def _scenario_calls(
         if prior_econ and latest_econ:
             query("company_passengers", ["AEROMEXICO", "VOLARIS"], [prior_econ, latest_econ])
         actions.append(("get_source_references", {"metric_ids": ["company_passengers"]}))
-        scope_limit = "Pasajeros describe un aspecto de 2T26, pero no resume el desempeño general de la aerolínea."
+        label = f"{latest_econ[-1]}T{latest_econ[2:4]}" if latest_econ else "el periodo disponible"
+        scope_limit = (
+            f"Pasajeros describe un aspecto de {label}, pero no resume el desempeño general de la aerolínea."
+        )
     elif case_id in {"N25", "N26"}:
         actions.append(("get_dashboard_context", {}))
         query(
@@ -366,9 +376,21 @@ def _derived_calculations(case_id: str, evidence: list[dict[str, Any]]) -> list[
         row = by_key.get((metric, entity, period))
         return float(row["value"]) if row is not None else None
 
+    def returned_periods(metric: str, entities: tuple[str, ...]) -> list[str]:
+        periods = {
+            period for row_metric, entity, period in by_key
+            if row_metric == metric and entity in entities
+        }
+        if any(not isinstance(period, str) or not re.fullmatch(r"\d{4}Q[1-4]", period) for period in periods):
+            return []
+        return sorted(periods)
+
     calculations: list[dict[str, Any]] = []
     if case_id == "N03":
-        period = "2026Q2"
+        periods = returned_periods("cask_cents_per_km", ("AEROMEXICO", "VOLARIS"))
+        if len(periods) != 1:
+            return []
+        period = periods[0]
         am = value("cask_cents_per_km", "AEROMEXICO", period)
         competitor = value("cask_cents_per_km", "VOLARIS", period)
         if am is not None and competitor is not None:
@@ -380,30 +402,25 @@ def _derived_calculations(case_id: str, evidence: list[dict[str, Any]]) -> list[
                     "period": period,
                 }
             )
-    elif case_id == "N07":
-        for entity in ("AEROMEXICO", "VOLARIS"):
-            prior = value("market_share", entity, "2025Q2")
-            current = value("market_share", entity, "2026Q2")
+    elif case_id in {"N07", "N11"}:
+        metric = "market_share" if case_id == "N07" else "load_factor"
+        suffix = "share_change" if case_id == "N07" else "load_factor_change"
+        entities = ("AEROMEXICO", "VOLARIS") if case_id == "N07" else (
+            "AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"
+        )
+        periods = returned_periods(metric, entities)
+        if len(periods) != 2 or _latest_prior(periods, periods[-1]) != periods[0]:
+            return []
+        for entity in entities:
+            prior = value(metric, entity, periods[0])
+            current = value(metric, entity, periods[1])
             if prior is not None and current is not None:
                 calculations.append(
                     {
-                        "calculation": f"{entity}_share_change",
+                        "calculation": f"{entity}_{suffix}",
                         "value": (current - prior) * 100,
                         "unit": "percentage_points",
-                        "periods": ["2025Q2", "2026Q2"],
-                    }
-                )
-    elif case_id == "N11":
-        for entity in ("AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"):
-            prior = value("load_factor", entity, "2025Q2")
-            current = value("load_factor", entity, "2026Q2")
-            if prior is not None and current is not None:
-                calculations.append(
-                    {
-                        "calculation": f"{entity}_load_factor_change",
-                        "value": (current - prior) * 100,
-                        "unit": "percentage_points",
-                        "periods": ["2025Q2", "2026Q2"],
+                        "periods": periods,
                     }
                 )
     elif case_id == "N21":

@@ -11,12 +11,40 @@ import sys
 from pathlib import Path
 
 VERIFIERS = (
+    ("quarterly-story-publication.json", "src.publish.quarterly_story_scope"),
     ("aerocivil-movements-publication.json", "src.publish.movements_scope"),
     ("source-data-publication.json", "src.publish.source_data_scope"),
     ("issuer-publication.json", "src.publish.issuer_scope"),
     ("financial-publication.json", "src.publish.financial_scope"),
     ("editorial-publication.json", "src.publish.editorial"),
+    ("afac-history-publication.json", "src.publish.afac_history_scope"),
 )
+
+
+def composition_parent(site, repo, manifest, proof):
+    # Script execution puts scripts/, not cwd, on sys.path. Run the DAG check
+    # with -c in the selected checkout so even master's preview helper cannot
+    # import master's already-loaded modules or need an ambient PYTHONPATH.
+    program = (
+        "import json,sys; from pathlib import Path; "
+        "from src.publish.afac_history_contract import proof_parent; "
+        "manifest,proof=json.load(sys.stdin); "
+        "parent,_=proof_parent(Path.cwd(),Path(sys.argv[1]),manifest,proof); "
+        "print(json.dumps({'upstream':parent}))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", program, str(site.resolve())],
+        cwd=repo,
+        input=json.dumps([manifest, proof]),
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise ValueError("Composition parent rejected by its pinned checkout: " + result.stderr[-600:])
+    value = json.loads(result.stdout)
+    if value != {"upstream": "quarterly-story-publication.json"}:
+        raise ValueError("Pinned composition verifier returned another dependency kind")
+    return value["upstream"]
 
 
 def verifier_for(site: Path, repo: Path | None = None) -> str:
@@ -45,6 +73,23 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
     # witnessed Git baseline, then let its strong verifier validate all claims.
     # Ties, missing history and unrelated branches are decisions, never fallback.
     repo = Path.cwd() if repo is None else Path(repo)
+    if any(receipt == "afac-history-publication.json" for receipt, _ in selected):
+        # This one new profile composes an explicitly unserved parent. Its
+        # exact proof remains upstream evidence, not a competing final root.
+        # Every older profile keeps the original strict precedence rules.
+        path = site / "afac-history-publication.json"
+        pin = next(item for item in files if item["path"] == path.name)
+        if path.is_symlink():
+            raise ValueError("Composition selection proof cannot be a symlink")
+        raw = path.read_bytes()
+        if (
+            type(pin.get("bytes")) is not int
+            or len(raw) != pin["bytes"]
+            or hashlib.sha256(raw).hexdigest() != pin.get("sha256")
+        ):
+            raise ValueError("Composition selection proof differs from its manifest pin")
+        upstream = composition_parent(site, repo, manifest, json.loads(raw))
+        selected = [(receipt, module) for receipt, module in selected if receipt != upstream]
     commits = {}
     for receipt, module in selected:
         if (site / receipt).is_symlink():
@@ -89,12 +134,14 @@ def verify_site(site, repo):
 
     module = verifier_for(site, repo)
     name = {
+        "src.publish.quarterly_story_scope": "verify_story",
         "src.publish.source_data_scope": "verify_source_data",
         "src.publish.issuer_scope": "verify_issuer",
         "src.publish.movements_scope": "verify_movements",
         "src.publish.financial_scope": "verify_financial",
         "src.publish.editorial": "verify_editorial",
         "src.publish.verify": "verify_site",
+        "src.publish.afac_history_scope": "verify_afac_history",
     }[module]
     return getattr(import_module(module), name)(site)
 

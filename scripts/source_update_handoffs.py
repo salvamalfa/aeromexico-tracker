@@ -1,8 +1,5 @@
-"""Persistent per-product outbox from verified source candidates to native agents.
-
-The host coordinating agent invokes returned envelopes. This CLI does not spawn
-workers, promote Gold, approve analysis, publish, or install another schedule.
-"""
+"""Per-product outbox for host-dispatched native agents; no source/data activation,
+approval, publication, worker spawning or additional schedule is performed here."""
 
 from __future__ import annotations
 
@@ -15,8 +12,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from scripts import source_update_handoff_routing as routing
-from scripts import source_update_semantic_identity as semantic
 from scripts import source_update_monthly_handoff as monthly
+from scripts import source_update_semantic_identity as semantic
 from scripts.source_update_coordinator import digest, load, persist
 from src.source_updates import readiness
 from src.source_updates.calendar import local_time
@@ -46,6 +43,10 @@ SKILLS = {
     "analysis": ".agents/skills/aeromexico-tracker-analysis/SKILL.md",
     "dashboard": ".agents/skills/airline-update-dashboard/SKILL.md",
 }
+EDITORIAL_CRITERIA = (
+    ".agents/skills/airline-quarterly-story/SKILL.md",
+    "docs/analysis-agent/narrativa-trimestral.md",
+)
 
 
 def file_hash(path: Path) -> str:
@@ -286,6 +287,8 @@ def envelope(state: dict, job: dict) -> dict:
         ),
         "dependency_result": state["jobs"][job["dependency"]]["result"] if job["dependency"] else None,
     }
+    if job["stage"] == "analysis" and source["product"] in ENTITIES:
+        instruction["editorial_criteria"] = [file_ref(ROOT / path) for path in EDITORIAL_CRITERIA]
     return {
         "tool": "collaboration.spawn_agent",
         "arguments": {
@@ -294,7 +297,10 @@ def envelope(state: dict, job: dict) -> dict:
                 f"{job['period'].lower()}_{job['job_id'][:10]}"
             ),
             "message": (
-                "Lee la skill exacta y verifica su SHA. Ejecuta este handoff real con los insumos cerrados. "
+                "Lee la skill exacta y verifica su SHA. Si hay editorial_criteria, verifica sus hashes "
+                "y aplica esos criterios al redactar y juzgar la tesis: historia del trimestre, "
+                "motores atribuidos, comparaciones equivalentes y contrapunto, con énfasis selectivo. "
+                "Ejecuta este handoff real con los insumos cerrados. "
                 "Conserva versiones, fechas y fuentes. No escribas el ledger común "
                 "ni adquieras otras fuentes. "
                 "No esperes a otras aerolíneas. Si bloquea, conserva el resultado y explica el control. "

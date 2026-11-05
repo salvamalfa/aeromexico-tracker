@@ -25,13 +25,19 @@ FLIGHTS_SCHEMA = _load("flights.schema.json")
 EXECUTIVE_SCHEMA = _load("executive.schema.json")
 ANALYSIS_SCHEMA = _load("analysis.schema.json")
 EDITORIAL_ANALYSIS_SCHEMA = _load("analysis_editorial.schema.json")
+INDUSTRY_STORY_SCHEMA = _load("analysis_industry_story.schema.json")
 
 
 def analysis_schema_for(period_id: str, entity_key: str = "AEROMEXICO") -> dict[str, Any]:
-    """The additional citation contract is confined to the approved Q3 slot."""
-    return (
-        EDITORIAL_ANALYSIS_SCHEMA if (entity_key, period_id) == ("AEROMEXICO", "2026Q3") else ANALYSIS_SCHEMA
-    )
+    """Q3 stories may cite the primary release distributor, including Industry.
+
+    The schema verifies public fields only. The lifecycle still independently
+    verifies the exact source-supported profile and approval for each slot.
+    Historical contract bytes remain unchanged.
+    """
+    if (entity_key, period_id) == ("INDUSTRY", "2026Q3"):
+        return INDUSTRY_STORY_SCHEMA
+    return EDITORIAL_ANALYSIS_SCHEMA if (entity_key, period_id) == ("AEROMEXICO", "2026Q3") else ANALYSIS_SCHEMA
 
 
 MARKET_SCHEMA = _load("market.schema.json")

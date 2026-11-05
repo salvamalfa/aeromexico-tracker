@@ -5,6 +5,7 @@
 // executive_summary.js drives both panels from one `views` object.
 
 import { initPeriods } from "../../state/period";
+import { financialPeriods } from "../../state/financial-period";
 import type {
   EntityBlock,
   EntityMeta,
@@ -53,13 +54,11 @@ export async function loadExecutive(dataRoot?: string): Promise<ExecutiveDocumen
   state.entities = payload.entities ?? null;
   state.entityList = payload.entity_list ?? null;
   const requestedPeriod = new URLSearchParams(window.location.search).get("period");
-  const defaultPeriod = requestedPeriod && state.views[requestedPeriod] &&
-    state.records.some((record) => record.period_id === requestedPeriod) ? requestedPeriod : state.metadata?.default_period;
-  state.periodIndex = Math.max(
-    0,
-    state.records.findIndex((record) => record.period_id === defaultPeriod)
-  );
-  initPeriods(state.records.map((record) => record.period_id), defaultPeriod);
+  const periods = financialPeriods(payload);
+  if (!periods.length) throw new Error("No hay un trimestre financiero verificable.");
+  const defaultPeriod = requestedPeriod && periods.includes(requestedPeriod) ? requestedPeriod : periods.at(-1)!;
+  state.periodIndex = state.records.findIndex((record) => record.period_id === defaultPeriod);
+  initPeriods(periods, defaultPeriod);
   return payload;
 }
 

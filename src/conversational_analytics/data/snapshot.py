@@ -12,11 +12,17 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
-from src.publish.manifest import CONTRACT_FILES, EDITORIAL_ANALYSIS_CONTRACT, EDITORIAL_ANALYSIS_PATH
+from src.publish.manifest import (
+    CONTRACT_FILES,
+    EDITORIAL_ANALYSIS_CONTRACT,
+    EDITORIAL_ANALYSIS_PATH,
+    INDUSTRY_STORY_CONTRACT,
+    analysis_identity,
+    analysis_relative_path,
+)
 from src.web_export.contract_versions import resolve_contract
 from src.web_export.privacy import check_file_size, check_privacy, load_privacy_rules
 from src.web_export.schemas import (
-    ANALYSIS_SCHEMA,
     BUSINESS_METRICS_APPROVAL_SCHEMA,
     BUSINESS_METRICS_SCHEMA,
     EXECUTIVE_SCHEMA,
@@ -26,6 +32,28 @@ from src.web_export.schemas import (
 
 class SnapshotError(ValueError):
     """The published site snapshot is incomplete, altered, or unsafe."""
+
+
+def _analysis_contracts(manifest: dict[str, Any]) -> dict[str, tuple[dict[str, Any], str]]:
+    """Resolve each published identity without trusting a payload's schema choice."""
+    result = {}
+    for entry in manifest["analysis_manifest"]:
+        try:
+            identity = analysis_identity(entry)
+            name = "data/v1/" + analysis_relative_path(entry).as_posix()
+        except (KeyError, TypeError, ValueError) as error:
+            raise SnapshotError("Invalid published analysis identity") from error
+        if name in result:
+            raise SnapshotError(f"Duplicate published analysis path: {name}")
+        contract = (
+            EDITORIAL_ANALYSIS_CONTRACT
+            if identity == ("AEROMEXICO", "2026Q3")
+            else INDUSTRY_STORY_CONTRACT
+            if identity == ("INDUSTRY", "2026Q3")
+            else "analysis.schema.json"
+        )
+        result[name] = (entry, contract)
+    return result
 
 
 # (file sha256, schema digest) pairs that already passed validation in this
@@ -160,13 +188,30 @@ class Snapshot:
         for rel, schema in schema_map.items():
             if rel in payloads:
                 self._validate_payload(paths[rel]["sha256"], schema, payloads[rel])
+        analysis_contracts = _analysis_contracts(manifest)
         for rel, payload in payloads.items():
             if rel.startswith("data/v1/analysis/"):
-                schema = ANALYSIS_SCHEMA
-                if rel == EDITORIAL_ANALYSIS_PATH and EDITORIAL_ANALYSIS_CONTRACT in resolved_contracts:
-                    schema = json.loads(
-                        resolved_contracts[EDITORIAL_ANALYSIS_CONTRACT].read_text(encoding="utf-8")
+                if rel not in analysis_contracts:
+                    raise SnapshotError(f"Analysis endpoint is absent from its published manifest: {rel}")
+                entry, contract = analysis_contracts[rel]
+                try:
+                    same_identity = analysis_identity(payload) == analysis_identity(entry)
+                except (AttributeError, TypeError, ValueError) as error:
+                    raise SnapshotError(f"Invalid analysis payload identity: {rel}") from error
+                if not same_identity or any(
+                    payload.get(key) != entry[key]
+                    for key in (
+                        "version",
+                        "content_hash",
+                        "evidence_fingerprint",
+                        "approval_event",
+                        "audit_hash",
                     )
+                ):
+                    raise SnapshotError(f"Analysis payload differs from its published identity: {rel}")
+                if contract not in resolved_contracts:
+                    raise SnapshotError(f"Analysis endpoint requires its declared contract {contract}: {rel}")
+                schema = json.loads(resolved_contracts[contract].read_text(encoding="utf-8"))
                 self._validate_payload(paths[rel]["sha256"], schema, payload)
             if rel.startswith("data/v1/flights/") and rel != "data/v1/flights/quarters.json":
                 self._validate_payload(paths[rel]["sha256"], network_schema, payload)

@@ -280,3 +280,16 @@ def test_schedule_of_another_operator_is_not_suppressed_by_shared_market():
         ]
     )
     assert {c["carrier_key"] for c in selected} == {"VIVA_AEROBUS", "AEROMEXICO_GROUP", "VOLARIS"}
+
+
+def test_refresh_replaces_derived_coverage_note_without_accumulating_old_counts():
+    network = {"routes": []}
+    apply_flight_cells(network, resolve_cells([cell(count=10)]), endpoint)
+    route = network["routes"][0]
+    route["coverage_note"] = "Contexto original · " + route["coverage_note"]
+    apply_flight_cells(network, resolve_cells([cell(count=12)]), endpoint)
+    refreshed = route["coverage_note"]
+    apply_flight_cells(network, resolve_cells([cell(count=12)]), endpoint)
+    assert route["coverage_note"] == refreshed
+    assert refreshed == "Contexto original · Vuelos por celda operador/ruta/sentido/mes: 12 observed"
+    assert route["departures"] == 12

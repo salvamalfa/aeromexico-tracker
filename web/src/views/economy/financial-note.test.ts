@@ -22,10 +22,10 @@ describe("scoped financial comparison note", () => {
     expect(document.getElementById("financial-comparison-note")?.textContent).toContain("No disponible");
     expect(document.querySelector("#financial-comparison-note details")).toBeNull();
   });
-  it("preserves previous-quarter presentation", () => {
+  it("explains an unavailable historical quarter instead of retaining a previous note", () => {
     renderFinancialNote("AEROMEXICO", "2026Q2");
-    expect(document.getElementById("financial-comparison-note")?.hidden).toBe(true);
-    expect(document.getElementById("financial-comparison-note")?.textContent).toBe("");
+    expect(document.getElementById("financial-comparison-note")?.hidden).toBe(false);
+    expect(document.getElementById("financial-comparison-note")?.textContent).toContain("No disponible para 2T26");
   });
   it.each([
     ["VIVA_AEROBUS", "Viva", "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-3T26-en.pdf"],

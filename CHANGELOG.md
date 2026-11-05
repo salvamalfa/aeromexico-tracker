@@ -1,5 +1,78 @@
 # Changelog
 
+## 2026-11-05 · Corrección histórica AFAC y comparativos BTS verificados
+
+- Nuevo perfil de publicación que conserva el padre trimestral original como
+  dependencia verificada y observa por separado el baseline realmente servido.
+  Reproduce las ocho aprobaciones con el productor original y exige una decisión
+  de datos específica para el scope corregido; no hereda la autoridad editorial.
+- Dos miembros nativos cerrados: ocho originales AFAC para historia y septiembre,
+  y restauración física de comparativos BTS regulares de julio en dos archivos.
+  El gate protege los demás campos, lecturas, noticias y assets, conserva el lock
+  hasta el intercambio y limita los retries HTTPS a errores transitorios concretos.
+- Preparación Linux, cinco Gold canónicos, inspección y autoridad específica
+  cerrados. El run `41978910020` publicó el artefacto y pasó la verificación
+  fuerte y el consumidor independiente: ocho análisis y doce JSON; el padre
+  original conserva ocho identidades, dieciséis outputs y cuatro replays 2T26.
+  El sitio `92c661e8` conserva las lecturas, financieros, noticias y demás redes.
+  CI e integración del PR y la comprobación servida de Pages/Railway siguen
+  siendo condiciones separadas antes de declarar esta versión en producción.
+
+## 2026-11-04 · Entrega trimestral con fuentes originales y gate completo
+
+- Cuatro vistas con trimestre global: Lectura, Mercado, Economía y Noticias.
+  Mercado reúne indicadores, mapa y AFAC; las gráficas y ayudas conservan el
+  periodo seleccionado y el corte propio de cada fuente.
+- Cuatro lecturas 3T26 auditadas y autorizadas en su alcance exacto. Volaris
+  conserva sus cifras mostradas y pasa a cuatro originales SEC. Las cuatro
+  lecturas 2T26 mantienen sus bytes y reproducción original completa; las tres
+  3T26 anteriores quedan como historia no reproducida ni consumida.
+- El lector del chat valida cada análisis con el contrato fijado por su identidad
+  en el manifiesto. Mantiene los límites históricos de 2T26, los hashes, las
+  aprobaciones y todos los bytes del sitio generado por el productor original.
+- La evaluación offline separa las trece referencias numéricas históricas de
+  los dos cambios AFAC actuales, sin modificar Gold ni atribuir calidad al
+  modelo. Cobertura deriva sus cálculos del trimestre consultado y el contrato
+  de evidencia reconoce la procedencia cerrada de las noticias ya aprobadas.
+- Industria 3T26 se reconstruye desde los tres emisores; AFAC llega a septiembre,
+  ANAC Brasil a julio–septiembre y Noticias a 26 fichas aprobadas. BTS y las
+  frecuencias conservan julio; no se completan meses de otras fuentes.
+- Gate Linux, verificación fuerte y consumidores independientes de ocho análisis
+  y doce JSON aprobados en el intento 2 del run privado `41932650875`. El primer
+  intento se detuvo ante un HTTP 503 del baseline servido; se comprobó la
+  recuperación exacta antes de esa única reejecución. CI, revisión e integración
+  del PR y comprobación servida conservan sus controles normales. El mapa AFAC
+  de fase 2 permanece fuera de esta entrega.
+
+## 2026-10-31 · Industria Q3 en preview y gráfica sin cuadros duplicados
+
+- Proyección explícita de revisión con los tres financieros reales, ponderada
+  por ASK. Completa tarjetas y gráficas locales de Industria Q3; no activa
+  datos en producción ni una tesis de Industria.
+- Se eliminan los tooltips automáticos duplicados y las etiquetas históricas
+  superpuestas de la dispersión; se conserva la marca del trimestre seleccionado.
+
+## 2026-10-31 · Coherencia de periodos, revisión local
+
+- Entrada en el último trimestre financiero publicado y verificable, con respeto
+  a enlaces históricos. Exportador y consumidor aplican el mismo criterio.
+- Economía redibuja todas las gráficas, marca el trimestre elegido y declara
+  ausencias por entidad; Industria Q3 conserva un candidato separado, no activado.
+- Vuelos elimina la conservación del índice anterior y los cambios silenciosos
+  de periodo del mapa. Tarjetas, AFAC y rutas declaran sus cortes; Q3 del mapa
+  tiene sólo julio. Mercado conserva agosto y la explicación del corte de julio.
+- Pruebas con los datos construidos, escritorio y móvil documentadas en
+  `docs/periodos-dashboard.md`. Cambios locales, sin publicación de esta entrega.
+
+## 2026-10-31 · Corte mensual y trimestre disponible de Mercado
+
+- Mercado identifica los meses disponibles del trimestre seleccionado y muestra
+  las tarjetas y la tabla del último trimestre completo, rotulado explícitamente.
+  Evita una sección llena de N/D cuando el trimestre nuevo aún está incompleto;
+  no suma meses parciales ni sustituye AFAC con reportes corporativos.
+- El salto de cobertura de julio se explica junto a la gráfica y conserva la
+  separación de líneas. Los datos y las aprobaciones publicadas se conservan.
+
 ## 2026-10-31 · Comprobación previa y controles CI separados
 
 - Pages y la imagen Docker real se verifican antes de las suites costosas.

@@ -1,0 +1,169 @@
+{
+  "reference_master": "3a299fbc",
+  "source_sha256": "4985e4f38efb448c8e495354ea8f0c3bb146c41141b53b6046be14c34e8e920a",
+  "published_default": "2026Q2",
+  "financial_latest": "2026Q3",
+  "entity_latest": {
+    "AEROMEXICO": "2026Q3",
+    "INDUSTRY": "2026Q2",
+    "VIVA_AEROBUS": "2026Q3",
+    "VOLARIS": "2026Q3"
+  },
+  "production_verified_for_this_change": false,
+  "data_activation": "none",
+  "industry_candidate": {
+    "status": "calculated_for_review_not_activated",
+    "record": {
+      "carrier_key": "INDUSTRY",
+      "period_id": "2026Q3",
+      "passengers": 22777000.0,
+      "ask_km": 41072068224.0,
+      "load_factor": 0.8748752791818504,
+      "rask_cents_per_km": 8.156345041427636,
+      "cask_cents_per_km": 7.574922166159674,
+      "unit_margin_cents_per_km": 0.581422875267962,
+      "load_factor_basis": "reported",
+      "cask_ex_fuel_cents_per_km": 4.924445949420519,
+      "rpk_km": 35901245952.0
+    },
+    "inputs": [
+      {
+        "carrier_key": "AEROMEXICO",
+        "period_id": "2026Q3",
+        "passengers": 6161000.0,
+        "ask_km": 15119786880.000002,
+        "load_factor": 0.883,
+        "rask_cents_per_km": 10.687584506482143,
+        "cask_cents_per_km": 9.382705002783743,
+        "unit_margin_cents_per_km": 1.3048795036984,
+        "load_factor_basis": "reported",
+        "cask_ex_fuel_cents_per_km": 6.2758490415970725,
+        "rpk_km": 13351117824.0
+      },
+      {
+        "carrier_key": "VIVA_AEROBUS",
+        "period_id": "2026Q3",
+        "passengers": 7639000.0,
+        "ask_km": 9744577920.0,
+        "load_factor": 0.892,
+        "rask_cents_per_km": 7.139554998806967,
+        "cask_cents_per_km": 7.064990455738486,
+        "unit_margin_cents_per_km": 0.07456454306848069,
+        "load_factor_basis": "reported",
+        "cask_ex_fuel_cents_per_km": 4.579505686789151,
+        "rpk_km": 8663098752.0
+      },
+      {
+        "carrier_key": "VOLARIS",
+        "period_id": "2026Q3",
+        "passengers": 8977000.0,
+        "ask_km": 16207703424.000002,
+        "load_factor": 0.857,
+        "rask_cents_per_km": 6.4063369919669135,
+        "cask_cents_per_km": 6.19507078660622,
+        "unit_margin_cents_per_km": 0.21126620536069346,
+        "load_factor_basis": "reported",
+        "cask_ex_fuel_cents_per_km": 3.8711425276385905,
+        "rpk_km": 13887029376.0
+      }
+    ],
+    "method": "Existing aggregate_industry: additive passengers/ASK/RPK; ASK-weighted unit ratios and reported load factors.",
+    "requirements": [
+      "Review the source-versioned passenger and unit-cost definitions of all three issuers; native rounded unit costs differ from statement expenses/ASM.",
+      "Accept an exact industry data projection with lineage, prior-period comparisons and reconciliations; individual issuer authorizations preserve Industry and do not activate this aggregate.",
+      "Use the normal source-data publication gate and exact data authorization, then UI and deployment checks; no Industry thesis is required or activated by this calculation."
+    ]
+  },
+  "afac": {
+    "last_month": "2026M08",
+    "last_quarter": "2026Q2",
+    "method_breaks": [
+      "2026M07"
+    ]
+  },
+  "maps": {
+    "AEROMEXICO": {
+      "period_label": "3T26",
+      "availability": "partial",
+      "observed_months": [
+        "2026M07"
+      ],
+      "expected_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "coverage_by_source": {
+        "AeroDataBox · frecuencias históricas estimadas": [
+          "2026M07"
+        ],
+        "Colombia · Aerocivil · movimientos registrados (provisional)": [
+          "2026M07"
+        ],
+        "Estados Unidos · BTS T-100": [
+          "2026M07"
+        ]
+      }
+    },
+    "INDUSTRY": {
+      "period_label": "3T26",
+      "availability": "partial",
+      "observed_months": [
+        "2026M07"
+      ],
+      "expected_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "coverage_by_source": {
+        "AeroDataBox · frecuencias históricas estimadas": [
+          "2026M07"
+        ],
+        "Estados Unidos · BTS T-100": [
+          "2026M07"
+        ]
+      }
+    },
+    "VIVA_AEROBUS": {
+      "period_label": "3T26",
+      "availability": "partial",
+      "observed_months": [
+        "2026M07"
+      ],
+      "expected_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "coverage_by_source": {
+        "AeroDataBox · frecuencias históricas estimadas": [
+          "2026M07"
+        ],
+        "Estados Unidos · BTS T-100": [
+          "2026M07"
+        ]
+      }
+    },
+    "VOLARIS": {
+      "period_label": "3T26",
+      "availability": "partial",
+      "observed_months": [
+        "2026M07"
+      ],
+      "expected_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "coverage_by_source": {
+        "AeroDataBox · frecuencias históricas estimadas": [
+          "2026M07"
+        ],
+        "Estados Unidos · BTS T-100": [
+          "2026M07"
+        ]
+      }
+    }
+  }
+}

@@ -86,7 +86,7 @@ def test_shared_validation_change_invalidates_entity_presentation(monkeypatch, f
 
     baseline = adapter.code_version()
     original_sha = adapter.sha
-    record = {"code_version": baseline, "prompt_version": original_sha(SKILL)}
+    record = {"draft": {}, "code_version": baseline, "prompt_version": original_sha(SKILL)}
     monkeypatch.setattr(
         adapter, "sha", lambda path: "0" * 64 if path.name == filename else original_sha(path)
     )
@@ -125,7 +125,7 @@ def test_publication_provenance_dependency_changes_entity_code_version(monkeypat
 
     baseline = adapter.code_version()
     original_sha = adapter.sha
-    record = {"code_version": baseline, "prompt_version": original_sha(SKILL)}
+    record = {"draft": {}, "code_version": baseline, "prompt_version": original_sha(SKILL)}
     dependency = adapter.PATHS.root / module
     assert dependency.is_file()
     monkeypatch.setattr(adapter, "sha", lambda path: "0" * 64 if path == dependency else original_sha(path))
@@ -362,7 +362,7 @@ def test_new_public_builder_mutation_invalidates_presentation(tmp_path, monkeypa
     path = tmp_path / module
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("initial approved calculation/projection")
-    record = {"code_version": adapter.code_version(), "prompt_version": adapter.sha(SKILL)}
+    record = {"draft": {}, "code_version": adapter.code_version(), "prompt_version": adapter.sha(SKILL)}
     path.write_text("changed calculation/projection")
     with pytest.raises(ValueError, match="implementation changed"):
         adapter.require_current_presentation(record)

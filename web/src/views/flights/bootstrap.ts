@@ -22,12 +22,12 @@ import { mountPicker } from "../shell/carriers";
 import { setMapEntities } from "./state";
 import { mountMapPeriodControl } from "./map-periods";
 import { state as executiveState } from "../executive/state";
+import { selectedFlightQuarter } from "./selected-period";
 
 function syncPeriodIndex(periodId: string): boolean {
   const index = state.quarters.findIndex((quarter) => quarter.period_id === periodId);
-  if (index < 0) return false;
   state.periodIndex = index;
-  return true;
+  return index >= 0;
 }
 
 // Dashboard v2: KPI cards (one airline) and the segment mix (one or more).
@@ -51,7 +51,7 @@ function mountFlightPickers(): void {
       if (!setMapEntities(keys)) return;
       state.pinnedAirport = null;
       state.selectedMarket = null;
-      if (await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id)) renderFlowMap();
+      if (await renderNetworkPeriod(selectedFlightQuarter().period_id)) renderFlowMap();
     });
     setMapEntities(initial);
     // In this map picker, Industry means all three carriers and is exclusive.
@@ -66,35 +66,36 @@ function mountFlightPickers(): void {
   }
   const mixHost = $("pick-mix") as HTMLElement | null;
   if (mixHost) {
-    mountPicker(mixHost, { card: "mix", multi: true, defaults: ["INDUSTRY"] }, () => renderMix(state.quarters[state.periodIndex]!));
+    mountPicker(mixHost, { card: "mix", multi: true, defaults: ["INDUSTRY"] }, () => renderMix(selectedFlightQuarter()));
   }
 }
 
 function wireControls(): void {
   mountFlightPickers();
-  mountMapPeriodControl(() => void renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id));
+  mountMapPeriodControl(() => void renderNetworkPeriod(selectedFlightQuarter().period_id));
   subscribe((periodId) => {
     syncPeriodIndex(periodId);
+    state.mapPeriodId = null;
     void renderQuarter();
   });
   $("network-mode-domestic")!.addEventListener("click", async () => {
     state.networkMode = "domestic";
-    await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
+    await renderNetworkPeriod(selectedFlightQuarter().period_id);
   });
   $("network-mode-international")!.addEventListener("click", async () => {
     state.networkMode = "international";
-    await renderNetworkPeriod(state.quarters[state.periodIndex]!.period_id);
+    await renderNetworkPeriod(selectedFlightQuarter().period_id);
   });
   $("passenger-basis")?.addEventListener("change", (event) => {
     state.passengerBasis = (event.target as HTMLSelectElement).value === "corporate" ? "corporate" : "afac";
     if (state.passengerBasis === "corporate") state.passengerPeriod = "month";
     const period = $("passenger-period") as HTMLSelectElement;
     period.value = state.passengerPeriod;
-    renderMix(state.quarters[state.periodIndex]!);
+    renderMix(selectedFlightQuarter());
   });
   $("passenger-period")!.addEventListener("change", (event) => {
     state.passengerPeriod = (event.target as HTMLSelectElement).value as "quarter" | "month";
-    renderMix(state.quarters[state.periodIndex]!);
+    renderMix(selectedFlightQuarter());
   });
   for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
     $(id)!.addEventListener("click", () => {

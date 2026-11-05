@@ -20,6 +20,9 @@ describe("flight-only map totals", () => {
     const html = document.getElementById("network-volume")!.innerHTML;
     expect(html).toContain("Vuelos estimados");
     expect(html).toContain("<strong>100</strong>");
+    expect(document.getElementById("flight-map-coverage")).not.toBeNull();
+    expect(html).not.toContain("Histórico conservado");
+    expect(html).not.toContain("rutas · cobertura parcial");
     expect(html).not.toMatch(/Pasajeros|Ocupación|987,654|98%/);
   });
   it("never adds observations, schedules, estimates and attributed market totals together", () => {
@@ -54,9 +57,10 @@ describe("flight-only map totals", () => {
     expect(host.innerHTML).toContain("<strong>N/D</strong>");
     expect(host.innerHTML).not.toContain("<strong>0</strong>");
   });
-  it("hides the empty summary", () => {
+  it("retains coverage help for a period without route totals", () => {
     renderNetworkVolume();
-    expect(document.getElementById("network-volume")!.hidden).toBe(true);
+    expect(document.getElementById("network-volume")!.hidden).toBe(false);
+    expect(document.getElementById("flight-map-coverage")!.textContent).toBe("No disponible");
   });
 });
 

@@ -2,6 +2,13 @@
 
 ## Ediciones nuevas y handoff vigente
 
+La [guía narrativa trimestral](narrativa-trimestral.md) explica cómo investigar
+el ángulo antes de cerrar la evidencia y revisarlo después: hitos, motores,
+comparables y contrapuntos, con ejemplos Viva/Volaris. La preparación ocurre
+fuera del rol de redacción cerrado; cualquier hallazgo nuevo debe llegar en el
+paquete validado. La skill histórica conserva sus bytes y su función en las
+identidades aprobadas. La nueva pauta no cambia por sí sola una tesis existente.
+
 La [skill de análisis](../../.agents/skills/aeromexico-tracker-analysis/SKILL.md)
 conserva el procedimiento vigente y la pauta de 200–300 palabras para nuevas
 ediciones. `issuer_quarter_v1` amplía el replay de fuentes validado a Viva y

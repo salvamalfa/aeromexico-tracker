@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>Aerolíneas MX Tracker</title>
+  <title>Airlines Tracker</title>
   <link rel="stylesheet" href="src/styles/base.css">
   <link rel="stylesheet" href="src/views/executive/executive.css">
   <link rel="stylesheet" href="src/views/economy/economy.css">
@@ -15,8 +15,7 @@
     <header class="hero">
       <div class="hero-grid">
         <div>
-          <h1>Aerolíneas MX Tracker</h1>
-          <p class="hero-note" id="industry-note">Industria = Aeroméxico, Volaris y Viva</p>
+          <h1>Airlines Tracker</h1>
         </div>
         <div class="period-control">
           <span class="period-label">Trimestre analizado</span>
@@ -25,58 +24,31 @@
             <output id="period-display" aria-live="polite">—</output>
             <button type="button" id="period-next" aria-label="Ir al trimestre siguiente" title="Trimestre siguiente">▲</button>
           </div>
-          <span id="period-help" class="sr-only">Actualiza tarjetas, conclusiones, narrativa y trimestre destacado.</span>
+          <span id="period-help" class="sr-only">Único selector de trimestre del dashboard. Actualiza la lectura, los indicadores y las gráficas.</span>
         </div>
       </div>
     </header>
 
     <div class="reader-tabs" role="tablist" aria-label="Vistas del dashboard">
       <button type="button" id="tab-reading" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
-      <button type="button" id="tab-market" role="tab" aria-selected="false" aria-controls="panel-market" tabindex="-1">Mercado</button>
+      <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Mercado</button>
       <button type="button" id="tab-economy" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
-      <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Vuelos</button>
-      <button type="button" id="tab-news" role="tab" aria-selected="false" aria-controls="panel-news" tabindex="-1">Noticias y estrategia</button>
+      <button type="button" id="tab-news" role="tab" aria-selected="false" aria-controls="panel-news" tabindex="-1">Noticias</button>
     </div>
 
     <section id="panel-reading" role="tabpanel" aria-labelledby="tab-reading">
       <section class="narrative-card" aria-labelledby="executive-reading-title">
-        <div class="card-head-row">
-          <h2 id="executive-reading-title">Lectura ejecutiva · <span id="narrative-entity">Aeroméxico</span> · <span id="narrative-period">—</span></h2>
-          <div id="pick-reading"></div>
-        </div>
-        <label for="reading-period">Trimestre de lectura</label>
-        <select id="reading-period" aria-label="Trimestre de lectura"></select>
-        <p class="muted">La lectura tiene su propio trimestre. Los indicadores y el mapa conservan sus periodos y cortes.</p>
+        <h2 id="executive-reading-title">Industria</h2>
         <div id="narrative-copy">
           <p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>
         </div>
-      </section>
-
-    </section>
-
-    <section id="panel-market" role="tabpanel" aria-labelledby="tab-market" hidden>
-      <div class="section-heading"><div><p class="section-kicker">Mercado</p><h2>Tamaño y participación</h2></div></div>
-      <article class="chart-card market-card" id="market-card">
-        <div class="chart-heading-row">
-          <div>
-            <h2 class="chart-title">Participación de pasajeros (AFAC) <button type="button" id="market-source" class="market-source-info" popovertarget="market-source-note" title="Fuente: AFAC" aria-label="Fuente: AFAC">ⓘ</button></h2>
-            <p id="market-source-note" class="market-source-note" popover></p>
-          </div>
-          <div class="chart-controls">
-            <label class="chart-range-control" for="market-segment">Segmento
-              <select id="market-segment">
-                <option value="total" selected>Total</option>
-                <option value="domestic">Nacional</option>
-                <option value="international">Internacional</option>
-              </select>
-            </label>
-            <div id="pick-market"></div>
-          </div>
+        <div class="reading-full-card" id="reading-full-card" hidden>
+          <details id="reading-full">
+            <summary>Análisis completo</summary>
+            <div id="reading-full-copy"></div>
+          </details>
         </div>
-        <div class="chart" id="market-chart" role="img" aria-label="Participación mensual de pasajeros por aerolínea"></div>
-        <div class="market-kpis" id="market-kpis" aria-live="polite"></div>
-        <div class="market-table-wrap"><table class="market-table"><caption>Contribución al crecimiento interanual del universo AFAC seleccionado</caption><thead><tr><th>Aerolínea</th><th>Pasajeros</th><th>Crecimiento interanual</th><th>Participación</th><th>Cambio interanual (pp)</th><th>Contribución (pp)</th></tr></thead><tbody id="market-comparison"></tbody></table></div>
-      </article>
+      </section>
     </section>
 
     <section id="panel-economy" role="tabpanel" aria-labelledby="tab-economy" hidden>
@@ -124,14 +96,12 @@
         </article>
       </section>
 
-      <div id="financial-comparison-note" class="analysis-temporal-notice" hidden></div>
       <section aria-labelledby="unit-heading">
         <div class="section-heading">
           <div>
             <p class="section-kicker">Economía unitaria</p>
             <h2 id="unit-heading">Ingreso, costo y margen por ASK</h2>
           </div>
-          <p class="source-inline" id="economy-source-inline">Fuente: v_aeromexico_quarterly</p>
         </div>
         <article class="chart-card">
           <div class="chart-heading-row">
@@ -140,7 +110,7 @@
               <p class="chart-subtitle" id="unit-subtitle">Cuando RASK supera CASK, la operación genera utilidad por cada asiento-kilómetro. Las barras muestran el margen unitario en ¢ USD por ASK-km para cada trimestre.</p>
             </div>
             <div class="chart-controls">
-              <label class="chart-range-control" for="unit-metric" id="unit-metric-control" hidden>Métrica
+              <label class="chart-range-control" for="unit-metric" id="unit-metric-control" hidden><span class="sr-only">Métrica</span>
                 <select id="unit-metric">
                   <option value="rask_cents_per_km" selected>RASK</option>
                   <option value="cask_cents_per_km">CASK</option>
@@ -148,12 +118,12 @@
                   <option value="unit_margin_cents_per_km">Margen unitario</option>
                 </select>
               </label>
-              <label class="chart-range-control" for="unit-range">Periodo
+              <label class="chart-range-control" for="unit-range"><span class="sr-only">Periodo</span>
                 <select id="unit-range">
                   <option value="all" selected>Historia completa</option>
-                  <option value="12">Últimos 12 trimestres</option>
-                  <option value="8">Últimos 8 trimestres</option>
-                  <option value="4">Últimos 4 trimestres</option>
+                  <option value="12">12 trimestres</option>
+                  <option value="8">8 trimestres</option>
+                  <option value="4">4 trimestres</option>
                 </select>
               </label>
               <div id="pick-unit"></div>
@@ -203,21 +173,12 @@
     </section>
 
     <section id="panel-news" role="tabpanel" aria-labelledby="tab-news" hidden>
-      <div class="section-heading"><div><p class="section-kicker">Archivo mensual</p><h2>Noticias y estrategia <button type="button" id="news-source" class="news-source-info" popovertarget="news-source-note" title="Archivo parcial de noticias verificadas" aria-label="Archivo parcial de noticias verificadas">ⓘ</button></h2></div></div>
-      <p id="news-source-note" class="news-source-note" popover></p>
-      <div class="news-filters">
-        <label>Mes de publicación<select id="news-month"></select></label>
-        <label>Aerolínea<select id="news-company"><option value="">Todas las aerolíneas</option><option>Aeroméxico</option><option>Aeroméxico Connect</option><option>Viva</option><option>Volaris</option></select></label>
-        <label>Tema<select id="news-topic"></select></label>
-        <label class="news-search">Buscar palabras en el archivo<input id="news-query" type="search" maxlength="240" placeholder="Ej. combustible, capacidad, Delta"></label>
-        <button type="button" id="news-chat" hidden>Preguntar al chat</button>
-      </div>
+      <div class="section-heading news-heading" id="news-heading"><h2>Archivo mensual</h2></div>
       <p class="news-count" id="news-count" aria-live="polite">Cargando noticias…</p>
       <div class="news-grid" id="news-stories"></div>
     </section>
 
     <section id="panel-flights" role="tabpanel" aria-labelledby="tab-flights" hidden>
-      <p id="flight-data-period" class="muted" aria-live="polite"></p>
       <div class="flights-view">
         <div class="flights-shell flights-integrated" data-testid="flights-dashboard-root">
           <div class="card-picker-row"><div id="pick-flight-kpis"></div></div>
@@ -230,14 +191,6 @@
                 <span>vs. trimestre anterior <strong id="flight-kpi-passengers-qoq">—</strong></span>
                 <span>vs. año anterior <strong id="flight-kpi-passengers-yoy">—</strong></span>
               </div>
-            </article>
-            <article class="flight-kpi" data-accent="blue">
-              <details class="coverage-help">
-                <summary class="info" aria-label="Cómo se calcula la cobertura del mapa">i</summary>
-                <p id="flight-map-coverage-info" role="tooltip"></p>
-              </details>
-              <p class="kpi-label">Cobertura del mapa</p>
-              <p class="kpi-value" id="flight-map-coverage" aria-live="polite">No disponible</p>
             </article>
             <article class="flight-kpi" data-accent="gold">
               <span class="info" title="Asientos disponibles multiplicados por millas voladas." aria-label="Asientos disponibles multiplicados por millas voladas.">i</span>
@@ -270,18 +223,19 @@
 
           <section aria-labelledby="network-title">
             <div class="section-heading network-heading">
-              <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2><p class="network-scope-note" id="network-scope-note"></p></div>
+              <div><p class="section-kicker">Red de vuelos</p><h2 id="network-title">Rutas nacionales</h2></div>
               <div id="pick-map"></div>
-            </div>
-            <div class="network-mode-switch" role="radiogroup" aria-label="Tipo de red">
-              <button type="button" id="network-mode-domestic" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
-              <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
-              <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
             </div>
             <div class="network-layout">
               <article class="panel flow-map-panel" id="map-panel">
                 <div class="map-route-toolbar">
-                  <div><strong id="map-route-title">Destinos que concentran el volumen</strong><span id="map-route-summary"></span></div>
+                  <div class="map-network-controls">
+                    <div class="network-mode-switch" role="radiogroup" aria-label="Tipo de red">
+                      <button type="button" id="network-mode-domestic" role="radio" aria-checked="true" aria-pressed="true">Nacional</button>
+                      <button type="button" id="network-mode-international" role="radio" aria-checked="false" aria-pressed="false">Internacional</button>
+                    </div>
+                    <div class="network-region-switch" id="network-region-switch" role="group" aria-label="Región internacional" hidden></div>
+                  </div>
                   <div class="map-route-switch" role="group" aria-label="Rutas visibles en el mapa">
                     <button type="button" id="map-routes-featured" aria-pressed="true">Más vuelos</button>
                     <button type="button" id="map-routes-change" aria-pressed="false">Mayores cambios</button>
@@ -301,22 +255,38 @@
             </div>
           </section>
 
+          <section id="market-participation" aria-label="Participación de mercado">
+      <article class="chart-card market-card" id="market-card">
+        <div class="chart-heading-row">
+          <div>
+            <h2 class="chart-title">Participación de pasajeros (AFAC) <button type="button" id="market-source" class="market-source-info" popovertarget="market-source-note" title="Fuente: AFAC" aria-label="Fuente: AFAC">ⓘ</button></h2>
+            <p id="market-source-note" class="market-source-note" popover></p>
+          </div>
+          <div class="chart-controls">
+            <label class="chart-range-control" for="market-segment"><span class="sr-only">Segmento</span>
+              <select id="market-segment"><option value="total" selected>Total</option><option value="domestic">Nacional</option><option value="international">Internacional</option></select>
+            </label>
+          </div>
+        </div>
+        <div class="chart" id="market-chart" role="img" aria-label="Participación mensual de pasajeros por aerolínea"></div>
+      </article>
+          </section>
+
           <section aria-labelledby="mix-title">
             <div class="section-heading">
               <div><p class="section-kicker">Capacidad y demanda</p><h2 id="mix-title">Mezcla nacional e internacional</h2></div>
-              <p class="source-inline" id="mix-source-inline">AFAC · pasajeros transportados; serie histórica y ediciones verificadas</p>
             </div>
             <article class="panel chart-panel">
               <div class="panel-heading chart-heading">
                 <div><p class="panel-title">Pasajeros y contribución por segmento</p></div>
                 <div class="chart-controls">
-                  <label class="chart-range-control" id="passenger-basis-control" for="passenger-basis" hidden>Fuente
+                  <label class="chart-range-control" id="passenger-basis-control" for="passenger-basis" hidden><span class="sr-only">Fuente</span>
                     <select id="passenger-basis">
                       <option value="afac" selected>AFAC</option>
                       <option value="corporate">Reporte corporativo mensual</option>
                     </select>
                   </label>
-                  <label class="chart-range-control" for="passenger-period">Periodo
+                  <label class="chart-range-control" for="passenger-period"><span class="sr-only">Periodo</span>
                     <select id="passenger-period">
                       <option value="quarter" selected>Trimestral</option>
                       <option value="month">Mensual</option>
@@ -325,7 +295,7 @@
                   <div id="pick-mix"></div>
                 </div>
               </div>
-              <div class="chart chart-mix" id="mix-chart" role="img" aria-label="Pasajeros por periodo: barras apiladas nacional e internacional y línea del total calculado"></div>
+              <div class="chart chart-mix" id="mix-chart" role="img" aria-label="Pasajeros por periodo y segmento nacional e internacional"></div>
             </article>
           </section>
         </div>

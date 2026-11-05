@@ -1,0 +1,58 @@
+[
+  {
+    "footers": 0,
+    "period": "2026Q3",
+    "points": [
+      "Industria. Las tres aerolíneas aumentaron sus ingresos frente al mismo trimestre del año anterior.123 El crecimiento de ventas convivió con presión sobre la rentabilidad: Aeroméxico redujo su margen operativo, mientras Viva y Volaris reportaron pérdidas netas.",
+      "Aeroméxico. En el tercer trimestre, Aeroméxico facturó US$1,619 millones1, 13.6%1 más que un año antes, mientras sus pasajeros disminuyeron 3.2%1. El combustible costó US$469.0 millones1, 57.6%1 más. El margen operativo terminó en 11.7%1, frente a 17.7%1 un año antes.",
+      "Viva. Viva aumentó sus ingresos trimestrales a 695.8 millones de dólares1, un avance anual de 6.1%1. La expansión de ventas coexistió con un resultado neto de -26.8 millones de dólares1. El contraste resume el tercer trimestre: la compañía obtuvo más ingreso de una operación de menor capacidad, mientras el aumento de los gastos limitó cuánto de esa venta llegó al resultado final. Estas cifras corresponden al trimestre de julio a septiembre, no al acumulado del año.",
+      "Volaris. Volaris registró ingresos trimestrales de 1,038.0 millones de dólares3, un aumento anual de 32.4%1. El avance comercial coexistió con un resultado neto de -26.0 millones de dólares2. La compañía vendió más y obtuvo mayor ingreso por cliente con boleto, pero la mejora de ventas no se trasladó en la misma proporción a la utilidad. La comparación corresponde a julio a septiembre y utiliza las cifras del mismo expediente, en dólares."
+    ],
+    "quarter": "3T26",
+    "selectors": 0,
+    "title": "Industria: mayores ingresos, rentabilidad bajo presión"
+  },
+  {
+    "period": "2026Q2",
+    "points": [
+      "Industria. La mejora del ingreso unitario quedó detrás del costo. El ingreso por asiento-kilómetro ofrecido creció 15,9 %12345 anual; el costo por ese mismo denominador aumentó 31,5 %12345. Cada unidad representa un asiento disponible y un kilómetro de vuelo.",
+      "Aeroméxico. Aeroméxico creció, pero a un costo más alto. Los ingresos del trimestre fueron de 1,479.0 millones de dólares1, 12.6% más que el año anterior. Esto pasó con menos pasajeros y más asientos disponibles, así que la mejora real se ve mejor en el ingreso por asiento ofrecido (RASK), aunque este número no distingue si vino de tarifas, tipo de viajero o tipo de cambio. Los ingresos crecieron más rápido que en trimestres pasados, pero los costos crecieron aún más rápido. El ingreso por asiento (RASK) subió 10.3%, mientras que el costo por asiento (CASK) subió 28.6%. La diferencia entre ambos sigue siendo positiva (0.43 centavos de dólar), pero se redujo bastante. El combustible fue el principal responsable, aunque el resto de los costos también subió.",
+      "Viva. El ingreso creció con una operación más pequeña. Viva generó 608.9 millones de dólares1, un avance anual de 10.9%12, mientras su capacidad varió -7.7%12. Los servicios adicionales representaron 53.8%1 del ingreso y aportaron 89.2%12 de su incremento absoluto: el crecimiento dependió principalmente de esa fuente de cobro.",
+      "Volaris. La recuperación comercial fue clara. Los ingresos alcanzaron 859,0 millones de dólares1, un aumento anual de 24,0%12. Los pasajeros reservados reportados sumaron 8,06 millones de pasajeros3, mientras la ocupación subió a 84,8%3. El crecimiento de ventas superó al de capacidad y mejoró el aprovechamiento de los vuelos frente al mismo trimestre anterior."
+    ],
+    "quarter": "2T26"
+  },
+  {
+    "period": "2026Q3",
+    "points": [
+      "Industria. Las tres aerolíneas aumentaron sus ingresos frente al mismo trimestre del año anterior.123 El crecimiento de ventas convivió con presión sobre la rentabilidad: Aeroméxico redujo su margen operativo, mientras Viva y Volaris reportaron pérdidas netas.",
+      "Aeroméxico. En el tercer trimestre, Aeroméxico facturó US$1,619 millones1, 13.6%1 más que un año antes, mientras sus pasajeros disminuyeron 3.2%1. El combustible costó US$469.0 millones1, 57.6%1 más. El margen operativo terminó en 11.7%1, frente a 17.7%1 un año antes.",
+      "Viva. Viva aumentó sus ingresos trimestrales a 695.8 millones de dólares1, un avance anual de 6.1%1. La expansión de ventas coexistió con un resultado neto de -26.8 millones de dólares1. El contraste resume el tercer trimestre: la compañía obtuvo más ingreso de una operación de menor capacidad, mientras el aumento de los gastos limitó cuánto de esa venta llegó al resultado final. Estas cifras corresponden al trimestre de julio a septiembre, no al acumulado del año.",
+      "Volaris. Volaris registró ingresos trimestrales de 1,038.0 millones de dólares3, un aumento anual de 32.4%1. El avance comercial coexistió con un resultado neto de -26.0 millones de dólares2. La compañía vendió más y obtuvo mayor ingreso por cliente con boleto, pero la mejora de ventas no se trasladó en la misma proporción a la utilidad. La comparación corresponde a julio a septiembre y utiliza las cifras del mismo expediente, en dólares."
+    ],
+    "quarter": "3T26"
+  },
+  {
+    "device": "mobile",
+    "period": "2026Q3",
+    "points": 4,
+    "quarter": "3T26",
+    "viewport": 375,
+    "width": 375
+  },
+  {
+    "block": "map",
+    "coverage": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "options": [
+      {
+        "text": "Trimestre general (3T26)",
+        "value": ""
+      },
+      {
+        "text": "julio 2026",
+        "value": "2026M07"
+      }
+    ],
+    "quarter": "3T26"
+  }
+]

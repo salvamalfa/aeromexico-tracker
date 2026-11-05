@@ -17,19 +17,11 @@ export const colors = {
 export const plotConfig = { displayModeBar: false, responsive: true, scrollZoom: false, staticPlot: false };
 export const signedTwoDecimals = (value: number): string => `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
 
+// The selected band/ring provides a persistent selection. Tooltips are only
+// shown by pointer interaction; opening one per trace duplicates the full KPI box.
 export function selectedHover(id: string): void {
   const graph = $(id) as PlotlyHTMLElement | null;
-  if (!graph || !graph.data || !graph.getBoundingClientRect().width) return;
-  const record = state.records[state.periodIndex];
-  if (!record) return;
-  const label = record.period_label;
-  const firstTrace = graph.data[0] as { x?: unknown[] } | undefined;
-  const point = (firstTrace?.x ?? []).indexOf(label);
-  if (point < 0) {
-    Plotly.Fx.unhover(graph);
-    return;
-  }
-  Plotly.Fx.hover(graph, [{ curveNumber: 1, pointNumber: point }]);
+  if (graph?.data) Plotly.Fx.unhover(graph);
 }
 
 export function marginLegend(): void {
@@ -89,7 +81,11 @@ export function visibleUnitRecords(rangeValue: string, records: ExecutiveRecord[
 
 export function setSubtitle(id: string, text: string): void {
   const node = document.getElementById(id);
-  if (node) node.textContent = text;
+  if (node) {
+    const info = node.querySelector(":scope > .market-source-info");
+    node.replaceChildren(document.createTextNode(text));
+    if (info) node.append(info);
+  }
 }
 
 export const UNIT_SUBTITLE =

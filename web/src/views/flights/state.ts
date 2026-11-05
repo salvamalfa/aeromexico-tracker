@@ -22,6 +22,7 @@ import type {
   WorldGeometry,
 } from "../../types/domain";
 
+import type { EvidenceView, ExcludedNorthAmericaFlights } from "./evidence-view";
 import { MAP_CARRIERS, mergeCarrierNetworks } from "./map-selection";
 
 export const DOMESTIC_MONTH_NAMES = [
@@ -64,6 +65,10 @@ export interface FlightsState {
   // network / routes currently on screen (recomputed by renderNetworkPeriod).
   network: Network | null;
   routes: Route[];
+  evidenceView: EvidenceView;
+  excludedNorthAmericaFlights: ExcludedNorthAmericaFlights;
+  observedNorthAmericaMonths: string[];
+  hasNorthAmericaObservations: boolean;
   // Routes with documented Aeroméxico presence but no attributable volume;
   // they are not drawn, so the volume line discloses how many were left out.
   presenceOnlyRouteCount: number;
@@ -115,6 +120,10 @@ export const state: FlightsState = {
 
   network: null,
   routes: [],
+  evidenceView: "all",
+  excludedNorthAmericaFlights: {estimated:0,scheduled:0,attributed:0,movements:0,routes:0},
+  observedNorthAmericaMonths: [],
+  hasNorthAmericaObservations: false,
   presenceOnlyRouteCount: 0,
   networkAllRoutes: [],
 

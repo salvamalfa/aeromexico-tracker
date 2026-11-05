@@ -8,6 +8,9 @@
 //   same source for all of them.
 // The route map is still Grupo Aeroméxico's until fase 3.
 
+import { afacMixTooltip, scheduleMixTooltip } from "./mix-tooltip";
+import { renderFlightKpiSources } from "./kpi-sources";
+import { renderPassengerCoverage } from "./passenger-coverage";
 import type { Data, Layout } from "plotly.js";
 import Plotly from "../../lib/plotly";
 import { $, deltaDisplay, metricDisplay, priorPeriod, setDelta } from "./dom";
@@ -36,6 +39,7 @@ export function renderEntityKpis(entity: EntityKey, periodId: string): void {
     setDelta(`flight-kpi-${key}-qoq`, deltaDisplay(value, kpiValue(entity, priorPeriod(periodId), key), points));
     setDelta(`flight-kpi-${key}-yoy`, deltaDisplay(value, kpiValue(entity, priorPeriod(periodId, 1), key), points));
   }
+  renderFlightKpiSources(entity, periodId);
 }
 
 interface SegmentPoint {
@@ -73,8 +77,17 @@ function segmentPoints(entity: EntityKey, periods: MarketPeriod[], monthly: bool
 // entity with the international part stacked on its domestic base.
 export function renderEntityMix(entities: EntityKey[], record: QuarterRecord, period: "quarter" | "month"): void {
   const market = entityState.market;
-  if (!market) return;
+  if (!market) {
+    renderPassengerCoverage(record.period_id, period, [], "AFAC");
+    scheduleMixTooltip(Plotly.react("mix-chart", [], {}, { displayModeBar: false }),[],()=>null);
+    return;
+  }
   const periods = period === "quarter" ? market.quarters : market.months;
+  const supported = (rows: MarketPeriod[]) => rows.filter(row => entities.every(key => ["domestic", "international"].every(segment => {
+    const block = row.segments[segment as "domestic" | "international"];
+    return (key === "INDUSTRY" ? block.industry : block.carriers[key])?.passengers != null;
+  }))).map(row => row.period_id);
+  renderPassengerCoverage(record.period_id, period, supported(periods), "AFAC", supported(market.months));
   const single = entities.length === 1;
   const traces: Data[] = [];
   for (const key of entities) {
@@ -87,7 +100,7 @@ export function renderEntityMix(entities: EntityKey[], record: QuarterRecord, pe
       name: single ? "Nacional" : `${name} · nacional`,
       offsetgroup: key, legendgroup: key, customdata: points.map((p) => p.label),
       marker: { color: color ?? "#003087" },
-      hovertemplate: `<b>%{customdata}</b><br>${name} nacional %{y:,.0f}<extra></extra>`,
+      hoverinfo: "none",
     } as Data);
     traces.push({
       type: "bar", x, y: points.map((p) => p.international),
@@ -95,13 +108,15 @@ export function renderEntityMix(entities: EntityKey[], record: QuarterRecord, pe
       name: single ? "Internacional" : `${name} · internacional`,
       offsetgroup: key, legendgroup: key, customdata: points.map((p) => p.label),
       marker: { color: color ?? "#c99400", opacity: single ? 1 : 0.5 },
-      hovertemplate: `<b>%{customdata}</b><br>${name} internacional %{y:,.0f}<extra></extra>`,
+      hoverinfo: "none",
     } as Data);
   }
   const first = periods[0]?.period_id;
   const last = periods[periods.length - 1]?.period_id;
   const start = new Date(`${first && period === "quarter" ? quarterStartDate(first) : `${first?.slice(0, 4)}-${first?.slice(5, 7)}-01`}T00:00:00Z`);
   const end = new Date(`${last && period === "quarter" ? quarterStartDate(last) : `${last?.slice(0, 4)}-${last?.slice(5, 7)}-01`}T00:00:00Z`);
+  if (record.metrics.passengers.period_start < start.toISOString().slice(0,10)) start.setTime(Date.parse(record.metrics.passengers.period_start));
+  if (record.metrics.passengers.period_end > end.toISOString().slice(0,10)) end.setTime(Date.parse(record.metrics.passengers.period_end));
   const padding = period === "quarter" ? 45 : 15;
   start.setUTCDate(start.getUTCDate() - padding);
   end.setUTCDate(end.getUTCDate() + padding);
@@ -121,5 +136,8 @@ export function renderEntityMix(entities: EntityKey[], record: QuarterRecord, pe
     hovermode: "closest",
     hoverlabel: { align: "left", bgcolor: "#ffffff", bordercolor: "#b9c8d9", font: { color: "#182233", size: 11 } },
   };
-  void Plotly.react("mix-chart", traces, layout, { displayModeBar: false, responsive: true });
+  const ids=periods.map(point=>point.period_id);
+  const keys=segmentPoints(entities[0]!,periods,period==="month").map(point=>point.date);
+  scheduleMixTooltip(Plotly.react("mix-chart", traces, layout, { displayModeBar: false, responsive: true }),keys,
+    (_key,index)=>afacMixTooltip(market,entities,ids[index]!));
 }

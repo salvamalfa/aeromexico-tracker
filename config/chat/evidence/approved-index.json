@@ -330,8 +330,1612 @@
         "resultados",
         "2T26"
       ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico informó que el tribunal de apelaciones anuló la orden del DOT contra su alianza con Delta. La empresa señaló que el acuerdo y su inmunidad seguían vigentes mientras revisaba los siguientes pasos.",
+      "event_date": "2026-08-20",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-08-20",
+      "id": "editorial_51e09773ed15e500bdc4d890",
+      "impact_note": "Cambia el riesgo regulatorio de la conectividad conjunta México–EE. UU.; se conserva como anuncio del emisor, sin extrapolar permisos de rutas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-20",
+      "publisher": "Aeroméxico / SEC",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526359690/d180062dex991.htm",
+          "event_date": "2026-08-20",
+          "event_end_date": null,
+          "evidence_note": "Exhibit 99.1 leído; fecha y fallo expresos en primer párrafo; separa orden sobre alianza de restricciones a nuevas rutas.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-20",
+          "publisher": "Aeroméxico / SEC",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Un tribunal anula la orden que retiraba inmunidad a la alianza Aeroméxico–Delta",
+          "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526359690/d180062dex991.htm"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "220fcf1ad7d6a142ef93fed7d8cf84dd1efd4a3c6b43bc911211050796c51673",
+          "candidate_id": "editorial_51e09773ed15e500bdc4d890",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "862403288343fb8b949800bcb706d3b1a7c1be0d52e3d5e2310b2cf612ec9be8",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_51e09773ed15e500bdc4d890",
+          "source_sha256": "1ee88b6d282ea802c8962b8abebf896c5e6cb44057412d15ad822c32e537ba09"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_51e09773ed15e500bdc4d890"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_1ee88b6d282ea802c896",
+        "json_pointer": "/records/0/publisher_observations/0",
+        "sha256": "1ee88b6d282ea802c8962b8abebf896c5e6cb44057412d15ad822c32e537ba09",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526359690/d180062dex991.htm"
+      },
+      "story_id": "event_51e09773ed15e500bdc4d890",
+      "summary_kind": "own_editorial_summary",
+      "title": "Un tribunal anula la orden que retiraba inmunidad a la alianza Aeroméxico–Delta",
+      "topics": [
+        "alliance"
+      ]
+    },
+    {
+      "companies": [
+        "Viva"
+      ],
+      "description": "Viva reportó crecimiento anual de 1,4% en pasajeros reservados y ocupación de 88,5% en julio. Señaló que las inspecciones Pratt & Whitney seguían limitando la flota, mientras alineaba capacidad y demanda.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-08-12",
+      "id": "editorial_b74281c018382f67fc5c04e2",
+      "impact_note": "Aporta contexto operativo y limitaciones de oferta; pasajeros son boletos reservados según glosario, no AFAC observado.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-12",
+      "publisher": "Viva",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-08-12-Trafico-julio-2026.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído: fecha en página 1, tabla mensual y comentario del director; glosario distingue reservados de transportados.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-12",
+          "publisher": "Viva",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Viva crece en julio con restricciones de disponibilidad de motores",
+          "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-08-12-Trafico-julio-2026.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "1ce0cf6ff6ffd1039b2d5fa0243845a24b851491355cac5b40e162add270e9e0",
+          "candidate_id": "editorial_b74281c018382f67fc5c04e2",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "b36602c3fa8cd7e049124050e3c62c944d144355ccfe6fb5b257b2b46bc4e580",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_b74281c018382f67fc5c04e2",
+          "source_sha256": "87e22051c987f8acc5c8252c0cdbf3aba9b8897e6f472352bf66cb16238db980"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_b74281c018382f67fc5c04e2"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_87e22051c987f8acc5c8",
+        "json_pointer": "/records/1/publisher_observations/0",
+        "sha256": "87e22051c987f8acc5c8252c0cdbf3aba9b8897e6f472352bf66cb16238db980",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-08-12-Trafico-julio-2026.pdf"
+      },
+      "story_id": "event_b74281c018382f67fc5c04e2",
+      "summary_kind": "own_editorial_summary",
+      "title": "Viva crece en julio con restricciones de disponibilidad de motores",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Volaris reportó 3,311 millones de pasajeros reservados en julio, 19,8% más anual. La capacidad aumentó 14,4%, los RPM 18,5% y la ocupación fue 87,9%; previó moderar el crecimiento en otoño.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-08-05",
+      "id": "editorial_d593642a1379cea2eb0ffc51",
+      "impact_note": "Distingue segmentos reservados de pasajeros transportados y muestra el ritmo de expansión.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-05",
+      "publisher": "Volaris / BMV",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1579903_1.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Documento primario BMV leído: tabla julio y comentario de asignación de capacidad.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-05",
+          "publisher": "Volaris / BMV",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Volaris expande capacidad y pasajeros reservados en julio",
+          "url": "https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1579903_1.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "fcdadd52f7641d1261ac6bc94743a76e209095d2ffbb91ed22b0ac3f29eaaeb0",
+          "candidate_id": "editorial_d593642a1379cea2eb0ffc51",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "3097454e958e63a697e3810c4ad86fe735cce197c47c3be129c474ca3c6dcacd",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_d593642a1379cea2eb0ffc51",
+          "source_sha256": "2755bc6d3791647aac258c0cb0d8adb970e4d967fdb39ca93974e3ab3f26f7d7"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_d593642a1379cea2eb0ffc51"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_2755bc6d3791647aac25",
+        "json_pointer": "/records/2/publisher_observations/0",
+        "sha256": "2755bc6d3791647aac258c0cb0d8adb970e4d967fdb39ca93974e3ab3f26f7d7",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.bmv.com.mx/docs-pub/eventemi/eventemi_1579903_1.pdf"
+      },
+      "story_id": "event_d593642a1379cea2eb0ffc51",
+      "summary_kind": "own_editorial_summary",
+      "title": "Volaris expande capacidad y pasajeros reservados en julio",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico reportó 2,157 millones de pasajeros en julio, 6,1% menos anual. La capacidad bajó 1,5% y la ocupación fue 88,0%; el comunicado atribuye el ajuste a la gestión de red y la demanda.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-08-03",
+      "id": "editorial_0aa3039f376de7c15a2dd4e0",
+      "impact_note": "Contextualiza oferta y demanda mensual del grupo; no sustituye tráfico AFAC ni vuelos por ruta.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-03",
+      "publisher": "Aeroméxico",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/08/03/16-22-29/July%202026_Op_Stat_ENG_V2.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído: fecha documental 3 agosto y tablas julio. Fecha de ruta URL no sustituye el cuerpo.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-03",
+          "publisher": "Aeroméxico",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Aeroméxico reduce tráfico en julio mientras ajusta capacidad",
+          "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/08/03/16-22-29/July%202026_Op_Stat_ENG_V2.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "b5ead0a9584e84004abf948778615b8b9df28f0784ddfed85b8cec5f635912ea",
+          "candidate_id": "editorial_0aa3039f376de7c15a2dd4e0",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "9a78b37a75a9bae2bb5c6b8c2ac52423e53f4c596aaaf3156ea06ef71684c990",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_0aa3039f376de7c15a2dd4e0",
+          "source_sha256": "da97512a38d4c50ca239e712ddbb43b1177c970e03eda5c7da1ef941fdb67785"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_0aa3039f376de7c15a2dd4e0"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_da97512a38d4c50ca239",
+        "json_pointer": "/records/3/publisher_observations/0",
+        "sha256": "da97512a38d4c50ca239e712ddbb43b1177c970e03eda5c7da1ef941fdb67785",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/08/03/16-22-29/July%202026_Op_Stat_ENG_V2.pdf"
+      },
+      "story_id": "event_0aa3039f376de7c15a2dd4e0",
+      "summary_kind": "own_editorial_summary",
+      "title": "Aeroméxico reduce tráfico en julio mientras ajusta capacidad",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Viva"
+      ],
+      "description": "El Ayuntamiento de Acapulco anunció una ruta de Viva hacia Cancún con inicio previsto el 3 de noviembre. El anuncio municipal amplía las opciones de conectividad futura del destino.",
+      "event_date": "2026-11-03",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-08-18",
+      "id": "editorial_0d08e581248efca2dfd579e6",
+      "impact_note": "Programación anunciada por autoridad local; no acredita operaciones realizadas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-18",
+      "publisher": "Ayuntamiento de Acapulco",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://acapulco.gob.mx/2026/08/amplia-acapulco-su-conectividad-aerea-y-abre-nuevas-rutas-al-turismo/",
+          "event_date": "2026-11-03",
+          "event_end_date": null,
+          "evidence_note": "Página oficial municipal leída; día de publicación y comienzo futuro expresos.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-18",
+          "publisher": "Ayuntamiento de Acapulco",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Acapulco anuncia una conexión de Viva con Cancún",
+          "url": "https://acapulco.gob.mx/2026/08/amplia-acapulco-su-conectividad-aerea-y-abre-nuevas-rutas-al-turismo/"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "74262f05f9d9549ee40c41bc8401eded1852f26515a23bc87673b38b5bc65469",
+          "candidate_id": "editorial_0d08e581248efca2dfd579e6",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "fc03e31c86c496cfc3cc785fb36823cdc22c47625e2498934157f74dee8f0200",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_0d08e581248efca2dfd579e6",
+          "source_sha256": "533de5505a81b817089914514fae6aa47a06c0df9ab4581700d6c2ab66389e8a"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_0d08e581248efca2dfd579e6"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_533de5505a81b8170899",
+        "json_pointer": "/records/4/publisher_observations/0",
+        "sha256": "533de5505a81b817089914514fae6aa47a06c0df9ab4581700d6c2ab66389e8a",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://acapulco.gob.mx/2026/08/amplia-acapulco-su-conectividad-aerea-y-abre-nuevas-rutas-al-turismo/"
+      },
+      "story_id": "event_0d08e581248efca2dfd579e6",
+      "summary_kind": "own_editorial_summary",
+      "title": "Acapulco anuncia una conexión de Viva con Cancún",
+      "topics": [
+        "route"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico anunció su intención de volar de Ciudad de México a Milán con Boeing 787 en marzo de 2027, sujeta a permisos. La nota también informa la llegada del Dreamliner número 25.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-08-18",
+      "id": "editorial_c8b26f6830ed36a782f0b1e2",
+      "impact_note": "Intención de programación futura; la nota no informa frecuencias aprobadas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-18",
+      "publisher": "AeroLatinNews / IATA",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://aerolatinnews.com/destacado/aeromexico-suma-milan-a-su-red-internacional-desde-ciudad-de-mexico/",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Página completa leída, fecha 18 agosto, atribución Fuente: Aeroméxico. No día preciso para inicio de marzo; fecha de evento nula.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-18",
+          "publisher": "AeroLatinNews / IATA",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "journalism",
+          "title": "Aeroméxico anuncia intención de abrir Ciudad de México–Milán",
+          "url": "https://aerolatinnews.com/destacado/aeromexico-suma-milan-a-su-red-internacional-desde-ciudad-de-mexico/"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "6e254c4cf6bd9a9c9b9f830422eed0626a49952574641bc4ac1a6c9a520f08fd",
+          "candidate_id": "editorial_c8b26f6830ed36a782f0b1e2",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "b2c508a5621532b6919f147ecc1035d16fc214907800e79292c02bca88ad95f4",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_c8b26f6830ed36a782f0b1e2",
+          "source_sha256": "259b55e898d92031a12bcc0cca3eda4c9f4fcd374f50698570fb2b258d412e2d"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_c8b26f6830ed36a782f0b1e2"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_259b55e898d92031a12b",
+        "json_pointer": "/records/5/publisher_observations/0",
+        "sha256": "259b55e898d92031a12bcc0cca3eda4c9f4fcd374f50698570fb2b258d412e2d",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://aerolatinnews.com/destacado/aeromexico-suma-milan-a-su-red-internacional-desde-ciudad-de-mexico/"
+      },
+      "story_id": "event_c8b26f6830ed36a782f0b1e2",
+      "summary_kind": "own_editorial_summary",
+      "title": "Aeroméxico anuncia intención de abrir Ciudad de México–Milán",
+      "topics": [
+        "route"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Volaris anunció ocho conexiones entre México, Estados Unidos, Guatemala y Colombia para iniciar el 1 de diciembre. Incluyen cuatro salidas internacionales de Guadalajara y dos rutas nacionales desde Puebla; son programación anunciada.",
+      "event_date": "2026-12-01",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-08-07",
+      "id": "editorial_271661e530e6ae1737f1c268",
+      "impact_note": "Amplía conectividad y oferta futura; no prueba vuelos realizados ni capacidad ejecutada.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-08-07",
+      "publisher": "Volaris",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://cms.volaris.com/es/informacion-util/sala-de-prensa/8-nuevas-rutas/",
+          "event_date": "2026-12-01",
+          "event_end_date": null,
+          "evidence_note": "Cuerpo fechado 7/agosto; índice muestra 8/agosto. Se usa fecha documental. Conectividad Guadalajara es otra publicación del mismo anuncio, no cuatro eventos adicionales.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-08-07",
+          "publisher": "Volaris",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Volaris anuncia ocho rutas para diciembre",
+          "url": "https://cms.volaris.com/es/informacion-util/sala-de-prensa/8-nuevas-rutas/"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "67e19bc87eae70bbfdf264eae0a2a604bce741915a182cd007d2cac40b9de42b",
+          "candidate_id": "editorial_271661e530e6ae1737f1c268",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "95b4f579846ed73e21dae35d0e19852188e9b72b52a46f4f790539a105c1c7de",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_271661e530e6ae1737f1c268",
+          "source_sha256": "4cda28a1d0c67e605969f45800b8598bc2aa1866cfaaa681ab6dec1df9123f4c"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_271661e530e6ae1737f1c268"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_4cda28a1d0c67e605969",
+        "json_pointer": "/records/6/publisher_observations/0",
+        "sha256": "4cda28a1d0c67e605969f45800b8598bc2aa1866cfaaa681ab6dec1df9123f4c",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://cms.volaris.com/es/informacion-util/sala-de-prensa/8-nuevas-rutas/"
+      },
+      "story_id": "event_271661e530e6ae1737f1c268",
+      "summary_kind": "own_editorial_summary",
+      "title": "Volaris anuncia ocho rutas para diciembre",
+      "topics": [
+        "route"
+      ]
+    },
+    {
+      "companies": [
+        "Viva"
+      ],
+      "description": "Viva reportó en agosto pasajeros reservados −1,2%, capacidad ASM −3,5% y ocupación de 89,8%. Vinculó sus ajustes de red con la demanda, el combustible elevado y las afectaciones de motores Pratt & Whitney.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-09-11",
+      "id": "editorial_064e3505206a45920defc8ae",
+      "impact_note": "Aporta contexto operativo y limitaciones de oferta; pasajeros son boletos reservados según glosario, no AFAC observado.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-11",
+      "publisher": "Viva",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-09-11-Trafico-agosto-2026.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído: fecha en página 1, tabla mensual y comentario del director; glosario distingue reservados de transportados.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-11",
+          "publisher": "Viva",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Viva reduce capacidad y mejora ocupación en agosto",
+          "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-09-11-Trafico-agosto-2026.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "8a731c8f2bce19ad50f9f1d4a2ee01dc954fc40b896942e228df99640c775602",
+          "candidate_id": "editorial_064e3505206a45920defc8ae",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "2c6a0179e17791ae3d2d88d39074f1104b28084e66c3b8fa62c6e3ce1ecfb36e",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_064e3505206a45920defc8ae",
+          "source_sha256": "da55443e6eba82d551fe3c2f4119975bc1d79ec9bafd7d530f476bca724a3dad"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_064e3505206a45920defc8ae"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_da55443e6eba82d551fe",
+        "json_pointer": "/records/0/publisher_observations/0",
+        "sha256": "da55443e6eba82d551fe3c2f4119975bc1d79ec9bafd7d530f476bca724a3dad",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-09-11-Trafico-agosto-2026.pdf"
+      },
+      "story_id": "event_064e3505206a45920defc8ae",
+      "summary_kind": "own_editorial_summary",
+      "title": "Viva reduce capacidad y mejora ocupación en agosto",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Viva",
+        "Volaris"
+      ],
+      "description": "El Economista informó avances en el proceso del grupo propuesto por Viva y Volaris, incluida autorización estadounidense y cambios societarios. La aprobación de la autoridad mexicana continuaba pendiente.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-09-06",
+      "id": "editorial_58f74da21cf55cffe3be414a",
+      "impact_note": "No implica cierre de la operación ni integración efectiva de flotas, marcas o certificados.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-06",
+      "publisher": "El Economista",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.eleconomista.com.mx/empresas/fusion-viva-volaris-espera-aprobacion-comision-nacional-antimonopolio-20260906-832138.html?facet=app&mode=light",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Artículo completo leído; afirma autorización FTC 31 agosto y cambios 3 septiembre. No se verificó expediente primario FTC; se mantiene atribución periodística.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-06",
+          "publisher": "El Economista",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "journalism",
+          "title": "La integración propuesta de Viva y Volaris sigue pendiente de autorización mexicana",
+          "url": "https://www.eleconomista.com.mx/empresas/fusion-viva-volaris-espera-aprobacion-comision-nacional-antimonopolio-20260906-832138.html?facet=app&mode=light"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "74beea4c4a9faabbeeedb209f83e69a84fbcdfcab3ab5f3ed5b7356bda3babab",
+          "candidate_id": "editorial_58f74da21cf55cffe3be414a",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "899bacbae4a8971dd64a06aa71f8e7f46ff8bca37bf76d342ac75ee857980245",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_58f74da21cf55cffe3be414a",
+          "source_sha256": "a5950b46d594d4ac48519aa7c4b6ef6493526a47de225009a029e5e19fa1c33e"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_58f74da21cf55cffe3be414a"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_a5950b46d594d4ac4851",
+        "json_pointer": "/records/1/publisher_observations/0",
+        "sha256": "a5950b46d594d4ac48519aa7c4b6ef6493526a47de225009a029e5e19fa1c33e",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.eleconomista.com.mx/empresas/fusion-viva-volaris-espera-aprobacion-comision-nacional-antimonopolio-20260906-832138.html?facet=app&mode=light"
+      },
+      "story_id": "event_58f74da21cf55cffe3be414a",
+      "summary_kind": "own_editorial_summary",
+      "title": "La integración propuesta de Viva y Volaris sigue pendiente de autorización mexicana",
+      "topics": [
+        "alliance"
+      ]
+    },
+    {
+      "companies": [],
+      "description": "AFAC publicó lineamientos para asignar horarios en aeropuertos con potencial de saturación. Exigen considerar capacidad real, neutralidad y trato no discriminatorio para mejorar la planeación y reducir congestiones.",
+      "event_date": "2026-09-04",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-09-04",
+      "id": "editorial_e2141a7189bcb2d2b2d77899",
+      "impact_note": "Reglas de acceso aeroportuario relevantes para la industria; no equivalen a capacidad nueva o vuelos observados.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-04",
+      "publisher": "AFAC",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.gob.mx/afac/articulos/emite-afac-lineamientos-para-mejorar-la-seguridad-y-la-planeacion-de-los-horarios-de-salidas-y-llegadas-en-los-aeropuertos-434921?idiom=es",
+          "event_date": "2026-09-04",
+          "event_end_date": null,
+          "evidence_note": "Comunicado oficial leído: fecha 4/septiembre; aplicación preventiva en aeropuertos con potencial de saturación.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-04",
+          "publisher": "AFAC",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "AFAC establece reglas nacionales para horarios aeroportuarios",
+          "url": "https://www.gob.mx/afac/articulos/emite-afac-lineamientos-para-mejorar-la-seguridad-y-la-planeacion-de-los-horarios-de-salidas-y-llegadas-en-los-aeropuertos-434921?idiom=es"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "cbf068c67b88a35a7ecfd43792b17522d1b1c52afbfaac4a5f26c27623364b85",
+          "candidate_id": "editorial_e2141a7189bcb2d2b2d77899",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "36ec48b7fa75f9fb7855475879d2e4ec07606953cf504b5d923158ae2b6b7fa7",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_e2141a7189bcb2d2b2d77899",
+          "source_sha256": "7f5580e835a13254be3cc8e06561dde525c17f0e29314c0d2c3760a650192af2"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_e2141a7189bcb2d2b2d77899"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_7f5580e835a13254be3c",
+        "json_pointer": "/records/2/publisher_observations/0",
+        "sha256": "7f5580e835a13254be3cc8e06561dde525c17f0e29314c0d2c3760a650192af2",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.gob.mx/afac/articulos/emite-afac-lineamientos-para-mejorar-la-seguridad-y-la-planeacion-de-los-horarios-de-salidas-y-llegadas-en-los-aeropuertos-434921?idiom=es"
+      },
+      "story_id": "event_e2141a7189bcb2d2b2d77899",
+      "summary_kind": "own_editorial_summary",
+      "title": "AFAC establece reglas nacionales para horarios aeroportuarios",
+      "topics": [
+        "regulation"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Volaris reportó 3,190 millones de pasajeros reservados en agosto, 17,5% más anual. La capacidad creció 15,8%, los RPM 15,4% y la ocupación fue 84,4%; reiteró moderación de oferta para el otoño.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-09-03",
+      "id": "editorial_ad5a64a03cbdaf2038432486",
+      "impact_note": "Contexto operativo de capacidad y demanda; pasajeros son reservados según emisor.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-03",
+      "publisher": "Volaris / GlobeNewswire",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.globenewswire.com/news-release/2026/09/03/3355966/0/en/volaris-reports-august-2026-traffic-results-load-factor-of-84.html",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Comunicado del emisor leído en distribuidor oficial, fechado 3 septiembre.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-03",
+          "publisher": "Volaris / GlobeNewswire",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Volaris mantiene expansión de tráfico en agosto",
+          "url": "https://www.globenewswire.com/news-release/2026/09/03/3355966/0/en/volaris-reports-august-2026-traffic-results-load-factor-of-84.html"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "fd24abfb821bf6473a52d8af65260e5cb5a82c488b38f92d922c5686227169c8",
+          "candidate_id": "editorial_ad5a64a03cbdaf2038432486",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "0fc296ae830eac9d0bd946b02472fea17249a7b27d01c3c9cc8e7de510b48309",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_ad5a64a03cbdaf2038432486",
+          "source_sha256": "9fb85afbe72648c9d69435fcd031143a974a4fe96066c180a0bdb518cb5aa96e"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_ad5a64a03cbdaf2038432486"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_9fb85afbe72648c9d694",
+        "json_pointer": "/records/3/publisher_observations/0",
+        "sha256": "9fb85afbe72648c9d69435fcd031143a974a4fe96066c180a0bdb518cb5aa96e",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.globenewswire.com/news-release/2026/09/03/3355966/0/en/volaris-reports-august-2026-traffic-results-load-factor-of-84.html"
+      },
+      "story_id": "event_ad5a64a03cbdaf2038432486",
+      "summary_kind": "own_editorial_summary",
+      "title": "Volaris mantiene expansión de tráfico en agosto",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico transportó 2,151 millones de pasajeros en agosto, 1,0% menos anual. La capacidad creció 2,3%, el tráfico medido en RPM subió 2,9% y la ocupación llegó a 89,7%.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-09-03",
+      "id": "editorial_fbbabf0a8f0931f5451622c3",
+      "impact_note": "Permite interpretar capacidad frente a pasajeros sin confundir RPM, ASM y vuelos.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-03",
+      "publisher": "Aeroméxico",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/09/02/21-16-12/Aug_2026_Op_Stat_ENG_V2.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído: comunicado fechado 3 septiembre; ruta del archivo fechada 2 septiembre, se prioriza cuerpo.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-03",
+          "publisher": "Aeroméxico",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Aeroméxico eleva capacidad y ocupación en agosto",
+          "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/09/02/21-16-12/Aug_2026_Op_Stat_ENG_V2.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "02c5b4e8a2ec73d596e7fd5ba415f5f5fce366d01ae1bc405f3ae1cc1af9d871",
+          "candidate_id": "editorial_fbbabf0a8f0931f5451622c3",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "a7e025e93cb0cec49fe671fac5aac9de8d3aab4b3fb02bce9de637dc96aaa6ee",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_fbbabf0a8f0931f5451622c3",
+          "source_sha256": "7927cbb63494e2205b026487564b38fd2668e57a8c8714403d2347e449afed55"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_fbbabf0a8f0931f5451622c3"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_7927cbb63494e2205b02",
+        "json_pointer": "/records/4/publisher_observations/0",
+        "sha256": "7927cbb63494e2205b026487564b38fd2668e57a8c8714403d2347e449afed55",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/09/02/21-16-12/Aug_2026_Op_Stat_ENG_V2.pdf"
+      },
+      "story_id": "event_fbbabf0a8f0931f5451622c3",
+      "summary_kind": "own_editorial_summary",
+      "title": "Aeroméxico eleva capacidad y ocupación en agosto",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico abrió la venta de rutas de Ciudad de México a Montego Bay y Nassau para marzo de 2027. Aviacionline informó tres frecuencias semanales por destino con Boeing 737 MAX 8, sujetas a aprobación.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-09-21",
+      "id": "editorial_4d6cc8d903291c6eb46d9ed3",
+      "impact_note": "Conectividad futura anunciada; tres frecuencias no se convierten en vuelos ejecutados.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-21",
+      "publisher": "Aviacionline",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.aviacionline.com/english/commercial-aviation/latin-america-and-caribbean/mexico/aeromexico-grows-in-the-caribbean-with-flights-to-the-bahamas-and-jamaica_a6ab163f6cdc8ca7068c23802",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Página del editor leída: Montego Bay 18 marzo y Nassau 19 marzo de 2027; son dos fechas y el evento agregado conserva fecha nula.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-21",
+          "publisher": "Aviacionline",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "journalism",
+          "title": "Aeroméxico pone a la venta rutas a Jamaica y Bahamas",
+          "url": "https://www.aviacionline.com/english/commercial-aviation/latin-america-and-caribbean/mexico/aeromexico-grows-in-the-caribbean-with-flights-to-the-bahamas-and-jamaica_a6ab163f6cdc8ca7068c23802"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "1173eafe0179f71fd8bc529c8b85618cf9fdfcb9d7eec52a8fbd51924b328d6a",
+          "candidate_id": "editorial_4d6cc8d903291c6eb46d9ed3",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "978df95d763743c2677f3bf9f4ab75db62cbb0e430cbb2fa3885b2c47ee258a1",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_4d6cc8d903291c6eb46d9ed3",
+          "source_sha256": "9199b26e216c2c7a208a6b3deec5f137f94ff1957ea0b4fb8edcab1bad32b673"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_4d6cc8d903291c6eb46d9ed3"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_9199b26e216c2c7a208a",
+        "json_pointer": "/records/5/publisher_observations/0",
+        "sha256": "9199b26e216c2c7a208a6b3deec5f137f94ff1957ea0b4fb8edcab1bad32b673",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.aviacionline.com/english/commercial-aviation/latin-america-and-caribbean/mexico/aeromexico-grows-in-the-caribbean-with-flights-to-the-bahamas-and-jamaica_a6ab163f6cdc8ca7068c23802"
+      },
+      "story_id": "event_4d6cc8d903291c6eb46d9ed3",
+      "summary_kind": "own_editorial_summary",
+      "title": "Aeroméxico pone a la venta rutas a Jamaica y Bahamas",
+      "topics": [
+        "route"
+      ]
+    },
+    {
+      "companies": [
+        "Viva"
+      ],
+      "description": "OMA anunció una ruta de Viva entre Tampico y Nuevo Laredo para el 14 de noviembre, con dos frecuencias semanales. El aeropuerto la presenta como una ampliación de conectividad regional.",
+      "event_date": "2026-11-14",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-09-08",
+      "id": "editorial_6547a7c3b748f62e68020911",
+      "impact_note": "Oferta futura; evita usar frecuencias anunciadas como salidas observadas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-09-08",
+      "publisher": "OMA",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://noticias.oma.aero/news/el-aeropuerto-de-tampico-suma-nueva-conexion-aerea-con-nuevo-laredo-a-traves-de-viva-73aae-5f19f.html",
+          "event_date": "2026-11-14",
+          "event_end_date": null,
+          "evidence_note": "Comunicado del operador aeroportuario leído: inicio 14 noviembre, martes y sábado.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-09-08",
+          "publisher": "OMA",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "OMA anuncia conexión de Viva entre Tampico y Nuevo Laredo",
+          "url": "https://noticias.oma.aero/news/el-aeropuerto-de-tampico-suma-nueva-conexion-aerea-con-nuevo-laredo-a-traves-de-viva-73aae-5f19f.html"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "faafe8826f8e44498d459e6e92a7f52242c550d80aeafc4d8707c09cc2369ecd",
+          "candidate_id": "editorial_6547a7c3b748f62e68020911",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "019001731df5951402d61851bae6dfa76dab3b26cb5abc695f49b17f1b13dcac",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_6547a7c3b748f62e68020911",
+          "source_sha256": "1239cdfae94eab267d31a433d51957fa341869101753eb0cbfdc212dc728e788"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_6547a7c3b748f62e68020911"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_1239cdfae94eab267d31",
+        "json_pointer": "/records/6/publisher_observations/0",
+        "sha256": "1239cdfae94eab267d31a433d51957fa341869101753eb0cbfdc212dc728e788",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://noticias.oma.aero/news/el-aeropuerto-de-tampico-suma-nueva-conexion-aerea-con-nuevo-laredo-a-traves-de-viva-73aae-5f19f.html"
+      },
+      "story_id": "event_6547a7c3b748f62e68020911",
+      "summary_kind": "own_editorial_summary",
+      "title": "OMA anuncia conexión de Viva entre Tampico y Nuevo Laredo",
+      "topics": [
+        "route"
+      ]
+    },
+    {
+      "companies": [
+        "Viva"
+      ],
+      "description": "Viva reportó ingresos de US$696 millones y EBITDAR de US$186 millones en 3T26. La pérdida neta fue de US$27 millones; los ajustes de capacidad y motores acompañaron presión de combustible. Son resultados no auditados del emisor.",
+      "event_date": "2026-10-28",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-10-28",
+      "id": "editorial_09221a96ac03dbc7c069c199",
+      "impact_note": "Explica rentabilidad y capacidad del trimestre; esta noticia no modifica indicadores, tesis ni sus aprobaciones.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-28",
+      "publisher": "Viva",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-3T26.pdf",
+          "event_date": "2026-10-28",
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído página 1, fecha 28/octubre y tabla financiera; montos USD, resultados no auditados.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-28",
+          "publisher": "Viva",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Viva mejora secuencialmente, con combustible y motores bajo presión",
+          "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-3T26.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "27e953826b0c81b9e43461934f83770e42153df2a45971857942d91eaf833e71",
+          "candidate_id": "editorial_09221a96ac03dbc7c069c199",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "92c144a1cc6693733d52de45edb4751fd7198b1eaacbc6ec8990cc63ba0470ed",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_09221a96ac03dbc7c069c199",
+          "source_sha256": "acd98cdf1411a7bec143a17fe888e1598fc34bb844b2575595c33b5a15b0b84b"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_09221a96ac03dbc7c069c199"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_acd98cdf1411a7bec143",
+        "json_pointer": "/records/0/publisher_observations/0",
+        "sha256": "acd98cdf1411a7bec143a17fe888e1598fc34bb844b2575595c33b5a15b0b84b",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://cdn.investorcloud.net/VivaAerobus/InformacionFinanciera/ReportesTrimestrales/2026-3T26.pdf"
+      },
+      "story_id": "event_09221a96ac03dbc7c069c199",
+      "summary_kind": "own_editorial_summary",
+      "title": "Viva mejora secuencialmente, con combustible y motores bajo presión",
+      "topics": [
+        "results"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico anunció que S&P elevó su calificación de emisor de B+ a BB− y la de sus notas con vencimiento en 2029 y 2031 de BB− a BB. Es información comunicada por la compañía.",
+      "event_date": "2026-10-28",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-10-28",
+      "id": "editorial_c893377485071c9743ca850a",
+      "impact_note": "Relevante para riesgo financiero y acceso a financiación; no reemplaza una lectura directa del análisis de S&P.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-28",
+      "publisher": "Aeroméxico",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/28/14-44-44/2026-10-28%20Aerom%C3%A9xico%20Announces%20S&P%20Global%20Ratings%20Upgrade.pdf",
+          "event_date": "2026-10-28",
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído desde enlace vigente del portal IR; diferencia rating de emisor y notas.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-28",
+          "publisher": "Aeroméxico",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "S&P eleva la calificación de Aeroméxico a BB−",
+          "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/28/14-44-44/2026-10-28%20Aerom%C3%A9xico%20Announces%20S&P%20Global%20Ratings%20Upgrade.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "45901c4ca8b82dce54392f857ad0cd3753d8bc8f23046317d175f789f706cb3a",
+          "candidate_id": "editorial_c893377485071c9743ca850a",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "e457792ef55615edc41fa7fd10f6d16f9ede07a9b34d02732f02050d18fb2384",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_c893377485071c9743ca850a",
+          "source_sha256": "4784a3994f0ba7ee2762b5807a30fdb5e654647ebdb9887c1d3f6e359645bc89"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_c893377485071c9743ca850a"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_4784a3994f0ba7ee2762",
+        "json_pointer": "/records/1/publisher_observations/0",
+        "sha256": "4784a3994f0ba7ee2762b5807a30fdb5e654647ebdb9887c1d3f6e359645bc89",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/28/14-44-44/2026-10-28%20Aerom%C3%A9xico%20Announces%20S&P%20Global%20Ratings%20Upgrade.pdf"
+      },
+      "story_id": "event_c893377485071c9743ca850a",
+      "summary_kind": "own_editorial_summary",
+      "title": "S&P eleva la calificación de Aeroméxico a BB−",
+      "topics": [
+        "results"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Volaris reportó ingresos de US$1.038 millones y pérdida neta de US$26 millones en Q3. El TRASM aumentó 19,2% y el EBITDAR fue US$263 millones; el combustible económico por galón subió 57,4%.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-10-26",
+      "id": "editorial_01329ffbccedbf01f512fb03",
+      "impact_note": "Aporta el balance entre recuperación de ingresos y presión de costes; noticia no cambia tarjetas financieras aprobadas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-26",
+      "publisher": "Volaris / SEC",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426005010/ex99-1.htm",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Exhibit original leído: resultados 26 octubre, llamada 27 octubre; estados no auditados y glosario EBITDAR.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-26",
+          "publisher": "Volaris / SEC",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Volaris supera mil millones de dólares de ingresos trimestrales",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426005010/ex99-1.htm"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "63a7fd27fa0a20de5f84db7ba70d35dad244633b2cd673049d247f8b639b51f2",
+          "candidate_id": "editorial_01329ffbccedbf01f512fb03",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "1662e71c6b6d90e3eddabd8ad3c2f8925895189f34e03292b9db0a5f9244bcb4",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_01329ffbccedbf01f512fb03",
+          "source_sha256": "6d5df3fde946f34da10cc45de935c830e97d1426cc07193bb61f94e55693a66e"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_01329ffbccedbf01f512fb03"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_6d5df3fde946f34da10c",
+        "json_pointer": "/records/2/publisher_observations/0",
+        "sha256": "6d5df3fde946f34da10cc45de935c830e97d1426cc07193bb61f94e55693a66e",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520504/000129281426005010/ex99-1.htm"
+      },
+      "story_id": "event_01329ffbccedbf01f512fb03",
+      "summary_kind": "own_editorial_summary",
+      "title": "Volaris supera mil millones de dólares de ingresos trimestrales",
+      "topics": [
+        "results"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico reportó ingresos de US$1.619 millones en Q3, 13,6% más anual, y margen operativo de 11,7%. El gasto en combustible creció 57,6%; el resultado incluyó US$48,7 millones por actualizar el reconocimiento de puntos no utilizados.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:52:50.671415+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:52:50.671415+00:00",
+      "first_reported_on": "2026-10-19",
+      "id": "editorial_383b248d86946760d248012d",
+      "impact_note": "El aumento de ingresos incluye un ajuste contable del programa de lealtad; no debe atribuirse completo a crecimiento del tráfico ni extrapolarse como ingreso recurrente.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-19",
+      "publisher": "Aeroméxico / GlobeNewswire",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.globenewswire.com/fr/news-release/2026/10/19/3383928/0/en/aerom%C3%A9xico-reports-unaudited-third-quarter-2026-results.html",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Comunicado completo del emisor leído; resultados no auditados en dólares. Se separan ingreso, margen operativo y ajuste de breakage del programa de lealtad.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:52:50.671415+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-19",
+          "publisher": "Aeroméxico / GlobeNewswire",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Aeroméxico Reports Unaudited Third Quarter 2026 Results",
+          "url": "https://www.globenewswire.com/fr/news-release/2026/10/19/3383928/0/en/aerom%C3%A9xico-reports-unaudited-third-quarter-2026-results.html"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "e104269bacc9052ef30bbfb3e9efea9bedede3e9b8f2ef3a4bd35fc8453487a1",
+          "candidate_id": "editorial_383b248d86946760d248012d",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "a72d5611e81e27b1ef80193c2e8d4b2824564da9adb216dbc563e0976dd4ae3c",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_383b248d86946760d248012d",
+          "source_sha256": "71e1d97f0d7f7c1084d601a16f18b959f2dfe0db15d468ef7b058bcbf9da0914"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_383b248d86946760d248012d"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_71e1d97f0d7f7c1084d6",
+        "json_pointer": "/records/3/publisher_observations/0",
+        "sha256": "71e1d97f0d7f7c1084d601a16f18b959f2dfe0db15d468ef7b058bcbf9da0914",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.globenewswire.com/fr/news-release/2026/10/19/3383928/0/en/aerom%C3%A9xico-reports-unaudited-third-quarter-2026-results.html"
+      },
+      "story_id": "event_383b248d86946760d248012d",
+      "summary_kind": "own_editorial_summary",
+      "title": "Aeroméxico reporta ingresos récord con presión del combustible",
+      "topics": [
+        "results"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico",
+        "Viva",
+        "Volaris"
+      ],
+      "description": "La SICT informó que el DOT revocó con efecto inmediato restricciones a nuevas rutas de aerolíneas mexicanas desde AICM y AIFA hacia Estados Unidos. La medida abre oportunidades; no confirma que las rutas ya se estén operando.",
+      "event_date": "2026-10-16",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-10-16",
+      "id": "editorial_53a00808b94cdacc5dd2ec51",
+      "impact_note": "Cambia el acceso potencial de las tres aerolíneas al mercado estadounidense, separado del litigio de la alianza AM–Delta.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-16",
+      "publisher": "SICT / SRE",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.gob.mx/sict/prensa/mexico-y-estados-unidos-fortalecen-su-relacion-bilateral-en-materia-de-aviacion-438124?idiom=es",
+          "event_date": "2026-10-16",
+          "event_end_date": null,
+          "evidence_note": "Comunicado oficial conjunto leído; fecha y efecto inmediato explícitos. No sumar reaperturas como operaciones realizadas.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-16",
+          "publisher": "SICT / SRE",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Estados Unidos retira restricciones a nuevas rutas desde AICM y AIFA",
+          "url": "https://www.gob.mx/sict/prensa/mexico-y-estados-unidos-fortalecen-su-relacion-bilateral-en-materia-de-aviacion-438124?idiom=es"
+        },
+        {
+          "canonical_url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/16/18-56-27/2026-10-16%20DOT%20Order%20Revocation.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído desde enlace IR vigente; cuerpo fechado 19 octubre, ruta del archivo 16 octubre. Misma revocación reportada por SICT, se conserva procedencia sin duplicar hecho.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-19",
+          "publisher": "Aeroméxico",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Aeroméxico Announces DOT Order Revocation",
+          "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/16/18-56-27/2026-10-16%20DOT%20Order%20Revocation.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "495470112e9ea8d1d343287fa4bea8ae5ec5c743dcea1f3e0cff18faa60e2678",
+          "candidate_id": "editorial_53a00808b94cdacc5dd2ec51",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "399d4d4a0b7787897ae8f1dcb278aa4123efa2867699882613bf6334df7f7fa3",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_53a00808b94cdacc5dd2ec51",
+          "source_sha256": "1f14a13ffcd2e736db01e511241fa8cf6814fccf2af14f4462b9159b20d56c66"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_53a00808b94cdacc5dd2ec51"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_1f14a13ffcd2e736db01",
+        "json_pointer": "/records/4/publisher_observations/0",
+        "sha256": "1f14a13ffcd2e736db01e511241fa8cf6814fccf2af14f4462b9159b20d56c66",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.gob.mx/sict/prensa/mexico-y-estados-unidos-fortalecen-su-relacion-bilateral-en-materia-de-aviacion-438124?idiom=es"
+      },
+      "story_id": "event_53a00808b94cdacc5dd2ec51",
+      "summary_kind": "own_editorial_summary",
+      "title": "Estados Unidos retira restricciones a nuevas rutas desde AICM y AIFA",
+      "topics": [
+        "regulation"
+      ]
+    },
+    {
+      "companies": [
+        "Viva"
+      ],
+      "description": "Viva reportó pasajeros reservados −7,1% y ASM −11,0% en septiembre, con ocupación de 89,4%. La empresa mantuvo ajustes por demanda estacional, combustible y aeronaves en tierra por motores Pratt & Whitney.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-10-09",
+      "id": "editorial_bc86116f256517f37034fadc",
+      "impact_note": "Aporta contexto operativo y limitaciones de oferta; pasajeros son boletos reservados según glosario, no AFAC observado.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-09",
+      "publisher": "Viva",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído: fecha en página 1, tabla mensual y comentario del director; glosario distingue reservados de transportados.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-09",
+          "publisher": "Viva",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Viva profundiza su ajuste de capacidad en septiembre",
+          "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "637cefc708cfadc0333d1b530c8baa78e265f759fb2ea85e0318de7877e6397f",
+          "candidate_id": "editorial_bc86116f256517f37034fadc",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "989654a6c4108f82c765eddc395fd76e248d048fdb1ecf76c2742f13fea09a40",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_bc86116f256517f37034fadc",
+          "source_sha256": "42f6f20ff49234b35a3f3e42cb5c348c8e96979761932d8557ef3a00d1468251"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_bc86116f256517f37034fadc"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_42f6f20ff49234b35a3f",
+        "json_pointer": "/records/5/publisher_observations/0",
+        "sha256": "42f6f20ff49234b35a3f3e42cb5c348c8e96979761932d8557ef3a00d1468251",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://investorcloud.s3.amazonaws.com/VivaAerobus/InformacionFinanciera/SalaPrensa/2026-10-09-Trafico-septiembre-2026.pdf"
+      },
+      "story_id": "event_bc86116f256517f37034fadc",
+      "summary_kind": "own_editorial_summary",
+      "title": "Viva profundiza su ajuste de capacidad en septiembre",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Volaris informó 2,5 millones de pasajeros reservados en septiembre. La capacidad subió 1,9% anual, los RPM 3,1% y la ocupación fue 84,4%; la oferta bajó 22% frente al pico de verano.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-10-06",
+      "id": "editorial_8ed0909b1e10069493ddf3f3",
+      "impact_note": "La caída frente al pico es estacional, no una variación anual ni cancelaciones observadas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-06",
+      "publisher": "Volaris / GlobeNewswire",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://www.globenewswire.com/news-release/2026/10/06/3375555/0/en/volaris-reports-september-2026-traffic-results-load-factor-of-84.html",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "Comunicado del emisor leído: tabla mensual y comparación estacional explícita.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-06",
+          "publisher": "Volaris / GlobeNewswire",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Volaris modera crecimiento de capacidad en septiembre",
+          "url": "https://www.globenewswire.com/news-release/2026/10/06/3375555/0/en/volaris-reports-september-2026-traffic-results-load-factor-of-84.html"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "734293ae48e12e5cfe3b7987de8e5808436a39a32e1fe0ec991e8ad1fb0b03dd",
+          "candidate_id": "editorial_8ed0909b1e10069493ddf3f3",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "4f9cc68a0870515e332275f422d3ef6e87508b4fafd479bd24a703a111344306",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_8ed0909b1e10069493ddf3f3",
+          "source_sha256": "d4c09735de6613134359173848e8d963ad3e831bda92e2b2f040d056e2cd6dda"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_8ed0909b1e10069493ddf3f3"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_d4c09735de6613134359",
+        "json_pointer": "/records/6/publisher_observations/0",
+        "sha256": "d4c09735de6613134359173848e8d963ad3e831bda92e2b2f040d056e2cd6dda",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://www.globenewswire.com/news-release/2026/10/06/3375555/0/en/volaris-reports-september-2026-traffic-results-load-factor-of-84.html"
+      },
+      "story_id": "event_8ed0909b1e10069493ddf3f3",
+      "summary_kind": "own_editorial_summary",
+      "title": "Volaris modera crecimiento de capacidad en septiembre",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Aeroméxico"
+      ],
+      "description": "Aeroméxico reportó 1,853 millones de pasajeros en septiembre, 2,1% menos anual. La capacidad total aumentó 3,4%, la internacional 6,3% y la ocupación fue 87,1%.",
+      "event_date": null,
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:43:49.667251+00:00",
+      "first_reported_on": "2026-10-06",
+      "id": "editorial_f98a534f5be8bcdfba813c3a",
+      "impact_note": "Actualiza el contexto del cierre de Q3; no es una medida de salidas observadas.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-06",
+      "publisher": "Aeroméxico",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/05/19-05-12/Sep_2026_Op_Stat_ENG_V3.pdf",
+          "event_date": null,
+          "event_end_date": null,
+          "evidence_note": "PDF oficial leído; fecha en cuerpo 6 octubre, publicación web conserva ruta del 5 octubre.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:43:49.667251+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-06",
+          "publisher": "Aeroméxico",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Aeroméxico crece en capacidad internacional durante septiembre",
+          "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/05/19-05-12/Sep_2026_Op_Stat_ENG_V3.pdf"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "5f10a7e6fca7f3a15416fa74e8032703d1abf9b120ee4976982f20ef142252fd",
+          "candidate_id": "editorial_f98a534f5be8bcdfba813c3a",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "29174243a53451c718bd14bb04a84bbe7231623679181a684d743fe730debbc3",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_f98a534f5be8bcdfba813c3a",
+          "source_sha256": "a012b03fe920b822827d33a63a9698f32dee657d76f7d197f0a82a4a627b45f3"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_f98a534f5be8bcdfba813c3a"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_a012b03fe920b822827d",
+        "json_pointer": "/records/7/publisher_observations/0",
+        "sha256": "a012b03fe920b822827d33a63a9698f32dee657d76f7d197f0a82a4a627b45f3",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://ir.aeromexico.com/system/files-encrypted/nasdaq_kms/news/2026/10/05/19-05-12/Sep_2026_Op_Stat_ENG_V3.pdf"
+      },
+      "story_id": "event_f98a534f5be8bcdfba813c3a",
+      "summary_kind": "own_editorial_summary",
+      "title": "Aeroméxico crece en capacidad internacional durante septiembre",
+      "topics": [
+        "capacity"
+      ]
+    },
+    {
+      "companies": [
+        "Volaris"
+      ],
+      "description": "Volaris lanzó con HTS un servicio adicional para retrasos mayores de dos horas o cancelaciones el mismo día. Ofrece reacomodo en Volaris u otra aerolínea, o reembolso, y conserva las obligaciones legales de la compañía.",
+      "event_date": "2026-10-05",
+      "event_end_date": null,
+      "event_first_observed_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_capture_scope": "selected_publisher_observation_not_first_publisher_availability",
+      "first_captured_at": "2026-11-02T00:25:45.739556+00:00",
+      "first_reported_on": "2026-10-05",
+      "id": "editorial_aa0905b2d3112fcf1401bfc6",
+      "impact_note": "Nuevo producto opcional vinculado a ingresos adicionales y experiencia del cliente; sin estimar impacto financiero.",
+      "kind": "news",
+      "publication_date_basis": "publisher_displayed_day_not_invented_UTC_timestamp",
+      "publication_precision": "day",
+      "published_at": "2026-10-05",
+      "publisher": "Volaris",
+      "publisher_observations": [
+        {
+          "canonical_url": "https://cms.volaris.com/es/informacion-util/sala-de-prensa/disurupciones/",
+          "event_date": "2026-10-05",
+          "event_end_date": null,
+          "evidence_note": "Página oficial leída, cuerpo fecha 5/octubre; servicio opcional, no sustituye obligaciones de compensación.",
+          "method": "native_web",
+          "observed_at": "2026-11-02T00:25:45.739556+00:00",
+          "original_page_sha256": null,
+          "published_on": "2026-10-05",
+          "publisher": "Volaris",
+          "publisher_page_read": true,
+          "representation": "reviewed_web_observation_not_original_publisher_bytes",
+          "source_kind": "official",
+          "title": "Volaris incorpora asistencia opcional ante disrupciones",
+          "url": "https://cms.volaris.com/es/informacion-util/sala-de-prensa/disurupciones/"
+        }
+      ],
+      "review": {
+        "approved_at": "2026-11-02T01:33:13Z",
+        "decision": "owner_approved",
+        "owner_id": "salvamalfa",
+        "receipt": {
+          "approved_at": "2026-11-02T01:33:13Z",
+          "candidate_content_sha256": "c40f009931d1c32923d09ef6c860aceaaa4ac85755e390ee6aa7e854108e9745",
+          "candidate_id": "editorial_aa0905b2d3112fcf1401bfc6",
+          "decision": "owner_approved",
+          "decision_reference": "docs/decisiones/20261102-noticias-23.md",
+          "excerpt_sha256": "59a8e485769288aaa41ae592e73a00b6fed925d8d3b8367470e6819036c1702c",
+          "owner_id": "salvamalfa",
+          "proposal_sha256": "907971ca7e811a914f4fdb44920e146882d5b0b74db50b53f0d54bcbcb866df4",
+          "receipt_id": "owner-news-907971ca7e811a91:editorial_aa0905b2d3112fcf1401bfc6",
+          "source_sha256": "de060db29304a8d8288fab6fe004690d2b3959cbb4ca403225d120724a823e79"
+        },
+        "receipt_id": "owner-news-907971ca7e811a91:editorial_aa0905b2d3112fcf1401bfc6"
+      },
+      "source": {
+        "artifact_file": "candidates.json",
+        "id": "web_observation_de060db29304a8d8288f",
+        "json_pointer": "/records/8/publisher_observations/0",
+        "sha256": "de060db29304a8d8288fab6fe004690d2b3959cbb4ca403225d120724a823e79",
+        "sha256_semantics": "reviewed_observation_not_original_page_bytes",
+        "url": "https://cms.volaris.com/es/informacion-util/sala-de-prensa/disurupciones/"
+      },
+      "story_id": "event_aa0905b2d3112fcf1401bfc6",
+      "summary_kind": "own_editorial_summary",
+      "title": "Volaris incorpora asistencia opcional ante disrupciones",
+      "topics": [
+        "alliance"
+      ]
     }
   ],
   "schema": "chat_evidence_index_v1",
-  "version": "evidence-v2-approved-2026-10-12"
+  "version": "evidence-news-2026-11-02-907971ca"
 }

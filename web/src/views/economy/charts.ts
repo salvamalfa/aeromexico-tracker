@@ -13,7 +13,9 @@ import {
   UNIT_SUBTITLE, bindDefaultHover, colors, commonLayout, horizontalQuarterTicks, marginLegend,
   plotConfig, selectedHover, setSubtitle, signedTwoDecimals, visibleUnitRecords,
 } from "./chart-common";
+import { economyPeriodContext } from "./period-context";
 import { renderIndustryVolume, renderLoadComparison, renderUnitComparison, renderVolumeComparison } from "./compare";
+import { renderEconomyChartSource } from "./chart-sources";
 
 const VOLUME_SUBTITLE = "Las barras indican el número de pasajeros; la línea, el RASK.";
 
@@ -35,10 +37,12 @@ export function renderUnitEconomics(): void {
   if (metricControl) metricControl.hidden = unitEntities.length < 2;
   if (unitEntities.length > 1) {
     renderUnitComparison(unitEntities, rangeValue);
+    renderEconomyChartSource("unit", unitEntities);
     return;
   }
   const entity = unitEntities[0]!;
   setSubtitle("unit-title", entity === "AEROMEXICO" ? "RASK vs. CASK + Margen unitario" : `RASK vs. CASK + Margen unitario · ${entityLabel(entity)}`);
+  renderEconomyChartSource("unit", unitEntities);
   const visibleRecords = visibleUnitRecords(rangeValue, entityRecords(entity));
   setSubtitle("unit-subtitle", entity === "AEROMEXICO" && visibleRecords.some(r => r.period_id === "2026Q3")
     ? "Las líneas muestran ingreso y costo unitarios reportados; las barras, su diferencia en centavos USD por asiento-kilómetro. El margen unitario no equivale al margen operativo porcentual."
@@ -108,6 +112,7 @@ export function renderUnitEconomics(): void {
       showgrid: false, zeroline: true, zerolinecolor: colors.ink, zerolinewidth: 1, tickformat: "+.1f", hoverformat: "+.2f",
     },
   });
+  economyPeriodContext("unit-chart", layout, unitEntities, true);
   Plotly.react("unit-chart", traces, layout, plotConfig).then(() => {
     bindDefaultHover("unit-chart");
     marginLegend();
@@ -122,6 +127,7 @@ export function setVolumeEntities(entities: EntityKey[]): void {
 }
 
 export function renderVolumeMonetization(): void {
+  renderEconomyChartSource("volume", volumeEntities);
   if (volumeEntities.length > 1) {
     renderVolumeComparison(volumeEntities);
     return;
@@ -165,6 +171,7 @@ export function renderVolumeMonetization(): void {
     yaxis: { title: { text: "Pasajeros (M)", font: { size: 10 } }, rangemode: "tozero", gridcolor: colors.grid, tickformat: ".1f" },
     yaxis2: { title: { text: "RASK (¢ USD)", font: { size: 10 } }, overlaying: "y", side: "right", tickmode: "auto", showgrid: false, tickformat: ".1f" },
   });
+  economyPeriodContext("volume-chart", layout, volumeEntities, true);
   Plotly.react("volume-chart", traces, layout, plotConfig).then(() => {
     bindDefaultHover("volume-chart");
     selectedHover("volume-chart");
@@ -182,6 +189,7 @@ export function setLoadEntities(entities: EntityKey[]): void {
 }
 
 export function renderLoadMonetization(periodId: string): void {
+  renderEconomyChartSource("load", loadEntities);
   if (loadEntities.length > 1) {
     renderLoadComparison(periodId, loadEntities);
     return;
@@ -203,7 +211,7 @@ export function renderLoadMonetization(periodId: string): void {
       ]),
       name: year,
       type: "scatter",
-      mode: "text+markers",
+      mode: "markers",
       textposition: "top center",
       textfont: { size: 8, color: colors.muted },
       marker: { size: 13, color: YEAR_COLORS[year], line: { color: "#ffffff", width: 1.2 } },
@@ -225,8 +233,12 @@ export function renderLoadMonetization(periodId: string): void {
   Object.assign(layout, {
     hovermode: "closest",
     legend: { orientation: "h", x: 0, y: 1.12, font: { size: 9 } },
+    annotations: current ? [{ x: current.load_factor_reported * 100, y: current.rask_cents_per_km,
+      text: current.period_label, showarrow: true, arrowhead: 0, ax: 20, ay: -24,
+      font: { size: 11, color: colors.red } }] : [],
     xaxis: { title: { text: "Factor de ocupación (%)", font: { size: 10 } }, gridcolor: colors.grid, ticksuffix: "%" },
     yaxis: { title: { text: "RASK (¢ USD por ASK-km)", font: { size: 10 } }, gridcolor: colors.grid, tickformat: ".1f", hoverformat: ".2f" },
   });
+  economyPeriodContext("load-chart", layout, loadEntities, false);
   Plotly.react("load-chart", [...traces, selectedTrace], layout, plotConfig);
 }

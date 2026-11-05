@@ -12,6 +12,14 @@ continuación de desarrollo no constituyen esta solicitud de publicación.
 
 ## Auditoría desde Codex
 
+Para nuevas versiones, usar también los criterios de
+[narrativa trimestral](narrativa-trimestral.md#revisión-y-entrega).
+Evaluar el aporte de la historia, los motores y los comparables presentes en el
+paquete. Una enumeración correcta de cifras puede necesitar revisión editorial.
+No exigir un récord o una comparación en todos los trimestres ni incorporar
+durante la auditoría evidencia externa que el paquete no contenga. Si hace
+falta, devolver la solicitud al preparador y revisar la nueva versión exacta.
+
 Iniciar al auditor en un contexto separado del analista cuando el usuario haya
 autorizado este flujo. Entregar rutas exactas del registro inmutable, paquete
 temporal y cálculo congelado. No darle Gold actual, narrativas de otros periodos

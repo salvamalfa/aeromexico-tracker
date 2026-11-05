@@ -10,9 +10,11 @@
 // fills the "vs. industria" chip (hidden for Industria itself).
 
 import { $ } from "../flights/dom";
+import { formatKpiComparison, formatKpiNumber } from "../../lib/kpi-format";
 import { entityRecord, entityRecords, entityView, industryComparisonView } from "../executive/entities";
 import type { EntityKey } from "../shell/carriers";
 import type { Comparison } from "../../types/domain";
+import { renderEconomyKpiSources } from "./kpi-sources";
 
 const READER_KPI_KEYS = ["rask_cents_per_km", "cask_cents_per_km", "ask_km"] as const;
 const ALL_KEYS = [...READER_KPI_KEYS, "unit_margin_cents_per_km"] as const;
@@ -24,11 +26,7 @@ function setText(id: string, value: string): void {
 }
 
 function comparisonText(comparison: Comparison): string {
-  return comparison.available ? comparison.display : "No disponible";
-}
-
-function signedTwoDecimals(value: number): string {
-  return `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}`;
+  return formatKpiComparison(comparison);
 }
 
 function setComparison(key: string, suffix: string, comparison: Comparison): void {
@@ -54,6 +52,7 @@ function marginRecordValue(entity: EntityKey, periodId: string): number | undefi
 }
 
 export function updateKpis(entity: EntityKey, periodId: string): void {
+  renderEconomyKpiSources(entity, periodId);
   const view = entityView(entity, periodId);
   if (!view) {
     for (const key of ALL_KEYS) {
@@ -61,25 +60,36 @@ export function updateKpis(entity: EntityKey, periodId: string): void {
       setComparison(key, "qoq", UNAVAILABLE);
       setComparison(key, "yoy", UNAVAILABLE);
       setIndustryChip(key, undefined);
+      document.querySelector(`[data-kpi='${key}']`)?.setAttribute("aria-label", `${key}: No disponible para ${periodId}`);
     }
     return;
   }
   const comparisons = industryComparisonView(entity, periodId);
+  const record = entityRecords(entity).find(row => row.period_id === periodId);
   const industryByKey = new Map((comparisons?.kpis ?? []).map((kpi) => [kpi.key, kpi.vs_industry]));
   const kpisByKey = new Map(view.kpis.map((kpi) => [kpi.key, kpi]));
   for (const key of READER_KPI_KEYS) {
     const kpi = kpisByKey.get(key);
-    if (!kpi) continue;
-    setText(`kpi-${key}-value`, kpi.display_value);
+    if (!kpi) {
+      setText(`kpi-${key}-value`, "No disponible");
+      setComparison(key, "qoq", UNAVAILABLE); setComparison(key, "yoy", UNAVAILABLE);
+      setIndustryChip(key, undefined);
+      continue;
+    }
+    const raw = kpi.value ?? record?.[key];
+    const value = key === "ask_km"
+      ? formatKpiNumber(raw == null ? null : raw / 1e9, { suffix: " mil M" })
+      : formatKpiNumber(raw, { suffix: " ¢ USD" });
+    setText(`kpi-${key}-value`, value);
     setComparison(key, "qoq", kpi.qoq);
     setComparison(key, "yoy", kpi.yoy);
     setIndustryChip(key, industryByKey.get(key) ?? undefined);
     const card = document.querySelector(`[data-kpi='${key}']`);
-    if (card) card.setAttribute("aria-label", `${kpi.label}: ${kpi.display_value}`);
+    if (card) card.setAttribute("aria-label", `${kpi.label}: ${value}`);
   }
   const margin = marginRecordValue(entity, periodId);
   if (margin === undefined) return;
-  const value = `${signedTwoDecimals(margin)} ¢ USD`;
+  const value = formatKpiNumber(margin, { signed: true, suffix: " ¢ USD" });
   setText("kpi-unit_margin_cents_per_km-value", value);
   setComparison("unit_margin_cents_per_km", "qoq", view.margin_qoq);
   setComparison("unit_margin_cents_per_km", "yoy", view.margin_yoy);

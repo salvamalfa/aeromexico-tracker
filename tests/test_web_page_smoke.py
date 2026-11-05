@@ -55,6 +55,7 @@ def web_server(tmp_path_factory, web_dist_dir):
     # its entity/period files would let the synthetic page load real routes
     # (and their map dependencies) instead of the fixture below.
     shutil.copytree(web_dist_dir, root, dirs_exist_ok=True, ignore=shutil.ignore_patterns("data"))
+    write_json(root / "api/chat/health", {"status": "ok", "auth": "password", "snapshot_version": "synthetic-ui-only"})
 
     out_dir = root / "data" / "v1"
     flights_fixture = _load_fixture("flights_sample.json")
@@ -95,6 +96,8 @@ def web_server(tmp_path_factory, web_dist_dir):
         },
     )
     analysis = _load_fixture("analysis_sample.json")
+    section_claim = next(claim for claim in analysis["claims"] if claim["claim_id"] == "section_one_claim")
+    section_claim["citations"] = [{"href": "https://www.sec.gov/example", "title": "Synthetic fixture citation", "label": "1", "value": "Fixture paragraph"}]
     for record in _load_fixture("executive_sample.json")["records"]:
         period = record["period_id"]
         write_json(out_dir / "analysis" / f"{period}.json", {**analysis, "period_id": period})
@@ -123,6 +126,7 @@ def web_server(tmp_path_factory, web_dist_dir):
 def page_with_console_capture(web_server):
     console_errors: list[str] = []
     external_requests: list[str] = []
+    unexpected_api_requests: list[tuple[str, str]] = []
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(executable_path=_chromium_executable())
         page = browser.new_page()
@@ -133,6 +137,8 @@ def page_with_console_capture(web_server):
                 console_errors.append(message.text)
 
         def on_request(request: Any) -> None:
+            if "/api/chat/" in request.url and (request.method != "GET" or request.url != web_server + "api/chat/health"):
+                unexpected_api_requests.append((request.method, request.url))
             if not request.url.startswith(web_server):
                 external_requests.append(request.url)
 
@@ -141,9 +147,11 @@ def page_with_console_capture(web_server):
         page.on("request", on_request)
         page.goto(web_server)
         page.wait_for_function("document.getElementById('period-display').textContent !== '—'")
+        page.get_by_role("button", name="Cerrar chat", exact=True).click()
         yield page, console_errors
         browser.close()
     assert external_requests == [], f"Synthetic smoke requested external resources: {external_requests}"
+    assert unexpected_api_requests == [], f"Dashboard smoke made an unexpected API request: {unexpected_api_requests}"
 
 
 def test_news_mounts_when_selected_while_executive_data_is_loading(web_server):
@@ -178,35 +186,31 @@ def test_news_source_links_keep_their_own_publisher(page_with_console_capture, w
     page.route("**/data/v1/news.json", lambda route: route.fulfill(json=payload))
     page.click("#tab-news")
     page.wait_for_selector(".news-card")
-    assert page.locator('a[href="https://example.com/second"]').text_content() == "Abrir fuente · Otro medio"
-    assert page.locator('a[href="https://ri.vivaaerobus.com/doc"]').text_content() == "Abrir fuente · Viva"
+    assert page.locator('a[href="https://example.com/second"]').text_content() == "Otro medio"
+    assert page.locator('a[href="https://ri.vivaaerobus.com/doc"]').text_content() == "Viva"
     assert errors == []
 
 
 def test_editorial_quarter_does_not_add_financial_observations(page_with_console_capture, web_server) -> None:
     page, errors = page_with_console_capture
-    manifest = {
-        "analysis_manifest": [
-            {"period_id": "2026Q2", "approval_event": "old"},
-            {"period_id": "2026Q3", "approval_event": "new"},
-        ]
-    }
+    manifest = {"analysis_manifest": [
+        {"period_id": "2026Q2", "approval_event": "old"},
+        {"period_id": "2026Q3", "approval_event": "new"},
+    ]}
     analysis = {**_load_fixture("analysis_sample.json"), "period_id": "2026Q3"}
     page.route("**/publication_manifest.json", lambda route: route.fulfill(json=manifest))
     page.route("**/analysis/2026Q3.json", lambda route: route.fulfill(json=analysis))
     page.reload()
-    page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q3'")
-    assert page.inner_text("#period-display") == "2T26"
-    assert page.input_value("#reading-period") == "2026Q3"
-    page.select_option("#reading-period", "2026Q2")
     page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q2'")
     assert page.inner_text("#period-display") == "2T26"
+    assert page.locator("#reading-period, #carrier-reading").count() == 0
+    assert page.is_disabled("#period-next")
     page.click("#period-prev")
-    page.wait_for_function("document.getElementById('period-display').textContent === '1T26'")
-    assert page.input_value("#reading-period") == "2026Q2"
-    assert (
-        page.request.get(web_server + "data/v1/executive.json").json()["metadata"]["last_period"] == "2026Q2"
-    )
+    page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q1'")
+    assert page.inner_text("#period-display") == "1T26"
+    assert page.locator("#reading-full-card").is_hidden()
+    assert page.inner_text("#narrative-copy").count("Sin lectura publicada") == 4
+    assert page.request.get(web_server + "data/v1/executive.json").json()["metadata"]["last_period"] == "2026Q2"
     assert errors == []
 
 
@@ -216,9 +220,9 @@ def test_reading_tab_renders_the_synthetic_analysis_by_default(page_with_console
     assert page.is_visible("#panel-reading")
     assert page.inner_text("#period-display") == "2T26"
     page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q2'")
-    page.wait_for_selector("#analysis-open-full")
-    assert "Fixture" in page.inner_text("#narrative-copy")
-    assert page.is_visible("#analysis-open-full")
+    page.wait_for_selector("#reading-full-card:not([hidden])")
+    assert "A second fixture claim" in page.inner_text("#narrative-copy")
+    assert not page.locator("#reading-full").get_attribute("open")
     assert console_errors == []
 
 
@@ -237,16 +241,16 @@ def test_market_uses_global_quarter_when_selected_during_startup(web_server):
         page.route("**/data/v1/executive.json", lambda route: held.append(route))
         with page.expect_request("**/data/v1/executive.json"):
             page.goto(web_server, wait_until="domcontentloaded")
-        page.click("#tab-market")
+        page.click("#tab-flights")
         page.evaluate(
             "() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))"
         )
         assert held
         held[0].continue_()
         page.wait_for_selector("#market-chart.js-plotly-plot")
-        assert page.get_attribute("#tab-market", "aria-selected") == "true"
+        assert page.get_attribute("#tab-flights", "aria-selected") == "true"
         assert page.inner_text("#period-display") == "2T26"
-        assert page.locator("#market-comparison tr").count() == 4
+        assert page.evaluate("document.getElementById('market-chart').data.length") == 3
         assert page.locator("#airport-demand-card, #market-grain, #market-period").count() == 0
         assert airport_requests == []
         browser.close()
@@ -296,35 +300,38 @@ def test_flights_tab_renders_the_synthetic_fixture(page_with_console_capture) ->
     assert console_errors == []
 
 
-def test_analysis_dialog_opens_and_closes(page_with_console_capture) -> None:
+def test_complete_analysis_expands_and_closes_in_the_reading_card(page_with_console_capture) -> None:
     page, console_errors = page_with_console_capture
-    page.click("#analysis-open-full")
-    page.wait_for_selector("#analysis-full[open]")
-    assert "Fixture" in page.inner_text("#analysis-full .modal-content")
-    page.click("#analysis-full .close")
-    page.wait_for_function("!document.getElementById('analysis-full').hasAttribute('open')")
+    page.wait_for_selector("#reading-full-card:not([hidden])")
+    page.locator("#reading-full > summary").click()
+    assert page.locator("#reading-full").get_attribute("open") is not None
+    paragraph = page.locator("#reading-full-copy section p").first
+    assert paragraph.evaluate("node => { const copy = node.cloneNode(true); copy.querySelectorAll('sup').forEach(sup => sup.remove()); return copy.textContent; }") == "Fixture paragraph for section one."
+    assert page.locator('#reading-full-copy article[data-entity="AEROMEXICO"] a.source-note').count() > 0
+    page.locator("#reading-full > summary").click()
+    assert page.locator("#reading-full").get_attribute("open") is None
     assert console_errors == []
 
 
-@pytest.mark.parametrize("new_tab", ["market", "news"])
-def test_independent_tabs_and_mobile_navigation(page_with_console_capture, new_tab):
+@pytest.mark.parametrize("new_tab", ["flights", "news"])
+def test_independent_tabs_and_mobile_navigation(page_with_console_capture, web_server, new_tab):
     page, errors = page_with_console_capture
-    if page.locator(f"#tab-{new_tab}").count() == 0:
-        pytest.skip("Independent proposal is not part of this branch")
+    if new_tab == "news":
+        archive = page.request.get(web_server + "data/v1/news.json").json()
+        archive["records"][0]["description"] = "<img src=x> malicious text remains plain"
+        page.route("**/data/v1/news.json", lambda route: route.fulfill(json=archive))
     page.set_viewport_size({"width": 390, "height": 844})
     page.click(f"#tab-{new_tab}")
-    if new_tab == "market":
-        page.wait_for_selector("#market-comparison tr")
+    if new_tab == "flights":
+        page.wait_for_selector("#market-chart.js-plotly-plot")
         assert not page.is_visible("#panel-reading #market-chart")
         assert page.locator("#market-grain, #market-period, #airport-demand-card").count() == 0
         page.select_option("#market-segment", "domestic")
         page.click("#period-prev")
         page.wait_for_function("document.getElementById('market-chart').layout.shapes[0].x0 === '2026-01-01'")
         assert page.inner_text("#period-display") == "1T26"
-        assert page.evaluate(
-            "document.getElementById('market-chart').data.every(t => t.x.every(x => x < '2026-04-01'))"
-        )
-        assert "2026Q1" in page.get_attribute("#market-source", "title")
+        assert page.evaluate("document.getElementById('market-chart').data.every(t => t.x.at(-1) === '2026-06-01')")
+        assert "junio de 2026" in page.locator("#market-source-note").text_content()
         page.select_option("#market-segment", "international")
         page.wait_for_function("document.getElementById('market-chart').layout.shapes[0].x0 === '2026-01-01'")
         page.click("#period-next")
@@ -332,14 +339,11 @@ def test_independent_tabs_and_mobile_navigation(page_with_console_capture, new_t
         assert page.inner_text("#period-display") == "2T26"
     else:
         page.wait_for_selector(".news-card")
-        page.select_option("#news-company", "Volaris")
-        assert "Sin fichas" in page.inner_text("#news-stories")
-        page.select_option("#news-company", "Viva")
-        page.fill("#news-query", "capacidad")
         assert page.locator(".news-card").count() == 1
-        page.fill("#news-query", "<img src=x>")
+        assert "Viva ajusta capacidad" in page.inner_text("#news-stories")
+        assert "<img src=x>" in page.inner_text("#news-stories")
         assert page.locator("#news-stories img").count() == 0
-        page.fill("#news-query", "")
+        assert page.locator("#news-company, #news-query, #news-chat").count() == 0
     page.click("#tab-reading")
     page.click("#tab-economy")
     page.click(f"#tab-{new_tab}")
@@ -382,9 +386,9 @@ def test_missing_reading_catalog_keeps_indicators_and_lazy_views_available(web_s
         page.wait_for_function(
             "document.getElementById('narrative-copy').textContent.includes('No se pudo verificar el catálogo')"
         )
-        assert page.locator("#reading-period").is_disabled()
+        assert page.locator("#reading-period").count() == 0
         assert "No se pudo verificar el catálogo" in page.inner_text("#narrative-copy")
-        assert page.locator("#analysis-open-full").count() == 0
+        assert page.locator("#reading-full-card").is_hidden()
         page.click("#tab-economy")
         previous = page.inner_text("#period-display")
         assert page.is_enabled("#period-prev")
@@ -394,7 +398,10 @@ def test_missing_reading_catalog_keeps_indicators_and_lazy_views_available(web_s
         )
         assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
         page.click("#tab-flights")
-        page.wait_for_selector("#route-flow-map .scattergeo .js-line")
+        assert page.is_visible("#panel-flights")
+        page.wait_for_selector("#network-volume:not([hidden])")
+        page.wait_for_function("document.getElementById('flight-map-coverage-info').textContent.includes('1T26')")
+        assert "sin datos: 0 de 3 meses" in page.locator("#flight-map-coverage-info").text_content()
         assert errors == []
         assert analysis_requests == []
         browser.close()
@@ -425,9 +432,9 @@ def test_financial_kpi_parity_does_not_wait_for_the_independent_reading_period(w
         )
         page.route("**/data/v1/analysis/2026Q3.json", lambda route: route.fulfill(json=analysis))
         page.goto(web_server + "?sel_kpis=AEROMEXICO")
-        page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q3'")
+        page.wait_for_function("document.getElementById('narrative-copy').dataset.period === '2026Q2'")
         helper._check_economy_kpis(page, executive)
-        assert page.locator("#narrative-copy").get_attribute("data-period") == "2026Q3"
+        assert page.locator("#narrative-copy").get_attribute("data-period") == executive['records'][0]['period_id']
         assert (
             page.inner_text("#period-display")
             == executive["views"][executive["records"][0]["period_id"]]["period_label"]
@@ -443,44 +450,44 @@ def test_slow_reading_requests_do_not_block_financial_controls_or_lazy_views(web
         page = browser.new_page()
         errors, held = [], []
         page.on("pageerror", lambda error: errors.append(str(error)))
-        target = "**/publication_manifest.json" if stalled == "catalog" else "**/data/v1/analysis/*.json"
+        current = {**_load_fixture("analysis_sample.json"), "period_id": "2026Q1", "thesis": "Current Q1 fixture"}
+        delayed = {**_load_fixture("analysis_sample.json"), "period_id": "2026Q2", "thesis": "Delayed Q2 fixture"}
+        page.route("**/data/v1/analysis/2026Q1.json", lambda route: route.fulfill(json=current))
+        target = "**/publication_manifest.json" if stalled == "catalog" else "**/data/v1/analysis/2026Q2.json"
         page.route(target, lambda route: held.append(route))
         with page.expect_request(target):
             page.goto(web_server, wait_until="domcontentloaded")
         page.wait_for_function("document.getElementById('period-display').textContent === '2T26'")
-        page.evaluate(
-            "() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))"
-        )
         assert len(held) == 1
-        assert page.locator("#analysis-open-full").count() == 0
-        if stalled == "catalog":
-            assert page.locator("#reading-period").is_disabled()
-            assert "Cargando lectura" in page.inner_text("#narrative-copy")
-        else:
-            assert not page.locator("#reading-period").is_disabled()
-            assert "Cargando análisis" in page.inner_text("#narrative-copy")
+        assert page.locator("#reading-full-card").is_hidden()
+        assert "Cargando lectura" in page.inner_text("#narrative-copy")
         page.click("#tab-economy")
         assert page.is_enabled("#period-prev")
         page.click("#period-prev")
         page.wait_for_function("document.getElementById('period-display').textContent === '1T26'")
         assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
         page.click("#tab-flights")
-        page.wait_for_selector("#route-flow-map .scattergeo .js-line")
-        assert len(held) == 1
-        # Flights keeps its own available cut. Return to financial controls
-        # and select Q1 again before releasing the still-pending Q2 reading.
-        page.click("#tab-economy")
-        while page.is_enabled("#period-next"):
-            page.click("#period-next")
-        page.click("#period-prev")
-        page.wait_for_function("document.getElementById('period-display').textContent === '1T26'")
-        held[0].continue_()
-        page.wait_for_selector("#analysis-open-full", state="attached")
-        assert page.inner_text("#period-display") == "1T26"
+        assert page.is_visible("#panel-flights")
+        page.wait_for_selector("#network-volume:not([hidden])")
+        page.wait_for_function("document.getElementById('flight-map-coverage-info').textContent.includes('1T26')")
+        assert "sin datos: 0 de 3 meses" in page.locator("#flight-map-coverage-info").text_content()
         page.click("#tab-reading")
-        page.wait_for_selector("#analysis-open-full")
-        assert page.locator("#narrative-copy").get_attribute("data-period") == "2026Q2"
+        if stalled == "catalog":
+            held[0].continue_()
+        else:
+            page.wait_for_function("document.getElementById('reading-full-copy').textContent.includes('Current Q1 fixture')")
+            held[0].fulfill(json=delayed)
+        page.wait_for_function("document.getElementById('reading-full-copy').textContent.includes('Current Q1 fixture')")
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        assert len(held) == 1
         assert page.inner_text("#period-display") == "1T26"
+        assert page.locator("#narrative-copy").get_attribute("data-period") == "2026Q1"
+        assert "Delayed Q2 fixture" not in page.locator("#reading-full-copy").text_content()
+        article = page.locator('#reading-full-copy article[data-entity="AEROMEXICO"]')
+        assert article.locator("section p").count() == sum(len(section["paragraphs"]) for section in current["sections"])
+        claims = {claim["claim_id"]: claim for claim in current["claims"]}
+        expected_sources = [citation["href"] for section in current["sections"] for claim in section["claim_ids"] for citation in claims[claim]["citations"]]
+        assert sorted(article.locator("a.source-note").evaluate_all("nodes => nodes.map(node => node.href)")) == sorted(expected_sources)
         assert errors == []
         browser.close()
 
@@ -498,7 +505,9 @@ def test_narrative_parity_visits_each_reading_without_selecting_financial_quarte
     )
     fixture_module = importlib.util.module_from_spec(fixture_spec)
     fixture_spec.loader.exec_module(fixture_module)
-    executive = fixture_module._public_fixtures()["/data/v1/executive.json"]
+    from test_web_financial_smoke import financial_fixture
+
+    executive = financial_fixture()
     identities = [
         ("AEROMEXICO", "2026Q2"),
         ("AEROMEXICO", "2026Q3"),
@@ -558,8 +567,8 @@ def test_narrative_parity_visits_each_reading_without_selecting_financial_quarte
 
         page.route("**/data/v1/analysis/**", serve_reading)
         helper.test_reading_tab_narrative_matches_the_approved_analysis(None, page, web_server)
-        assert len(visited) == len(identities)
-        assert all("readingPeriod=" in url and "&period=" not in url for url in visited)
-        assert page.inner_text("#period-display") == "2T26"
+        assert len(visited) == len({period for _, period in identities})
+        assert all("?period=" in url and "readingPeriod=" not in url for url in visited)
+        assert page.inner_text("#period-display") == "3T26"
         assert errors == []
         browser.close()

@@ -80,6 +80,7 @@ export interface ChatContext {
     end?: string;
     entities?: Array<"AEROMEXICO" | "VOLARIS" | "VIVA_AEROBUS" | "INDUSTRY">;
     network_mode?: "domestic" | "international";
+    flight_evidence?: "north_america_observed";
     domestic_months?: string[];
     region?: string;
     range?: "all" | "12" | "8" | "4";

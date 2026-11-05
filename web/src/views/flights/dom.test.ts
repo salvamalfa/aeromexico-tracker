@@ -31,11 +31,11 @@ describe("metricDisplay", () => {
   it("formats load_factor as a percentage", () => {
     expect(metricDisplay("load_factor", 0.812)).toBe("81.2%");
   });
-  it("formats passengers in millions with 3 decimals", () => {
-    expect(metricDisplay("passengers", 1_234_567)).toBe("1.235 M");
+  it("formats passengers in millions with one decimal", () => {
+    expect(metricDisplay("passengers", 1_234_567)).toBe("1.2 M");
   });
   it("formats other metrics (asm_miles/rpm_miles) in thousand-millions", () => {
-    expect(metricDisplay("asm_miles", 2_345_000_000)).toBe("2.345 mil M");
+    expect(metricDisplay("asm_miles", 2_345_000_000)).toBe("2.3 mil M");
   });
 });
 

@@ -13,6 +13,7 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
+from src.dashboard.financial_periods import with_financial_default
 from src.web_export.inputs import require_inputs
 from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.schemas import EXECUTIVE_SCHEMA
@@ -35,5 +36,7 @@ def export_executive(
     if errors:
         raise ValueError(f"executive.json does not match its schema: {errors[:5]}")
 
+    payload = with_financial_default(payload)
+    validator.validate(payload)
     check_privacy(payload, load_privacy_rules())
     return [write_json(out_dir / "executive.json", payload)]

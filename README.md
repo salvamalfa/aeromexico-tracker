@@ -6,7 +6,12 @@ El proyecto transforma fuentes regulatorias, operativas y de mercado en una lect
 
 ## Dashboard
 
-El dashboard presenta cinco vistas integradas: Lectura ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia, construidas como una página real en `web/` (Vite + TypeScript) y servidas por GitHub Pages. Desde el Dashboard v2 (30 sep 2026), cada tarjeta tiene un selector de aerolínea: Industria, Aeroméxico, Volaris o Viva. Las fases están documentadas en `docs/etapas/dashboard-v2-*.md`.
+La revisión actual reúne cuatro vistas: Lectura, Mercado, Economía y Noticias.
+Mercado integra los indicadores de vuelos, el mapa existente, la participación y
+la mezcla AFAC; el trimestre superior es común. El código vive en `web/`
+(Vite + TypeScript) y se publica mediante el gate de GitHub Pages. La entrega
+sigue el cierre descrito en [Periodos del dashboard](docs/periodos-dashboard.md);
+la revisión local y un build no acreditan una nueva versión servida.
 
 [Repositorio público en GitHub](https://github.com/salvamalfa/aeromexico-tracker)
 
@@ -34,22 +39,26 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 
 ## Estado
 
-- **Dashboard:** cinco vistas en la publicación autorizada de Pages: Lectura
-  ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia.
-  Usa datos y análisis ya aprobados; Noticias mantiene cobertura parcial.
-- **Analysis Agent:** la lectura financiera de Aeroméxico 3T26,
-  «Ingresos récord, margen bajo presión», tiene fuentes, cálculos, auditoría
-  independiente y aprobación vinculados a su versión exacta. Su publicación
-  editorial exige baseline remoto y servido, CI, revisión y verificación de Pages.
-  La lectura tiene un selector independiente. Aeroméxico conserva su modalidad
-  financiera acotada. Las entregas por emisor de Viva y Volaris 3T26 incorporan
-  sus tesis aprobadas y los indicadores de las tarjetas, tres gráficas y tabla
-  existentes, con fuentes y aprobaciones propias. Industria conserva su corte.
-  Volaris usa la reconstrucción visible autorizada del reporte de referencia;
-  no se certifican sus bytes originales SEC ni revisiones posteriores.
-  Los recibos distinguen build verificado, integración y publicación servida.
-  Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
-  conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
+- **Dashboard:** cuatro vistas, Lectura, Mercado, Economía y Noticias, con un
+  trimestre global. Mercado integra los indicadores y el mapa existentes.
+  Noticias muestra 26 fichas aprobadas y mantiene cobertura parcial. El gate
+  distingue el artefacto verificado de su integración y comprobación en Pages.
+- **Corrección estadística:** el artefacto Linux reconstruye AFAC 2019–2025
+  desde los originales oficiales, conserva las cifras de 2026 y extiende la
+  serie mensual a septiembre. Recupera 77 comparativos BTS regulares con
+  soporte físico. Gold, fuentes, gate y consumidor independiente están
+  verificados; CI final y la comprobación servida se siguen por separado.
+- **Analysis Agent:** cuatro lecturas de 3T26, para Aeroméxico, Viva, Volaris e
+  Industria, con auditoría independiente y aprobación de sus versiones exactas.
+  El perfil `quarterly_business_story_v1` verifica las fuentes y conserva
+  resumen, desarrollo y citas. Volaris usa cuatro documentos originales SEC;
+  sus cifras mostradas coinciden con la revisión anterior. Las tres lecturas
+  3T26 sustituidas conservan su historia, expresamente no reproducida ni usada
+  como fuente nueva. Los cuatro textos de 2T26 conservan sus bytes y su replay
+  original completo. La publicación Linux verifica ocho análisis y doce JSON
+  normales antes de entregar los commits del sitio. Se mantienen cifras no
+  auditadas del emisor y cálculos propios identificados. Los cortes mensuales
+  del mapa son independientes. [Estado y evidencia](docs/periodos-dashboard.md).
 - **Actualización por producto:** el único coordinador de fuentes conserva el
   calendario activado y sus recibos privados. Los handoffs distinguen datos
   validados, análisis y dashboard por aerolínea, periodo y versión; conservan
@@ -70,6 +79,9 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   El [reporte BTS y sus límites](docs/etapas/bts-refresco-cobertura-20261017.md)
   distingue representación mixta de cobertura observada. AFAC se actualiza manualmente. Lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
+  La entrega trimestral incorpora AFAC septiembre y ANAC Brasil julio–septiembre;
+  BTS y las frecuencias conservan julio. No atribuye cobertura uniforme al mapa
+  ni activa su rediseño posterior con AFAC.
 
 Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y
 el comando para reproducirla están en [`REPO_MAP.md`](REPO_MAP.md), no aquí.
@@ -157,11 +169,21 @@ Fuentes principales: SEC EDGAR, BMV XBRL, AFAC, BTS T-100, Banxico, EIA, datos p
 
 ## Mercado
 
-Mercado reúne participación, tamaño, crecimiento interanual, contribución por
-aerolínea y cambios de participación del universo AFAC comparable. Un trimestre
-global controla indicadores, tabla y corte de la historia mensual; segmento y
-aerolíneas conservan su selección. Fuente y salvedades están en el botón de
-información. Los datos aeroportuarios permanecen en su exportación.
+La [guía de periodos del dashboard](docs/periodos-dashboard.md) explica la entrada
+en el último trimestre financiero verificable, los cortes independientes de
+Economía/Vuelos/Mercado, las pruebas reales y los vacíos pendientes de datos.
+La revisión local usa exclusivamente el trimestre global y reúne la lectura
+en cuatro puntos de Industria, Aeroméxico, Viva y Volaris, sin selectores propios.
+
+Mercado reúne participación, tamaño y cambios interanuales del universo AFAC.
+El trimestre global controla gráfica, tarjetas y tabla; las tres aerolíneas se
+muestran siempre y sólo se filtra el segmento. La revisión local incorpora el
+resumen oficial AFAC hasta septiembre de 2026, con Q3 completo. Cuando un trimestre
+sea parcial, compara exclusivamente los mismos meses del año anterior y muestra
+su cobertura en el icono de información amarillo; nunca sustituye otro trimestre.
+Los cambios positivos llevan signo y verde; los negativos, signo y rojo.
+La fuente y el último mes de la gráfica se consultan en el icono superior.
+Los datos aeroportuarios permanecen en su exportación.
 El [plan coordinado](docs/publicacion-mercado-noticias.md) documenta el gate y
 el orden de integración de Vuelos, Mercado y Noticias.
 La [auditoría Gold](docs/gold-exposure.md) distingue exposición, contexto y linaje.

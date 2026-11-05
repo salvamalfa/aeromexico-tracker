@@ -23,7 +23,7 @@ def write(path, value):
 def env(tmp_path, monkeypatch):
     monkeypatch.setattr(handoffs, "ROOT", tmp_path)
     monkeypatch.setattr(collection, "ROOT", tmp_path)
-    for name in [*handoffs.SKILLS.values(), *handoffs.CONSUMERS]:
+    for name in [*handoffs.SKILLS.values(), *handoffs.CONSUMERS, *handoffs.EDITORIAL_CRITERIA]:
         path = tmp_path / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("Synthetic test skill")
@@ -140,6 +140,15 @@ def test_uncertain_send_persists_and_cannot_be_reclaimed(env):
     result = claim(workspace, job)
     assert len(result["ready_jobs"]) == 1 and result["unreconciled_jobs"] == [job]
     assert result["state"]["jobs"][job]["attempt"]["native_call"]["tool"] == "collaboration.spawn_agent"
+    message = result["state"]["jobs"][job]["attempt"]["native_call"]["arguments"]["message"]
+    instruction = json.loads(message[message.index("{\"dependency_result\""):])
+    assert [item["path"] for item in instruction["editorial_criteria"]] == [
+        str(handoffs.ROOT / path) for path in handoffs.EDITORIAL_CRITERIA
+    ]
+    for item in instruction["editorial_criteria"]:
+        handoffs.checked_ref(item)
+    assert "historia del trimestre" in message
+
     with pytest.raises(ValueError, match="reconcile"):
         action(workspace, "claim", "claim2", job_id=job, owner_lease_id="local_lease:test")
     assert handoffs.run(workspace)["state"]["jobs"][job]["status"] == "dispatch_intent"

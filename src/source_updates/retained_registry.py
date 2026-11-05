@@ -160,7 +160,7 @@ def spec(product: str) -> dict:
             "code_files": [Path(route_documents.__file__)],
         }
     for name, roles in {
-        "anac": {"json": ("international_routes",)},
+        "anac": {"json": ("international_routes", "anac")},
         "caa": {"csv": ("route_authority_research", "international_routes")},
         "aena": {
             role: ("aena",)

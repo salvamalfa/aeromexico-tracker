@@ -5,11 +5,11 @@ import { state } from "./state";
 vi.mock("./mix", () => ({renderMix:vi.fn()}));
 vi.mock("./network", () => ({renderNetworkPeriod:vi.fn(async()=>true)}));
 vi.mock("./carriers", () => ({renderEntityKpis:vi.fn()}));
-vi.mock("../shell/carriers", () => ({selection:()=>["AEROMEXICO"]}));
+vi.mock("../shell/carriers", () => ({selection:()=>["AEROMEXICO"], ENTITY_LABELS: { AEROMEXICO: "Aeroméxico" }}));
 
 describe("financial period and retained flight cut", () => {
   beforeEach(() => {
-    document.body.innerHTML='<span id="period-display">3T26</span><button id="period-prev"></button><button id="period-next"></button><p id="flight-data-period"></p><p id="live-status"></p>';
+    document.body.innerHTML='<span id="period-display">3T26</span><button id="period-prev"></button><button id="period-next"></button><p id="live-status"></p>';
     for(const key of ["passengers","asm_miles","rpm_miles","load_factor"]){
       for(const suffix of ["","-qoq","-yoy"]){const el=document.createElement("span");el.id=`flight-kpi-${key}${suffix}`;document.body.append(el);}
     }
@@ -21,14 +21,13 @@ describe("financial period and retained flight cut", () => {
   it("does not overwrite the financial header with a retained Q1 flight cut", async()=>{
     await renderQuarter();
     expect(document.getElementById("period-display")?.textContent).toBe("3T26");
-    expect(document.getElementById("flight-data-period")?.textContent).toContain("Corte de vuelos: 1T26");
-    expect(document.getElementById("flight-data-period")?.textContent).toContain("No hay datos de vuelos para 2026Q3");
-    expect(document.getElementById("live-status")?.textContent).toContain("conservan 2026Q3");
+    expect(document.getElementById("flight-data-period")).toBeNull();
+    expect(document.getElementById("live-status")?.textContent).toContain("Selección: 3T26");
   });
   it("keeps the ordinary shared-quarter behavior when that flight quarter exists",async()=>{
     initPeriods(["2026Q1","2026Q2","2026Q3"],"2026Q1");
     await renderQuarter();
     expect(document.getElementById("period-display")?.textContent).toBe("1T26");
-    expect(document.getElementById("flight-data-period")?.textContent).not.toContain("No hay datos");
+    expect(document.getElementById("flight-data-period")).toBeNull();
   });
 });

@@ -14,6 +14,7 @@ from scripts.check_pages_publication import VERIFIERS, verifier_for
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "scripts/check_pages_publication.py"
+LEGACY_VERIFIERS = tuple(item for item in VERIFIERS if item[0] != "afac-history-publication.json")
 
 
 def manifest(site, receipts):
@@ -44,7 +45,7 @@ def manifest(site, receipts):
         (["editorial-publication.json"], "src.publish.editorial"),
         (["editorial-publication.json", "financial-publication.json"], "src.publish.financial_scope"),
         (["issuer-publication.json"], "src.publish.issuer_scope"),
-        ([name for name, _ in reversed(VERIFIERS)], "src.publish.movements_scope"),
+        ([name for name, _ in reversed(LEGACY_VERIFIERS)], "src.publish.quarterly_story_scope"),
     ],
 )
 def test_declared_receipt_priority(tmp_path, receipts, expected):
@@ -60,7 +61,7 @@ def test_missing_declared_receipt_fails_before_any_verifier(tmp_path, receipt, m
         verifier_for(tmp_path, repo)
 
 
-@pytest.mark.parametrize("receipt, module", [*VERIFIERS, (None, "src.publish.verify")])
+@pytest.mark.parametrize("receipt, module", [*LEGACY_VERIFIERS, (None, "src.publish.verify")])
 @pytest.mark.parametrize("exit_code", [0, 17])
 def test_real_subprocess_uses_cwd_code_and_preserves_failure(tmp_path, receipt, module, exit_code):
     # Master supplies the helper; a separate pinned checkout supplies modules.

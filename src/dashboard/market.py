@@ -2,10 +2,8 @@
 
 Denominator: the passengers AFAC reports for every Mexican carrier (regular
 and charter service), summed per month and segment. It is the universe the
-dashboard calls *Industria*'s market; foreign carriers on international
-routes are outside it because AFAC only publishes them as an aggregate, and
-the fase-0 report documents that difference
-(docs/etapas/dashboard-v2-fase0-datos-20260928.md).
+dashboard calls *Industria*'s market. Foreign carriers, also present in the
+native workbook by operator, are outside this chosen Mexican-carrier scope.
 
 A carrier row AFAC does not publish for a month is missing, not zero: that
 carrier's share and the industry total are ``None`` for that month. When any
@@ -13,11 +11,9 @@ of the three Industria carriers (~99 % of the universe) is missing, the
 denominator itself is incomplete, so it and every share of that cell are
 ``None`` rather than computed over a partial total.
 
-The 2019–2020 AFAC workbooks this project parses carry almost no
-international passengers by Mexican carrier (Aeroméxico 0 in 2019, the whole
-set a few thousand a month against ~565 thousand in 2021M01), so the
-international and total segments start in ``INTERNATIONAL_FIRST_MONTH``;
-before it they are not published. Domestic keeps its 2019 baseline.
+Native 2019–2020 workbooks include international passengers, including
+unlabelled TOTAL rows reconciled by the annual parser. All segments retain
+the same 2019 baseline.
 """
 
 from __future__ import annotations
@@ -29,23 +25,22 @@ import duckdb
 
 from src.config import PATHS
 from src.dashboard.entities import CARRIER_ENTITIES, INDUSTRY
-
+from src.parse.afac.market_scope import RETAINED_TOTAL_FORMULA, TOTAL_FORMULA, TOTAL_KEY
 
 SCHEMA_VERSION = "market_payload_v1"
 # Enough history for the pre-pandemic baseline and every year-over-year
 # comparison the card shows, without shipping 2015–2018 to the browser.
 FIRST_MONTH = "2019M01"
-INTERNATIONAL_FIRST_MONTH = "2021M01"
+INTERNATIONAL_FIRST_MONTH = "2019M01"
 SEGMENTS = ("total", "domestic", "international")
 MONTHS_ES = ("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
 
 MONTHLY_QUERY = """
-SELECT carrier_key, period_id, segment, value
+SELECT carrier_key, period_id, segment, value, derivation_formula
 FROM v_carrier_default
 WHERE metric_key = 'passengers_afac'
   AND period_type = 'month'
   AND segment IN ('total', 'domestic', 'international')
-  AND carrier_key <> 'MARKET_TOTAL_MX'
   AND value IS NOT NULL
   AND period_id >= ?
 ORDER BY period_id, segment, carrier_key
@@ -98,7 +93,9 @@ def _segment_block(values: dict[str, float], denominator: float | None) -> dict[
     }
 
 
-def _published(cells: dict[tuple[str, str], dict[str, float]], period_id: str, segment: str) -> dict[str, float]:
+def _published(
+    cells: dict[tuple[str, str], dict[str, float]], period_id: str, segment: str
+) -> dict[str, float]:
     """The carrier rows of one month and segment, or none before the series starts."""
     if segment != "domestic" and period_id < INTERNATIONAL_FIRST_MONTH:
         return {}
@@ -116,7 +113,9 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
     with duckdb.connect(path, read_only=True) as connection:
         frame = connection.execute(MONTHLY_QUERY, [FIRST_MONTH]).df()
         as_of = connection.execute(
-            "SELECT MAX(CAST(downloaded_at AS DATE)) FROM dim_source_artifact WHERE source_system = 'afac'"
+            "SELECT MAX(CASE WHEN typeof(downloaded_at) = 'TIMESTAMP WITH TIME ZONE' "
+            "THEN CAST(downloaded_at AT TIME ZONE 'UTC' AS DATE) ELSE CAST(downloaded_at AS DATE) END) "
+            "FROM dim_source_artifact WHERE source_system = 'afac'"
         ).fetchone()[0]
     if frame.empty:
         raise ValueError("AFAC carrier passengers are missing from v_carrier_default")
@@ -125,8 +124,29 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
 
     # (period, segment) -> carrier -> passengers
     cells: dict[tuple[str, str], dict[str, float]] = defaultdict(dict)
+    denominators = {}
     for row in frame.itertuples(index=False):
-        cells[(str(row.period_id), str(row.segment))][str(row.carrier_key)] = float(row.value)
+        identity = (str(row.period_id), str(row.segment))
+        if row.carrier_key == TOTAL_KEY:
+            if row.derivation_formula not in {TOTAL_FORMULA, RETAINED_TOTAL_FORMULA}:
+                raise ValueError(
+                    "AFAC Mexican TOTAL lacks verified native scope or retained-baseline provenance"
+                )
+            if identity in denominators:
+                raise ValueError("Duplicate AFAC Mexican TOTAL")
+            denominators[identity] = float(row.value)
+        else:
+            if str(row.carrier_key) in cells[identity]:
+                raise ValueError("Duplicate AFAC carrier passenger cell")
+            cells[identity][str(row.carrier_key)] = float(row.value)
+    for period, segment in cells:
+        if (segment == "domestic" or period >= INTERNATIONAL_FIRST_MONTH) and (
+            period,
+            segment,
+        ) not in denominators:
+            raise ValueError(
+                f"AFAC verified Mexican TOTAL missing for {period}/{segment}; rebuild native inputs"
+            )
 
     months = sorted({period for period, _ in cells})
     month_rows = []
@@ -134,8 +154,12 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
         segments = {}
         for segment in SEGMENTS:
             values = _published(cells, period_id, segment)
-            segments[segment] = _segment_block(values, float(sum(values.values())) if values else None)
-        month_rows.append({"period_id": period_id, "period_label": _month_label(period_id), "segments": segments})
+            segments[segment] = _segment_block(
+                values, denominators.get((period_id, segment)) if values else None
+            )
+        month_rows.append(
+            {"period_id": period_id, "period_label": _month_label(period_id), "segments": segments}
+        )
 
     # Quarters only from complete three-month windows; a carrier missing in
     # any month of the quarter stays missing for that quarter.
@@ -153,7 +177,10 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
             carriers_present = set.intersection(*(set(values) for values in month_values))
             for carrier in carriers_present:
                 totals[carrier] = sum(values[carrier] for values in month_values)
-            denominator = float(sum(sum(values.values()) for values in month_values))
+            month_denominators = [denominators.get((month, segment)) for month in quarter_months]
+            denominator = (
+                sum(month_denominators) if all(value is not None for value in month_denominators) else None
+            )
             segments[segment] = _segment_block(totals, denominator if all(month_values) else None)
         quarter_blocks[quarter_id] = {
             "period_id": quarter_id,
@@ -165,6 +192,7 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
         prior_year = quarter_blocks.get(_previous_year(quarter_id))
         for segment, current in block["segments"].items():
             for key, item in [*current["carriers"].items(), (INDUSTRY.key, current["industry"])]:
+
                 def previous_share(reference: dict[str, Any] | None) -> float | None:
                     if reference is None:
                         return None
@@ -197,10 +225,10 @@ def build_market_payload(database_path: str | None = None) -> dict[str, Any]:
             "method_note": (
                 "La participación divide los pasajeros de cada aerolínea entre los de todas "
                 "las aerolíneas mexicanas del mismo mes y segmento. Aeroméxico incluye a "
-                "Aeroméxico Connect. Las aerolíneas extranjeras quedan fuera porque AFAC "
-                "no las publica por aerolínea. Internacional y total empiezan en 2021: los "
-                "libros AFAC de 2019–2020 casi no traen pasajeros internacionales por "
-                "aerolínea mexicana. Si falta una de las tres aerolíneas, la participación "
+                "Aeroméxico Connect. Las aerolíneas extranjeras publicadas por AFAC quedan "
+                "fuera del universo mexicano elegido para esta vista. Los totales se reconcilian con "
+                "servicio regular y de fletamento de los libros originales desde 2019. "
+                "Si falta una de las tres aerolíneas, la participación "
                 "de ese periodo queda N/D."
             ),
         },

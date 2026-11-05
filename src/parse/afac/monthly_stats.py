@@ -2,27 +2,26 @@
 
 from __future__ import annotations
 
-from calendar import monthrange
-from collections import defaultdict
 import csv
-from datetime import date
 import hashlib
 import json
-from pathlib import Path
 import re
 import unicodedata
+from calendar import monthrange
+from collections import defaultdict
+from datetime import date
+from pathlib import Path
 
 import openpyxl
 import polars as pl
-from pypdf import PdfReader
 import xlrd
+from pypdf import PdfReader
 
 from src.common.quality import log_issue_once
 from src.config import PATHS
 from src.parse.sec.common import write_parquet_atomic
 
-
-PARSER_VERSION = "afac_monthly_stats_v1"
+PARSER_VERSION = "afac_monthly_stats_v2"
 ANNUAL_START_YEAR = 2015
 PASSENGER_SHEETS = {"PAXREG": "scheduled", "PASREG": "scheduled", "PAXFLET": "charter", "PASFLET": "charter"}
 MONTH_NAMES = {
@@ -95,6 +94,7 @@ def parse_annual_passenger_workbook(
 
     facts: list[dict[str, object]] = []
     checks: list[dict[str, object]] = []
+    completed_blocks: set[tuple[str, bool, str]] = set()
     available = {name.upper(): name for name in _sheet_names(path)}
     for normalized_sheet, service_type in PASSENGER_SHEETS.items():
         actual_sheet = available.get(normalized_sheet)
@@ -129,6 +129,8 @@ def parse_annual_passenger_workbook(
             if carrier_column is not None and any(
                 "JAN" in _normalize(value) or "ENE" in _normalize(value) for value in row
             ):
+                if in_data and block_facts:
+                    raise ValueError(f"Unclosed AFAC data block before header in {path.name}/{actual_sheet}")
                 if is_domestic_carrier is None or market is None:
                     raise ValueError(
                         f"Missing AFAC block context in {path.name}/{actual_sheet} row {row_number}"
@@ -144,11 +146,27 @@ def parse_annual_passenger_workbook(
                 (str(value).strip() for value in row if isinstance(value, str) and value.strip()),
                 "",
             )
-            if not carrier_name:
-                continue
             compact_name = _compact(carrier_name)
             month_values = [_number(value) for value in row[1:13]]
-            if compact_name in {"TOTAL", "TOTALTOTAL"}:
+            # The captured 2019/20 layout has an unlabelled TOTAL in two
+            # Mexican blocks. Accept only a complete 12-month numeric row
+            # under native country/service/month anchors, exactly equal to
+            # the named carrier rows. Never infer a blank or foreign total.
+            unlabelled_total = (
+                not carrier_name and year in {2019, 2020}
+                and is_domestic_carrier is True and bool(block_facts)
+                and len(month_values) == 12 and all(value is not None for value in month_values)
+            )
+            if unlabelled_total and any(
+                expected != sum(float(fact["value"]) for fact in block_facts if fact["month"] == month)
+                for month, expected in enumerate(month_values, 1)
+            ):
+                raise ValueError(f"Unlabelled AFAC TOTAL does not reconcile in {path.name}/{actual_sheet}")
+            if compact_name in {"TOTAL", "TOTALTOTAL"} or unlabelled_total:
+                block_identity = (service_type, is_domestic_carrier, market)
+                if block_identity in completed_blocks:
+                    raise ValueError(f"Duplicate AFAC block in {path.name}/{actual_sheet}")
+                completed_blocks.add(block_identity)
                 for month, expected in enumerate(month_values, start=1):
                     if expected is None:
                         continue
@@ -164,6 +182,12 @@ def parse_annual_passenger_workbook(
                             "period_id": f"{year}M{month:02d}",
                             "sheet": actual_sheet,
                             "block_start_row": block_start,
+                            "total_row_number": row_number,
+                            "total_label_present": not unlabelled_total,
+                            "layout_version": (
+                                "annual_2019_2020_anchored_v2"
+                                if year in {2019, 2020} else "annual_labelled_v1"
+                            ),
                             "is_domestic_carrier": is_domestic_carrier,
                             "service_type": service_type,
                             "market": market,
@@ -176,6 +200,8 @@ def parse_annual_passenger_workbook(
                 facts.extend(block_facts)
                 block_facts = []
                 in_data = False
+                continue
+            if not carrier_name:
                 continue
             if _normalize(carrier_name).startswith("TOTAL "):
                 continue  # Foreign-carrier regional subtotals are not airline rows.
@@ -194,6 +220,7 @@ def parse_annual_passenger_workbook(
                         "market": market,
                         "value": value,
                         "source_row_number": row_number,
+                        "source_sheet": actual_sheet,
                     }
                 )
         if in_data and block_facts:
@@ -224,8 +251,8 @@ def _latest_annual_workbook(year: int) -> Path:
     return max(candidates, key=lambda path: path.stat().st_mtime_ns)
 
 
-def _load_crosswalk() -> dict[str, list[dict[str, str]]]:
-    path = PATHS.data / "reference" / "carrier_crosswalk.csv"
+def _load_crosswalk(path=None) -> dict[str, list[dict[str, str]]]:
+    path = PATHS.data / "reference" / "carrier_crosswalk.csv" if path is None else path
     result: dict[str, list[dict[str, str]]] = defaultdict(list)
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         for row in csv.DictReader(handle):
@@ -590,7 +617,9 @@ def _sec_reconciliation(facts: pl.DataFrame) -> tuple[pl.DataFrame, dict[str, fl
     )
     joined = afac.join(sec, on="period_id", how="inner").with_columns(
         (pl.col("afac_passengers") - pl.col("sec_passengers")).alias("difference"),
-        ((pl.col("afac_passengers") - pl.col("sec_passengers")) / pl.col("sec_passengers")).alias("difference_pct"),
+        ((pl.col("afac_passengers") - pl.col("sec_passengers")) / pl.col("sec_passengers")).alias(
+            "difference_pct"
+        ),
     ).sort("period_id")
     if joined.height < 3:
         raise ValueError("Insufficient AFAC/SEC overlapping passenger months")
@@ -647,6 +676,12 @@ def write_inventory(through_month=6, database=None) -> Path:
 def run_afac_parse(*, documents=None, database=None, through_month=6) -> dict[str, object]:
     """Build AFAC silver, strict workbook checks, and the SEC reconciliation."""
 
+    if documents is None and database is None:
+        from src.parse.afac.annual_series import run
+
+        return run()
+    if documents is None or database is None:
+        raise ValueError("Legacy AFAC parsing requires explicit PDF and database inputs together")
     crosswalk = _load_crosswalk()
     annual_records, total_checks = _annual_facts(crosswalk)
     pdf_records, pdf_checks = _pdf_2026_facts(crosswalk, documents)
@@ -704,7 +739,8 @@ def run_afac_parse(*, documents=None, database=None, through_month=6) -> dict[st
             datatur_records[0]["source_file"],
             "info",
             "schema_drift",
-            "DATATUR contains repeated natural keys; the parser preserves provenance in source_row_count and sums the source rows.",
+            "DATATUR contains repeated natural keys; the parser preserves provenance "
+            "in source_row_count and sums the source rows.",
             duplicate_groups,
         )
 

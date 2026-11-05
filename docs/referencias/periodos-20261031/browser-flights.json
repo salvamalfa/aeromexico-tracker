@@ -1,0 +1,578 @@
+[
+  {
+    "size": "desktop",
+    "entity": "AEROMEXICO",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.161 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Grupo Aeroméxico (Aerovías + Connect) · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n9,173\n52 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 3 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "AEROMEXICO",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.161 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Aeroméxico · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · movimientos registrados (provisional): julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n367\n13 rutas · cobertura parcial\nVUELOS ESTIMADOS\n1,858\n30 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n347\nProvisional · 2026M07 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "AEROMEXICO",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.014 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Aeroméxico · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · vuelos AM programados: abril, mayo, junio · Estimación histórica: abril, mayo, junio · ANAC: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n7,136\n68 rutas · cobertura parcial\nVUELOS PROGRAMADOS\n13,480\n49 rutas · cobertura parcial\nVUELOS ESTIMADOS\n5,264\n30 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n1,029\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D · 1 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "AEROMEXICO",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.161 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Aeroméxico · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · movimientos registrados (provisional): julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n367\n13 rutas · cobertura parcial\nVUELOS ESTIMADOS\n1,858\n30 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n347\nProvisional · 2026M07 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VIVA_AEROBUS",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Viva · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.639 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n13,498\n147 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 2 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 9,
+      "routePaths": 21,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VIVA_AEROBUS",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Viva · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.639 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n1,597\n38 rutas · cobertura parcial\nVUELOS ESTIMADOS\n389\n12 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 13,
+      "routePaths": 25,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VIVA_AEROBUS",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Viva · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.208 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · Estimación histórica: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n3,647\n43 rutas · cobertura parcial\nVUELOS ESTIMADOS\n450\n6 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n450\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VIVA_AEROBUS",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Viva · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.639 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n1,597\n38 rutas · cobertura parcial\nVUELOS ESTIMADOS\n389\n12 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 13,
+      "routePaths": 25,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VOLARIS",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Volaris · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.977 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n13,822\n151 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 1 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 8,
+      "routePaths": 20,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VOLARIS",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Volaris · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.977 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n4,287\n76 rutas · cobertura parcial\nVUELOS ESTIMADOS\n264\n6 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VOLARIS",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Volaris · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.064 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · Estimación histórica: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n11,029\n80 rutas · cobertura parcial\nVUELOS ESTIMADOS\n614\n6 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n157\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "VOLARIS",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Volaris · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.977 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n4,287\n76 rutas · cobertura parcial\nVUELOS ESTIMADOS\n264\n6 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "INDUSTRY",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Industria · 3T26: No disponible; sin registro publicado para este trimestre. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "No disponible",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n36,493\n244 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 3 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 9,
+      "routePaths": 21,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "INDUSTRY",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Industria · 3T26: No disponible; sin registro publicado para este trimestre. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "No disponible",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n6,251\n112 rutas · cobertura parcial\nVUELOS ESTIMADOS\n2,853\n48 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "INDUSTRY",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Industria · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "21.286 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · vuelos AM programados: abril, mayo, junio · Estimación histórica: abril, mayo, junio · ANAC: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n21,812\n153 rutas · cobertura parcial\nVUELOS PROGRAMADOS\n13,480\n49 rutas · cobertura parcial\nVUELOS ESTIMADOS\n6,328\n39 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n1,636\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D · 1 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "entity": "INDUSTRY",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Industria · 3T26: No disponible; sin registro publicado para este trimestre. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "No disponible",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n6,251\n112 rutas · cobertura parcial\nVUELOS ESTIMADOS\n2,853\n48 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "AEROMEXICO",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.161 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Grupo Aeroméxico (Aerovías + Connect) · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n9,173\n52 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 3 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "AEROMEXICO",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.161 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Aeroméxico · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · movimientos registrados (provisional): julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n367\n13 rutas · cobertura parcial\nVUELOS ESTIMADOS\n1,858\n30 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n347\nProvisional · 2026M07 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "AEROMEXICO",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.014 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Aeroméxico · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · vuelos AM programados: abril, mayo, junio · Estimación histórica: abril, mayo, junio · ANAC: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n7,136\n68 rutas · cobertura parcial\nVUELOS PROGRAMADOS\n13,480\n49 rutas · cobertura parcial\nVUELOS ESTIMADOS\n5,264\n30 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n1,029\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D · 1 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "AEROMEXICO",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Aeroméxico · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "6.161 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Aeroméxico · observados: Aerovías y Connect separados por operador; programación: marca AM; estimados: Grupo · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · movimientos registrados (provisional): julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n367\n13 rutas · cobertura parcial\nVUELOS ESTIMADOS\n1,858\n30 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n347\nProvisional · 2026M07 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 59,
+      "routePaths": 25,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VIVA_AEROBUS",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Viva · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.639 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n13,498\n147 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 2 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 9,
+      "routePaths": 21,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VIVA_AEROBUS",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Viva · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.639 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n1,597\n38 rutas · cobertura parcial\nVUELOS ESTIMADOS\n389\n12 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 13,
+      "routePaths": 25,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VIVA_AEROBUS",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Viva · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.208 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · Estimación histórica: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n3,647\n43 rutas · cobertura parcial\nVUELOS ESTIMADOS\n450\n6 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n450\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VIVA_AEROBUS",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Viva · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "7.639 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Viva (Aeroenlaces) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n1,597\n38 rutas · cobertura parcial\nVUELOS ESTIMADOS\n389\n12 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 13,
+      "routePaths": 25,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VOLARIS",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Volaris · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.977 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n13,822\n151 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 1 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 8,
+      "routePaths": 20,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VOLARIS",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Volaris · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.977 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n4,287\n76 rutas · cobertura parcial\nVUELOS ESTIMADOS\n264\n6 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VOLARIS",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Volaris · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.064 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · Estimación histórica: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n11,029\n80 rutas · cobertura parcial\nVUELOS ESTIMADOS\n614\n6 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n157\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "VOLARIS",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Volaris · 3T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "8.977 M",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Volaris México (Y4/VOI; excluye Q6 y N3) · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n4,287\n76 rutas · cobertura parcial\nVUELOS ESTIMADOS\n264\n6 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "INDUSTRY",
+    "phase": "direct-Q3-domestic",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Industria · 3T26: No disponible; sin registro publicado para este trimestre. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "No disponible",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · frecuencias estimadas identificadas por ruta; no acreditan vuelos realizados · 3T26 · parcial: 1 de 3 meses (julio)",
+    "volume": "VUELOS ESTIMADOS\n36,493\n244 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D · 3 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 9,
+      "routePaths": 21,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "INDUSTRY",
+    "phase": "international",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Industria · 3T26: No disponible; sin registro publicado para este trimestre. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "No disponible",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n6,251\n112 rutas · cobertura parcial\nVUELOS ESTIMADOS\n2,853\n48 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "INDUSTRY",
+    "phase": "Q2",
+    "period": "2T26",
+    "financial": "Tarjetas financieras · Industria · 2T26: trimestre disponible. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "21.286 M",
+    "mix": "AFAC · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio). Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 2T26 · ventana mensual completa: 3 de 3 meses (abril, mayo, junio) · vuelos AM programados: abril, mayo, junio · Estimación histórica: abril, mayo, junio · ANAC: abril, mayo, junio · movimientos registrados (provisional): abril, mayo, junio · BTS T-100: abril, mayo, junio",
+    "volume": "VUELOS OBSERVADOS\n21,812\n153 rutas · cobertura parcial\nVUELOS PROGRAMADOS\n13,480\n49 rutas · cobertura parcial\nVUELOS ESTIMADOS\n6,328\n39 rutas · cobertura parcial\nMOVIMIENTOS REGISTRADOS · AEROCIVIL\n1,636\nProvisional · 2026M04, 2026M05, 2026M06 · fuera de vuelos\nHistórico conservado · tipos de cifra separados · faltantes N/D · 1 rutas sin número de vuelos",
+    "mapSelection": "Trimestre general (2T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "entity": "INDUSTRY",
+    "phase": "Q3-return",
+    "period": "3T26",
+    "financial": "Tarjetas financieras · Industria · 3T26: No disponible; sin registro publicado para este trimestre. Pasajeros AFAC y mapa indican sus propios meses disponibles.",
+    "passengers": "No disponible",
+    "mix": "AFAC · 3T26 · parcial: 2 de 3 meses (julio, agosto). No se calcula un trimestre con meses incompletos. Historia disponible hasta 2T26.",
+    "map": "Industria: Aeroméxico, Volaris México y Viva · histórico conservado · vuelos observados, programación y estimaciones separados · cobertura parcial por fuente · 3T26 · parcial: 1 de 3 meses (julio) · Estimación histórica: julio · BTS T-100: julio",
+    "volume": "VUELOS OBSERVADOS\n6,251\n112 rutas · cobertura parcial\nVUELOS ESTIMADOS\n2,853\n48 rutas · cobertura parcial\nHistórico conservado · tipos de cifra separados · faltantes N/D",
+    "mapSelection": "Trimestre general (3T26)",
+    "geometry": {
+      "points": 12,
+      "routePaths": 24,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  }
+]

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def pin(monkeypatch):
     monkeypatch.setenv(
         "CHAT_EVIDENCE_APPROVED_INDEX_SHA256",
-        "1cd0455ac1944849d567c96f7147c3f393d17333dac2c28b70459e4f7887334f",
+        "9f8f12fc088cefce09f822d6647f5b46856e6ee7b600c5a1750db0c3e5f07005",
     )
 
 
@@ -54,10 +54,11 @@ def test_parent_and_connect_arguments_cannot_replace_each_other(query, company):
 def test_parent_and_connect_are_separate_in_an_explicit_union():
     result = resolve_news_query("noticias de Aeroméxico y Aeroméxico Connect")
     assert set(result["companies"]) == {"Aeroméxico", "Aeroméxico Connect"}
-    result = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json").search_news(
-        "noticias de Aeroméxico"
-    )
-    assert result["count"] == 2 and all(r["companies"] == ["Aeroméxico"] for r in result["results"])
+    index = EvidenceIndex(ROOT / "config/chat/evidence/approved-index.json")
+    result = index.search_news("noticias de Aeroméxico")
+    expected = sum(r.get("kind") == "news" and "Aeroméxico" in r.get("companies", []) for r in index.records)
+    assert result["total"] == expected and result["count"] == min(5, expected)
+    assert all("Aeroméxico" in r["companies"] for r in result["results"])
 
 
 @pytest.mark.parametrize(
@@ -143,8 +144,9 @@ def test_parent_full_name_does_not_leave_group_as_a_search_term(name, same_argum
     result = index.search_news("noticias de " + name, company=name if same_argument else None)
     assert result["filters"]["companies"] == ["Aeroméxico"]
     assert result["filters"]["terms"] == []
-    assert result["count"] == 2
-    assert all(row["companies"] == ["Aeroméxico"] for row in result["results"])
+    expected = sum(r.get("kind") == "news" and "Aeroméxico" in r.get("companies", []) for r in index.records)
+    assert result["total"] == expected and result["count"] == min(5, expected)
+    assert all("Aeroméxico" in row["companies"] for row in result["results"])
 
 
 def test_full_parent_name_does_not_replace_connect():

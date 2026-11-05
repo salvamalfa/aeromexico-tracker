@@ -159,12 +159,18 @@ def test_candidate_cannot_claim_owner_approval_or_change_content(monkeypatch, tm
 def test_approved_index_bytes_remain_the_authoritative_original():
     import hashlib
 
-    # Bytes from the approved base commit; works in a shallow CI checkout.
+    from scripts.news.approve_review_package import encoded
+
+    # The exact historical ten records remain unchanged after the separately
+    # owner-approved 23-item addition; works in a shallow CI checkout.
     original_sha256 = "5fba922f7b6186a5ee0c31d9f678c3222a11fb50e9cf7d5b2f26b62212516672"
-    assert (
-        hashlib.sha256(Path("config/chat/evidence/approved-index.json").read_bytes()).hexdigest()
-        == original_sha256
-    )
+    payload = json.loads(Path("config/chat/evidence/approved-index.json").read_bytes())
+    historical = {**payload, "records": payload["records"][:10], "version": "evidence-v2-approved-2026-10-12"}
+    assert hashlib.sha256(encoded(historical)).hexdigest() == original_sha256
+    proof = json.loads(Path("config/news/approved-batch-20261102.json").read_bytes())
+    added = payload["records"][10:]
+    assert len(added) == 23
+    assert {row["id"] for row in added} == {row["id"] for row in proof["approved_items"]}
 
 
 def test_normal_export_never_includes_candidates_without_the_existing_pin(monkeypatch, tmp_path):

@@ -5,7 +5,35 @@ description: "Coordinar el calendario único, verificar candidatos y despachar a
 
 # Coordinador mensual y trimestral
 
+## Preparación del ángulo trimestral
+
+Para nuevas tesis y revisiones editoriales, aplicar la
+[preparación narrativa](../airline-quarterly-story/SKILL.md) antes de congelar
+la evidencia del analista. Buscar hitos históricos, motores operativos y pares
+que expliquen el trimestre, según su relevancia. Conservar el mapa de ideas y
+solicitar las fuentes adicionales mediante sus adaptadores autorizados.
+Una buena pregunta puede requerir ampliar y validar el preparador del perfil;
+no insertar campos o cifras sin soporte ni pedir al analista investigar fuera
+del contexto cerrado. Una comparación opcional ausente no bloquea las tesis
+independientes que sí tienen evidencia suficiente.
+
+Esta preparación es una instrucción para futuras ejecuciones autorizadas;
+no dispara tareas, adquiere suscripciones ni modifica el calendario o el ledger.
+Preservar la skill histórica de análisis y las identidades aprobadas existentes.
+
 ## Continuación por producto después de una fuente válida
+
+Al revisar una petición de actualización completa, inventariar todos los
+bloques visibles, además de las tareas requeridas del calendario: fuente,
+skill/producto, adquisición, transformación, exportador, consumidor y último
+recibo de captura real. Un `checks_passed` por reproducción no es una captura
+nueva ni prueba el último periodo disponible. Conservar por separado el
+último periodo publicado, el candidato verificado y su cobertura parcial.
+El [plan de continuidad de rutas](../../../docs/plan-salida-aerodatabox.md#actualización-pública-y-consumidores)
+documenta los granos y tramos que aún no tienen integración selectiva; la
+decisión de conservar AeroDataBox congelado no detiene AFAC/BTS/ANAC ni la
+revisión de programación AICM. No esperar un proveedor pagado ni ejecutar un
+estimador experimental para actualizar los productos independientes.
 
 La autorización del 30/oct/2026 cubre publicación validada de datos y tesis de
 Aeroméxico, Viva y Volaris; no cubre Industria ni otros productos editoriales.

@@ -53,5 +53,12 @@ export function mountTabs(root: Document | Element = document): { activate: (tab
     });
   });
 
+  // Historical links to either former view open the single Mercado panel.
+  const requested = new URLSearchParams(window.location.search).get("tab") ?? window.location.hash.slice(1);
+  if (["market","flights","tab-market","panel-market","tab-flights","panel-flights"].includes(requested)) {
+    const merged = tabs.find(tab => tab.getAttribute("aria-controls") === "panel-flights");
+    if (merged) activate(merged);
+  }
+
   return { activate };
 }

@@ -16,6 +16,12 @@ front-end publishes. Fuente única de verdad de la forma pública de los datos.
 - `executive.schema.json` describe la salida de
   `src.dashboard.executive_summary.build_executive_payload()`, embebida sin
   transformación adicional.
+  Para un export nuevo, `metadata.default_period` se normaliza al último
+  trimestre financiero completo con registro y vista publicados, entre la
+  serie principal y los emisores. No exige un corte común de Industria ni una
+  tesis nueva. El consumidor calcula el mismo criterio para ediciones históricas
+  cuyo default quedó rezagado, y respeta enlaces históricos válidos. Esta regla
+  usa los campos existentes: el esquema y sus hashes históricos no se modifican.
 - `analysis.schema.json` describe exactamente lo que
   `src.analysis_agent.lifecycle.consumer_payload(record)` autoriza para un
   periodo con aprobación vigente — el contrato de entrega que usa

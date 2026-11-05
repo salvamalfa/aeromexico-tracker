@@ -1,0 +1,17 @@
+{
+  "all_reconciled": true,
+  "checks": 36,
+  "default_quarter": "2026Q3",
+  "last_period": "2026M09",
+  "source_sha256": "d1f88a20511457ae0ec9ccc7c354c0a78c3e23c2bba8d1b20ec3d7c85193b60b",
+  "through": 9,
+  "unmapped_in_denominator": [
+    "Eurus Aviation",
+    "Servicios Integrales De Aviacion, S.A. De C.V.",
+    "Señor Air"
+  ],
+  "year": 2026,
+  "source_url": "https://www.gob.mx/cms/uploads/attachment/file/1112829/resumen-septiembre-2026-27102026.xlsx",
+  "catalog_url": "https://www.gob.mx/afac/acciones-y-programas/estadisticas-280404",
+  "captured_at": "2026-11-01T22:57:50.205468+00:00"
+}

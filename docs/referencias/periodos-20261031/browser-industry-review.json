@@ -1,0 +1,70 @@
+[
+  {
+    "size": "desktop",
+    "period": "2T26",
+    "kpis": "i\n\nRASK\n\n7.60 ¢ USD\n\nvs. trimestre anterior\n+7.8%\nvs. año anterior\n+15.9%\ni\n\nCASK\n\n7.79 ¢ USD\n\nvs. trimestre anterior\n+13.7%\nvs. año anterior\n+31.5%\ni\n\nASK\n\n38.79 mil M\n\nvs. trimestre anterior\n+3.7%\nvs. año anterior\n-0.6%\ni\n\nMARGEN UNITARIO\n\n-0.19 ¢ USD\n\nvs. trimestre anterior\n-0.39 ¢ USD\nvs. año anterior\n-0.82 ¢ USD",
+    "coverage": [
+      "Seleccionado: 2T26. Industria: 2T26 disponible. Se conserva la historia disponible.",
+      "Seleccionado: 2T26. Industria: 2T26 disponible. Se conserva la historia disponible.",
+      "Seleccionado: 2T26. Industria: 2T26 disponible. Se conserva la historia disponible."
+    ],
+    "dom": {
+      "bars": 60,
+      "forcedTooltipBoxes": 0,
+      "points": 61,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "desktop",
+    "period": "3T26",
+    "kpis": "i\n\nRASK\n\n8.16 ¢ USD\n\nvs. trimestre anterior\n+7.3%\nvs. año anterior\n+12.9%\ni\n\nCASK\n\n7.57 ¢ USD\n\nvs. trimestre anterior\n-2.8%\nvs. año anterior\n+21.2%\ni\n\nASK\n\n41.07 mil M\n\nvs. trimestre anterior\n+5.9%\nvs. año anterior\n+3.4%\ni\n\nMARGEN UNITARIO\n\n+0.58 ¢ USD\n\nvs. trimestre anterior\n+0.77 ¢ USD\nvs. año anterior\n-0.39 ¢ USD",
+    "coverage": [
+      "Seleccionado: 3T26. Industria: 3T26 calculado · vista previa. Se conserva la historia disponible.",
+      "Seleccionado: 3T26. Industria: 3T26 calculado · vista previa. Se conserva la historia disponible.",
+      "Seleccionado: 3T26. Industria: 3T26 calculado · vista previa. Se conserva la historia disponible."
+    ],
+    "dom": {
+      "bars": 60,
+      "forcedTooltipBoxes": 0,
+      "points": 61,
+      "scrollWidth": 1425,
+      "width": 1425
+    }
+  },
+  {
+    "size": "mobile",
+    "period": "2T26",
+    "kpis": "i\n\nRASK\n\n7.60 ¢ USD\n\nvs. trimestre anterior\n+7.8%\nvs. año anterior\n+15.9%\ni\n\nCASK\n\n7.79 ¢ USD\n\nvs. trimestre anterior\n+13.7%\nvs. año anterior\n+31.5%\ni\n\nASK\n\n38.79 mil M\n\nvs. trimestre anterior\n+3.7%\nvs. año anterior\n-0.6%\ni\n\nMARGEN UNITARIO\n\n-0.19 ¢ USD\n\nvs. trimestre anterior\n-0.39 ¢ USD\nvs. año anterior\n-0.82 ¢ USD",
+    "coverage": [
+      "Seleccionado: 2T26. Industria: 2T26 disponible. Se conserva la historia disponible.",
+      "Seleccionado: 2T26. Industria: 2T26 disponible. Se conserva la historia disponible.",
+      "Seleccionado: 2T26. Industria: 2T26 disponible. Se conserva la historia disponible."
+    ],
+    "dom": {
+      "bars": 60,
+      "forcedTooltipBoxes": 0,
+      "points": 61,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  },
+  {
+    "size": "mobile",
+    "period": "3T26",
+    "kpis": "i\n\nRASK\n\n8.16 ¢ USD\n\nvs. trimestre anterior\n+7.3%\nvs. año anterior\n+12.9%\ni\n\nCASK\n\n7.57 ¢ USD\n\nvs. trimestre anterior\n-2.8%\nvs. año anterior\n+21.2%\ni\n\nASK\n\n41.07 mil M\n\nvs. trimestre anterior\n+5.9%\nvs. año anterior\n+3.4%\ni\n\nMARGEN UNITARIO\n\n+0.58 ¢ USD\n\nvs. trimestre anterior\n+0.77 ¢ USD\nvs. año anterior\n-0.39 ¢ USD",
+    "coverage": [
+      "Seleccionado: 3T26. Industria: 3T26 calculado · vista previa. Se conserva la historia disponible.",
+      "Seleccionado: 3T26. Industria: 3T26 calculado · vista previa. Se conserva la historia disponible.",
+      "Seleccionado: 3T26. Industria: 3T26 calculado · vista previa. Se conserva la historia disponible."
+    ],
+    "dom": {
+      "bars": 60,
+      "forcedTooltipBoxes": 0,
+      "points": 61,
+      "scrollWidth": 375,
+      "width": 375
+    }
+  }
+]

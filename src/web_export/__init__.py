@@ -8,11 +8,30 @@ split by period. Publication itself is out of scope for this package
 approvals.
 """
 
-from src.web_export.executive import export_executive
-from src.web_export.flights import export_flights, recombine_flights
-from src.web_export.inputs import MissingWebInput, require_inputs
-from src.web_export.market import export_market
-from src.web_export.privacy import PrivacyViolation, check_privacy
+from importlib import import_module
+
+# The chat image imports lightweight helpers such as writer and schema readers.
+# Loading an unrelated exporter here would also require its offline dashboard
+# dependencies, which deliberately are not part of that runtime image.
+_EXPORT_MODULES = {
+    "export_executive": "executive",
+    "export_flights": "flights",
+    "export_market": "market",
+    "recombine_flights": "flights",
+    "require_inputs": "inputs",
+    "MissingWebInput": "inputs",
+    "check_privacy": "privacy",
+    "PrivacyViolation": "privacy",
+}
+
+
+def __getattr__(name: str):
+    module_name = _EXPORT_MODULES.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    value = getattr(import_module(f"{__name__}.{module_name}"), name)
+    globals()[name] = value
+    return value
 
 __all__ = [
     "export_executive",
