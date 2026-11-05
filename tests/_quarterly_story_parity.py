@@ -88,10 +88,23 @@ def industry_projection(before, after):
 
 
 def publication(site, repo):
-    assert verifier_for(site, repo) == PROFILE
-    problems = scope.verify_story(site, repo)
-    assert not problems, problems
-    spec = scope.anchor(repo)
+    profile = verifier_for(site, repo)
+    if profile == "src.publish.afac_history_scope":
+        from src.publish import afac_history_contract as composition
+        from src.publish import afac_history_scope as history
+
+        problems = history.verify_afac_history(site, repo)
+        assert not problems, problems
+        final = history.anchor(repo)
+        _, _, parent_files, spec = composition.parent_public(repo, final["scope"]["candidate_parent"])
+        assert (site / "data/v1/executive.json").read_bytes() == parent_files["data/v1/executive.json"]
+        inherited = frozenset(parent_files) - {row["path"] for row in final["scope"]["data_files"]}
+    else:
+        assert profile == PROFILE
+        problems = scope.verify_story(site, repo)
+        assert not problems, problems
+        spec = scope.anchor(repo)
+        inherited = scope.preserved_files(site, repo, spec)
     old_raw = _git(repo, "show", f"{spec['baseline_commit']}:site/publication_manifest.json")
     assert sha(old_raw) == spec["baseline_manifest_sha256"]
     old = json.loads(old_raw)
@@ -110,7 +123,6 @@ def publication(site, repo):
         spec["retained_analysis_manifest"] + spec["analysis_manifest"], key=manifests.analysis_sort_key
     )
     assert len(current["analysis_manifest"]) == 8
-    inherited = scope.preserved_files(site, repo, spec)
     for entry in spec["retained_analysis_manifest"] + spec["superseded_analysis_manifest"]:
         name = "data/v1/" + manifests.analysis_relative_path(entry).as_posix()
         pin = next(p for p in old["files"] if p["path"] == name)
@@ -139,6 +151,10 @@ def _record_path(repo, entry):
 
 
 def missing_records(site, repo):
+    if verifier_for(site, repo) == "src.publish.afac_history_scope":
+        from tests._afac_history_parity import missing_inputs
+
+        return missing_inputs(repo)
     spec, _, _ = publication(site, repo)
     return [
         str(path)
@@ -151,6 +167,10 @@ def missing_records(site, repo):
 
 def replay_data(site, repo):
     """Rebuild the twelve data outputs from the exact retained release request."""
+    if verifier_for(site, repo) == "src.publish.afac_history_scope":
+        from tests._afac_history_parity import replay_all
+
+        return replay_all(site, repo)["data"]
     from src.publish.quarterly_story_data import outputs
     from src.publish.quarterly_story_update import authority, request_inputs
     from src.publish.source_data_scope import pins
@@ -244,6 +264,10 @@ print(json.dumps(dict(authorized=[e[1] for e in entries],payloads=[_analysis_pay
 
 
 def replay(site, repo):
+    if verifier_for(site, repo) == "src.publish.afac_history_scope":
+        from tests._afac_history_parity import replay_all
+
+        return replay_all(site, repo)
     from src.analysis_agent import lifecycle as flow
     from src.publish import frozen_data
     from src.publish.approval_cohorts import approval_plan

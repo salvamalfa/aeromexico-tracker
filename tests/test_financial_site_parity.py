@@ -53,7 +53,7 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
     assert after["views"]["2026Q3"]["kpis"][0]["yoy"]["display"] == "+12.2%"
     from scripts.check_pages_publication import verifier_for
 
-    if verifier_for(SITE, ROOT) == "src.publish.quarterly_story_scope":
+    if verifier_for(SITE, ROOT) in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
         from tests._quarterly_story_parity import missing_records, replay
 
         if missing_records(SITE, ROOT):

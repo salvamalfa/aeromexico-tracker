@@ -154,6 +154,7 @@ def replay_inputs(tmp_path, monkeypatch):
         dict(implementation_commit="old-q3-code", analysis_manifest=retired),
     ]
     monkeypatch.setattr(consumer, "publication", lambda *args: (spec, {}, {}))
+    monkeypatch.setattr(consumer, "verifier_for", lambda *args: consumer.PROFILE)
     monkeypatch.setattr(consumer, "_git", lambda *args: b"current" if args[1] == "show" else b"new-code")
     monkeypatch.setattr(consumer.manifests, "load_manifest", lambda *args: current)
     monkeypatch.setattr(approval_cohorts, "approval_plan", lambda *args: (groups, {}))

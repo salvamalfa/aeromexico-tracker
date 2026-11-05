@@ -51,8 +51,9 @@ def editorial_site(request):
         "src.publish.movements_scope",
         "src.publish.source_data_scope",
         "src.publish.quarterly_story_scope",
+        "src.publish.afac_history_scope",
     }, f"Unsupported publication verifier: {profile}"
-    if profile == "src.publish.quarterly_story_scope":
+    if profile in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
         from tests._quarterly_story_parity import publication
 
         return publication(SITE, ROOT)[0]
@@ -102,7 +103,7 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
 
     module = verifier_for(SITE, ROOT)
-    if module == "src.publish.quarterly_story_scope":
+    if module in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
         from tests._quarterly_story_parity import publication
 
         spec, _, _ = publication(SITE, ROOT)
@@ -149,7 +150,7 @@ def _required_source_record(entry, request):
 def test_editorial_new_payload_matches_its_full_approved_source_replay(editorial_site, request):
     from scripts.check_pages_publication import verifier_for
 
-    if verifier_for(SITE, ROOT) == "src.publish.quarterly_story_scope":
+    if verifier_for(SITE, ROOT) in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
         from tests._quarterly_story_parity import missing_records, replay
 
         if missing_records(SITE, ROOT):

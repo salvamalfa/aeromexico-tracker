@@ -39,7 +39,9 @@ from src.web_export.analysis import MissingAnalysisInput
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
 from tests._site_publication_parity import (
-    _published_approval_config_view, _with_citation_labels, assert_reading_parity,
+    _published_approval_config_view,
+    _with_citation_labels,
+    assert_reading_parity,
 )
 
 pytestmark = pytest.mark.local_data
@@ -67,7 +69,9 @@ def _replay_published_cohorts() -> dict:
     repo = SITE_DIR.parent
     from scripts.check_pages_publication import verifier_for
 
-    if verifier_for(SITE_DIR, repo) == "src.publish.quarterly_story_scope":
+    if verifier_for(SITE_DIR, repo) in {
+        "src.publish.quarterly_story_scope", "src.publish.afac_history_scope",
+    }:
         from tests._quarterly_story_parity import replay
 
         return replay(SITE_DIR, repo)
@@ -93,7 +97,9 @@ def published_executive(executive_payload: dict) -> dict:
     from src.publish.financial_scope import PROOF as FINANCIAL_PROOF
     from src.publish.records import _analysis_manifest_entry
 
-    if verifier_for(SITE_DIR, SITE_DIR.parent) == "src.publish.quarterly_story_scope":
+    if verifier_for(SITE_DIR, SITE_DIR.parent) in {
+        "src.publish.quarterly_story_scope", "src.publish.afac_history_scope",
+    }:
         from src.publish.financial_scope import anchor as financial_anchor
         from tests._quarterly_story_parity import publication
 
@@ -273,7 +279,9 @@ def test_published_parity_survives_a_later_runtime_without_weakening_replay(
         identities = {manifest_mod.analysis_identity(entry) for entry in entries}
         from scripts.check_pages_publication import verifier_for
 
-        story = verifier_for(SITE_DIR, SITE_DIR.parent) == "src.publish.quarterly_story_scope"
+        profile = verifier_for(SITE_DIR, SITE_DIR.parent)
+        native = profile == "src.publish.afac_history_scope"
+        story = profile in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}
         complete_story = historical | {(entity, "2026Q3") for entity, _ in historical}
         assert identities in (
             (complete_story,) if story else (historical, historical | {("AEROMEXICO", "2026Q3")})
@@ -281,13 +289,19 @@ def test_published_parity_survives_a_later_runtime_without_weakening_replay(
         assert len(entries) == len(replay["authorized"]) == len(replay["payloads"]) == len(identities)
         cohort_count = 2 if ("AEROMEXICO", "2026Q3") in identities else 1
         assert [_analysis_manifest_entry(a) for a in replay["authorized"]] == entries
-        expected_calls = [
+        expected_calls = [] if native else [
             cohort["implementation_commit"]
             for cohort in replay["cohorts"]
             if not story or all(e["period_id"] == "2026Q2" for e in cohort["analysis_manifest"])
         ]
         assert replay_calls == expected_calls
-        assert len(set(replay_calls)) == (1 if story else cohort_count)
+        assert len(set(replay_calls)) == (0 if native else 1 if story else cohort_count)
+        if native:
+            original = replay["original_parent_replay"]
+            assert original["retained_q2_replayed"] == 4 and original["outputs_verified"] == 16
+            assert original["producer_code_version"] == (
+                "602ea2a44fec7881311af05eb5610de20ddb07219b220c50ff75f618d11960d6"
+            )
         for entry, payload in zip(entries, replay["payloads"]):
             actual = json.loads((DATA_DIR / manifest_mod.analysis_relative_path(entry)).read_bytes())
             assert _export_approved_entry(entry) == payload == actual
@@ -301,7 +315,12 @@ def test_published_parity_survives_a_later_runtime_without_weakening_replay(
         # A refusal by the pinned verifier must still fail the helper. The
         # successful historical replay above cannot become an approval bypass.
         _replay_published_cohorts.cache_clear()
-        monkeypatch.setattr(frozen_data, "verify_baseline_approvals", later_runtime_refuses)
+        if native:
+            from src.publish import afac_history_parent
+
+            monkeypatch.setattr(afac_history_parent, "replay_parent", later_runtime_refuses)
+        else:
+            monkeypatch.setattr(frozen_data, "verify_baseline_approvals", later_runtime_refuses)
         with pytest.raises(ValueError, match="Simulated later runtime"):
             _replay_published_cohorts()
     finally:
@@ -319,7 +338,9 @@ def test_site_flights_and_executive_data_match_a_fresh_export(
     manifest = manifest_mod.load_manifest(SITE_DIR)
     from scripts.check_pages_publication import verifier_for
 
-    if verifier_for(SITE_DIR, SITE_DIR.parent) == "src.publish.quarterly_story_scope":
+    if verifier_for(SITE_DIR, SITE_DIR.parent) in {
+        "src.publish.quarterly_story_scope", "src.publish.afac_history_scope",
+    }:
         from tests._quarterly_story_parity import replay_data
 
         rebuilt = replay_data(SITE_DIR, SITE_DIR.parent)

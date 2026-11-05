@@ -18,7 +18,11 @@ from src.publish.issuer_projection import require_scope
 
 def verify_current_publication(site, repo, financial_checker, *, base_commit=None):
     module = verifier_for(site, repo)
-    if module == "src.publish.quarterly_story_scope":
+    if module == "src.publish.afac_history_scope":
+        from src.publish.afac_history_scope import verify_afac_history
+
+        problems = verify_afac_history(site, repo)
+    elif module == "src.publish.quarterly_story_scope":
         from src.publish.quarterly_story_scope import verify_story
 
         problems = verify_story(site, repo)
@@ -104,7 +108,7 @@ def preserved_financial_projection(site, repo, financial_spec):
         source_data_scope.PROOF,
     } & {item["path"] for item in manifest["files"]}:
         module = _active_module(site, repo, manifest, commit)
-        if module == "src.publish.quarterly_story_scope":
+        if module in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
             from tests._quarterly_story_parity import industry_projection, publication
 
             assert commit is None, "Historical story editions need their own pinned scope consumer"
@@ -290,7 +294,9 @@ def assert_reading_parity(site_page, site_server, expected):
                             for item in analysis["summary_items"] if item["claim_id"] == claim]
                 items = selected[:2] or items
             elif entity == "INDUSTRY":
-                items = [next((item for item in analysis["summary_items"] if item["claim_id"] == "s_revenue"), items[0])]
+                items = [next(
+                    (item for item in analysis["summary_items"] if item["claim_id"] == "s_revenue"), items[0],
+                )]
             short = " ".join(item["text"].replace(item.get("lead") or "", "").strip()
                              if entity == "AEROMEXICO" and period_id == "2026Q3" else item["text"]
                              for item in items)
@@ -299,12 +305,17 @@ def assert_reading_parity(site_page, site_server, expected):
             summary = site_page.locator("#narrative-copy li").nth(summary_index).locator(":scope > span")
             assert summary.inner_text() == _with_citation_labels(short, sources)
             paragraphs = article.locator("section p")
-            source_paragraphs = [(text, claim) for section in analysis["sections"]
-                                 for text, claim in zip(section["paragraphs"], section["claim_ids"], strict=True)]
+            source_paragraphs = [
+                (text, claim) for section in analysis["sections"]
+                for text, claim in zip(section["paragraphs"], section["claim_ids"], strict=True)
+            ]
             assert paragraphs.count() == len(source_paragraphs)
             for index, (text, claim) in enumerate(source_paragraphs):
                 paragraph = paragraphs.nth(index)
                 assert paragraph.inner_text() == _with_citation_labels(text, citations[claim])
-                assert sorted(paragraph.locator("a.source-note").evaluate_all("nodes => nodes.map(node => node.href)")) == sorted(c["href"] for c in citations[claim])
+                actual = paragraph.locator("a.source-note").evaluate_all(
+                    "nodes => nodes.map(node => node.href)"
+                )
+                assert sorted(actual) == sorted(c["href"] for c in citations[claim])
             checked.add((entity, period_id))
     assert checked == set(expected), f"never reached {set(expected) - checked}"
