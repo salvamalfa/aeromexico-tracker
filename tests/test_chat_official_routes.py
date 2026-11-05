@@ -196,6 +196,33 @@ def test_us_defaults_three_and_explicit_scope_does_not_inherit_afac_region_or_ca
     assert result["query"]["region"] is None and result["total_departures"] == 9
 
 
+@pytest.mark.parametrize("scope", ["national", "us", "international"])
+def test_comparison_calendar_names_previous_year_without_relabelling_source_months(scope):
+    snapshot = PublicSnapshot()
+    result = registry(snapshot).invoke("query_official_routes", {}, map_context(snapshot.document, scope))
+    calendar = result["comparison_calendar"]
+    assert calendar["current_period"] == "2026Q3" and calendar["previous_period"] == "2025Q3"
+    assert calendar["current_months"] == result["observed_months"]
+    assert calendar["previous_months"] == [
+        month.replace("2026", "2025") for month in result["observed_months"]
+    ]
+    if scope == "us":
+        assert calendar["current_months"] == ["2026M07"]
+        assert calendar["previous_months"] == ["2025M07"]
+    for row in result["rows"]:
+        assert all(month.startswith("2026") for month in row["comparison"]["comparison_months"])
+
+
+def test_missing_period_does_not_invent_comparison_month_support():
+    snapshot = PublicSnapshot()
+    result = registry(snapshot).invoke(
+        "query_official_routes", {"period": "2026Q4"}, map_context(snapshot.document)
+    )
+    assert result["comparison_calendar"]["previous_period"] == "2025Q4"
+    assert result["comparison_calendar"]["current_months"] == []
+    assert result["comparison_calendar"]["previous_months"] == []
+
+
 @pytest.mark.parametrize("region", ["canada", "central_america_caribbean", "south_america", "europe", "asia"])
 def test_international_geographic_regions_are_exact_and_include_puerto_rico(region):
     snapshot = PublicSnapshot()
@@ -207,6 +234,45 @@ def test_international_geographic_regions_are_exact_and_include_puerto_rico(regi
     assert result["rows"][0]["destination"]["country_iso2"] != "US"
     if region == "central_america_caribbean":
         assert result["rows"][0]["destination"]["country_iso2"] == "PR"
+
+
+@pytest.mark.parametrize("arguments", [{}, {"region": None}])
+def test_omitted_or_null_region_inherits_europe_from_attached_map(arguments):
+    snapshot = PublicSnapshot()
+    result = registry(snapshot).invoke(
+        "query_official_routes",
+        arguments,
+        map_context(snapshot.document, "international", map_region="europe"),
+    )
+    assert result["query"]["region"] == "europe"
+    assert len(result["rows"]) == 1 and result["rows"][0]["region"] == "europe"
+
+
+def test_explicit_all_region_clears_europe_without_changing_context_or_other_filters():
+    snapshot = PublicSnapshot()
+    context = map_context(snapshot.document, "international", map_region="europe")
+    result = registry(snapshot).invoke("query_official_routes", {"region": "all"}, context)
+    assert result["query"]["region"] is None
+    assert {row["region"] for row in result["rows"]} == {
+        "canada",
+        "central_america_caribbean",
+        "south_america",
+        "europe",
+        "asia",
+    }
+    assert result["entity"] == "ALL" and result["query"]["period"] == "2026Q3"
+    assert context["filters"]["map_region"] == "europe"
+
+
+def test_explicit_region_replaces_europe_instead_of_intersecting_the_chip():
+    snapshot = PublicSnapshot()
+    result = registry(snapshot).invoke(
+        "query_official_routes",
+        {"region": "asia"},
+        map_context(snapshot.document, "international", map_region="europe"),
+    )
+    assert result["query"]["region"] == "asia"
+    assert len(result["rows"]) == 1 and result["rows"][0]["region"] == "asia"
 
 
 @pytest.mark.parametrize("arguments", [{"period": "2026Q4"}, {"route_key": "ABSENT"}])
@@ -229,6 +295,7 @@ def test_unpublished_period_or_absent_route_stays_missing_without_nearest_or_zer
         {"scope": "us", "carrier_keys": ["INDUSTRY"]},
         {"scope": "us", "carrier_keys": ["VOLARIS", "VOLARIS"]},
         {"region": "asia"},
+        {"region": "all"},
         {"top_n": True},
         {"top_n": 21},
         {"dataset_version": "0" * 64},
