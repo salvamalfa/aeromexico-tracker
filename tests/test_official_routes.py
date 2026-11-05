@@ -128,6 +128,17 @@ def test_minimal_official_nochange_request_uses_closed_continuity_route(monkeypa
     assert update.source_approvals(request, profile, [], tmp_path, "baseline", {}, tmp_path) == {"official": True}
 
 
+def test_candidate_certificate_paths_are_portable_between_windows_and_linux(monkeypatch):
+    from pathlib import PurePosixPath, PureWindowsPath
+
+    from src.source_updates import official_routes as preparation
+
+    monkeypatch.setattr(preparation, "digest", lambda _: "a" * 64)
+    windows = preparation.input_inventory([PureWindowsPath("C:/candidate/data/a.xlsx")], PureWindowsPath("C:/candidate"))
+    linux = preparation.input_inventory([PurePosixPath("/candidate/data/a.xlsx")], PurePosixPath("/candidate"))
+    assert windows == linux == {"data/a.xlsx": "a" * 64}
+
+
 def test_retained_real_package_and_geographic_extract_replay_exactly():
     from src.source_updates.official_routes_sources import replay
     from src.dashboard.official_routes_contract import encoded

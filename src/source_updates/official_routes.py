@@ -27,6 +27,11 @@ def fingerprints(root=PATHS.root) -> dict:
     return {name: digest(root / name) for name in CODE_FILES}
 
 
+def input_inventory(files, workspace):
+    """Transport identities use POSIX separators on every producer platform."""
+    return {p.relative_to(workspace).as_posix(): digest(p) for p in sorted(set(files))}
+
+
 def prepare(selection_path: Path, *, execute=False, check=False, retained_approvals=None, repo=PATHS.root) -> dict:
     selection_path = selection_path.resolve()
     workspace = selection_path.parent
@@ -44,7 +49,7 @@ def prepare(selection_path: Path, *, execute=False, check=False, retained_approv
                    output_sha256=__import__("hashlib").sha256(encoded(payload)).hexdigest(),
                    activation="none", publication="not_authorized")
     profile["retained_approvals"] = retained_approvals
-    evidence.update(input_files={str(p.relative_to(workspace)): digest(p) for p in sorted(set(files))},
+    evidence.update(input_files=input_inventory(files, workspace),
                     code_sha256=profile["code_sha256"])
     outputs = {workspace / PUBLIC_PATH: encoded(payload), workspace / "certification.json": encoded(evidence),
                workspace / "profile.json": encoded(profile)}
