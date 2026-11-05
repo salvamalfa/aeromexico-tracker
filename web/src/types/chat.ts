@@ -75,6 +75,12 @@ export interface ChatContext {
   entity?: string | string[];
   card_id?: string;
   filters?: {
+    map_scope?: "national" | "us" | "international";
+    map_region?: "canada" | "central_america_caribbean" | "south_america" | "europe" | "asia";
+    map_carriers?: Array<"AEROMEXICO" | "VOLARIS" | "VIVA_AEROBUS">;
+    map_dataset_version?: string;
+    map_grain?: "city_pair" | "airport_pair";
+    map_months?: string[];
     segment?: "total" | "domestic" | "international";
     start?: string;
     end?: string;

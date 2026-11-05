@@ -6,7 +6,7 @@ import { $, deltaDisplay, metricDisplay, priorPeriod, setDelta } from "./dom";
 import { currentIndex, currentPeriodId, periodCount } from "../../state/period";
 import { monthsInQuarter, state } from "./state";
 import { renderMix } from "./mix";
-import { renderNetworkPeriod } from "./network";
+import { renderOfficialMap } from "./official-map";
 import { renderFlightKpiSources } from "./kpi-sources";
 import { renderEntityKpis } from "./carriers";
 import { selection } from "../shell/carriers";
@@ -49,7 +49,7 @@ export async function renderQuarter(): Promise<void> {
   }
   if (!executiveState.entities) renderFlightKpiSources(kpiEntity, record.period_id, record);
   renderMix(record);
-  await renderNetworkPeriod(record.period_id);
+  await renderOfficialMap(record.period_id);
   if (request !== quarterRequest || (currentPeriodId() && currentPeriodId() !== record.period_id)) return;
   $("live-status")!.textContent = `Selección: ${record.period_label}. Cada bloque de Vuelos declara su periodo y cobertura; un mes disponible no completa un trimestre.`;
 }

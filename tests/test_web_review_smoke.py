@@ -26,6 +26,12 @@ pytestmark = pytest.mark.browser
 
 
 def _chromium_executable() -> str | None:
+    override = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+    if override:
+        candidate = Path(override)
+        if not candidate.is_file():
+            raise ValueError("PLAYWRIGHT_CHROMIUM_EXECUTABLE does not name a browser executable")
+        return str(candidate)
     candidate = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
     return str(candidate) if candidate.exists() else None
 

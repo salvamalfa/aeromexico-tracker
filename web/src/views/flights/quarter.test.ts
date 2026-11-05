@@ -3,7 +3,7 @@ import { initPeriods } from "../../state/period";
 import { renderQuarter } from "./quarter";
 import { state } from "./state";
 vi.mock("./mix", () => ({renderMix:vi.fn()}));
-vi.mock("./network", () => ({renderNetworkPeriod:vi.fn(async()=>true)}));
+vi.mock("./official-map", () => ({renderOfficialMap:vi.fn(async()=>{})}));
 vi.mock("./carriers", () => ({renderEntityKpis:vi.fn()}));
 vi.mock("../shell/carriers", () => ({selection:()=>["AEROMEXICO"], ENTITY_LABELS: { AEROMEXICO: "Aeroméxico" }}));
 

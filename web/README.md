@@ -37,15 +37,14 @@ Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
     payload but not rendered), the three
     Plotly charts (unit economics, volume vs. RASK, load factor vs. RASK)
     and the by-quarter disclosure table.
-  - `flights/*.ts`: `state.ts` (mutable state + lazy per-period fetch/cache),
-    `dom.ts` (formatting), `domestic.ts`/`regions.ts` (mode switches),
-    `coverage.ts` (route coverage dots/icons), `volume.ts` (network volume
-    line), `table.ts` (route table + airport tooltip), `search.ts`
-    (airport search box), `map.ts` (the Plotly flow map), `network.ts`
-    (mode/period orchestration), `mix.ts` (passenger mix chart),
-    `quarter.ts` (global quarter selection), `bootstrap.ts` (mounts the
-    view and wires `#period-prev`/`#period-next` — see "Mount order"
-    below).
+  - `flights/*.ts`: `official-routes.ts` (official-map state, exact selection,
+    search and cached loading), `official-map.ts` (controls and route detail),
+    `official-map-chart.ts` (bounded Plotly traces and responsive canvas),
+    `state.ts` (the retained financial/passenger payload), `mix.ts`
+    (passenger mix), `quarter.ts` (global quarter), and `bootstrap.ts`
+    (mounting). The previous `map.ts`/`network.ts` and their support modules
+    remain for regression of the retained historical contract; bootstrap no
+    longer mounts their estimated/programming selectors.
   - `main.ts`: mounts the tab shell, then `views/executive`, then
     `views/flights` (via a dynamic `import()`, see "Tamaño del bundle"
     below), in that order (see "Mount order" below).
@@ -63,6 +62,48 @@ Built with Vite and strict TypeScript (`package.json`, `vite.config.ts`,
   and tab shell use), `views/executive/executive.css` (narrative card,
   analysis summary/dialog), `views/economy/economy.css` (KPI grid, chart
   cards, disclosure table) and `views/flights/flights.css` (scoped under `.flights-view`).
+
+### Mapa oficial de Mercado
+
+La interfaz preparada el 5 de noviembre de 2026 usa
+[`official_route_network_v1`](../contracts/web/official-routes.schema.json)
+desde `data/v1/official-routes.json`. La preview local usa un candidato real;
+esto no acredita aprobación de datos ni publicación. El trimestre superior
+es único y nunca se sustituye por otro disponible.
+
+- Nacional: AFAC, todas las aerolíneas, ciudades. Internacional: el mismo
+  universo AFAC, excluido EE. UU.; Canadá, Centroamérica (incluido Caribe),
+  Sudamérica, Europa y Asia se filtran con metadatos de país y región.
+- EE. UU.: BTS T-100, clases regulares F y G, incluidos vuelos de carga.
+  El selector contiene sólo Grupo Aeroméxico (Aerovías y Connect), Volaris y
+  Viva; la selección inicial son las tres. No representa todo el mercado BTS.
+- Vuelos dimensiona y ordena las rutas. «Más vuelos» muestra doce; «Todas»
+  conserva la red completa. Totales, búsqueda y lista incluyen rutas sin
+  coordenadas y ceros explícitos de la fuente. El dibujo sólo representa
+  valores positivos. Meses faltantes siguen N/D. El icono amarillo identifica
+  cobertura parcial; los detalles conservan meses, sentidos y periodo anual
+  comparable. Un resultado regional vacío conserva su filtro y muestra N/D.
+- `map_scope`, `map_region` y `map_carriers` guardan los filtros propios.
+  `sel_map` antiguo inicializa sólo la selección BTS; `INDUSTRY` conserva el
+  significado de las tres mexicanas. Los filtros financieros son independientes.
+- «Pregunta» y las preguntas generales desde Mercado fijan dataset, trimestre,
+  ámbito, grano y meses visibles. AFAC no hereda entidades. Sólo EE. UU.
+  envía `map_carriers`. Las tarjetas financieras, participación y mezcla
+  mantienen su contexto propio. El backend debe aceptar la misma versión
+  exacta antes de consultar el nuevo conjunto.
+
+Se conservan los contratos y las regresiones históricas. Los tipos oficiales
+se generan desde el esquema; las nuevas fixtures y pruebas cubren selección,
+cancelación de cargas, búsqueda fuera del top, faltantes geográficos y límites
+de trazas. El navegador comprueba el build con fixtures sintéticas explícitas;
+la revisión local adicional usa el candidato real, sin modificar `site/`, las
+ocho lecturas ni las noticias. `tmp/official-map-ui/` contiene la revisión
+regenerable y no se versiona ni publica.
+
+Para un navegador ya instalado, los smoke admiten
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE`; si se define debe apuntar a un ejecutable
+existente. En Node 25 local, usar `NODE_OPTIONS=--no-experimental-webstorage`
+evita que el almacenamiento experimental nativo sustituya al de jsdom.
 
 ### Formato de las tarjetas KPI
 

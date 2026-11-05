@@ -114,7 +114,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             try:
                 # Uses the Playwright-managed browser installed by CI's
                 # `playwright install chromium`, independent of host packages.
-                browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+                browser = p.chromium.launch(headless=True, args=["--no-sandbox"], executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE"))
             except Exception as error:  # browser binaries can exist but lack system libraries
                 pytest.skip(f"Chromium no pudo iniciarse: {error}")
             page = browser.new_page(viewport={"width": 1280, "height": 900})
