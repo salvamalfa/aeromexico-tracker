@@ -93,6 +93,8 @@ es único y nunca se sustituye por otro disponible.
   envía `map_carriers`. Las tarjetas financieras, participación y mezcla
   mantienen su contexto propio. El backend debe aceptar la misma versión
   exacta antes de consultar el nuevo conjunto.
+  Las referencias y tablas del chat admiten las fuentes oficiales AFAC/BTS;
+  la URL de selección BTS conserva sólo sus cuatro parámetros verificados.
 
 Se conservan los contratos y las regresiones históricas. Los tipos oficiales
 se generan desde el esquema; las nuevas fixtures y pruebas cubren selección,
