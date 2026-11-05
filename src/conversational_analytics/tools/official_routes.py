@@ -56,7 +56,12 @@ def official_route_tool_spec(dataset_version: str) -> dict[str, Any]:
             "properties": {
                 "period": {"type": "string", "pattern": "^20[0-9]{2}Q[1-4]$"},
                 "scope": {"type": "string", "enum": sorted(OFFICIAL_SCOPES)},
-                "region": {"type": "string", "enum": sorted(OFFICIAL_REGIONS)},
+                "region": {
+                    "type": "string",
+                    "enum": ["all", *sorted(OFFICIAL_REGIONS)],
+                    "description": "Sólo international: all elimina el filtro; null u omisión heredan "
+                    "la región del contexto. Otra región explícita la reemplaza.",
+                },
                 "carrier_keys": {
                     "type": "array",
                     "items": {"type": "string", "enum": list(OFFICIAL_CARRIERS)},
@@ -138,9 +143,13 @@ class OfficialRouteTools:
         carriers = [carrier for carrier in OFFICIAL_CARRIERS if carrier in carriers]
         region = arguments.get("region", filters.get("map_region") if same_scope else None)
         if region is not None and (
-            scope != "international" or not isinstance(region, str) or region not in OFFICIAL_REGIONS
+            scope != "international"
+            or not isinstance(region, str)
+            or region not in OFFICIAL_REGIONS | {"all"}
         ):
             raise PlanValidationError("region sólo corresponde a international y debe ser oficial")
+        if region == "all":
+            region = None
         top_n = arguments.get("top_n", 10)
         if not isinstance(top_n, int) or isinstance(top_n, bool) or not 1 <= top_n <= 20:
             raise PlanValidationError("top_n debe estar entre 1 y 20")
@@ -224,6 +233,18 @@ class OfficialRouteTools:
             ),
             "expected_months": list(network["expected_months"]) if network else self._quarter_months(period),
             "observed_months": list(network["observed_months"]) if network else [],
+            "comparison_calendar": {
+                "current_period": period,
+                "previous_period": str(int(period[:4]) - 1) + period[4:],
+                "current_months": list(network["observed_months"]) if network else [],
+                "previous_months": [
+                    str(int(month[:4]) - 1) + month[4:] for month in network["observed_months"]
+                ]
+                if network
+                else [],
+                "row_months_reference": "comparison.comparison_months contiene soporte del año actual; "
+                "la base YoY usa esos mismos meses del año anterior.",
+            },
             "total_departures": sum(route["departures"] for route in routes) if not missing else None,
             "total_routes": len(routes) if not missing else None,
             "rows": rows,

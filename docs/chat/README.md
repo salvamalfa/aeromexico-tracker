@@ -64,10 +64,18 @@ Aerovías y Connect conservan sus identificadores y cifras por separado.
 El universo es regular de pasajeros y carga; BTS incluye F y G y excluye L y P.
 
 Los argumentos explícitos prevalecen sobre el contexto. Un cambio de alcance
-no hereda filtros exclusivos del alcance anterior. La herramienta rechaza
+no hereda filtros exclusivos del alcance anterior.
+En los argumentos de `query_official_routes`, `region: "all"` selecciona todas
+las regiones internacionales. `region: null` u omisión heredan la región del
+contexto; otra región explícita la reemplaza. Esto conserva el significado de
+los campos opcionales enviados como `null` por el esquema estricto del proveedor.
+La herramienta rechaza
 un chip de otra versión o con meses distintos de los publicados. Una selección
 sin observaciones devuelve `missing` y totales nulos, sin buscar otro trimestre.
 Las filas conservan la comparación publicada, sus meses y su motivo de ausencia.
+`comparison.comparison_months` conserva el soporte del año actual, tal como está
+publicado. `comparison_calendar` nombra por separado el trimestre y los meses del
+año anterior: julio de 2026 se compara con julio de 2025, nunca consigo mismo.
 La cobertura y los totales de toda la selección permanecen visibles cuando
 el límite de transporte recorta el detalle de rutas.
 

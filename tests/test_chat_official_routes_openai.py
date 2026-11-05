@@ -26,11 +26,25 @@ from tests.test_chat_openai import (
 )
 
 
-@pytest.mark.parametrize("scope", ["national", "us", "international"])
-def test_official_tool_roundtrips_real_adapter_with_fake_sdk_events(scope):
+@pytest.mark.parametrize(
+    ("scope", "context_region", "requested_region", "expected_region"),
+    [
+        ("national", None, None, None),
+        ("us", None, None, None),
+        ("international", None, None, None),
+        ("international", "europe", None, "europe"),
+        ("international", "europe", "all", None),
+        ("international", "europe", "asia", "asia"),
+    ],
+)
+def test_official_tool_roundtrips_real_adapter_with_fake_sdk_events(
+    scope, context_region, requested_region, expected_region
+):
     snapshot = PublicSnapshot()
     tools = registry(snapshot)
     context = map_context(snapshot.document, scope)
+    if context_region is not None:
+        context["filters"]["map_region"] = context_region
     action = RequiredActionSessionRequiredActionResourceFunctionCall.model_validate(
         {
             "type": "function_call",
@@ -40,7 +54,7 @@ def test_official_tool_roundtrips_real_adapter_with_fake_sdk_events(scope):
             "arguments": {
                 "period": None,
                 "scope": None,
-                "region": None,
+                "region": requested_region,
                 "carrier_keys": None,
                 "dataset_version": None,
                 "route_key": None,
@@ -93,6 +107,10 @@ def test_official_tool_roundtrips_real_adapter_with_fake_sdk_events(scope):
     output = json.loads(fake.events.created[0]["events"][0]["output"])
     assert output["dataset_version"] == snapshot.version
     assert output["query"]["scope"] == scope
+    assert output["query"]["region"] == expected_region
+    if scope == "international":
+        assert len(output["rows"]) == (5 if expected_region is None else 1)
+        assert all(expected_region is None or row["region"] == expected_region for row in output["rows"])
     assert output["observed_months"] == context["filters"]["map_months"]
     assert any("official-routes.json" in reference["url"] for reference in result.references)
     if scope == "us":
