@@ -63,6 +63,7 @@ def analysis_relative_path(entry: dict[str, Any]) -> Path:
 # build output. Their own content hash stands in for "the contract version"
 # (no separate version field is embedded in every schema file today).
 CONTRACT_FILES = (
+    "official-routes.schema.json",
     "flights.schema.json",
     "executive.schema.json",
     "market.schema.json",

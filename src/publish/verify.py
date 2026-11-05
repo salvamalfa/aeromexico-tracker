@@ -237,6 +237,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         has_business_metrics = "data/v1/business_metrics.json" in listed_paths
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
         optional_payload_contracts = {
+            "official-routes.schema.json": "data/v1/official-routes.json",
             manifest_mod.EDITORIAL_ANALYSIS_CONTRACT: manifest_mod.EDITORIAL_ANALYSIS_PATH,
             manifest_mod.INDUSTRY_STORY_CONTRACT: manifest_mod.INDUSTRY_STORY_PATH,
             "market_demand.schema.json": "data/v1/market-demand.json",
