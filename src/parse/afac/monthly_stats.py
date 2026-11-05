@@ -22,7 +22,7 @@ from src.config import PATHS
 from src.parse.sec.common import write_parquet_atomic
 
 
-PARSER_VERSION = "afac_monthly_stats_v1"
+PARSER_VERSION = "afac_monthly_stats_v2"
 ANNUAL_START_YEAR = 2015
 PASSENGER_SHEETS = {"PAXREG": "scheduled", "PASREG": "scheduled", "PAXFLET": "charter", "PASFLET": "charter"}
 MONTH_NAMES = {
@@ -95,6 +95,7 @@ def parse_annual_passenger_workbook(
 
     facts: list[dict[str, object]] = []
     checks: list[dict[str, object]] = []
+    completed_blocks: set[tuple[str, bool, str]] = set()
     available = {name.upper(): name for name in _sheet_names(path)}
     for normalized_sheet, service_type in PASSENGER_SHEETS.items():
         actual_sheet = available.get(normalized_sheet)
@@ -129,6 +130,8 @@ def parse_annual_passenger_workbook(
             if carrier_column is not None and any(
                 "JAN" in _normalize(value) or "ENE" in _normalize(value) for value in row
             ):
+                if in_data and block_facts:
+                    raise ValueError(f"Unclosed AFAC data block before header in {path.name}/{actual_sheet}")
                 if is_domestic_carrier is None or market is None:
                     raise ValueError(
                         f"Missing AFAC block context in {path.name}/{actual_sheet} row {row_number}"
@@ -144,11 +147,27 @@ def parse_annual_passenger_workbook(
                 (str(value).strip() for value in row if isinstance(value, str) and value.strip()),
                 "",
             )
-            if not carrier_name:
-                continue
             compact_name = _compact(carrier_name)
             month_values = [_number(value) for value in row[1:13]]
-            if compact_name in {"TOTAL", "TOTALTOTAL"}:
+            # The captured 2019/20 layout has an unlabelled TOTAL in two
+            # Mexican blocks. Accept only a complete 12-month numeric row
+            # under native country/service/month anchors, exactly equal to
+            # the named carrier rows. Never infer a blank or foreign total.
+            unlabelled_total = (
+                not carrier_name and year in {2019, 2020}
+                and is_domestic_carrier is True and bool(block_facts)
+                and len(month_values) == 12 and all(value is not None for value in month_values)
+            )
+            if unlabelled_total and any(
+                expected != sum(float(fact["value"]) for fact in block_facts if fact["month"] == month)
+                for month, expected in enumerate(month_values, 1)
+            ):
+                raise ValueError(f"Unlabelled AFAC TOTAL does not reconcile in {path.name}/{actual_sheet}")
+            if compact_name in {"TOTAL", "TOTALTOTAL"} or unlabelled_total:
+                block_identity = (service_type, is_domestic_carrier, market)
+                if block_identity in completed_blocks:
+                    raise ValueError(f"Duplicate AFAC block in {path.name}/{actual_sheet}")
+                completed_blocks.add(block_identity)
                 for month, expected in enumerate(month_values, start=1):
                     if expected is None:
                         continue
@@ -164,6 +183,9 @@ def parse_annual_passenger_workbook(
                             "period_id": f"{year}M{month:02d}",
                             "sheet": actual_sheet,
                             "block_start_row": block_start,
+                            "total_row_number": row_number,
+                            "total_label_present": not unlabelled_total,
+                            "layout_version": "annual_2019_2020_anchored_v2" if year in {2019, 2020} else "annual_labelled_v1",
                             "is_domestic_carrier": is_domestic_carrier,
                             "service_type": service_type,
                             "market": market,
@@ -176,6 +198,8 @@ def parse_annual_passenger_workbook(
                 facts.extend(block_facts)
                 block_facts = []
                 in_data = False
+                continue
+            if not carrier_name:
                 continue
             if _normalize(carrier_name).startswith("TOTAL "):
                 continue  # Foreign-carrier regional subtotals are not airline rows.

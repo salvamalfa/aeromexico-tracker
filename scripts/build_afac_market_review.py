@@ -16,20 +16,15 @@ from jsonschema import Draft202012Validator
 
 from src.config import PATHS
 from src.dashboard.market import build_market_payload
-from src.parse.afac.monthly_stats import _load_crosswalk, _mapped_carrier, parse_annual_passenger_workbook
+from src.parse.afac.market_scope import RETAINED_TOTAL_FORMULA, TOTAL_FORMULA, TOTAL_KEY, market_cells
+from src.parse.afac.monthly_stats import _load_crosswalk, parse_annual_passenger_workbook
 from src.web_export.privacy import check_privacy, load_privacy_rules
 from src.web_export.writer import write_json
 
 
 def build(baseline, workbook, year, through, captured_at, database):
     facts, checks = parse_annual_passenger_workbook(workbook, year)
-    checks = [row for row in checks if row["is_domestic_carrier"] and int(row["period_id"][-2:]) <= through]
-    if len(checks) != through * 4 or any(row["difference"] != 0 for row in checks):
-        raise ValueError("AFAC published totals do not reconcile")
-    domestic = [row for row in facts if row["is_domestic_carrier"]]
-    observed = max(int(row["month"]) for row in domestic if row["value"] > 0)
-    if observed != through:
-        raise ValueError("Requested coverage differs from observed workbook coverage")
+    native_values, receipt = market_cells(facts, checks, year, through, _load_crosswalk())
     values = defaultdict(float)
     for month in baseline["months"]:
         if int(month["period_id"][:4]) >= year:
@@ -47,30 +42,26 @@ def build(baseline, workbook, year, through, captured_at, database):
             if remainder < 0:
                 raise ValueError("Negative historical remainder")
             values[("OTHER_MX", month["period_id"], segment)] += remainder
-    crosswalk = _load_crosswalk()
-    unmapped = set()
-    for row in domestic:
-        month = int(row["month"])
-        if month > through:
-            continue
-        key, _ = _mapped_carrier(crosswalk, row["source_carrier_name"], year, month)
-        if not key:
-            unmapped.add(row["source_carrier_name"])
-            key = "OTHER_" + hashlib.sha256(row["source_carrier_name"].encode()).hexdigest()[:12]
-        if key == "AEROMEXICO_CONNECT":
-            key = "AEROMEXICO"
-        period = f"{year}M{month:02d}"
-        values[(key, period, row["market"])] += row["value"]
-        values[(key, period, "total")] += row["value"]
+            values[(TOTAL_KEY, month["period_id"], segment)] = block["mexican_carriers_passengers"]
+    values.update(native_values)
     with duckdb.connect(str(database)) as connection:
         connection.execute(
             "CREATE OR REPLACE TABLE v_carrier_default("
             "carrier_key VARCHAR, period_id VARCHAR, segment VARCHAR, value DOUBLE, "
-            "metric_key VARCHAR, period_type VARCHAR)"
+            "metric_key VARCHAR, period_type VARCHAR, derivation_formula VARCHAR)"
         )
         connection.executemany(
-            "INSERT INTO v_carrier_default VALUES (?,?,?,?, 'passengers_afac','month')",
-            [(key, period, segment, value) for (key, period, segment), value in values.items()],
+            "INSERT INTO v_carrier_default VALUES (?,?,?,?, 'passengers_afac','month',?)",
+            [
+                (
+                    key,
+                    period,
+                    segment,
+                    value,
+                    TOTAL_FORMULA if int(period[:4]) == year else RETAINED_TOTAL_FORMULA,
+                )
+                for (key, period, segment), value in values.items()
+            ],
         )
         connection.execute(
             "CREATE OR REPLACE TABLE dim_source_artifact(source_system VARCHAR, downloaded_at TIMESTAMPTZ)"
@@ -81,13 +72,12 @@ def build(baseline, workbook, year, through, captured_at, database):
         payload
     )
     check_privacy(payload, load_privacy_rules())
-    receipt = dict(
+    receipt.update(
         source_sha256=hashlib.sha256(Path(workbook).read_bytes()).hexdigest(),
         year=year,
         through=through,
-        checks=len(checks),
-        all_reconciled=True,
-        unmapped_in_denominator=sorted(unmapped),
+        retained_before_year=year,
+        retained_baseline_recertified=False,
         last_period=payload["metadata"]["last_period"],
         default_quarter=payload["metadata"]["default_quarter"],
     )

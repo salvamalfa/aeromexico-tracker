@@ -819,6 +819,20 @@ el productor original permanecen ligados a sus identidades aprobadas.
 
 ## Pendientes
 
+- La corrección AFAC preparada en la rama de continuidad exige cuatro totales
+  mexicanos exactos por mes (regular/fletamento y nacional/internacional).
+  `market_scope.market_cells` conserva claves estables para empresas sin
+  correspondencia y excluye empresas extranjeras. El lector rechaza el total
+  heredado sin esa procedencia. Los originales 2019/2020 contienen totales sin
+  etiqueta: se reconocen por cabeceras nativas y suma exacta de doce meses,
+  sin sustituir pasajeros internacionales por cero. La prueba con los ocho
+  originales 2019–2026 cotejó 279 denominadores y 372 totales de servicio;
+  reconstruyó ocho ediciones con el generador normal. Los archivos físicos y
+  sus recibos permanecen privados. Falta cerrar persistencia normal de Gold,
+  exportación, actualización mensual y revisión independiente. Este código
+  preparado no activa datos ni cambia aprobaciones; conserva los originales,
+  pruebas y generadores para reproducir la corrección.
+
 - La integración conserva CI y revisión del head final del PR 188, despliegue
   normal y comprobación de Pages y Railway. Un build local no sustituye esa
   verificación de producción ni la respuesta del servidor del chat.
