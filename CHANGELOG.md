@@ -9,6 +9,9 @@
   conserva sus cifras mostradas y pasa a cuatro originales SEC. Las cuatro
   lecturas 2T26 mantienen sus bytes y reproducción original completa; las tres
   3T26 anteriores quedan como historia no reproducida ni consumida.
+- El lector del chat valida cada análisis con el contrato fijado por su identidad
+  en el manifiesto. Mantiene los límites históricos de 2T26, los hashes, las
+  aprobaciones y todos los bytes del sitio generado por el productor original.
 - Industria 3T26 se reconstruye desde los tres emisores; AFAC llega a septiembre,
   ANAC Brasil a julio–septiembre y Noticias a 26 fichas aprobadas. BTS y las
   frecuencias conservan julio; no se completan meses de otras fuentes.

@@ -782,6 +782,14 @@ conservan ascendencia desde el código revisado `089f48a6`; el cierre documental
 no modifica runtime ni datos firmados. El PR y los recibos de despliegue
 distinguen estos resultados locales de la comprobación servida.
 
+El lector del chat selecciona el contrato exacto declarado por la identidad y
+ruta de cada análisis presente en el manifiesto. Así acepta Aeroméxico e Industria
+3T26 bajo sus contratos propios, mientras 2T26 conserva el contrato histórico y
+sus límites de citas. Verifica hashes de contratos y cinco campos de identidad
+antes de reutilizar una validación en caché. Este arreglo de consumidor conserva
+byte a byte sitio, ancla y autoridades del productor original `602ea2a4`; el
+lector nuevo tiene revisión técnica propia y no reasigna el alcance aprobado.
+
 ## Pendientes
 
 - La integración conserva CI y revisión del head final del PR 188, despliegue
