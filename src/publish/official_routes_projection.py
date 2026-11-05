@@ -18,7 +18,7 @@ ADDED_TARGETS = TARGETS
 
 def _replay(profile, repo=PATHS.root):
     if set(profile) != {"schema_version", "period", "selection", "code_sha256", "dataset_version",
-                        "output_sha256", "activation", "publication"} or (
+                        "output_sha256", "activation", "publication", "retained_approvals"} or (
         profile["schema_version"] != "official_route_profile_v1" or profile["activation"] != "none"
         or profile["publication"] != "not_authorized"
     ):
@@ -36,7 +36,10 @@ def _replay(profile, repo=PATHS.root):
         raise ValueError("Official route payload exceeds the public privacy size budget")
     if payload["dataset_version"] != profile["dataset_version"] or hashlib.sha256(raw).hexdigest() != profile["output_sha256"]:
         raise ValueError("Official source replay differs from its prepared exact output")
-    return raw, selection, [selection_path, *files, *[repo / p for p in fingerprints(repo)]]
+    from src.publish.official_routes_approvals import retained_files
+
+    return raw, selection, [selection_path, *files, *[repo / p for p in fingerprints(repo)],
+                            *retained_files(profile, repo)]
 
 
 def replay(profile, baseline):

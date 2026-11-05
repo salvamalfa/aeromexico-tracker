@@ -15,7 +15,7 @@ from src.config import PATHS
 from . import editorial as transport
 from . import manifest as manifests
 from . import source_data_members as members
-from .approval_cohorts import verify_approval_cohorts
+from .approval_cohorts import verify_approval_cohorts as ordinary_approval_cohorts
 from .issuer_authority import input_snapshot
 from .issuer_update import _write_pins
 from .source_data_nochange import verify_no_visual_change as verify_no_visual_change
@@ -83,6 +83,19 @@ def request_inputs(path, repo):
     if not records or len(set(records)) != len(records):
         raise ValueError("Select every distinct record from the released analysis manifest")
     return path, request, profile, records
+
+
+def source_approvals(request, profile_path, records, repo, baseline_commit, baseline, ledger_root):
+    selected = members.selections(request)
+    if any(u["product"] == "official_routes" for u in selected) and len(selected) != 1:
+        raise ValueError("Official map exposure cannot coalesce unrelated source surfaces")
+    if request["product"] != "official_routes":
+        return ordinary_approval_cohorts(records, repo, baseline_commit, baseline, ledger_root)
+    if request.get("additional_sources"):
+        raise ValueError("Official map exposure cannot coalesce unrelated source surfaces")
+    from .official_routes_approvals import verify
+
+    return verify(records, repo, baseline_commit, baseline, ledger_root, json.loads(profile_path.read_bytes()))
 
 
 def _replay_one(request, profile, baseline, repo):
@@ -165,7 +178,7 @@ def authority(request, spec, repo):
 
 
 def snapshot(path, request, profile, records, value, repo):
-    result = input_snapshot(records, {}, repo=repo)
+    result = {} if request.get("product") == "official_routes" else input_snapshot(records, {}, repo=repo)
     files = [path, profile, *[Path(p) for p in value["input_files"]]]
     if request["authorization"] is not None:
         files.append(file_ref(request["authorization"], repo))
@@ -234,7 +247,7 @@ def inspect_source(path):
         if "additional_sources" in first[0]:
             spec["additional_sources"] = first[0]["additional_sources"]
         initial = snapshot(path, request, profile, records, first[0], repo)
-        cohorts = verify_approval_cohorts(records, repo, baseline_commit, old, gate.flow.ROOT)
+        cohorts = source_approvals(request, profile, records, repo, baseline_commit, old, gate.flow.ROOT)
     spec["frontend_files"] = transport.frontend_entries(export(baseline, first[1]))
     with gate.flow.writer(gate.flow.ROOT):
         if (
@@ -242,7 +255,7 @@ def inspect_source(path):
             or snapshot(path, request, profile, records, first[0], repo) != initial
         ):
             raise ValueError("Source inputs changed while inspecting the release")
-        if verify_approval_cohorts(records, repo, baseline_commit, old, gate.flow.ROOT) != cohorts:
+        if source_approvals(request, profile, records, repo, baseline_commit, old, gate.flow.ROOT) != cohorts:
             raise ValueError("Financial approvals changed while inspecting the source release")
         gate.require_trusted_site_baseline(baseline, trusted_commit=baseline_commit)
         manifests.refuse_if_build_inputs_dirty()
@@ -296,7 +309,7 @@ def publish_source(path, out):
             or pins(outputs) != spec["data_files"]
         ):
             raise ValueError("Source replay differs from exact authorized release")
-        cohort = verify_approval_cohorts(records, repo, spec["baseline_commit"], old, gate.flow.ROOT)
+        cohort = source_approvals(request, profile, records, repo, spec["baseline_commit"], old, gate.flow.ROOT)
         return value, outputs, cohort
 
     with gate.flow.writer(gate.flow.ROOT):

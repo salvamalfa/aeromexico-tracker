@@ -12,7 +12,7 @@ from src.source_updates.official_routes import prepare
 from src.source_updates.official_routes_sources import physical
 
 
-def stage(inputs: Path, out: Path, *, execute=False):
+def stage(inputs: Path, out: Path, *, execute=False, retained_approvals=None):
     source, out = inputs.resolve(), out.resolve()
     out.relative_to((PATHS.root / "tmp").resolve())
     if out.exists():
@@ -33,7 +33,7 @@ def stage(inputs: Path, out: Path, *, execute=False):
             shutil.copyfile(path, target)
         target = out / "selection.json"
         target.write_bytes(source.read_bytes())
-        result = prepare(target, execute=True)
+        result = prepare(target, execute=True, retained_approvals=retained_approvals)
     return result
 
 
@@ -42,8 +42,11 @@ def main():
     parser.add_argument("--inputs", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--retained-approvals", type=Path)
     args = parser.parse_args()
-    print(json.dumps(stage(args.inputs, args.out, execute=args.execute), ensure_ascii=False))
+    approvals = json.loads(args.retained_approvals.read_bytes()) if args.retained_approvals else None
+    print(json.dumps(stage(args.inputs, args.out, execute=args.execute, retained_approvals=approvals),
+                     ensure_ascii=False))
 
 
 if __name__ == "__main__":

@@ -12,7 +12,6 @@ from src.config import PATHS
 from . import editorial as transport
 from . import manifest as manifests
 from . import source_data_members as members
-from .approval_cohorts import verify_approval_cohorts
 from .source_data_scope import ANCHOR, PROOF, adapter, pins, sha, verify_historical_baseline
 
 
@@ -28,7 +27,7 @@ def _records(repo, old):
 
 def verify_no_visual_change(profile_path, binding, *, site=None):
     from . import gate
-    from .source_data_update import physical_path, replay, snapshot
+    from .source_data_update import physical_path, replay, snapshot, source_approvals
 
     repo = PATHS.root
     site = repo / "site" if site is None else Path(site)
@@ -41,7 +40,12 @@ def verify_no_visual_change(profile_path, binding, *, site=None):
     }
     gate.require_trusted_site_baseline(site, trusted_commit=spec["baseline_commit"])
     old = verify_historical_baseline(repo, spec, site)
-    records = _records(repo, old)
+    if binding["product"] == "official_routes":
+        from .official_routes_approvals import record_paths
+
+        records = record_paths(json.loads(profile.read_bytes()), old, repo)
+    else:
+        records = _records(repo, old)
     request = {"product": binding["product"], "period": binding["period"], "authorization": None}
     with gate.flow.writer(gate.flow.ROOT):
         value, outputs = replay(request, profile, site, repo)
@@ -50,13 +54,13 @@ def verify_no_visual_change(profile_path, binding, *, site=None):
         ):
             raise ValueError("Source does not reproduce the currently served monthly view")
         initial = snapshot(profile, request, profile, records, value, repo)
-        cohorts = verify_approval_cohorts(records, repo, spec["baseline_commit"], old, gate.flow.ROOT)
+        cohorts = source_approvals(request, profile, records, repo, spec["baseline_commit"], old, gate.flow.ROOT)
         if replay(request, profile, site, repo) != (value, outputs):
             raise ValueError("Source changed during no-visual-change verification")
         if snapshot(profile, request, profile, records, value, repo) != initial:
             raise ValueError("Source or approvals changed during no-visual-change verification")
         gate.require_trusted_site_baseline(site, trusted_commit=spec["baseline_commit"])
-        if verify_approval_cohorts(records, repo, spec["baseline_commit"], old, gate.flow.ROOT) != cohorts:
+        if source_approvals(request, profile, records, repo, spec["baseline_commit"], old, gate.flow.ROOT) != cohorts:
             raise ValueError("An approval changed during no-visual-change verification")
     return {
         "status": "no_visual_change",
@@ -93,7 +97,7 @@ def already_built(request_path, request, profile, records, spec, repo):
 
     from . import gate
     from .source_data_scope import preserved_files
-    from .source_data_update import authority, replay, snapshot
+    from .source_data_update import authority, replay, snapshot, source_approvals
     from .verify import _verify_site
 
     site = repo / "site"
@@ -123,7 +127,7 @@ def already_built(request_path, request, profile, records, spec, repo):
         ):
             raise ValueError("Existing build consumed another exact source version")
         initial = snapshot(request_path, request, profile, records, value, repo)
-        verify_approval_cohorts(records, repo, spec["baseline_commit"], old, gate.flow.ROOT)
+        source_approvals(request, profile, records, repo, spec["baseline_commit"], old, gate.flow.ROOT)
         problems = _verify_site(site, preserved_approval_files=preserved_files(site, repo, spec))
         if problems:
             raise ValueError(f"Existing source build is invalid: {problems[:3]}")

@@ -19,6 +19,7 @@ CODE_FILES = (
     "src/source_updates/bts_native.py", "src/web_export/official_routes.py",
     "contracts/web/official-routes.schema.json", "config/carrier_crosswalk.csv",
     "data/reference/official_route_cities.csv",
+    "src/publish/official_routes_approvals.py",
 )
 
 
@@ -26,11 +27,13 @@ def fingerprints(root=PATHS.root) -> dict:
     return {name: digest(root / name) for name in CODE_FILES}
 
 
-def prepare(selection_path: Path, *, execute=False, check=False, repo=PATHS.root) -> dict:
+def prepare(selection_path: Path, *, execute=False, check=False, retained_approvals=None, repo=PATHS.root) -> dict:
     selection_path = selection_path.resolve()
     workspace = selection_path.parent
     workspace.relative_to((repo / "tmp").resolve())
     selection = json.loads(selection_path.read_bytes())
+    if check and retained_approvals is None and (workspace / "profile.json").is_file():
+        retained_approvals = json.loads((workspace / "profile.json").read_bytes()).get("retained_approvals")
     if not execute and not check:
         return dict(status="official_routes_dry_run", output=str(workspace / PUBLIC_PATH),
                     network_requests=0, paid_requests=0, activation="none", publication="not_authorized")
@@ -40,6 +43,7 @@ def prepare(selection_path: Path, *, execute=False, check=False, repo=PATHS.root
                    code_sha256=fingerprints(repo), dataset_version=payload["dataset_version"],
                    output_sha256=__import__("hashlib").sha256(encoded(payload)).hexdigest(),
                    activation="none", publication="not_authorized")
+    profile["retained_approvals"] = retained_approvals
     evidence.update(input_files={str(p.relative_to(workspace)): digest(p) for p in sorted(set(files))},
                     code_sha256=profile["code_sha256"])
     outputs = {workspace / PUBLIC_PATH: encoded(payload), workspace / "certification.json": encoded(evidence),
@@ -63,12 +67,15 @@ def prepare(selection_path: Path, *, execute=False, check=False, repo=PATHS.root
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--selection", required=True, type=Path)
+    parser.add_argument("--retained-approvals", type=Path, help="Closed continuity binding; no new authority.")
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--execute", action="store_true")
     modes.add_argument("--check", action="store_true")
     modes.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(prepare(args.selection, execute=args.execute, check=args.check), ensure_ascii=False))
+    approvals = json.loads(args.retained_approvals.read_bytes()) if args.retained_approvals else None
+    print(json.dumps(prepare(args.selection, execute=args.execute, check=args.check,
+                             retained_approvals=approvals), ensure_ascii=False))
 
 
 if __name__ == "__main__":
