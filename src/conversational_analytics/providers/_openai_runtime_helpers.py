@@ -14,6 +14,7 @@ OPTIONAL_TOOL_NAMES = frozenset(
     {
         "query_routes",
         "find_shared_routes",
+        "query_official_routes",
         "query_business_metrics",
         "get_business_metric_definition",
         "search_reports",
@@ -66,7 +67,8 @@ def validate_tool_specs(specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
             raise OpenAIProviderError("El catálogo contiene una herramienta fuera del formato function")
         name = raw.get("name")
         params = raw.get("parameters")
-        if name not in ALLOWED_TOOL_NAMES | OPTIONAL_TOOL_NAMES or name in names or not isinstance(params, dict):
+        if (name not in ALLOWED_TOOL_NAMES | OPTIONAL_TOOL_NAMES
+                or name in names or not isinstance(params, dict)):
             raise OpenAIProviderError("El catálogo contiene una herramienta desconocida o duplicada")
         params = _strict_schema(params)
         clean = {

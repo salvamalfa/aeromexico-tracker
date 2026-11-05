@@ -59,9 +59,20 @@ class ToolRegistry:
     def __init__(self, snapshot: Snapshot, config: Any | None = None):
         self.snapshot = snapshot
         self.enable_route_tools = bool(getattr(config, "enable_route_tools", False))
+        self.enable_official_route_tools = bool(getattr(config, "enable_official_route_tools", False))
+        self._official_routes = None
+        if self.enable_official_route_tools:
+            from .official_routes import OfficialRouteTools
+
+            pin = getattr(config, "official_route_dataset_sha256", None)
+            if not isinstance(pin, str) or len(pin) != 64:
+                raise PlanValidationError("La herramienta oficial requiere un pin explícito del dataset")
+            self._official_routes = OfficialRouteTools(snapshot, expected_version=pin)
         self.enable_business_metric_tools = bool(getattr(config, "enable_business_metric_tools", False))
         self.enable_evidence_tools = bool(getattr(config, "enable_evidence_tools", False))
         self._active_tool_names = set(TOOL_NAMES)
+        if self.enable_official_route_tools:
+            self._active_tool_names.add("query_official_routes")
         if self.enable_route_tools:
             self._active_tool_names.update(ROUTE_TOOL_NAMES)
         if self.enable_business_metric_tools:
@@ -96,6 +107,10 @@ class ToolRegistry:
 
     def _configured_specs(self) -> list[dict[str, Any]]:
         specs = self._make_specs()
+        if self._official_routes is not None:
+            from .official_routes import official_route_tool_spec
+
+            specs.append(official_route_tool_spec(self._official_routes.version))
         if self.enable_route_tools:
             specs.extend(copy.deepcopy(ROUTE_TOOL_SPECS))
         if self.enable_business_metric_tools:
@@ -161,7 +176,7 @@ class ToolRegistry:
             }
             for item in self._catalog["metrics"]["inventory_not_enabled"]
         ]
-        return {
+        result = {
             "data_version": self.snapshot.version,
             "semantic_version": self.snapshot.semantic_version,
             "entities": copy.deepcopy(self._catalog["entities"]["entities"]),
@@ -174,6 +189,9 @@ class ToolRegistry:
                 "Use exact exported periods and never substitute a nearest period."
             ),
         }
+        if self._official_routes is not None:
+            result["official_routes"] = self._official_routes.catalog()
+        return result
 
     def _validate_context(self, context: dict[str, Any] | None) -> dict[str, Any]:
         return validate_context(context)
@@ -406,9 +424,16 @@ class ToolRegistry:
             raise PlanValidationError(f"Herramienta desconocida: {name}")
         if not isinstance(arguments, dict):
             raise PlanValidationError("arguments debe ser un objeto")
+        if name == "query_official_routes":
+            return self._official_routes.query(arguments, context)
         if name in ROUTE_TOOL_NAMES:
             route_context = self._validate_context(context)
             view_filters = route_context.get("filters", {})
+            if "map_scope" in view_filters:
+                raise PlanValidationError(
+                    "La tarjeta del mapa oficial requiere query_official_routes; "
+                    "esta consulta usa otra evidencia"
+                )
             return RouteTools(
                 self.snapshot,
                 evidence_view=view_filters.get("flight_evidence"),

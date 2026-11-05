@@ -12,6 +12,12 @@ ALLOWED_REFERENCE_HOSTS = frozenset(
         "www.sec.gov",
         "gob.mx",
         "www.gob.mx",
+        "www.sct.gob.mx",
+        "www.transtats.bts.gov",
+        "transtats.bts.gov",
+        "www.bts.gov",
+        "bts.gov",
+        "data.transportation.gov",
         "github.com",
         "salvamalfa.github.io",
         "ir.aeromexico.com",
@@ -44,7 +50,8 @@ def references_from_results(results: Iterable[dict[str, Any]]) -> list[dict[str,
                             {
                                 "label": label,
                                 "url": url,
-                                **({"metric_id": ref["metric_id"]} if isinstance(ref.get("metric_id"), str) else {}),
+                                **({"metric_id": ref["metric_id"]}
+                                   if isinstance(ref.get("metric_id"), str) else {}),
                             }
                         )
             for child in value.values():
