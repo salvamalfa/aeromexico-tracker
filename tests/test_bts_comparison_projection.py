@@ -95,7 +95,9 @@ def test_actual_native_archives_restore_77_only_and_leave_charter_unavailable(tm
     # retained copies in this checkout's ignored scratch for that read-only API.
     from tempfile import TemporaryDirectory
 
-    with TemporaryDirectory(dir=PATHS.root / "tmp/source-updates", prefix="bts-repair-test-") as folder:
+    scratch = PATHS.root / "tmp/source-updates"
+    scratch.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(dir=scratch, prefix="bts-repair-test-") as folder:
         for role in ("current", "previous"):
             item = profile[role]
             source = tmp_path / item["path"]
