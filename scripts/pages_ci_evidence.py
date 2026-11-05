@@ -64,14 +64,18 @@ def assess(merge_sha: str, repository: str) -> dict:
         pull_requests = gh_json(f"repos/{repository}/commits/{source_sha}/pulls?per_page=100")
         if not isinstance(pull_requests, list):
             return {"reuse": False, "reason": "invalid_pull_request_response"}
-        matching_pr = any(
+        # The workflow-run API does not reliably include its originating PR
+        # number. Reuse is safe only when GitHub reports a single association
+        # for this source SHA, so a run from another target branch cannot win.
+        if len(pull_requests) != 1 or not isinstance(pull_requests[0], dict):
+            return {"reuse": False, "reason": "ambiguous_pull_request_association"}
+        pr = pull_requests[0]
+        matching_pr = (
             pr.get("head", {}).get("sha") == source_sha
             and pr.get("base", {}).get("ref") == "master"
             and pr.get("base", {}).get("sha") == base_sha
             and pr.get("merge_commit_sha") == merge_sha
             and pr.get("merged_at")
-            for pr in pull_requests
-            if isinstance(pr, dict)
         )
         if not matching_pr:
             return {"reuse": False, "reason": "no_merged_master_pr_for_exact_tree"}

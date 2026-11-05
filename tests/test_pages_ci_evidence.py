@@ -125,6 +125,30 @@ def test_ci_from_unmerged_or_non_master_pr_is_not_reused(monkeypatch) -> None:
     assert result == {"reuse": False, "reason": "no_merged_master_pr_for_exact_tree"}
 
 
+def test_ambiguous_pr_association_uses_full_fallback(monkeypatch) -> None:
+    mock_git(monkeypatch)
+    mock_api(monkeypatch)
+    original = evidence.gh_json
+
+    def api(path: str) -> dict:
+        if "/pulls?" in path:
+            return original(path) + [
+                {
+                    "head": {"sha": SOURCE},
+                    "base": {"ref": "feature", "sha": BASE},
+                    "merge_commit_sha": None,
+                    "merged_at": None,
+                }
+            ]
+        return original(path)
+
+    monkeypatch.setattr(evidence, "gh_json", api)
+
+    result = evidence.assess(MERGE, "salvamalfa/aeromexico-tracker")
+
+    assert result == {"reuse": False, "reason": "ambiguous_pull_request_association"}
+
+
 def test_unavailable_github_evidence_uses_full_fallback(monkeypatch) -> None:
     mock_git(monkeypatch)
 

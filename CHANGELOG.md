@@ -2,8 +2,8 @@
 
 ## 2026-11-05 · Pages reutiliza CI sólo para el mismo árbol validado
 
-- Después de integrar un PR, Pages exige que GitHub lo vincule con `master`,
-  compara el árbol completo del merge con el segundo padre y verifica la última
+- Después de integrar un PR, Pages exige una sola asociación de GitHub con un
+  PR de `master`, compara el árbol completo del merge con el segundo padre y verifica la última
   ejecución de CI de ese SHA, incluidos `test` y `web`. Si algo no coincide o
   la evidencia no está disponible, corre la CI completa como antes.
 - Se mantienen la verificación del sitio integrado, los checks obligatorios,

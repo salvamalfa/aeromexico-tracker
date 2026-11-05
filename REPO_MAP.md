@@ -160,8 +160,8 @@ lifecycle depende de esa metadata y vuelve a validarse.
 Preparar el bloque documental antes del push evita reinicios por presentación.
 
 Pages comprueba el sitio publicado en el commit integrado. Si ese commit es un
-merge de dos padres, el segundo padre está asociado por GitHub con un PR ya
-fusionado en `master` sobre el mismo primer padre, su árbol Git coincide
+merge de dos padres, GitHub asocia el segundo padre con un solo PR ya fusionado
+en `master` sobre el mismo primer padre, su árbol Git coincide
 exactamente con el merge y la última ejecución completa de
 `.github/workflows/ci.yml` para ese SHA del PR pasó `test`, `web` y sus
 componentes, Pages reutiliza esa CI. El check compara árboles completos, no
