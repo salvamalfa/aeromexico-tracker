@@ -5,9 +5,9 @@ name: Pages
 # src.publish.verify needs no private data: it checks
 # publication_manifest.json's own schema, every listed file's hash/size,
 # that no unlisted file is present, and every data/v1/**/*.json file
-# against contracts/web/*.schema.json + privacy.yaml. deploy also depends
-# on ci.yml (called here via workflow_call) so a push to master never
-# ships a site/ built from code whose own tests/web checks are failing.
+# against contracts/web/*.schema.json + privacy.yaml. deploy reuses the PR's
+# complete CI only for an identical, successful integration tree; uncertain
+# cases still call ci.yml and run the full suite.
 
 on:
   push:
@@ -51,12 +51,48 @@ jobs:
         run: |
           uv run --locked --no-group dev --extra analytics python scripts/check_pages_publication.py site/
 
-  # Deploying site/ should never ship ahead of the same checks a PR into
-  # master already had to pass: this reuses ci.yml itself (as a
-  # workflow_call) rather than duplicating its two jobs, so there is one
-  # place that defines "the public test subset and web/ checks pass".
+  # The merge commit can reuse CI from its PR head only when both point to
+  # the same Git tree and the latest complete PR CI run is green. Any missing
+  # or ambiguous evidence runs the existing full workflow_call below.
+  ci-evidence:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      reuse: ${{ steps.assess.outputs.reuse }}
+      reason: ${{ steps.assess.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: assess
+        name: Check exact integration tree and successful PR CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: python3 scripts/pages_ci_evidence.py
+
   ci:
+    if: ${{ always() && needs.ci-evidence.outputs.reuse != 'true' }}
+    needs: [ci-evidence]
     uses: ./.github/workflows/ci.yml
+
+  ci-gate:
+    if: ${{ always() }}
+    needs: [ci-evidence, ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require reused evidence or the full fallback CI
+        env:
+          PAGES_CI_MODE: gate
+          REUSE: ${{ needs.ci-evidence.outputs.reuse }}
+          EVIDENCE_RESULT: ${{ needs.ci-evidence.result }}
+          FALLBACK_RESULT: ${{ needs.ci.result }}
+        run: python3 scripts/pages_ci_evidence.py
 
   preview:
     runs-on: ubuntu-latest
@@ -132,7 +168,7 @@ jobs:
           uv run --locked --no-group dev --extra analytics python ../scripts/check_pages_publication.py site/
 
   deploy:
-    needs: [verify, preview, ci]
+    needs: [verify, preview, ci-gate]
     runs-on: ubuntu-latest
     # Only copies files (never runs the preview's code) and publishes them.
     permissions:
