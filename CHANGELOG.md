@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-04 · Gate compuesto para la corrección histórica, sin activación
+## 2026-11-05 · Corrección histórica AFAC y comparativos BTS verificados
 
 - Nuevo perfil de publicación que conserva el padre trimestral original como
   dependencia verificada y observa por separado el baseline realmente servido.
@@ -10,8 +10,13 @@
   y restauración física de comparativos BTS regulares de julio en dos archivos.
   El gate protege los demás campos, lecturas, noticias y assets, conserva el lock
   hasta el intercambio y limita los retries HTTPS a errores transitorios concretos.
-- Código preparado para revisión, sin generar una autoridad ni activar datos.
-  Quedan pendientes el cierre Gold derivado, el replay Linux y el candidato final.
+- Preparación Linux, cinco Gold canónicos, inspección y autoridad específica
+  cerrados. El run `41978910020` publicó el artefacto y pasó la verificación
+  fuerte y el consumidor independiente: ocho análisis y doce JSON; el padre
+  original conserva ocho identidades, dieciséis outputs y cuatro replays 2T26.
+  El sitio `92c661e8` conserva las lecturas, financieros, noticias y demás redes.
+  CI e integración del PR y la comprobación servida de Pages/Railway siguen
+  siendo condiciones separadas antes de declarar esta versión en producción.
 
 ## 2026-11-04 · Entrega trimestral con fuentes originales y gate completo
 

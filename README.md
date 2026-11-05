@@ -43,6 +43,11 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   trimestre global. Mercado integra los indicadores y el mapa existentes.
   Noticias muestra 26 fichas aprobadas y mantiene cobertura parcial. El gate
   distingue el artefacto verificado de su integración y comprobación en Pages.
+- **Corrección estadística:** el artefacto Linux reconstruye AFAC 2019–2025
+  desde los originales oficiales, conserva las cifras de 2026 y extiende la
+  serie mensual a septiembre. Recupera 77 comparativos BTS regulares con
+  soporte físico. Gold, fuentes, gate y consumidor independiente están
+  verificados; CI final y la comprobación servida se siguen por separado.
 - **Analysis Agent:** cuatro lecturas de 3T26, para Aeroméxico, Viva, Volaris e
   Industria, con auditoría independiente y aprobación de sus versiones exactas.
   El perfil `quarterly_business_story_v1` verifica las fuentes y conserva

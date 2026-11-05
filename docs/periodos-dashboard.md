@@ -875,9 +875,9 @@ las ocho versiones de lectura. Los candidatos actuales no son publicación.
   6.692 registros anteriores, los 3.050 ajenos a AFAC y los 1.332 AFAC previos
   a 2019; anexa versiones con estado de valor, fórmula y estimación declarada
   por la fuente. La última comprobación local pasó por los ocho originales y
-  cotejó exactamente 2.646 celdas entre crudo y Gold/warehouse. La publicación
-  exige todavía la preparación Linux bajo código K y un hijo L que incorpore
-  únicamente los cinco Gold; no usa la muestra Windows como autorización.
+  cotejó exactamente 2.646 celdas entre crudo y Gold/warehouse. La preparación
+  Linux bajo código K y el hijo L que incorpora únicamente los cinco Gold ya
+  pasaron; no se usó la muestra Windows como autorización.
   `afac_native_dataset.create` prepara el descriptor portable;
   `audit_candidate` reproduce desde los cinco Gold originales sin exigir que
   estén incorporados. `replay` y `materialize_inputs` exigen los cinco Gold
@@ -932,8 +932,12 @@ Su auditoría independiente `415f6850…` y la autoridad nueva `fb24fd21…` apl
 las instrucciones auténticas de corregir el circuito normal y publicar; no
 afirman que el dueño vio o aprobó literalmente ese hash. La autoridad trimestral
 y las ocho identidades se conservan por separado. El gate de publicación
-`41978910020` está en ejecución; no acredita aún sitio servido, CI final ni
-despliegue de Pages/Railway.
+`41978910020` terminó correctamente el 5 de noviembre: anchor `797782ce`,
+sitio `92c661e8`, manifiesto `913a2af1…` y Snapshot `50ea8b7d…`.
+Los verificadores y el consumidor independiente reprodujeron ocho análisis y
+doce JSON; el padre original pasó ocho identidades, dieciséis outputs y los
+cuatro replays completos de 2T26. El artefacto no acredita por sí solo sitio
+servido, CI final ni despliegue de Pages/Railway.
 
 El generador de revisión ANAC usa la actualización selectiva compartida de
 Vuelos: un no-op conserva todos los comparativos y una llegada sólo recalcula
