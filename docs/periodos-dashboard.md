@@ -843,6 +843,17 @@ las ocho versiones de lectura. Los candidatos actuales no son publicación.
 
 ## Pendientes
 
+- La corrección tipada de comparativos BTS usa los ZIP originales 2025 y 2026,
+  su diccionario y el contrato nativo de identidad, unidades y grano. Recalcula
+  77 comparativos de julio (7 Aeroméxico y 70 Industria), con operadores,
+  sentidos y servicio regular F/G iguales. El baseline Git fijo sólo identifica
+  las pérdidas; no aporta los valores calculados. Sólo puede cambiar
+  `previous.departures` en las dos redes mensuales. CUN–CVG conserva N/D:
+  los 14 vuelos anteriores eran chárter L, fuera de este alcance regular.
+  Pasajeros, asientos, vuelos actuales, coordenadas, ANAC y elegibilidad histórica
+  siguen iguales. El módulo y las pruebas se conservan para la composición
+  revisable; los originales y perfiles permanecen privados e ignorados.
+
 - La corrección AFAC preparada en la rama de continuidad exige cuatro totales
   mexicanos exactos por mes (regular/fletamento y nacional/internacional).
   `market_scope.market_cells` conserva claves estables para empresas sin
