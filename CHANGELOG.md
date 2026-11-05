@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-04 · Entrega trimestral con fuentes originales y gate completo
+
+- Cuatro vistas con trimestre global: Lectura, Mercado, Economía y Noticias.
+  Mercado reúne indicadores, mapa y AFAC; las gráficas y ayudas conservan el
+  periodo seleccionado y el corte propio de cada fuente.
+- Cuatro lecturas 3T26 auditadas y autorizadas en su alcance exacto. Volaris
+  conserva sus cifras mostradas y pasa a cuatro originales SEC. Las cuatro
+  lecturas 2T26 mantienen sus bytes y reproducción original completa; las tres
+  3T26 anteriores quedan como historia no reproducida ni consumida.
+- Industria 3T26 se reconstruye desde los tres emisores; AFAC llega a septiembre,
+  ANAC Brasil a julio–septiembre y Noticias a 26 fichas aprobadas. BTS y las
+  frecuencias conservan julio; no se completan meses de otras fuentes.
+- Gate Linux, verificación fuerte y consumidores independientes de ocho análisis
+  y doce JSON aprobados en el intento 2 del run privado `41932650875`. El primer
+  intento se detuvo ante un HTTP 503 del baseline servido; se comprobó la
+  recuperación exacta antes de esa única reejecución. CI, revisión e integración
+  del PR y comprobación servida conservan sus controles normales. El mapa AFAC
+  de fase 2 permanece fuera de esta entrega.
+
 ## 2026-10-31 · Industria Q3 en preview y gráfica sin cuadros duplicados
 
 - Proyección explícita de revisión con los tres financieros reales, ponderada

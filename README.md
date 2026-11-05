@@ -39,22 +39,21 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 
 ## Estado
 
-- **Dashboard:** cinco vistas en la publicación autorizada de Pages: Lectura
-  ejecutiva, Economía unitaria, Vuelos, Mercado y Noticias y estrategia.
-  Usa datos y análisis ya aprobados; Noticias mantiene cobertura parcial.
-- **Analysis Agent:** la lectura financiera de Aeroméxico 3T26,
-  «Ingresos récord, margen bajo presión», tiene fuentes, cálculos, auditoría
-  independiente y aprobación vinculados a su versión exacta. Su publicación
-  editorial exige baseline remoto y servido, CI, revisión y verificación de Pages.
-  La lectura tiene un selector independiente. Aeroméxico conserva su modalidad
-  financiera acotada. Las entregas por emisor de Viva y Volaris 3T26 incorporan
-  sus tesis aprobadas y los indicadores de las tarjetas, tres gráficas y tabla
-  existentes, con fuentes y aprobaciones propias. Industria conserva su corte.
-  Volaris usa la reconstrucción visible autorizada del reporte de referencia;
-  no se certifican sus bytes originales SEC ni revisiones posteriores.
-  Los recibos distinguen build verificado, integración y publicación servida.
-  Usa cifras no auditadas, fuentes del emisor y cálculos propios identificados. Las cuatro tesis publicadas de 2T26
-  conservan sus versiones y texto. Los cortes mensuales del mapa son independientes.
+- **Dashboard:** cuatro vistas, Lectura, Mercado, Economía y Noticias, con un
+  trimestre global. Mercado integra los indicadores y el mapa existentes.
+  Noticias muestra 26 fichas aprobadas y mantiene cobertura parcial. El gate
+  distingue el artefacto verificado de su integración y comprobación en Pages.
+- **Analysis Agent:** cuatro lecturas de 3T26, para Aeroméxico, Viva, Volaris e
+  Industria, con auditoría independiente y aprobación de sus versiones exactas.
+  El perfil `quarterly_business_story_v1` verifica las fuentes y conserva
+  resumen, desarrollo y citas. Volaris usa cuatro documentos originales SEC;
+  sus cifras mostradas coinciden con la revisión anterior. Las tres lecturas
+  3T26 sustituidas conservan su historia, expresamente no reproducida ni usada
+  como fuente nueva. Los cuatro textos de 2T26 conservan sus bytes y su replay
+  original completo. La publicación Linux verifica ocho análisis y doce JSON
+  normales antes de entregar los commits del sitio. Se mantienen cifras no
+  auditadas del emisor y cálculos propios identificados. Los cortes mensuales
+  del mapa son independientes. [Estado y evidencia](docs/periodos-dashboard.md).
 - **Actualización por producto:** el único coordinador de fuentes conserva el
   calendario activado y sus recibos privados. Los handoffs distinguen datos
   validados, análisis y dashboard por aerolínea, periodo y versión; conservan
@@ -75,6 +74,9 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
   El [reporte BTS y sus límites](docs/etapas/bts-refresco-cobertura-20261017.md)
   distingue representación mixta de cobertura observada. AFAC se actualiza manualmente. Lo pendiente
   está en [`ROADMAP.md`](ROADMAP.md).
+  La entrega trimestral incorpora AFAC septiembre y ANAC Brasil julio–septiembre;
+  BTS y las frecuencias conservan julio. No atribuye cobertura uniforme al mapa
+  ni activa su rediseño posterior con AFAC.
 
 Conteos de tablas Gold y pruebas cambian con cada cambio; la cuenta vigente y
 el comando para reproducirla están en [`REPO_MAP.md`](REPO_MAP.md), no aquí.
