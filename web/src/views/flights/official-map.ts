@@ -6,7 +6,7 @@ import { state as flights } from "./state";
 import { bindSourceInfo, closeSourceInfoWithin } from "../market/source-info";
 import { drawOfficialMap } from "./official-map-chart";
 import { geographicRoutes, incidentOfficialRoutes, loadOfficialRoutes, MAP_CARRIERS, MAP_CARRIER_LABELS,
-  MAP_REGIONS, MAP_SCOPES, officialRouteTitle, officialState, parseMapSelection, routeHasGeometry,
+  MAP_REGIONS, MAP_SCOPES, officialRouteTitle, officialState, parseMapSelection, previousComparisonMonths, routeHasGeometry,
   searchOfficialPoints, selectOfficialNetwork, syncMapUrl, visibleOfficialRoutes } from "./official-routes";
 
 const el = (id: string) => document.getElementById(id);
@@ -14,7 +14,7 @@ function monthsLabel(months: string[]): string { return months.length ? months.m
 function comparisonLabel(route: OfficialRoute): string {
   const c = route.comparison;
   if (c.yoy_pct === null) return c.reason ?? "Sin periodo comparable";
-  return `${c.yoy_pct >= 0 ? "+" : ""}${c.yoy_pct.toFixed(1)} % frente a ${monthsLabel(c.comparison_months)} (${integer.format(c.previous_departures!)} vuelos)`;
+  return `${c.yoy_pct >= 0 ? "+" : ""}${c.yoy_pct.toFixed(1)} % frente a ${monthsLabel(previousComparisonMonths(route))} (${integer.format(c.previous_departures!)} vuelos)`;
 }
 
 export function officialRouteDetails(route: OfficialRoute): string {

@@ -67,6 +67,10 @@ export function officialRouteTitle(route: OfficialRoute): string {
 export function incidentOfficialRoutes(node: string): OfficialRoute[] {
   return orderedOfficialRoutes().filter(route => route.origin.id === node || route.destination.id === node);
 }
+/** The wire stores comparable CURRENT-year support; the YoY base is one year earlier. */
+export function previousComparisonMonths(route: OfficialRoute): string[] {
+  return route.comparison.comparison_months.map(month => `${Number(month.slice(0, 4)) - 1}${month.slice(4)}`);
+}
 
 export function searchOfficialPoints(query: string): Array<{ point: OfficialPoint; count: number }> {
   const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-MX");

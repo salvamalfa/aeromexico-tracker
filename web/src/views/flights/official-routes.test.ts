@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { beforeEach, expect, it } from "vitest";
 import type { OfficialNetwork, OfficialRoutesDocument } from "../../types/official-routes";
 import { geographicRoutes, MAP_CARRIERS, officialState, parseMapSelection, routeHasGeometry,
-  searchOfficialPoints, selectOfficialNetwork, syncMapUrl, visibleOfficialRoutes } from "./official-routes";
+  previousComparisonMonths, searchOfficialPoints, selectOfficialNetwork, syncMapUrl, visibleOfficialRoutes } from "./official-routes";
 import { officialArc, officialMapTraces } from "./official-map-chart";
 import { vi } from "vitest";
 vi.mock("../../lib/plotly", () => ({ default: {} }));
@@ -58,4 +58,11 @@ it("retains an explicit reported zero in the list but draws no zero-flight arc o
   const traces = officialMapTraces([route], null, null);
   expect(traces).toHaveLength(2); // empty highlight + empty markers, no volume bucket
   expect((traces[1] as unknown as { lat:number[] }).lat).toEqual([]);
+});
+it("labels the YoY base as last year, while retaining the current-year comparable support on the wire", () => {
+  const route = { ...wire.networks[0]!.routes[0]!, comparison: { previous_departures:3, yoy_pct:100, comparison_months:["2026M07", "2026M08"], reason:null } };
+  expect(previousComparisonMonths(route)).toEqual(["2025M07", "2025M08"]);
+  expect(route.comparison.comparison_months).toEqual(["2026M07", "2026M08"]);
+  const trace = officialMapTraces([route], null, null)[0] as unknown as { text:string[] };
+  expect(trace.text[0]).toContain("julio 2025, agosto 2025"); expect(trace.text[0]).not.toContain("frente a julio 2026");
 });

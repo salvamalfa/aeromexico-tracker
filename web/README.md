@@ -83,6 +83,8 @@ es único y nunca se sustituye por otro disponible.
   valores positivos. Meses faltantes siguen N/D. El icono amarillo identifica
   cobertura parcial; los detalles conservan meses, sentidos y periodo anual
   comparable. Un resultado regional vacío conserva su filtro y muestra N/D.
+  `comparison_months` conserva el soporte del año actual; las fechas de la
+  base interanual se rotulan un año antes, sin modificar ese soporte ni cifras.
 - `map_scope`, `map_region` y `map_carriers` guardan los filtros propios.
   `sel_map` antiguo inicializa sólo la selección BTS; `INDUSTRY` conserva el
   significado de las tres mexicanas. Los filtros financieros son independientes.

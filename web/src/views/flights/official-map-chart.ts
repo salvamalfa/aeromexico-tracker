@@ -4,7 +4,7 @@ import type { OfficialPoint, OfficialRoute } from "../../types/official-routes";
 import { state as flights } from "./state";
 import { esc, integer } from "./dom";
 import { mapPeriodLabel } from "./map-periods";
-import { hasGeometry, officialRouteTitle, officialState, routeHasGeometry, visibleOfficialRoutes } from "./official-routes";
+import { hasGeometry, officialRouteTitle, officialState, previousComparisonMonths, routeHasGeometry, visibleOfficialRoutes } from "./official-routes";
 
 const arcs = new Map<string, { lat: Array<number | null>; lon: Array<number | null> }>();
 /** Great-circle geometry is cached independently of quarter and volume. */
@@ -43,7 +43,7 @@ export function officialMapTraces(routes: OfficialRoute[], selectedRoute: string
     const arc = officialArc(route);
     line.lat.push(...arc.lat, null); line.lon.push(...arc.lon, null); line.customdata.push(...arc.lat.map(() => route.route_key), "");
     const comparison = route.comparison.yoy_pct === null ? route.comparison.reason ?? "Sin comparación disponible"
-      : `${route.comparison.yoy_pct >= 0 ? "+" : ""}${route.comparison.yoy_pct.toFixed(1)} % frente a ${route.comparison.comparison_months.map(mapPeriodLabel).join(", ")}`;
+      : `${route.comparison.yoy_pct >= 0 ? "+" : ""}${route.comparison.yoy_pct.toFixed(1)} % frente a ${previousComparisonMonths(route).map(mapPeriodLabel).join(", ")}`;
     const label = `${esc(officialRouteTitle(route))}<br>${integer.format(route.departures)} vuelos · ambos sentidos<br>${esc(route.monthly.map(m => mapPeriodLabel(m.period_id)).join(", "))}<br>${esc(comparison)}`;
     line.text.push(...arc.lat.map(() => label), "");
     buckets.set(bucket, line);
