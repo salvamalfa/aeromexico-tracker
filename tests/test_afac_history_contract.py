@@ -358,3 +358,30 @@ def test_canonical_gold_cannot_be_an_untracked_or_arbitrary_source_overwrite(can
         expected["fact_carrier_metrics"] = "bad"
     with pytest.raises(ValueError):
         members.canonical_gold(repo, units)
+
+
+@pytest.mark.parametrize("mutation", ["prepare_mode", "adapter", "reorder", "duplicate", "period", "product"])
+def test_gate_never_selects_native_preparation_or_a_request_defined_adapter(mutation):
+    selections = [
+        {
+            "product": product,
+            "period": members.ADAPTERS[product][1],
+            "profile": {"path": f"tmp/{index}.json", "sha256": "a" * 64},
+        }
+        for index, product in enumerate(members.ORDER)
+    ]
+    members.selections({"native_sources": selections})
+    if mutation == "prepare_mode":
+        selections[1]["mode"] = "prepare_candidate"
+    elif mutation == "adapter":
+        selections[1]["adapter"] = "src.source_updates.afac_native_dataset.audit_candidate"
+    elif mutation == "reorder":
+        selections.reverse()
+    elif mutation == "duplicate":
+        selections[1] = copy.deepcopy(selections[0])
+    elif mutation == "period":
+        selections[1]["period"] = "2026M10"
+    else:
+        selections[1]["product"] = "free_json_patch"
+    with pytest.raises(ValueError):
+        members.selections({"native_sources": selections})
