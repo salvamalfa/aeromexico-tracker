@@ -1,0 +1,132 @@
+{
+  "schema_version": "official_route_network_v1",
+  "metadata": {
+    "title": "Vuelos regulares",
+    "universe": "scheduled_passenger_and_all_cargo",
+    "source_as_of": "2026-11-05T00:00:00Z",
+    "notes": [
+      "Ejemplo sintético de contrato; no son cifras publicables."
+    ],
+    "geography_attribution": "GeoNames CC BY 4.0; OurAirports"
+  },
+  "periods": [
+    "2026Q3"
+  ],
+  "carriers": [
+    {
+      "key": "AEROMEXICO",
+      "label": "Grupo Aeroméxico",
+      "operator_ids": [
+        "19534",
+        "20250"
+      ]
+    },
+    {
+      "key": "VOLARIS",
+      "label": "Volaris",
+      "operator_ids": [
+        "21351"
+      ]
+    },
+    {
+      "key": "VIVA_AEROBUS",
+      "label": "Viva",
+      "operator_ids": [
+        "21342"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "afac-2026",
+      "label": "AFAC SASE",
+      "url": "https://www.gob.mx/afac",
+      "source_period": "2026M09",
+      "captured_at": "2026-11-02T00:17:20Z",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "networks": [
+    {
+      "period_id": "2026Q3",
+      "scope": "national",
+      "entity": "ALL",
+      "carrier_keys": [],
+      "grain": "city_pair",
+      "expected_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "availability": "complete",
+      "source_ids": [
+        "afac-2026"
+      ],
+      "notes": [
+        "Todas las aerolíneas; carga incluida."
+      ],
+      "routes": [
+        {
+          "route_key": "CITY_MX_MEXICO--CITY_MX_MONTERREY",
+          "origin": {
+            "id": "CITY_MX_MEXICO",
+            "label": "MEXICO",
+            "country_iso2": "MX",
+            "lat": 19.42847,
+            "lon": -99.12766,
+            "point_kind": "city"
+          },
+          "destination": {
+            "id": "CITY_MX_MONTERREY",
+            "label": "MONTERREY",
+            "country_iso2": "MX",
+            "lat": 25.67507,
+            "lon": -100.31847,
+            "point_kind": "city"
+          },
+          "region": null,
+          "departures": 6,
+          "monthly": [
+            {
+              "period_id": "2026M07",
+              "departures": 2
+            },
+            {
+              "period_id": "2026M08",
+              "departures": 2
+            },
+            {
+              "period_id": "2026M09",
+              "departures": 2
+            }
+          ],
+          "directions": [
+            {
+              "origin_id": "CITY_MX_MEXICO",
+              "destination_id": "CITY_MX_MONTERREY",
+              "departures": 3
+            },
+            {
+              "origin_id": "CITY_MX_MONTERREY",
+              "destination_id": "CITY_MX_MEXICO",
+              "departures": 3
+            }
+          ],
+          "operators": [],
+          "comparison": {
+            "previous_departures": null,
+            "yoy_pct": null,
+            "comparison_months": [],
+            "reason": "No hay soporte comparable previo."
+          }
+        }
+      ]
+    }
+  ],
+  "dataset_version": "86aaffbb7f64c0969a950124b8d304b4887be6d21ddf3cfcd9d228f91536ed3a"
+}
