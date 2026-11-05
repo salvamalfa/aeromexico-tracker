@@ -373,6 +373,28 @@ def _replay_release(record_paths, repo, trusted_commit, current_manifest, ledger
     return {"afac": replay}
 
 
+def publish_from_gate(record_paths, out_dir):
+    """Adapt the CLI to the strict profile without expanding the shared gate."""
+    from . import gate
+
+    try:
+        return publish_presentation_only(
+            record_paths,
+            out_dir,
+            repo=gate.PATHS.root,
+            ledger_root=gate.flow.ROOT,
+            web_dir=gate.WEB_DIR,
+            web_data_v1=gate.WEB_DATA_V1,
+            build_web=gate.build_web,
+            require_trusted_baseline=gate.require_trusted_site_baseline,
+            trusted_site_commit=gate._trusted_site_commit,
+            assemble_site=gate.assemble_site,
+            write_receipt=gate.write_receipt,
+        )
+    except (ValueError, OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+        raise PublicationRefused(f"presentation-only publication rejected: {error}") from error
+
+
 def publish_presentation_only(
     record_paths,
     out_dir: Path,
