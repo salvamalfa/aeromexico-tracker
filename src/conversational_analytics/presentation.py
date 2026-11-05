@@ -7,9 +7,10 @@ import logging
 import math
 import re
 from typing import Any
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import urlsplit
 
 from .markdown_tables import remove_numeric_markdown_tables
+from .official_route_sources import BTS_SOURCE_HOSTS, approved_bts_query
 
 LOG = logging.getLogger("conversational_analytics.presentation")
 _MARKER = re.compile(r"\{\{(tabla|grafica):([A-Za-z0-9][A-Za-z0-9_.-]{0,95})\}\}")
@@ -89,19 +90,8 @@ def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
                         parsed.hostname == "api.mziq.com" and parsed.query == "origin=2"
                         and re.fullmatch(r"/mzfilemanager/v2/d/[a-f0-9-]+/[a-f0-9-]+", parsed.path)
                     )
-                    if parsed.hostname in {"www.transtats.bts.gov", "transtats.bts.gov"}:
-                        query = parse_qs(parsed.query, keep_blank_values=True)
-                        approved_query = (
-                            parsed.path == "/DL_SelectFields.aspx"
-                            and set(query) == {
-                                "gnoyr_VQ", "QO_fu146_anzr", "requested_geography", "requested_year"
-                            }
-                            and query["gnoyr_VQ"] == ["FJE"]
-                            and query["QO_fu146_anzr"] == ["Nv4 Pn44vr45"]
-                            and query["requested_geography"] == ["Mexico"]
-                            and len(query["requested_year"]) == 1
-                            and re.fullmatch(r"20\d{2}", query["requested_year"][0]) is not None
-                        )
+                    if parsed.hostname in BTS_SOURCE_HOSTS:
+                        approved_query = approved_bts_query(parsed)
                     if (parsed.query and not approved_query) or parsed.fragment:
                         continue
                     url = parsed.geturl()
