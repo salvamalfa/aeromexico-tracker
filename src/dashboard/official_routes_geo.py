@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import unicodedata
+from typing import TYPE_CHECKING
 
-import pandas as pd
+if TYPE_CHECKING:
+    import pandas as pd
 
 COUNTRIES = {
     "ALEMANIA": "DE", "ARGENTINA": "AR", "BELGICA": "BE", "BELICE": "BZ", "BRASIL": "BR",
@@ -57,6 +59,8 @@ def region(country: str) -> str | None:
 
 
 def city_points(frame: pd.DataFrame) -> dict:
+    import pandas as pd
+
     required = {"afac_city_key", "label", "country_iso2", "latitude", "longitude", "geonameid"}
     if not required <= set(frame) or frame.afac_city_key.duplicated().any():
         raise ValueError("Explicit unique official city geography required")
@@ -73,6 +77,8 @@ def city_points(frame: pd.DataFrame) -> dict:
 
 
 def airport_points(frame: pd.DataFrame) -> dict:
+    import pandas as pd
+
     result = {}
     for row in frame.to_dict("records"):
         code = row.get("iata_code") or row.get("airport_iata")
