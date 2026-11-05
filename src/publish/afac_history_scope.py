@@ -176,6 +176,7 @@ def preserved_files(site, repo, spec):
     scope = spec["scope"]
     members.canonical_gold(repo, spec["members"])
     parent, _, before, parent_spec = parent_public(repo, scope["candidate_parent"])
+    members.original_gold(repo, scope["candidate_parent"], spec["members"])
     if (
         scope["baseline_commit"] != parent_spec["baseline_commit"]
         or scope["baseline_manifest_sha256"] != parent_spec["baseline_manifest_sha256"]

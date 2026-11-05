@@ -205,6 +205,21 @@ def canonical_gold(repo, units):
     return result
 
 
+def original_gold(repo, parent, units):
+    """The preservation baseline is B's original Gold, not another dataset."""
+    if [unit["product"] for unit in units] != list(ORDER):
+        raise ValueError("Original Gold requires the exact correction source members")
+    expected = units[1]["source_binding"]["native_dataset"]["baseline_gold"]
+    require_keys(expected, set(CANONICAL_GOLD), "original parent Gold DATA inventory")
+    hex_digest(parent["code_commit"], 40)
+    for name in CANONICAL_GOLD:
+        require_keys(expected[name], {"path", "sha256"}, "original Gold reference")
+        hex_digest(expected[name]["sha256"])
+        original = _git(repo, "show", f"{parent['code_commit']}:data/gold/{name}.parquet")
+        if sha(original) != expected[name]["sha256"]:
+            raise ValueError("Native AFAC preservation baseline differs from the original parent Gold")
+
+
 def replay(repo, request, parent_site, parent_files):
     units, inputs = [], {}
     for selection in selections(request):

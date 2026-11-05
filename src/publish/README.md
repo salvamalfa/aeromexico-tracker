@@ -700,6 +700,8 @@ El miembro AFAC exige además `native_dataset`, validado por el adaptador normal
 cerrado. Sus cinco Gold DATA canónicos deben coincidir por SHA tanto físicamente
 como en HEAD y forman parte del cierre de insumos; Gold de evaluación permanece
 separado e inmutable. Sin ese adaptador o sin el cierre, la inspección falla.
+Las cinco copias usadas como baseline de preservación deben coincidir además con
+los Gold del commit original de B en Git, sin sustituirlos por otro dataset válido.
 
 El expediente original de B se restaura separado de Gold corregido: un inventario
 ordenado `afac_history_parent_inputs_v1` fija cada archivo por ruta, tamaño y SHA.

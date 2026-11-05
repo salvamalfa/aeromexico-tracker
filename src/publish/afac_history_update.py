@@ -85,6 +85,7 @@ def evaluate(repo, request_path, *, existing=False):
     if first != second or parent_inventory(repo, request["parent_inputs"])[2] != original:
         raise ValueError("Native/original physical inputs changed during complete inspection")
     units, outputs, native_inputs = first
+    members.original_gold(repo, request["candidate_parent"], units)
     state = {
         "request": identity(path),
         "original_inputs": original,

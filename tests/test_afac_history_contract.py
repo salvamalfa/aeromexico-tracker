@@ -385,3 +385,41 @@ def test_gate_never_selects_native_preparation_or_a_request_defined_adapter(muta
         selections[1]["product"] = "free_json_patch"
     with pytest.raises(ValueError):
         members.selections({"native_sources": selections})
+
+
+@pytest.fixture(scope="module")
+def original_gold_binding(public_parent):
+    selected = public_parent[0]
+    refs = {
+        name: {
+            "path": f"tmp/source-updates/original/{name}.parquet",
+            "sha256": contract.sha(
+                contract.transport._git(ROOT, "show", f"{selected['code_commit']}:data/gold/{name}.parquet")
+            ),
+        }
+        for name in members.CANONICAL_GOLD
+    }
+    units = [
+        {"product": members.COMPARISONS},
+        {"product": contract.PRODUCT, "source_binding": {"native_dataset": {"baseline_gold": refs}}},
+    ]
+    return selected, units
+
+
+def test_gold_preservation_baseline_is_exactly_the_original_parent_in_git(original_gold_binding):
+    selected, units = original_gold_binding
+    members.original_gold(ROOT, selected, units)
+
+
+@pytest.mark.parametrize("mutation", ["another_baseline", "missing", "extra"])
+def test_a_valid_other_dataset_cannot_replace_B_as_the_preservation_baseline(original_gold_binding, mutation):
+    selected, units = copy.deepcopy(original_gold_binding)
+    refs = units[1]["source_binding"]["native_dataset"]["baseline_gold"]
+    if mutation == "another_baseline":
+        refs["fact_carrier_metrics"]["sha256"] = "0" * 64
+    elif mutation == "missing":
+        del refs["dim_period"]
+    else:
+        refs["financial_another_scope"] = {"path": "tmp/source-updates/other.parquet", "sha256": "0" * 64}
+    with pytest.raises(ValueError):
+        members.original_gold(ROOT, selected, units)
