@@ -19,6 +19,8 @@ from src.conversational_analytics.semantic.plan import (
 )
 from src.conversational_analytics.tools.routes import ROUTE_TOOL_SPECS, RouteTools
 
+from .official_routes import configured_official_routes, reject_legacy_context
+
 ALLOWED_HOSTS = {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
 TOOL_NAMES = (
     "get_data_catalog",
@@ -59,15 +61,8 @@ class ToolRegistry:
     def __init__(self, snapshot: Snapshot, config: Any | None = None):
         self.snapshot = snapshot
         self.enable_route_tools = bool(getattr(config, "enable_route_tools", False))
-        self.enable_official_route_tools = bool(getattr(config, "enable_official_route_tools", False))
-        self._official_routes = None
-        if self.enable_official_route_tools:
-            from .official_routes import OfficialRouteTools
-
-            pin = getattr(config, "official_route_dataset_sha256", None)
-            if not isinstance(pin, str) or len(pin) != 64:
-                raise PlanValidationError("La herramienta oficial requiere un pin explícito del dataset")
-            self._official_routes = OfficialRouteTools(snapshot, expected_version=pin)
+        self._official_routes = configured_official_routes(snapshot, config)
+        self.enable_official_route_tools = self._official_routes is not None
         self.enable_business_metric_tools = bool(getattr(config, "enable_business_metric_tools", False))
         self.enable_evidence_tools = bool(getattr(config, "enable_evidence_tools", False))
         self._active_tool_names = set(TOOL_NAMES)
@@ -108,9 +103,7 @@ class ToolRegistry:
     def _configured_specs(self) -> list[dict[str, Any]]:
         specs = self._make_specs()
         if self._official_routes is not None:
-            from .official_routes import official_route_tool_spec
-
-            specs.append(official_route_tool_spec(self._official_routes.version))
+            specs.append(self._official_routes.tool_spec())
         if self.enable_route_tools:
             specs.extend(copy.deepcopy(ROUTE_TOOL_SPECS))
         if self.enable_business_metric_tools:
@@ -429,11 +422,7 @@ class ToolRegistry:
         if name in ROUTE_TOOL_NAMES:
             route_context = self._validate_context(context)
             view_filters = route_context.get("filters", {})
-            if "map_scope" in view_filters:
-                raise PlanValidationError(
-                    "La tarjeta del mapa oficial requiere query_official_routes; "
-                    "esta consulta usa otra evidencia"
-                )
+            reject_legacy_context(view_filters)
             return RouteTools(
                 self.snapshot,
                 evidence_view=view_filters.get("flight_evidence"),

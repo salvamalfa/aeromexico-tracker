@@ -77,6 +77,24 @@ def official_route_tool_spec(dataset_version: str) -> dict[str, Any]:
     }
 
 
+def configured_official_routes(snapshot: Any, config: Any | None) -> OfficialRouteTools | None:
+    """Construct the optional reader only when explicitly enabled and pinned."""
+    if not bool(getattr(config, "enable_official_route_tools", False)):
+        return None
+    pin = getattr(config, "official_route_dataset_sha256", None)
+    if not isinstance(pin, str) or len(pin) != 64:
+        raise PlanValidationError("La herramienta oficial requiere un pin explícito del dataset")
+    return OfficialRouteTools(snapshot, expected_version=pin)
+
+
+def reject_legacy_context(filters: dict[str, Any]) -> None:
+    """An official-map selection cannot silently read a different route dataset."""
+    if "map_scope" in filters:
+        raise PlanValidationError(
+            "La tarjeta del mapa oficial requiere query_official_routes; esta consulta usa otra evidencia"
+        )
+
+
 class OfficialRouteTools:
     """Never loads warehouse data or reconstructs unsupported route/carrier cells."""
 
@@ -90,6 +108,9 @@ class OfficialRouteTools:
         self.version = self.document["dataset_version"]
         if expected_version is not None and expected_version != self.version:
             raise PlanValidationError("El pin del dataset oficial no coincide con el publicado")
+
+    def tool_spec(self) -> dict[str, Any]:
+        return official_route_tool_spec(self.version)
 
     def catalog(self) -> dict[str, Any]:
         return {
