@@ -53,6 +53,8 @@ def preparation_options(request: dict) -> tuple[set[str], dict]:
             raise ValueError("Continuation requires only an exact previous_state reference")
         ref = continuation["previous_state"]
         previous = read_previous(ref)
+        if set(previous.get("consumers", [])) - set(consumers):
+            raise ValueError("Continuation cannot remove an existing selected consumer")
         if previous.get("run_id") == run_id:
             raise ValueError("Continuation requires a NEW run_id; retain the previous checkpoint")
         extras["continuation"] = {
@@ -109,7 +111,49 @@ def finalize_preparation(state: dict, options: dict, cutoff) -> dict:
     state.update(options)
     if state.get("continuation"):
         previous = read_previous(state["continuation"]["previous_state"])
+        future_rounds = [
+            r for r in previous["monthly_rounds"] if date.fromisoformat(r["date"]) > cutoff.date()
+        ]
+        if state["monthly_rounds"] != future_rounds:
+            raise ValueError(
+                "Continuation must preserve the complete future monthly calendar and its horizon"
+            )
+        quarter = state["next_quarterly"]
+        if quarter["date"] and date.fromisoformat(quarter["date"]) <= cutoff.date():
+            old_quarter = [
+                t
+                for t in previous["tasks"].values()
+                if t["selected"] and (t["cadence"], t["period"]) == ("quarterly", state["request"]["quarter"])
+            ]
+            if (
+                not old_quarter
+                or previous["request"]["quarter"] != state["request"]["quarter"]
+                or previous["next_quarterly"]["date"] != quarter["date"]
+                or any(
+                    t["status"] != "completed"
+                    or not t["due_date"]
+                    or date.fromisoformat(t["due_date"]) > cutoff.date()
+                    for t in old_quarter
+                )
+            ):
+                raise ValueError("A past quarter must be the same original fully completed round")
         for key, task in previous["tasks"].items():
+            if (
+                key in state["tasks"]
+                and task["selected"]
+                and task["status"] == "completed"
+                and task["due_date"]
+                and date.fromisoformat(task["due_date"]) <= cutoff.date()
+            ):
+                del state["tasks"][key]
+                state["continuation"].setdefault("retained_completed_task_keys", []).append(key)
+                continue
+            if (
+                task["selected"]
+                and task["status"] != "completed"
+                and (key not in state["tasks"] or not state["tasks"][key]["selected"])
+            ):
+                raise ValueError("Continuation cannot omit an existing selected pending task")
             if (
                 task["selected"]
                 and task["status"] in {"planned", "retry_pending"}
@@ -132,6 +176,16 @@ def finalize_preparation(state: dict, options: dict, cutoff) -> dict:
                 raise ValueError(
                     "Continue an attempted task in its original checkpoint; never reset its history"
                 )
+        if any(
+            t["selected"] and t["due_date"] and date.fromisoformat(t["due_date"]) <= cutoff.date()
+            for t in state["tasks"].values()
+        ):
+            raise ValueError("Continuation cannot add an uncompleted historical task")
+        from scripts.source_update_coordinator import install_events
+
+        state["events"] = {}
+        install_events(state, [*state["monthly_rounds"], {"kind": "quarterly", **state["next_quarterly"]}])
+        state["events"] = {key: event for key, event in state["events"].items() if event["task_keys"]}
     return state
 
 

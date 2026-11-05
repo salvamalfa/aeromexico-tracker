@@ -13,6 +13,7 @@ from scripts import source_update_coordinator as coordinator
 from src.source_updates import collection
 from src.source_updates.coordinator_consumers import PROMPT_DELTA
 from tests.test_source_update_coordinator_state import NOW, bind, record
+from tests.test_source_update_coordinator_state import releases as financial_releases
 
 
 @pytest.fixture
@@ -131,6 +132,87 @@ def test_continuation_never_resets_existing_attempt_history(continuation, status
     with pytest.raises(ValueError, match="reconciled|never reset"):
         coordinator.run(new, request=request, now=NOW)
     assert not (new / "state.json").exists() and path.read_bytes() == before
+
+
+@pytest.mark.parametrize("change", [{"months": 1}, {"months": 3}, {"start": "2026-12"}])
+def test_continuation_preserves_complete_future_horizon(continuation, change, monkeypatch):
+    new, old, request = continuation
+    before = (old / "state.json").read_bytes()
+    bank = copy.deepcopy(coordinator.holidays())
+    bank["years"]["2027"] = {
+        "dates": []
+    }  # Synthetic only: reach horizon guard instead of the real 2027 block.
+    monkeypatch.setattr(coordinator, "holidays", lambda: bank)
+    with pytest.raises(ValueError, match="complete future monthly calendar"):
+        coordinator.run(new, request={**request, **change}, now=NOW)
+    assert not (new / "state.json").exists() and (old / "state.json").read_bytes() == before
+
+
+def test_continuation_preserves_undated_pending_quarter(continuation):
+    new, old, request = continuation
+    before = (old / "state.json").read_bytes()
+    with pytest.raises(ValueError, match="omit an existing selected pending"):
+        coordinator.run(new, request={**request, "quarter": "2026Q2"}, now=NOW)
+    assert not (new / "state.json").exists() and (old / "state.json").read_bytes() == before
+
+
+@pytest.mark.parametrize("pending", [False, True])
+def test_completed_past_quarter_is_retained_without_new_dispatch(continuation, pending):
+    new, old, request = continuation
+    historical = old.parent / "completed-history"
+    reports = financial_releases(entities=("AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"), day="2026-10-23")
+    original_request = {k: request[k] for k in ("start", "months", "quarter")}
+    original_request.update(as_of="2026-10-24T00:00:00Z", releases=reports)
+    coordinator.run(historical, request=original_request, now=NOW)
+    bind(historical)
+    previous = coordinator.load(historical / "state.json")
+    selected = {
+        key for key, task in previous["tasks"].items() if task["selected"] and task["cadence"] == "quarterly"
+    }
+    # Synthetic terminal history only: never presented as actual source certification.
+    for key in selected:
+        previous["tasks"][key].update(
+            status="completed", dispatches=[{"synthetic": True}], receipts=[{"synthetic": True}]
+        )
+    if pending:
+        previous["tasks"][sorted(selected)[0]]["status"] = "planned"
+    path = historical / "state.json"
+    path.write_text(json.dumps(previous), encoding="utf-8")
+    from scripts.source_update_handoffs import file_ref
+
+    request.update(releases=reports, continuation={"previous_state": file_ref(path)})
+    before = path.read_bytes()
+    if pending:
+        with pytest.raises(ValueError, match="same original fully completed"):
+            coordinator.run(new, request=request, now=NOW)
+        assert not (new / "state.json").exists()
+    else:
+        output = coordinator.run(new, request=request, now=NOW)
+        state = output["state"]
+        assert selected.isdisjoint(state["tasks"])
+        assert set(state["continuation"]["retained_completed_task_keys"]) == selected
+        assert all(
+            state["tasks"][key]["cadence"] == "monthly" for key in output["next_trigger"]["pending_task_keys"]
+        )
+        assert all(task["status"] == "planned" for task in state["tasks"].values())
+        assert all(task["publication_authorized"] is False for task in state["tasks"].values())
+        assert all(event["task_keys"] for event in state["events"].values())
+    assert path.read_bytes() == before
+
+
+def test_continuation_cannot_turn_previously_selected_conditional_off(continuation):
+    new, old, request = continuation
+    previous = coordinator.load(old / "state.json")
+    for task in previous["tasks"].values():
+        if task["product"] == "afac_margins":
+            task["selected"] = True
+    path = old / "state.json"
+    path.write_text(json.dumps(previous), encoding="utf-8")
+    from scripts.source_update_handoffs import file_ref
+
+    request.update(continuation={"previous_state": file_ref(path)}, conditional_products=[], consumers=[])
+    with pytest.raises(ValueError, match="omit an existing selected pending"):
+        coordinator.run(new, request=request, now=NOW)
 
 
 def test_default_preparation_and_prompt_match_k2_exactly(tmp_path):

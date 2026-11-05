@@ -91,7 +91,8 @@ def prepare(request: dict) -> dict:
         period = (due.replace(day=1) - timedelta(days=1)).strftime("%YM%m")
         rounds.append({"kind": "monthly", "date": due.isoformat(), "period": period})
     quarter = calendar.quarterly(request["quarter"], request.get("releases", []), request["as_of"], bank)
-    if quarter["date"] and date.fromisoformat(quarter["date"]) <= cutoff.date():
+    if (quarter["date"] and date.fromisoformat(quarter["date"]) <= cutoff.date()
+            and not consumer_options.get("continuation")):
         raise ValueError("Past quarterly round needs an explicit recovery decision")
     rounds.append({"kind": "quarterly", **quarter})
     tasks = {}

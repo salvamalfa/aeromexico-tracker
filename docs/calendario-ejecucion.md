@@ -398,6 +398,13 @@ sobre el mismo workspace falla sin modificar sus bytes. La continuación
 requiere el ID ya vinculado, ningún envío activo o pendiente de reconciliar y
 las mismas fechas para tareas compartidas. Las rondas vencidas deben
 reconciliarse antes; no se convierten en ejecuciones nuevas.
+Se conserva todo el horizonte mensual futuro y toda tarea pendiente, incluso
+una trimestral sin fecha: no se acorta, extiende o deselecciona en esta operación.
+Un trimestre pasado sólo se admite si es el mismo periodo/fecha original y
+todas sus tareas seleccionadas ya terminaron. Se excluyen del nuevo despacho;
+sus claves quedan en `continuation.retained_completed_task_keys` y su historia
+permanece en el checkpoint anterior con SHA. No se copian recibos, estados de
+aprobación o permisos al nuevo plan ni se vuelven a despachar esas tareas.
 
 Después de publicar y verificar el mapa, leer la configuración **actual** de
 la misma automatización. Comparar su prompt, ID, horario, zona, vigencia y
