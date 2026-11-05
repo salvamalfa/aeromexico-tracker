@@ -21,12 +21,9 @@ def _unavailable(request, message):
 
 @pytest.fixture(scope="module")
 def editorial_comparison_site(request):
-    with official_map_baseline(SITE, ROOT) as comparison_site:
-        if comparison_site != SITE:
-            checker = request.getfixturevalue("verify_financial_publication")
-            verify_current_publication(
-                SITE, ROOT, checker, base_commit=request.config.getoption("--financial-publication-base")
-            )
+    checker = request.getfixturevalue("verify_financial_publication")
+    base_commit = request.config.getoption("--financial-publication-base")
+    with official_map_baseline(SITE, ROOT, checker, base_commit=base_commit) as comparison_site:
         yield comparison_site
 
 
