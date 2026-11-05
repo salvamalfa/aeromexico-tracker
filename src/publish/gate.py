@@ -526,6 +526,14 @@ def main(argv: list[str] | None = None) -> int:
         help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
     )
     publish_modes.add_argument(
+        "--presentation-only",
+        action="store_true",
+        help=(
+            "publish a presentation-only build after replaying the current approval and AFAC source chains, "
+            "preserving every non-frontend site file byte for byte"
+        ),
+    )
+    publish_modes.add_argument(
         "--preserve-published-data",
         action="store_true",
         help=(
@@ -582,6 +590,25 @@ def main(argv: list[str] | None = None) -> int:
             from .financial_overlay import publish_business_metrics_only
 
             result = publish_business_metrics_only(args.records, args.out)
+        elif args.presentation_only:
+            from .presentation_release import publish_presentation_only
+
+            try:
+                result = publish_presentation_only(
+                    args.records,
+                    args.out,
+                    repo=PATHS.root,
+                    ledger_root=flow.ROOT,
+                    web_dir=WEB_DIR,
+                    web_data_v1=WEB_DATA_V1,
+                    build_web=build_web,
+                    require_trusted_baseline=require_trusted_site_baseline,
+                    trusted_site_commit=_trusted_site_commit,
+                    assemble_site=assemble_site,
+                    write_receipt=write_receipt,
+                )
+            except (ValueError, OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                raise PublicationRefused(f"presentation-only publication rejected: {error}") from error
         elif args.ui_only:
             result = publish_ui_only(args.records, args.out)
         else:
