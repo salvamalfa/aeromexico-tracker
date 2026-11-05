@@ -52,7 +52,7 @@ def test_current_counts_and_eligibility_cannot_change(field, value):
         repair.public_outputs(before, projection)
 
 
-@pytest.mark.parametrize("value", [-1, float("nan"), float("inf"), True])
+@pytest.mark.parametrize("value", [-1, 0.5, float("nan"), float("inf"), True])
 def test_comparison_cannot_be_fabricated_as_invalid_count(value):
     before, projection = example()
     projection["comparisons"][repair.TARGETS[1]]["GDL<>ONT"] = value

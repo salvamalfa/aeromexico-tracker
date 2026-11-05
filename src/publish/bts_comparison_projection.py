@@ -222,6 +222,7 @@ def public_outputs(before, projection):
                 or isinstance(value, bool)
                 or not math.isfinite(value)
                 or value < 0
+                or not float(value).is_integer()
             ):
                 raise ValueError("BTS comparison repair requires a finite native nonnegative count")
             if market not in routes:
