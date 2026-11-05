@@ -17,9 +17,10 @@ from fastapi.testclient import TestClient
 from src.conversational_analytics.config import ChatConfig
 from src.conversational_analytics.data.snapshot import Snapshot
 from src.conversational_analytics.providers.mock import MockProvider
-
 from tests._published_snapshot_fixtures import (
     _verified_published_snapshot as _verified_published_snapshot,
+)
+from tests._published_snapshot_fixtures import (
     published_snapshot as published_snapshot,
 )
 
@@ -272,8 +273,18 @@ def test_explicit_entity_overrides_dashboard_context_and_all_carriers_uses_afac_
         comparison = denominator_tool["result"]["comparison"]
         assert comparison["previous"]["entity_id"] == "MEXICAN_CARRIERS"
         assert comparison["current"]["entity_id"] == "MEXICAN_CARRIERS"
-        assert comparison["previous"]["value"] == 19_319_636
-        assert comparison["current"]["value"] == 20_361_241
+        market = json.loads(
+            (Path(__file__).resolve().parents[1] / "site/data/v1/market.json").read_bytes()
+        )
+        for side, months in (
+            ("previous", {"2026M01", "2026M02", "2026M03"}),
+            ("current", {"2026M04", "2026M05", "2026M06"}),
+        ):
+            source_months = [row for row in market["months"] if row["period_id"] in months]
+            assert {row["period_id"] for row in source_months} == months
+            assert comparison[side]["value"] == sum(
+                row["segments"]["total"]["mexican_carriers_passengers"] for row in source_months
+            )
 
 
 def test_mock_display_marks_fx_converted_usd_as_calculated() -> None:

@@ -790,6 +790,33 @@ antes de reutilizar una validación en caché. Este arreglo de consumidor conser
 byte a byte sitio, ancla y autoridades del productor original `602ea2a4`; el
 lector nuevo tiene revisión técnica propia y no reasigna el alcance aprobado.
 
+La evaluación congelada Stage 2 se comprueba por separado de la auditoría del
+snapshot actual. La publicación histórica `4c8dd92a`, restaurada completa con
+sus 809 pins y manifiesto `be17ab16`, conserva las trece referencias numéricas;
+su pin de Noticias `1cd0455a` sólo se aplica dentro de esa auditoría aislada.
+Al salir se restaura el pin actual `9f8f12fc`, que rechaza el índice histórico.
+Las versiones de esa publicación siguen siendo diferentes de las de la campaña
+congelada: trece coincidencias numéricas no acreditan calidad de un modelo.
+
+El snapshot actual conserva once de esas trece referencias. Los dos cambios
+son la cuota doméstica de Aeroméxico en 2T26 y su variación relativa anual.
+La captura AFAC de septiembre, SHA-256
+`d1f88a20511457ae0ec9ccc7c354c0a78c3e23c2bba8d1b20ec3d7c85193b60b`,
+contiene 15.844.349 pasajeros domésticos regulares y 17.415 de fletamento:
+15.861.764 en total. Aeroméxico conserva 3.856.840 pasajeros; la cuota es
+0,24315328358182609 frente a la referencia anterior 0,24337659436582212,
+cuyo denominador era 15.847.210. El mercado aprobado `6421acaf` conserva
+estos datos. No se reescribe Gold ni la evaluación congelada; ambas auditorías
+mantienen el denominador de calidad en cero y dos casos pendientes de modelo.
+
+El consumidor de cobertura F2.9 deriva cálculos y rótulos de los periodos que
+efectivamente consultó, con regresiones de 3T26 y otro trimestre. Los límites y
+las preguntas con periodos explícitos conservan su significado. El contrato
+cerrado de evidencia reconoce la procedencia de las 23 noticias ya aprobadas,
+sin abrir los reportes ni las noticias anteriores y sin cambiar el índice,
+sus recibos o el pin externo. Son reparaciones de consumidores; el sitio y
+el productor original permanecen ligados a sus identidades aprobadas.
+
 ## Pendientes
 
 - La integración conserva CI y revisión del head final del PR 188, despliegue

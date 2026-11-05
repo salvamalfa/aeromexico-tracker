@@ -12,6 +12,10 @@
 - El lector del chat valida cada análisis con el contrato fijado por su identidad
   en el manifiesto. Mantiene los límites históricos de 2T26, los hashes, las
   aprobaciones y todos los bytes del sitio generado por el productor original.
+- La evaluación offline separa las trece referencias numéricas históricas de
+  los dos cambios AFAC actuales, sin modificar Gold ni atribuir calidad al
+  modelo. Cobertura deriva sus cálculos del trimestre consultado y el contrato
+  de evidencia reconoce la procedencia cerrada de las noticias ya aprobadas.
 - Industria 3T26 se reconstruye desde los tres emisores; AFAC llega a septiembre,
   ANAC Brasil a julio–septiembre y Noticias a 26 fichas aprobadas. BTS y las
   frecuencias conservan julio; no se completan meses de otras fuentes.

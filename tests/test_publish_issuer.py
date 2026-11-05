@@ -166,7 +166,9 @@ def test_structural_scope_is_separate_from_output_hash(projected, mutation):
         key = next(iter(baseline["entities"]["VIVA_AEROBUS"]["views"]))
         block["views"][key]["period_label"] = "altered"
     elif mutation == "root":
-        after["metadata"]["default_period"] = "2026Q3"
+        previous = after["metadata"]["default_period"]
+        after["metadata"]["default_period"] = "2026Q2" if previous != "2026Q2" else "2026Q3"
+        assert after["metadata"]["default_period"] != previous
     elif mutation == "first":
         block["first_period"] = "2026Q3"
     else:
