@@ -19,6 +19,8 @@ import Plotly from "../../lib/plotly";
 const controls = vi.hoisted(() => ({ entity: "AEROMEXICO" }));
 vi.mock("../../lib/plotly", () => ({default: { react: vi.fn(async () => {}) }}));
 vi.mock("./map", () => ({renderFlowMap: vi.fn()}));
+// These tests retain the legacy snapshot contract; the active official map has its own source-backed suite.
+vi.mock("./official-map", () => ({renderOfficialMap: vi.fn(async () => {})}));
 vi.mock("./table", () => ({renderRouteOverview: vi.fn()}));
 vi.mock("../shell/carriers", async original => ({...await original<typeof import("../shell/carriers")>(), selection: () => [controls.entity]}));
 // Optional QA-only overlay of the nine native-generated review outputs. It
@@ -50,6 +52,7 @@ const hasAnac = data<{coverage_by_source:Record<string,string[]>}>("flights/enti
 const executive = data<ExecutiveDocument>("executive"), quarters = data<QuartersDocument>("flights/quarters");
 beforeEach(() => {
   document.body.innerHTML = readFileSync("index.html","utf8");
+  document.body.insertAdjacentHTML("beforeend", '<button id="network-mode-domestic"></button><button id="network-mode-international"></button><div id="network-region-switch"></div><div id="network-volume"></div>');
   financial.records = executive.records; financial.views = executive.views; financial.entities = executive.entities!;
   entityState.market = data<MarketDocument>("market");
   state.mapEntity = "AEROMEXICO"; state.baseAvailablePeriods = null; initState(structuredClone(quarters));
@@ -65,6 +68,7 @@ for (const entity of ["AEROMEXICO","VIVA_AEROBUS","VOLARIS","INDUSTRY"]) {
       state.periodIndex = state.quarters.findIndex(row => row.period_id === id); state.mapPeriodId = null;
       state.networkMode = "domestic";
       await renderQuarter();
+      await renderNetworkPeriod(id);
       expect(selectedFlightQuarter().period_id).toBe(id); expect(currentMapPeriod()).toBe(id);
       const published = executive.entities![entity]!.records.find(row => row.period_id === id);
       expect(document.getElementById("flight-kpi-passengers")?.textContent).toBe(published ? `${(published.passengers / 1e6).toFixed(1)} M` : "No disponible");

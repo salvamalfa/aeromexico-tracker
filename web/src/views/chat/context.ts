@@ -4,6 +4,7 @@ import { state as flightState } from "../flights/state";
 import { entityLabel } from "../executive/entities";
 import { state as executiveState } from "../executive/state";
 import type { ChatContext } from "../../types/chat";
+import { officialState, MAP_CARRIER_LABELS, MAP_REGIONS, MAP_SCOPES } from "../flights/official-routes";
 
 const CARD_SELECTION: Record<string, string> = {
   "market-chart": "market", "market-card": "market", "unit-chart": "unit", "volume-chart": "volume",
@@ -71,6 +72,19 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const focusedCard = cardElement ?? document.activeElement;
   const cardTab = tabForCard(focusedCard);
   const cardId = cardTab && cardTab !== visualTab ? undefined : cardIdFrom(focusedCard);
+  // Resolve the map by its card, including inside the merged Mercado tab.
+  // AFAC city totals have no airline attribution. Never inherit the market chart's three entities.
+  const officialMapCard = cardId === "route-flow-map" || cardId === "flow-map";
+  if (officialMapCard || (!cardId && !focusedCard?.closest("[data-chat-unavailable]") && (visualTab === "flights" || visualTab === "market"))) {
+    const us = officialState.scope === "us";
+    return { tab: "market", ...(officialMapCard ? { card_id: cardId } : {}), period: currentPeriodId() ?? officialState.period,
+      ...(us ? { entity: [...officialState.carriers] } : {}),
+      filters: { map_scope: officialState.scope,
+        ...(officialState.scope === "international" && officialState.region ? { map_region: officialState.region } : {}),
+        ...(us ? { map_carriers: [...officialState.carriers] } : {}),
+        ...(officialState.document ? { map_dataset_version: officialState.document.dataset_version } : {}),
+        map_grain: us ? "airport_pair" : "city_pair", map_months: [...(officialState.network?.observed_months ?? [])] } };
+  }
   // The merged Mercado tab preserves the existing data contracts: map and
   // financial flight cards are `flights`; the AFAC participation chart is `market`.
   const tab = cardId === "market-card" || cardId === "market-chart" ? "market" : visualTab;
@@ -138,6 +152,14 @@ export function describeChatContext(context: ChatContext): string {
     ? `${context.period.slice(-1)}T${context.period.slice(2, 4)}`
     : executiveState.records.find((record) => record.period_id === context.period)?.period_label ??
     flightState.byPeriod.get(context.period)?.period_label ?? context.period;
+  if (context.filters?.map_scope) {
+    const f = context.filters;
+    const mapPeriod = /^\d{4}Q[1-4]$/.test(context.period) ? `${context.period.slice(-1)}T${context.period.slice(2, 4)}` : period;
+    const scope = MAP_SCOPES[f.map_scope!];
+    const region = f.map_region ? ` · ${MAP_REGIONS[f.map_region]}` : "";
+    const carriers = f.map_scope === "us" ? (f.map_carriers ?? []).map(key => MAP_CARRIER_LABELS[key]).join(", ") : "Todas las aerolíneas";
+    return `Mapa de rutas · ${mapPeriod} · ${scope}${region} · ${carriers} · ${f.map_grain === "city_pair" ? "ciudades" : "aeropuertos"} · ${f.map_months?.length ?? 0}/3 meses`;
+  }
   const entities = (Array.isArray(context.entity) ? context.entity : context.entity ? [context.entity] : []).map((entity) =>
     ["INDUSTRY", "AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"].includes(entity)
       ? entityLabel(entity as EntityKey)

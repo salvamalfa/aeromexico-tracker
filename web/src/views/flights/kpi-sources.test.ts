@@ -50,6 +50,8 @@ it("supports the retained financial payload without entity blocks", () => {
 });
 
 it("attributes real estimated flight counts to AeroDataBox, keeps one trigger, and removes a stale open popup on rerender", () => {
+  // Retained historical renderer, no longer mounted by the official map.
+  document.body.insertAdjacentHTML("beforeend", '<div id="network-volume"></div>');
   state.routes = data<{routes:Route[]}>("flights/entities/INDUSTRY/domestic/2026M07").routes;
   renderNetworkVolume();
   const button = document.getElementById("network-estimated-info")!;
