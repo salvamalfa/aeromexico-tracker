@@ -176,12 +176,15 @@ class OfficialRouteTools:
             raise PlanValidationError("Identidad de red oficial duplicada")
         network = networks[0] if networks else None
         # A chip describes the exact displayed coverage, never permission to silently change it.
+        context_carriers = [
+            carrier for carrier in OFFICIAL_CARRIERS if carrier in filters.get("map_carriers", [])
+        ]
+        observed_months = network["observed_months"] if network is not None else []
         if (
-            network is not None
-            and same_scope
+            same_scope
             and period == clean.get("period")
-            and carriers == filters.get("map_carriers", [])
-            and sorted(filters["map_months"]) != sorted(network["observed_months"])
+            and carriers == context_carriers
+            and sorted(filters["map_months"]) != sorted(observed_months)
         ):
             raise PlanValidationError("Los meses del mapa adjunto no coinciden con la cobertura publicada")
         refs = [{"label": f"Mapa oficial publicado · {period} · {scope}", "url": PUBLISHED_URL}]

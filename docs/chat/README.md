@@ -71,6 +71,8 @@ contexto; otra región explícita la reemplaza. Esto conserva el significado de
 los campos opcionales enviados como `null` por el esquema estricto del proveedor.
 La herramienta rechaza
 un chip de otra versión o con meses distintos de los publicados. Una selección
+de aerolíneas conserva su significado en cualquier orden. Un trimestre sin red
+publicada exige meses adjuntos vacíos. Una selección
 sin observaciones devuelve `missing` y totales nulos, sin buscar otro trimestre.
 Las filas conservan la comparación publicada, sus meses y su motivo de ausencia.
 `comparison.comparison_months` conserva el soporte del año actual, tal como está

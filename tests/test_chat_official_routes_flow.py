@@ -192,3 +192,34 @@ def test_wrong_dataset_pin_fails_app_startup(tmp_path, monkeypatch):
             snapshot=snapshot,
             provider=AdversarialProvider(),
         )
+
+
+@pytest.mark.parametrize(
+    ("scope", "carriers", "period"),
+    [
+        ("us", ["VIVA_AEROBUS", "VOLARIS", "AEROMEXICO"], "2026Q3"),
+        ("us", ["VOLARIS", "AEROMEXICO"], "2026Q3"),
+        ("national", [], "2026Q4"),
+    ],
+)
+def test_stale_months_fail_admission_for_reordered_selection_or_unpublished_quarter(
+    scope, carriers, period, tmp_path, monkeypatch
+):
+    snapshot = PublicSnapshot()
+    provider = AdversarialProvider()
+    app = create_app(config=config(tmp_path, monkeypatch), snapshot=snapshot, provider=provider)
+    months = ["2026M07"] if period == "2026Q4" else []
+    context = map_context(snapshot.document, scope, map_carriers=carriers, map_months=months)
+    context["period"] = period
+    with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+        conversation = client.post("/api/chat/conversations").json()["id"]
+        response = client.post(
+            f"/api/chat/conversations/{conversation}/messages",
+            json={
+                "content": "Este mapa",
+                "client_message_id": "stale-reordered-map",
+                "context": context,
+            },
+        )
+        assert response.status_code == 422 and "meses" in response.text
+        assert provider.contexts == []
