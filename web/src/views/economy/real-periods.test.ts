@@ -98,6 +98,9 @@ it("real AFAC keeps every reported share unchanged, joins June to July and compl
   }
   const call = vi.mocked(Plotly.react).mock.calls.at(-1)!;
   const trace = call[1][0] as {x: string[]; y: Array<number|null>};
+  expect(market.metadata.first_period).toBe("2019M01");
+  expect(market.months).toHaveLength(93);
+  expect(trace.x[0]).toBe("2019-01-01");
   const july = trace.x.indexOf("2026-07-01");
   expect(trace.x[july - 1]).toBe("2026-06-01");
   expect(trace.y[july - 1]).toBeTypeOf("number");
@@ -105,8 +108,9 @@ it("real AFAC keeps every reported share unchanged, joins June to July and compl
   expect(trace.x.at(-1)).toBe("2026-09-01");
   expect(new Set(trace.x).size).toBe(trace.x.length);
   for (const [i, key] of ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"].entries()) {
-    const actual = call[1][i] as { y: Array<number|null> };
-    const months = market.months.filter(row => row.period_id >= "2021M01");
+    const actual = call[1][i] as { x: string[]; y: Array<number|null> };
+    const months = market.months;
+    expect(actual.x).toEqual(months.map(row => `${row.period_id.slice(0,4)}-${row.period_id.slice(5,7)}-01`));
     expect(actual.y).toEqual(months.map(row => {
       const share = row.segments.total.carriers[key]?.share;
       return share == null ? null : share * 100;
