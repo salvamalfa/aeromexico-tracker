@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-04 · Gate compuesto para la corrección histórica, sin activación
+
+- Nuevo perfil de publicación que conserva el padre trimestral original como
+  dependencia verificada y observa por separado el baseline realmente servido.
+  Reproduce las ocho aprobaciones con el productor original y exige una decisión
+  de datos específica para el scope corregido; no hereda la autoridad editorial.
+- Dos miembros nativos cerrados: ocho originales AFAC para historia y septiembre,
+  y restauración física de comparativos BTS regulares de julio en dos archivos.
+  El gate protege los demás campos, lecturas, noticias y assets, conserva el lock
+  hasta el intercambio y limita los retries HTTPS a errores transitorios concretos.
+- Código preparado para revisión, sin generar una autoridad ni activar datos.
+  Quedan pendientes el cierre Gold derivado, el replay Linux y el candidato final.
+
 ## 2026-11-04 · Entrega trimestral con fuentes originales y gate completo
 
 - Cuatro vistas con trimestre global: Lectura, Mercado, Economía y Noticias.

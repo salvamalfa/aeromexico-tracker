@@ -893,3 +893,13 @@ posterior de conservar el corte. Los datos de preview, `.venv`, compilados y
 recibos temporales son locales e ignorados; no son expedientes de aprobación.
 
 El inventario completo y la disposición vigente se conservan en el cuerpo del [PR 188](https://github.com/salvamalfa/aeromexico-tracker/pull/188), junto al diff exacto de esta entrega.
+
+La corrección histórica se prepara con el gate compuesto descrito en
+[la guía de publicación](../src/publish/README.md#corrección-histórica-compuesta-de-afac-y-comparativos-bts).
+Su padre trimestral permanece identificado como preparado y no servido. Conserva
+las ocho lecturas y los originales del productor `602ea2a4…`; requiere inspección
+y autoridad de datos propias para los dos miembros nativos cerrados. La autoridad
+editorial `708bedf9…` no cubre por sí sola esos nuevos datos. El código aislado y
+sus pruebas no activan fuentes ni levantan el bloqueo de calidad de la historia.
+Faltan el cierre Gold AFAC derivado, la reproducción completa en Linux y la
+revisión independiente del candidato final antes de publicar.

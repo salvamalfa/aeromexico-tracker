@@ -17,6 +17,7 @@ VERIFIERS = (
     ("issuer-publication.json", "src.publish.issuer_scope"),
     ("financial-publication.json", "src.publish.financial_scope"),
     ("editorial-publication.json", "src.publish.editorial"),
+    ("afac-history-publication.json", "src.publish.afac_history_scope"),
 )
 
 
@@ -46,6 +47,25 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
     # witnessed Git baseline, then let its strong verifier validate all claims.
     # Ties, missing history and unrelated branches are decisions, never fallback.
     repo = Path.cwd() if repo is None else Path(repo)
+    if any(receipt == "afac-history-publication.json" for receipt, _ in selected):
+        # This one new profile composes an explicitly unserved parent. Its
+        # exact proof remains upstream evidence, not a competing final root.
+        # Every older profile keeps the original strict precedence rules.
+        from src.publish.afac_history_contract import proof_parent
+
+        path = site / "afac-history-publication.json"
+        pin = next(item for item in files if item["path"] == path.name)
+        if path.is_symlink():
+            raise ValueError("Composition selection proof cannot be a symlink")
+        raw = path.read_bytes()
+        if (
+            type(pin.get("bytes")) is not int
+            or len(raw) != pin["bytes"]
+            or hashlib.sha256(raw).hexdigest() != pin.get("sha256")
+        ):
+            raise ValueError("Composition selection proof differs from its manifest pin")
+        upstream, _ = proof_parent(repo, site, manifest, json.loads(raw))
+        selected = [(receipt, module) for receipt, module in selected if receipt != upstream]
     commits = {}
     for receipt, module in selected:
         if (site / receipt).is_symlink():
@@ -97,6 +117,7 @@ def verify_site(site, repo):
         "src.publish.financial_scope": "verify_financial",
         "src.publish.editorial": "verify_editorial",
         "src.publish.verify": "verify_site",
+        "src.publish.afac_history_scope": "verify_afac_history",
     }[module]
     return getattr(import_module(module), name)(site)
 

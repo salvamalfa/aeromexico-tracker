@@ -676,3 +676,52 @@ selecciona `quarterly_story_scope` por su prueba declarada; un fallo no cae a ot
 verificador. El PR, CI del head final, revisión independiente, merge y comprobación
 HTTPS/navegador siguen siendo obligatorios. Un artifact de Actions acredita sólo
 lo que contienen sus hashes y recibos; no acredita una publicación servida.
+
+### Corrección histórica compuesta de AFAC y comparativos BTS
+
+`afac_history_update` prepara una corrección de datos sobre un padre trimestral
+verificado que todavía no fue servido. El perfil cerrado distingue el baseline
+servido A, observado físicamente mediante HTTPS, del padre B en Git. B conserva
+su productor original `602ea2a4…`, su commit de código `2f6045aa…`, el scope
+`708bedf9…` y las ocho identidades de lectura. No se renueva una tesis ni se
+transfiere esa autoridad editorial a los datos corregidos.
+
+Los únicos miembros admitidos son `afac_carriers_history` (ocho originales
+2019–2026, Mercado y el bloque AFAC `monthly_passengers` de Vuelos) y
+`bts_unchanged_source_comparisons` (julio de 2026, dos archivos y únicamente
+`routes[*].previous.departures`). El segundo recalcula sólo comparativos
+regulares previamente existentes, desde los ZIP originales y el crosswalk
+fijado; mantiene elegibilidad, razones, hechos actuales y faltantes sin respaldo.
+El resto del sitio, incluidas las ocho lecturas y sus aprobaciones, permanece
+idéntico a B. Los contratos de los perfiles y sus proyecciones cierran el alcance;
+no se acepta una lista libre de parches o de adaptadores.
+
+El expediente original de B se restaura separado de Gold corregido: un inventario
+ordenado `afac_history_parent_inputs_v1` fija cada archivo por ruta, tamaño y SHA.
+No incluye código ni lifecycle. El ledger vigente se incorpora aparte para
+reproducir las fuentes, cálculos y aprobaciones originales y detectar revocaciones.
+La reproducción se ejecuta con código original; el extractor Q2 sigue requiriendo
+Linux. Ni la inspección ni un recibo verde crean una aprobación humana.
+
+```bash
+python -m src.publish.afac_history_update --inspect <request-privado.json> --inspection-out tmp/source-updates/correction-review
+# Revisar scope y cuatro JSON; retener decisión auténtica y auditoría exactas.
+python -m src.publish.afac_history_update --prepare <request-autorizado.json>
+# Revisar y confirmar config/publish/afac-history-release.json.
+python -m src.publish.afac_history_update --request <request-autorizado.json> --out site/
+python scripts/check_pages_publication.py site/
+```
+
+La inspección opcional sólo retiene material privado en un directorio nuevo bajo
+`tmp/`; nunca sustituye el replay de publicación. El gate repite las fuentes y
+aprobaciones bajo el lock, comprueba HEAD, autoridad, huellas y remoto antes del
+intercambio atómico, y restaura el sitio anterior si falla el intercambio. El
+witness nuevo permite hasta tres GET para errores transitorios concretos, con
+esperas acotadas; un HTTP200 con tamaño/SHA distintos, 403 o 404 falla sin retry.
+El witness V1 original no cambia. El selector sólo trata la prueba B como una
+dependencia cuando verifica ese enlace exacto; los empates V1 siguen fallando.
+
+Esta implementación está preparada para revisión. Antes de activarla faltan el
+cierre físico de Gold AFAC derivado, el replay privado completo en Linux, la
+inspección del candidato final y su autoridad de datos. PR, CI y comprobación del
+sitio realmente servido conservan sus controles normales.
