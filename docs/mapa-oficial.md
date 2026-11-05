@@ -70,11 +70,19 @@ crosswalk, contrato y productor. No reescribir certificados. `--check` reproduce
 originales y compara bytes. No copiar Gold candidato al warehouse ni alterar
 `flight_evidence_v1`. Los crudos permanecen privados; el CSV de puntos es público.
 
-El coordinador existente evalúa dependencias `afac_margins`/`bts_segments`.
+El coordinador existente conserva por defecto la evaluación de dependencias
+`afac_margins`/`bts_segments`. La [continuación explícita del mapa
+oficial](calendario-ejecucion.md#continuación-explícita-para-el-mapa-oficial)
+selecciona `conditional_products=["afac_margins"]` y
+`consumers=["official_routes"]` en un checkpoint con `run_id` nuevo, ligado al
+mismo ID de automatización y al estado anterior por hash. Conserva horizonte,
+pendientes, fechas e historia; no repite tareas ya completadas.
 `official_routes_consumer.consumer_plan` identifica ámbitos, preparador y gate.
-Cada llegada reutiliza el último original aceptado de la otra fuente y sus meses
-reales. No espera otras fuentes, no toca otras vistas ni crea otro calendario.
-Si la salida es idéntica, no exige otra publicación.
+El handoff exige los originales verificados de AFAC/BTS, el perfil completo y,
+para cerrar una publicación, autoridad exacta, gate y QA servida. Cada llegada
+reutiliza el último original aceptado de la otra fuente y sus meses reales.
+La equivalencia reproduce el JSON oficial completo y su baseline; nunca usa el
+mapa histórico. Preparar esta continuación no modifica la tarea nativa.
 
 `src.publish.official_routes_projection` reproduce el perfil completo, producto
 `official_routes`. El gate compartido sólo añade/reemplaza el JSON nuevo y su
@@ -92,6 +100,10 @@ python scripts/check_pages_publication.py site/
 
 ## Pendientes
 
-Integración web/chat, revisión independiente y comprobación del paquete final.
-La aprobación del plan no se registra como aprobación de cifras ni hashes
-todavía no revisados. Activación y primera exposición requieren su decisión.
+Web, chat, datos y continuación mensual están integrados y cuentan con revisión
+independiente. La inspección Linux K2 reprodujo el candidato y su continuidad
+histórica sin publicar; el productor final requiere su propia inspección y
+scope. Siguen pendientes la autoridad exacta, publicación y QA de los datos
+servidos, y después la actualización de la misma tarea nativa con su
+configuración actual verificada. El código no acredita esa activación operativa.
+La aprobación del plan no se registra como aprobación de cifras ni hashes.
