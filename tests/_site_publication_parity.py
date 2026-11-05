@@ -224,3 +224,87 @@ def _published_approval_config_view(repo: Path, manifest_raw: bytes):
             subprocess.run(
                 ["git", "worktree", "remove", "--force", str(view)], cwd=repo, capture_output=True, check=True
             )
+
+
+def _with_citation_labels(text: str, citations: list[dict]) -> str:
+    """Port of narrative.ts::applyCitations' text-splicing, in plain text:
+    each citation's label is inserted right after the first (in reading
+    order) occurrence of its ``value`` -- the same substring the DOM ends
+    up with once the <sup><a> citation marker is spliced in."""
+
+    # Sources for a shared value append to its first marker group in input
+    # order. Citation labels are never searched as narrative text.
+    segments: list[str | tuple[str, str]] = [text]
+    for citation in citations:
+        marker_position = next(
+            (
+                i
+                for i, segment in enumerate(segments)
+                if isinstance(segment, tuple) and segment[0] == citation["value"]
+            ),
+            None,
+        )
+        if marker_position is not None:
+            previous = segments[marker_position]
+            segments[marker_position] = (citation["value"], previous[1] + citation["label"])
+            continue
+        for position, segment in enumerate(segments):
+            if not isinstance(segment, str):
+                continue
+            index = segment.find(citation["value"])
+            if index == -1:
+                continue
+            end = index + len(citation["value"])
+            segments[position : position + 1] = [
+                segment[:end],
+                (citation["value"], citation["label"]),
+                segment[end:],
+            ]
+            break
+    return "".join(segment if isinstance(segment, str) else segment[1] for segment in segments)
+
+
+
+def assert_reading_parity(site_page, site_server, expected):
+    checked = set()
+    for period_id in sorted({period for _, period in expected}):
+        site_page.goto(f"{site_server}?period={period_id}")
+        site_page.wait_for_function(
+            "period => document.getElementById('narrative-copy').dataset.period === period && "
+            "!document.getElementById('reading-full-card').hidden", arg=period_id,
+        )
+        site_page.click("#tab-reading")
+        site_page.locator("#reading-full > summary").click()
+        quarter = {entity: value for (entity, period), value in expected.items() if period == period_id}
+        articles = site_page.locator("#reading-full-copy article[data-entity]")
+        assert set(articles.evaluate_all("nodes => nodes.map(node => node.dataset.entity)")) == set(quarter)
+        for entity, analysis in quarter.items():
+            article = site_page.locator(f'#reading-full-copy article[data-entity="{entity}"]')
+            assert analysis["thesis"] in article.locator("h3").inner_text()
+            citations = {claim["claim_id"]: claim["citations"] for claim in analysis["claims"]}
+            # The approved four-point overview selects short claims, while
+            # the complete card below preserves every approved paragraph.
+            items = analysis["summary_items"][:1]
+            if entity == "AEROMEXICO":
+                selected = [item for claim in ("sales", "fuel", "summary_business", "summary_unit")
+                            for item in analysis["summary_items"] if item["claim_id"] == claim]
+                items = selected[:2] or items
+            elif entity == "INDUSTRY":
+                items = [next((item for item in analysis["summary_items"] if item["claim_id"] == "s_revenue"), items[0])]
+            short = " ".join(item["text"].replace(item.get("lead") or "", "").strip()
+                             if entity == "AEROMEXICO" and period_id == "2026Q3" else item["text"]
+                             for item in items)
+            sources = [citation for item in items for citation in citations[item["claim_id"]]]
+            summary_index = ("INDUSTRY", "AEROMEXICO", "VIVA_AEROBUS", "VOLARIS").index(entity)
+            summary = site_page.locator("#narrative-copy li").nth(summary_index).locator(":scope > span")
+            assert summary.inner_text() == _with_citation_labels(short, sources)
+            paragraphs = article.locator("section p")
+            source_paragraphs = [(text, claim) for section in analysis["sections"]
+                                 for text, claim in zip(section["paragraphs"], section["claim_ids"], strict=True)]
+            assert paragraphs.count() == len(source_paragraphs)
+            for index, (text, claim) in enumerate(source_paragraphs):
+                paragraph = paragraphs.nth(index)
+                assert paragraph.inner_text() == _with_citation_labels(text, citations[claim])
+                assert sorted(paragraph.locator("a.source-note").evaluate_all("nodes => nodes.map(node => node.href)")) == sorted(c["href"] for c in citations[claim])
+            checked.add((entity, period_id))
+    assert checked == set(expected), f"never reached {set(expected) - checked}"

@@ -38,7 +38,9 @@ from src.publish.verify import verify_site
 from src.web_export.analysis import MissingAnalysisInput
 from src.web_export.executive import export_executive
 from src.web_export.flights import export_flights, recombine_flights
-from tests._site_publication_parity import _published_approval_config_view
+from tests._site_publication_parity import (
+    _published_approval_config_view, _with_citation_labels, assert_reading_parity,
+)
 
 pytestmark = pytest.mark.local_data
 
@@ -443,10 +445,8 @@ def test_reader_tabs_switch_panels_on_the_site(site_page) -> None:
 def test_economy_tab_kpis_match_the_underlying_payload_for_every_quarter(
     site_page, site_server, published_executive: dict
 ) -> None:
-    """The economy tab's KPI cards show exactly the payload's own display
-    values -- rask/cask/ask are pre-formatted server-side
-    (``executive_summary.py``'s ``_display_value``); the margin card is the
-    one KPI computed client-side, from the same record's raw field.
+    """The economy tab renders the payload's exact raw values at the approved
+    one-decimal card precision; the full records retain their source precision.
 
     ``records``/``views`` are Grupo Aeroméxico's, while the Dashboard v2 KPI
     cards open on Industria, so the page is loaded with Aeroméxico selected
@@ -471,11 +471,16 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
     for period_id in reversed(period_ids):
         view = views[period_id]
         kpis_by_key = {item["key"]: item for item in view["kpis"]}
-        expected_values = {key: kpis_by_key[key]["display_value"] for key in READER_KPI_KEYS}
+        expected_values = {}
+        for key in READER_KPI_KEYS:
+            raw = kpis_by_key[key].get("value")
+            raw = records[period_id][key] if raw is None else raw
+            scale, suffix = (1e9, " mil M") if key == "ask_km" else (1, " ¢ USD")
+            expected_values[key] = "No disponible" if raw is None else f"{raw / scale:,.1f}{suffix}"
         margin = records[period_id]["unit_margin_cents_per_km"]
-        expected_values["unit_margin_cents_per_km"] = f"{'+' if margin >= 0 else ''}{margin:.2f} ¢ USD"
-        # Reading and financial periods are independent. Wait for the actual
-        # financial label, stepper and rendered KPI values before comparing.
+        expected_values["unit_margin_cents_per_km"] = f"{'+' if margin >= 0 else ''}{margin:.1f} ¢ USD"
+        # A delayed reading must not block the global quarter or the exact
+        # numeric KPI values. Wait for all three before comparing.
         site_page.wait_for_function(
             "([label, first, last, values]) => "
             "document.getElementById('period-display').textContent.trim() === label && "
@@ -492,50 +497,12 @@ def _check_economy_kpis(site_page, executive_payload: dict) -> None:
         )
         observed = _kpi_values(site_page)
         for key in READER_KPI_KEYS:
-            assert observed[key] == kpis_by_key[key]["display_value"], f"{key} mismatch at {period_id}"
+            assert observed[key] == expected_values[key], f"{key} mismatch at {period_id}"
         margin = records[period_id]["unit_margin_cents_per_km"]
-        expected_margin = f"{'+' if margin >= 0 else ''}{margin:.2f} ¢ USD"
+        expected_margin = f"{'+' if margin >= 0 else ''}{margin:.1f} ¢ USD"
         assert observed["unit_margin_cents_per_km"] == expected_margin, f"margin mismatch at {period_id}"
         if period_id != period_ids[0]:
             site_page.click("#period-prev")
-
-
-def _with_citation_labels(text: str, citations: list[dict]) -> str:
-    """Port of narrative.ts::applyCitations' text-splicing, in plain text:
-    each citation's label is inserted right after the first (in reading
-    order) occurrence of its ``value`` -- the same substring the DOM ends
-    up with once the <sup><a> citation marker is spliced in."""
-
-    # Sources for a shared value append to its first marker group in input
-    # order. Citation labels are never searched as narrative text.
-    segments: list[str | tuple[str, str]] = [text]
-    for citation in citations:
-        marker_position = next(
-            (
-                i
-                for i, segment in enumerate(segments)
-                if isinstance(segment, tuple) and segment[0] == citation["value"]
-            ),
-            None,
-        )
-        if marker_position is not None:
-            previous = segments[marker_position]
-            segments[marker_position] = (citation["value"], previous[1] + citation["label"])
-            continue
-        for position, segment in enumerate(segments):
-            if not isinstance(segment, str):
-                continue
-            index = segment.find(citation["value"])
-            if index == -1:
-                continue
-            end = index + len(citation["value"])
-            segments[position : position + 1] = [
-                segment[:end],
-                (citation["value"], citation["label"]),
-                segment[end:],
-            ]
-            break
-    return "".join(segment if isinstance(segment, str) else segment[1] for segment in segments)
 
 
 def test_citation_labels_preserve_multiple_sources_for_the_same_value() -> None:
@@ -564,21 +531,4 @@ def test_reading_tab_narrative_matches_the_approved_analysis(
             # Each exact selected identity must pass its own pinned verifier.
             _skip_or_fail(request.config, f"{entry}: {error}")
 
-    checked = set()
-    for (entity, period_id), analysis in expected.items():
-        site_page.goto(f"{site_server}?sel_reading={entity}&readingPeriod={period_id}")
-        site_page.wait_for_function(
-            "([entity, period, thesis]) => { const copy = document.getElementById('narrative-copy'); "
-            "return copy.dataset.entity === entity && copy.dataset.period === period && "
-            "copy.querySelector('h3')?.textContent === thesis; }",
-            arg=[entity, period_id, analysis["thesis"]],
-        )
-        site_page.click("#tab-reading")
-        citations_by_claim = {claim["claim_id"]: claim["citations"] for claim in analysis["claims"]}
-        text = _text(site_page, "#narrative-copy")
-        assert analysis["thesis"] in text, (entity, period_id)
-        for item in analysis["summary_items"]:
-            expected_text = _with_citation_labels(item["text"], citations_by_claim.get(item["claim_id"], []))
-            assert expected_text in text, (entity, period_id, item["claim_id"])
-        checked.add((entity, period_id))
-    assert checked == set(expected), f"never reached {set(expected) - checked}"
+    assert_reading_parity(site_page, site_server, expected)

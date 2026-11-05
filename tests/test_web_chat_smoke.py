@@ -3,6 +3,7 @@
 import json
 import os
 import socket
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -90,7 +91,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
     port = _free_port()
     env = {**os.environ, "VITE_CHAT_ENABLED": "true", "VITE_CHAT_API_URL": "/api/chat"}
     server = subprocess.Popen(
-        ["npm", "run", "dev", "--", "--host", "127.0.0.1", "--port", str(port), "--strictPort"],
+        [shutil.which("npm"), "run", "dev", "--", "--host", "127.0.0.1", "--port", str(port), "--strictPort"],
         cwd=WEB,
         env=env,
         stdout=subprocess.DEVNULL,
@@ -121,6 +122,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             password = "correct-horse-battery-1"
             api_state = {"resume_pending": False, "expired": False, "logins": 0}
             seen_events: list[str] = []
+            accepted: dict[str, dict[str, object]] = {}
 
             def sse(turn_id: str, text: str) -> str:
                 return (
@@ -180,8 +182,14 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
                         }
                     )  # type: ignore[attr-defined]
                 elif path.endswith("/messages") and request.method == "POST":
-                    sent_context.append(request.post_data_json["context"])
-                    route.fulfill(json={"turn_id": "turn-smoke", "status": "pending"})  # type: ignore[attr-defined]
+                    message = request.post_data_json
+                    key = message["client_message_id"]
+                    if key not in accepted:
+                        sent_context.append(message["context"])
+                        accepted[key] = {"turn_id": f"turn-smoke-{len(accepted) + 1}", "message": message}
+                    else:
+                        assert accepted[key]["message"] == message
+                    route.fulfill(json={"turn_id": accepted[key]["turn_id"], "status": "pending"})  # type: ignore[attr-defined]
                 elif path.endswith("/events"):
                     turn_id = path.split("/")[2]
                     seen_events.append(turn_id)
@@ -203,9 +211,8 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             page.route("**/data/v1/**", fake_public_data)
             page.route("**/publication_manifest.json", fake_public_data)
             page.goto(f"http://127.0.0.1:{port}", wait_until="domcontentloaded")
-            launcher = page.get_by_role("button", name="Abrir Airline Tracker chat analítico")
-            launcher.wait_for(state="visible", timeout=20_000)
-            launcher.click()
+            launcher = page.get_by_role("button", name="Abrir chat", exact=True)
+            page.locator("#airline-chat-panel").wait_for(state="visible", timeout=20_000)
             # The panel asks for the password before any conversation exists.
             password_field = page.get_by_label("Contraseña", exact=True)
             password_field.wait_for(state="visible", timeout=10_000)
@@ -217,11 +224,22 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             password_field.wait_for(state="hidden", timeout=10_000)
             assert password not in page.content()
             assert password not in page.evaluate("JSON.stringify(Object.assign({}, localStorage))")
-            page.get_by_label("Pregunta sobre los datos publicados").fill("¿Cómo cambió la ocupación?")
-            page.get_by_role("button", name="Enviar").click()
-            page.get_by_text("Respuesta segura.").wait_for(timeout=10_000)
+            def send_question(question=None):
+                previous = page.locator(".chat-message-assistant").count()
+                if question is not None:
+                    page.get_by_label("Pregunta sobre los datos publicados").fill(question)
+                page.get_by_role("button", name="Enviar pregunta", exact=True).click()
+                page.wait_for_function(
+                    "count => document.querySelectorAll('.chat-message-assistant').length > count && "
+                    "document.querySelector('[data-chat-status]').textContent === 'Respuesta completa.'",
+                    arg=previous, timeout=10000,
+                )
+                assert "Respuesta segura." in page.locator(".chat-message-assistant").nth(previous).inner_text()
+
+            send_question("¿Cómo cambió la ocupación?")
             assert sent_context and sent_context[0]["tab"] == "reading"
-            assert sent_context[0]["period"] == "2026Q3"
+            assert sent_context[0]["period"] == "2026Q2"
+            assert sent_context[0]["entity"] == "INDUSTRY"
             assert page.inner_text("#period-display") == "2T26"
             assert (
                 page.get_by_role("link", name="Fuente", exact=True).get_attribute("rel")
@@ -230,24 +248,19 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             page.keyboard.press("Escape")
             assert launcher.get_attribute("aria-expanded") == "false"
 
-            reading_entity = page.locator("#carrier-reading")
-            reading_entity.wait_for(state="visible")
-            reading_entity.select_option("VOLARIS")
-            page.get_by_role("button", name="Preguntar sobre esta gráfica").click()
-            page.get_by_label("Pregunta sobre los datos publicados").fill("Explícame esta lectura")
-            page.get_by_role("button", name="Enviar").click()
-            page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
-            assert sent_context[1]["card_id"] == "reading-card"
+            page.click("#tab-economy")
+            page.locator("#pick-kpis select").select_option("VOLARIS")
+            page.get_by_role("button", name="Preguntar sobre RASK", exact=True).click()
+            send_question("Explícame esta lectura")
+            assert sent_context[1]["card_id"] == "kpi-rask_cents_per_km"
+            assert sent_context[1]["tab"] == "economy"
             assert sent_context[1]["entity"] == "VOLARIS"
             assert sent_context[1]["period"] == "2026Q2"
             page.keyboard.press("Escape")
 
-            if page.locator("#tab-market").count():
-                page.click("#tab-market")
-            page.locator(".chart-card .chat-card-action").filter(visible=True).first.click()
-            page.get_by_label("Pregunta sobre los datos publicados").fill("Explícame esta gráfica")
-            page.get_by_role("button", name="Enviar").click()
-            page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
+            page.click("#tab-flights")
+            page.locator("#market-card > .chat-card-action").click()
+            send_question("Explícame esta gráfica")
             market_index = len(sent_context) - 1
             assert sent_context[market_index]["card_id"] in {"market-chart", "market-card"}
             assert sent_context[market_index]["filters"]["segment"] == "total"  # type: ignore[index]
@@ -257,8 +270,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             # from its stored events instead of resending the question.
             api_state["resume_pending"] = True
             page.reload(wait_until="domcontentloaded")
-            launcher.wait_for(state="visible", timeout=20_000)
-            launcher.click()
+            page.locator("#airline-chat-panel").wait_for(state="visible", timeout=20_000)
             password_field.wait_for(state="visible", timeout=10_000)
             password_field.fill(password)
             page.get_by_role("button", name="Entrar").click()
@@ -275,37 +287,36 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             page.set_viewport_size({"width": 390, "height": 844})
             launcher.click()
             assert page.locator("#airline-chat-panel").is_visible()
-            assert (
-                page.locator("#airline-chat-panel").evaluate("node => getComputedStyle(node).width")
-                == "390px"
-            )
-            if page.locator("#tab-news").count():
-                page.keyboard.press("Escape")
-                page.click("#tab-news")
-                page.wait_for_selector("#news-count:text-is('0 noticias')")
-                page.select_option("#news-company", "Viva")
-                page.fill("#news-query", "capacidad")
-                before_count = len(sent_context)
-                page.click("#news-chat")
-                prompt = page.get_by_label("Pregunta sobre los datos publicados")
-                assert prompt.input_value() == "Busca noticias de Viva publicadas en 2026-09 sobre capacidad."
-                assert len(sent_context) == before_count  # Prefill does not submit.
-                password_field.fill(password)
-                page.get_by_role("button", name="Entrar").click()
-                password_field.wait_for(state="hidden")
-                page.get_by_role("button", name="Enviar").click()
-                page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
-                assert sent_context[-1]["tab"] == "news"
-                assert sent_context[-1]["period"] == "2026M09"
-                assert sent_context[-1]["entity"] == "VIVA_AEROBUS"
-                page.keyboard.press("Escape")
-                page.select_option("#news-company", "Aeroméxico Connect")
-                page.click("#news-chat")
-                assert "Aeroméxico Connect" in prompt.input_value()
-                assert "Sin aerolínea preseleccionada" in page.locator("#airline-chat-panel").inner_text()
-                page.get_by_role("button", name="Enviar").click()
-                page.get_by_text("Respuesta segura.").last.wait_for(timeout=10_000)
-                assert "entity" not in sent_context[-1]
+            bounds = page.locator("#airline-chat-panel").bounding_box()
+            assert bounds and bounds["x"] >= 0 and bounds["x"] + bounds["width"] <= 390
+            assert bounds["y"] >= 0 and bounds["y"] + bounds["height"] <= 844
+            page.keyboard.press("Escape")
+            page.click("#tab-news")
+            page.wait_for_selector("#news-count:text-is('0 noticias')")
+            before_count = len(sent_context)
+            page.locator("#news-heading > .chat-card-action").click()
+            prompt = page.get_by_label("Pregunta sobre los datos publicados")
+            prompt.fill("Busca noticias de Viva publicadas en septiembre de 2026 sobre capacidad.")
+            assert len(sent_context) == before_count  # Attaching never submits.
+            password_field.fill(password)
+            page.get_by_role("button", name="Entrar").click()
+            password_field.wait_for(state="hidden")
+            send_question()
+            assert sent_context[-1]["tab"] == "news"
+            assert sent_context[-1]["period"] == ""
+            assert sent_context[-1]["entity"] == "INDUSTRY"
+            page.keyboard.press("Escape")
+            page.locator("#news-heading > .chat-card-action").click()
+            prompt.fill("Busca noticias de Aeroméxico Connect en septiembre de 2026.")
+            before_count = len(sent_context)
+            page.get_by_role("button", name="Cerrar chat", exact=True).click()
+            launcher.click()
+            assert "Aeroméxico Connect" in prompt.input_value()
+            assert len(sent_context) == before_count
+            send_question()
+            assert sent_context[-1]["entity"] == "INDUSTRY"  # No removed company filter is inherited.
+            assert len(accepted) == len(sent_context) == 5
+            assert {item["turn_id"] for item in accepted.values()} <= set(seen_events)
             browser.close()
     finally:
         server.terminate()

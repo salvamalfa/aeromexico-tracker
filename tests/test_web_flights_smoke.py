@@ -48,6 +48,7 @@ def web_server(tmp_path_factory, web_dist_dir):
     root = tmp_path_factory.mktemp("web_smoke")
     # Synthetic fixtures must not inherit an existing real export's files.
     shutil.copytree(web_dist_dir, root, dirs_exist_ok=True, ignore=shutil.ignore_patterns("data"))
+    write_json(root / "api/chat/health", {"status": "ok", "auth": "password", "snapshot_version": "synthetic-ui-only"})
 
     out_dir = root / "data" / "v1"
     fixture = _load_fixture("flights_sample.json")
@@ -91,6 +92,7 @@ def test_flights_view_renders_the_synthetic_fixture_without_console_errors(web_s
         page.on("console", on_console_error)
         page.on("pageerror", lambda error: console_errors.append(str(error)))
         page.goto(web_server)
+        page.get_by_role("button", name="Cerrar chat", exact=True).click()
         page.click("#tab-flights")
         page.wait_for_selector("#network-volume:not([hidden])")
         page.wait_for_selector("#route-flow-map .scattergeo .js-line")
@@ -113,6 +115,7 @@ def test_region_map_refits_its_bounds_when_the_canvas_resizes(web_server) -> Non
         page = browser.new_page(viewport={"width": 1400, "height": 900})
         page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
         page.goto(web_server)
+        page.get_by_role("button", name="Cerrar chat", exact=True).click()
         page.click("#tab-flights")
         page.wait_for_selector("#network-volume:not([hidden])")
         # A region view uses fitViewToCanvas (the world view does not).
@@ -145,6 +148,7 @@ def test_region_map_refits_when_only_the_canvas_height_changes(web_server) -> No
         page = browser.new_page(viewport={"width": 600, "height": 900})
         page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
         page.goto(web_server)
+        page.get_by_role("button", name="Cerrar chat", exact=True).click()
         page.click("#tab-flights")
         page.wait_for_selector("#network-volume:not([hidden])")
         page.click("#network-region-switch button")
@@ -177,6 +181,7 @@ def test_region_map_refits_after_a_hidden_tab_redraw(web_server) -> None:
         page = browser.new_page(viewport={"width": 1400, "height": 900})
         page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
         page.goto(web_server)
+        page.get_by_role("button", name="Cerrar chat", exact=True).click()
         page.click("#tab-flights")
         page.wait_for_selector("#network-volume:not([hidden])")
         page.click("#network-region-switch button")

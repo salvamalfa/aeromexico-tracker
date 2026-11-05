@@ -28,6 +28,7 @@ Fixtures
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from copy import deepcopy
@@ -209,7 +210,12 @@ def web_dist_dir() -> Path:
         result = subprocess.run([npm, "ci"], cwd=WEB_ROOT, capture_output=True, text=True)
         if result.returncode != 0:
             pytest.skip(f"web_dist_dir: `npm ci` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}")
-    result = subprocess.run([npm, "run", "build"], cwd=WEB_ROOT, capture_output=True, text=True)
+    # Keep the synthetic browser fixture self-contained; production keeps its
+    # configured backend, while this build routes mocked chat requests locally.
+    result = subprocess.run(
+        [npm, "run", "build"], cwd=WEB_ROOT, capture_output=True, text=True,
+        env={**os.environ, "VITE_CHAT_API_URL": "/api/chat"},
+    )
     if result.returncode != 0:
         pytest.fail(
             f"web_dist_dir: `npm run build` failed in {WEB_ROOT}:\n{result.stdout}\n{result.stderr}",
