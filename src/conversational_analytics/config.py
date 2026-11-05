@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -85,6 +86,8 @@ class ChatConfig:
     # Capability additions remain disabled until the owner approves the
     # matching prompt and data activation.
     enable_route_tools: bool = False
+    enable_official_route_tools: bool = False
+    official_route_dataset_sha256: str | None = None
     enable_business_metric_tools: bool = False
     enable_evidence_tools: bool = False
     max_message_chars: int = 8_000
@@ -209,6 +212,8 @@ class ChatConfig:
             prompt_version=prompt_version,
             openai_enabled=openai_enabled,
             enable_route_tools=_env_bool("CHAT_ENABLE_ROUTE_TOOLS", False),
+            enable_official_route_tools=_env_bool("CHAT_ENABLE_OFFICIAL_ROUTE_TOOLS", False),
+            official_route_dataset_sha256=os.environ.get("CHAT_OFFICIAL_ROUTE_DATASET_SHA256") or None,
             enable_business_metric_tools=_env_bool("CHAT_ENABLE_BUSINESS_METRIC_TOOLS", False),
             enable_evidence_tools=_env_bool("CHAT_ENABLE_EVIDENCE_TOOLS", False),
             admission_enabled=os.environ.get("CHAT_ADMISSION_ENABLED", "true").lower()
@@ -235,11 +240,18 @@ class ChatConfig:
         )
 
     def __post_init__(self) -> None:
+        if self.enable_official_route_tools and (
+            not isinstance(self.official_route_dataset_sha256, str)
+            or not re.fullmatch(r"[a-f0-9]{64}", self.official_route_dataset_sha256)
+        ):
+            raise ValueError("Official route tools require CHAT_OFFICIAL_ROUTE_DATASET_SHA256")
         requested = {
             capability
             for field_name, capability in TOOL_CAPABILITIES.items()
             if getattr(self, field_name)
         }
+        if self.enable_official_route_tools:
+            requested.add("route_queries")
         from .providers._openai_prompt import effective_prompt_sha256, effective_prompt_version
 
         active_hash = effective_prompt_sha256()
