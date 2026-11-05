@@ -178,9 +178,13 @@ def test_news_mounts_when_selected_while_executive_data_is_loading(web_server):
         assert page.inner_text("#news-count") == "Cargando noticias…"
         assert held
         held[0].continue_()
-        page.wait_for_selector(".news-card")
+        page.wait_for_selector("#news-outside summary")
+        page.get_by_role("button", name="Cerrar chat", exact=True).click()
+        assert page.locator("#news-stories .news-card").count() == 0
+        page.locator("#news-outside summary").click()
+        page.wait_for_selector("#news-outside-stories .news-card")
         assert page.get_attribute("#tab-news", "aria-selected") == "true"
-        assert "Viva ajusta capacidad" in page.inner_text("#news-stories")
+        assert "Viva ajusta capacidad" in page.inner_text("#news-outside-stories")
         browser.close()
 
 
@@ -193,9 +197,11 @@ def test_news_source_links_keep_their_own_publisher(page_with_console_capture, w
     )
     page.route("**/data/v1/news.json", lambda route: route.fulfill(json=payload))
     page.click("#tab-news")
-    page.wait_for_selector(".news-card")
-    assert page.locator('a[href="https://example.com/second"]').text_content() == "Otro medio"
-    assert page.locator('a[href="https://ri.vivaaerobus.com/doc"]').text_content() == "Viva"
+    page.wait_for_selector("#news-outside summary")
+    assert page.locator("#news-stories .news-card").count() == 0
+    page.locator("#news-outside summary").click()
+    assert page.locator('#news-outside-stories a[href="https://example.com/second"]').text_content() == "Otro medio"
+    assert page.locator('#news-outside-stories a[href="https://ri.vivaaerobus.com/doc"]').text_content() == "Viva"
     assert errors == []
 
 
@@ -346,11 +352,13 @@ def test_independent_tabs_and_mobile_navigation(page_with_console_capture, web_s
         page.wait_for_function("document.getElementById('market-chart').layout.shapes[0].x0 === '2026-04-01'")
         assert page.inner_text("#period-display") == "2T26"
     else:
-        page.wait_for_selector(".news-card")
-        assert page.locator(".news-card").count() == 1
-        assert "Viva ajusta capacidad" in page.inner_text("#news-stories")
-        assert "<img src=x>" in page.inner_text("#news-stories")
-        assert page.locator("#news-stories img").count() == 0
+        page.wait_for_selector("#news-outside summary")
+        assert page.locator("#news-stories .news-card").count() == 0
+        page.locator("#news-outside summary").click()
+        assert page.locator("#news-outside-stories .news-card").count() == 1
+        assert "Viva ajusta capacidad" in page.inner_text("#news-outside-stories")
+        assert "<img src=x>" in page.inner_text("#news-outside-stories")
+        assert page.locator("#news-outside-stories img").count() == 0
         assert page.locator("#news-company, #news-query, #news-chat").count() == 0
     page.click("#tab-reading")
     page.click("#tab-economy")

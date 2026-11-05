@@ -90,10 +90,9 @@ export function buildChatContext(cardElement?: Element | null): ChatContext {
   const tab = cardId === "market-card" || cardId === "market-chart" ? "market" : visualTab;
   const newsCompany = document.querySelector<HTMLSelectElement>("#news-company")?.value;
   const newsEntities: Record<string,string> = { "Aeroméxico":"AEROMEXICO", "Volaris":"VOLARIS", "Viva":"VIVA_AEROBUS" };
-  const newsMonth = document.querySelector<HTMLSelectElement>("#news-month")?.value;
   const period = tab === "flights"
     ? currentPeriodId() ?? flightState.quarters[flightState.periodIndex]?.period_id ?? ""
-    : tab === "news" ? newsMonth?.replace("-","M") || "" : currentPeriodId() ?? "";
+    : currentPeriodId() ?? "";
   const picked = tab === "news" ? newsCompany ? newsEntities[newsCompany] : "INDUSTRY" : selectedEntities(cardId, tab);
   const context: ChatContext = { tab, period, ...(picked !== undefined ? {entity:picked} : {}) };
   if (cardId) context.card_id = cardId;
@@ -148,7 +147,7 @@ export function describeChatContext(context: ChatContext): string {
     "unit-chart": "Economía unitaria", "volume-chart": "Pasajeros y RASK", "load-chart": "Ocupación y RASK",
     "route-flow-map": "Mapa de rutas", "flow-map": "Mapa de rutas", "mix-chart": "Mezcla por segmento",
   };
-  const period = context.tab === "reading" && /^\d{4}Q[1-4]$/.test(context.period)
+  const period = (context.tab === "reading" || context.tab === "news") && /^\d{4}Q[1-4]$/.test(context.period)
     ? `${context.period.slice(-1)}T${context.period.slice(2, 4)}`
     : executiveState.records.find((record) => record.period_id === context.period)?.period_label ??
     flightState.byPeriod.get(context.period)?.period_label ?? context.period;
