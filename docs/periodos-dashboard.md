@@ -924,8 +924,16 @@ las ocho lecturas y los originales del productor `602ea2a4…`; requiere inspecc
 y autoridad de datos propias para los dos miembros nativos cerrados. La autoridad
 editorial `708bedf9…` no cubre por sí sola esos nuevos datos. El código aislado y
 sus pruebas no activan fuentes ni levantan el bloqueo de calidad de la historia.
-Faltan el cierre Gold AFAC derivado, la reproducción completa en Linux y la
-revisión independiente del candidato final antes de publicar.
+La preparación nativa Linux `41974431358` cerró cinco Gold y cuatro salidas
+con revisión independiente. El hijo L `d0b5ed60` sólo incorpora esos Gold,
+con el mismo código K `c21d8580`. La inspección `41976436998` reprodujo el padre
+original aislado y las fuentes nativas y fijó el scope de datos `32478256…`.
+Su auditoría independiente `415f6850…` y la autoridad nueva `fb24fd21…` aplican
+las instrucciones auténticas de corregir el circuito normal y publicar; no
+afirman que el dueño vio o aprobó literalmente ese hash. La autoridad trimestral
+y las ocho identidades se conservan por separado. El gate de publicación
+`41978910020` está en ejecución; no acredita aún sitio servido, CI final ni
+despliegue de Pages/Railway.
 
 El generador de revisión ANAC usa la actualización selectiva compartida de
 Vuelos: un no-op conserva todos los comparativos y una llegada sólo recalcula
