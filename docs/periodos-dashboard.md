@@ -863,8 +863,24 @@ las ocho versiones de lectura. Los candidatos actuales no son publicación.
   sin sustituir pasajeros internacionales por cero. La prueba con los ocho
   originales 2019–2026 cotejó 279 denominadores y 372 totales de servicio;
   reconstruyó ocho ediciones con el generador normal. Los archivos físicos y
-  sus recibos permanecen privados. Falta cerrar persistencia normal de Gold,
-  exportación, actualización mensual y revisión independiente. Este código
+  sus recibos permanecen privados. La cadena normal de preparación usa
+  `parse.afac_annual,transform.afac_native,transform.warehouse`: conserva los
+  6.692 registros anteriores, los 3.050 ajenos a AFAC y los 1.332 AFAC previos
+  a 2019; anexa versiones con estado de valor, fórmula y estimación declarada
+  por la fuente. La última comprobación local pasó por los ocho originales y
+  cotejó exactamente 2.646 celdas entre crudo y Gold/warehouse. La publicación
+  exige todavía la preparación Linux bajo código K y un hijo L que incorpore
+  únicamente los cinco Gold; no usa la muestra Windows como autorización.
+  `afac_native_dataset.create` prepara el descriptor portable;
+  `audit_candidate` reproduce desde los cinco Gold originales sin exigir que
+  estén incorporados. `replay` y `materialize_inputs` exigen los cinco Gold
+  canónicos iguales a Git HEAD y la misma huella de código K→L. Materializar
+  sólo regenera Silver, checks y warehouse; no escribe Gold ni JSON visibles.
+  La exportación `src.web_export --only market --database <warehouse> --out
+  <salida>` conserva contrato y privacidad y escribe sólo `market.json`.
+  La continuidad mensual sobre el nuevo baseline compuesto mantiene su
+  revisión y gate específico pendientes, sin actualizar el calendario.
+  Este código
   preparado no activa datos ni cambia aprobaciones; conserva los originales,
   pruebas y generadores para reproducir la corrección.
 

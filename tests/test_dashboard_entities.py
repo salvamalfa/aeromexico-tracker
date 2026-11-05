@@ -70,16 +70,23 @@ def _metric_rows() -> list[tuple]:
 def _afac_rows() -> list[tuple]:
     rows = []
     shares = {"AEROMEXICO": 290, "VOLARIS": 370, "VIVA_AEROBUS": 330, "TAR": 10}
-    # 2020M12: before INTERNATIONAL_FIRST_MONTH, only domestic may be published.
+    # Native international and total coverage includes the 2019/2020 books.
     for month in ("2020M12", "2025M10", "2025M11", "2025M12", "2026M01", "2026M02", "2026M03"):
         for carrier, value in shares.items():
             for segment, factor in (("total", 1.0), ("domestic", 0.8), ("international", 0.2)):
                 if carrier == "TAR" and segment == "international":
                     continue
-                rows.append((carrier, month, "month", segment, "passengers_afac", value * factor * 1000, None))
-        rows.append(("MARKET_TOTAL_MX", month, "month", "total", "passengers_afac", 2.0e6, None))
+                rows.append(
+                    (carrier, month, "month", segment, "passengers_afac", value * factor * 1000, None)
+                )
+        for segment, value in (("total", 1.0e6), ("domestic", 0.8e6), ("international", 0.2e6)):
+            rows.append(("MARKET_TOTAL_MX", month, "month", segment, "passengers_afac", value, None))
     # Viva has no international row in 2026M02: missing, not zero.
-    return [row for row in rows if not (row[0] == "VIVA_AEROBUS" and row[1] == "2026M02" and row[3] == "international")]
+    return [
+        row
+        for row in rows
+        if not (row[0] == "VIVA_AEROBUS" and row[1] == "2026M02" and row[3] == "international")
+    ]
 
 
 @pytest.fixture()
@@ -93,8 +100,13 @@ def warehouse(tmp_path: Path) -> Path:
         connection.executemany(
             "INSERT INTO v_carrier_default VALUES (?, ?, ?, ?, ?, ?, ?)", _metric_rows() + _afac_rows()
         )
+        from src.parse.afac.market_scope import TOTAL_FORMULA
+
+        connection.execute("ALTER TABLE v_carrier_default ADD COLUMN derivation_formula VARCHAR")
+        connection.execute("UPDATE v_carrier_default SET derivation_formula = ?", [TOTAL_FORMULA])
         connection.execute(
-            "CREATE TABLE dim_source_artifact AS SELECT 'afac' AS source_system, TIMESTAMP '2026-09-13 00:00:00' AS downloaded_at"
+            "CREATE TABLE dim_source_artifact AS SELECT 'afac' AS source_system, "
+            "TIMESTAMP '2026-09-13 00:00:00' AS downloaded_at"
         )
     return path
 
@@ -135,13 +147,25 @@ def test_industry_ex_fuel_is_missing_when_one_carrier_does_not_publish_it(wareho
 def test_industry_only_exists_on_the_constant_three_carrier_panel() -> None:
     carriers = pd.DataFrame(
         [
-            {"carrier_key": carrier, "period_id": period, "passengers": 1.0, "ask_km": 1.0,
-             "load_factor": 0.8, "rask_cents_per_km": 5.0, "cask_cents_per_km": 4.0,
-             "unit_margin_cents_per_km": 1.0, "load_factor_basis": "reported",
-             "cask_ex_fuel_cents_per_km": None, "rpk_km": None}
+            {
+                "carrier_key": carrier,
+                "period_id": period,
+                "passengers": 1.0,
+                "ask_km": 1.0,
+                "load_factor": 0.8,
+                "rask_cents_per_km": 5.0,
+                "cask_cents_per_km": 4.0,
+                "unit_margin_cents_per_km": 1.0,
+                "load_factor_basis": "reported",
+                "cask_ex_fuel_cents_per_km": None,
+                "rpk_km": None,
+            }
             for carrier, period in [
-                ("AEROMEXICO", "2022Q4"), ("VOLARIS", "2022Q4"),
-                ("AEROMEXICO", "2023Q1"), ("VOLARIS", "2023Q1"), ("VIVA_AEROBUS", "2023Q1"),
+                ("AEROMEXICO", "2022Q4"),
+                ("VOLARIS", "2022Q4"),
+                ("AEROMEXICO", "2023Q1"),
+                ("VOLARIS", "2023Q1"),
+                ("VIVA_AEROBUS", "2023Q1"),
             ]
         ]
     )
@@ -156,7 +180,7 @@ def test_market_payload_shares_are_over_mexican_carriers_and_missing_stays_null(
 
     month = {m["period_id"]: m for m in payload["months"]}
     total = month["2026M01"]["segments"]["total"]
-    # Denominator: every Mexican carrier (TAR included), never MARKET_TOTAL_MX.
+    # Denominator: reconciled Mexican TOTAL, including carriers outside the panel.
     assert total["mexican_carriers_passengers"] == pytest.approx(1_000_000)
     assert total["carriers"]["VOLARIS"]["share"] == pytest.approx(0.37)
     assert total["industry"]["share"] == pytest.approx(0.99)
@@ -171,13 +195,12 @@ def test_market_payload_shares_are_over_mexican_carriers_and_missing_stays_null(
     assert missing["carriers"]["VOLARIS"]["share"] is None
     assert missing["carriers"]["VOLARIS"]["passengers"] == pytest.approx(74_000)
 
-    # Before 2021 AFAC barely publishes international passengers by Mexican
-    # carrier: international and total are not published, domestic is.
+    # Historical native totals must not be hidden because their label was blank.
     early = month["2020M12"]["segments"]
     for segment in ("international", "total"):
-        assert early[segment]["mexican_carriers_passengers"] is None
-        assert early[segment]["carriers"]["AEROMEXICO"]["passengers"] is None
-        assert early[segment]["industry"]["share"] is None
+        assert early[segment]["mexican_carriers_passengers"] is not None
+        assert early[segment]["carriers"]["AEROMEXICO"]["passengers"] is not None
+        assert early[segment]["industry"]["share"] is not None
     assert early["domestic"]["carriers"]["VOLARIS"]["share"] == pytest.approx(0.37)
 
     quarters = {q["period_id"]: q for q in payload["quarters"]}

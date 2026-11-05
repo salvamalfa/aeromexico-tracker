@@ -10,6 +10,10 @@ from src.config import PATHS
 
 
 def validate_afac() -> dict[str, object]:
+    if (PATHS.data / "afac_native_annual_inputs.json").is_file():
+        from src.parse.afac.annual_series import validate
+
+        return validate()
     facts = pl.read_parquet(PATHS.silver / "afac_monthly_stats.parquet")
     totals = pl.read_parquet(PATHS.quality / "afac_total_checks.parquet")
     reconciliation = pl.read_parquet(

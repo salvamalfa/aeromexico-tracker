@@ -28,8 +28,11 @@ from src.web_export.news import export_news
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--only", choices=("market",), help="Export only the normal AFAC market payload.")
+    parser.add_argument("--database", type=Path, help="Explicit warehouse for --only market.")
     parser.add_argument(
-        "--analysis-manifest", type=Path,
+        "--analysis-manifest",
+        type=Path,
         help="Exact analysis identity list or publication_manifest.json, without ambiguous ledger discovery.",
     )
     parser.add_argument(
@@ -54,16 +57,33 @@ def main(argv: list[str] | None = None) -> int:
         help="Owner approval receipt; both business-metrics options are required together.",
     )
     args = parser.parse_args(argv)
+    if args.database and args.only != "market":
+        parser.error("--database requires --only market")
+    if args.only and (
+        args.analysis_manifest or args.business_metrics_proposal or args.business_metrics_receipt
+    ):
+        parser.error("--only market cannot select analysis or business-metric publication inputs")
     if bool(args.business_metrics_proposal) != bool(args.business_metrics_receipt):
         parser.error("--business-metrics-proposal and --business-metrics-receipt must be supplied together")
 
     try:
+        market_payload = build_market_payload(str(args.database)) if args.database else build_market_payload()
+        if args.only == "market":
+            written = export_market(
+                market_payload,
+                args.out,
+                include_demand=False,
+                input_root=args.database.resolve().parent.parent if args.database else None,
+            )
+            for path in written:
+                print(f"{path.relative_to(args.out)}\t{path.stat().st_size:,} bytes")
+            return 0
         analysis_manifest = load_analysis_manifest(args.analysis_manifest) if args.analysis_manifest else None
         flight_payload = build_flight_payload()
         written = export_flights(flight_payload, args.out)
         executive_payload = build_executive_payload()
         written += export_executive(executive_payload, args.out)
-        written += export_market(build_market_payload(), args.out)
+        written += export_market(market_payload, args.out)
         written += export_news(args.out)
         written += export_analysis(
             args.out,
@@ -79,7 +99,13 @@ def main(argv: list[str] | None = None) -> int:
                 args.business_metrics_receipt,
                 args.out,
             )
-    except (MissingWebInput, MissingAnalysisInput, BusinessMetricsApprovalError, ValueError, OSError) as error:
+    except (
+        MissingWebInput,
+        MissingAnalysisInput,
+        BusinessMetricsApprovalError,
+        ValueError,
+        OSError,
+    ) as error:
         print(f"web_export: {error}", file=sys.stderr)
         return 1
 

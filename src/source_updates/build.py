@@ -21,6 +21,7 @@ ALLOWED = frozenset(
         "parse.aeromexico_ir",
         "parse.aeromexico_ir_financial",
         "parse.afac",
+        "parse.afac_annual",
         "parse.bmv",
         "parse.complementary",
         "parse.peers",
@@ -40,9 +41,26 @@ ALLOWED = frozenset(
         "transform.stage6",
         "transform.validate_stage6",
         "transform.gold_lineage",
+        "transform.afac_native",
+        "transform.warehouse",
     }
 )
 GRANULAR = {
+    "parse.afac_annual": (
+        "src.parse.afac.annual_series:run",
+        ("afac",),
+        ("afac_monthly_stats",),
+    ),
+    "transform.afac_native": (
+        "src.transform.afac_native_update:run",
+        (),
+        ("../gold/fact_carrier_metrics",),
+    ),
+    "transform.warehouse": (
+        "src.transform.afac_native_update:warehouse",
+        (),
+        (),
+    ),
     "parse.market_chart": (
         "src.source_updates.market:build_from_charts",
         ("yahoo_finance",),
@@ -91,6 +109,8 @@ def required_predecessors(steps: list[str]) -> dict[str, tuple[str, ...]]:
     dependencies.update({name: () for name in GRANULAR})
     dependencies["parse.complementary"] = ("parse.sec",)
     dependencies["transform.gold_lineage"] = ("transform.validate_stage6",)
+    dependencies["transform.afac_native"] = ("parse.afac_annual",)
+    dependencies["transform.warehouse"] = ("transform.afac_native",)
     # This granular parser accepts preserved SEC evidence as an explicit file
     # input. If SEC is rebuilt in this run, it must precede the market parser.
     dependencies["parse.market"] = ("parse.sec",) if "parse.sec" in steps else ()
@@ -202,6 +222,7 @@ def build(workspace: Path, steps: list[str], *, execute: bool = False) -> dict:
 
 
 def worker(workspace: Path, requested: list[str], report: Path) -> int:
+    workspace = safe_workspace(workspace)
     build_plan(workspace, requested)
     if not report.resolve().is_relative_to((workspace / "receipts").resolve()):
         raise ValueError("Build receipt must remain inside the candidate workspace")
@@ -268,7 +289,11 @@ def worker(workspace: Path, requested: list[str], report: Path) -> int:
             action,
             RequirementLevel.REQUIRED,
             tuple(inputs),
-            tuple(f"data/silver/{table}.parquet" for table in outputs),
+            (
+                ("data/warehouse.duckdb",)
+                if name == "transform.warehouse"
+                else tuple(f"data/silver/{table}.parquet" for table in outputs)
+            ),
             depends_on=dependencies.get(name, ()),
         )
     selected = [replace(registry[name], requirement=RequirementLevel.REQUIRED) for name in requested]

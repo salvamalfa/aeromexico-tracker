@@ -13,7 +13,6 @@ import yaml
 from src.config import PATHS
 from src.transform.stage9_lineage import add_record_ids
 
-
 CONTRACT_PATH = PATHS.root / "config" / "gold_schema_contracts.yaml"
 TYPE_MAP: dict[str, Any] = {
     "string": pa.String,
@@ -94,6 +93,8 @@ def _state_token(row: pd.Series, columns: list[str]) -> tuple[object, ...]:
     values: list[object] = []
     for column in columns:
         value = row[column]
+        if column == "derivation_formula" and isinstance(value, str):
+            value = " ".join(value.split())
         values.append(None if pd.isna(value) else value)
     return tuple(values)
 
@@ -244,7 +245,9 @@ def validate_relationships(*, max_stage: int | None = None) -> dict[str, int]:
             child_keys = child[child_columns].dropna().drop_duplicates()
             parent_keys = parent[parent_columns].dropna().drop_duplicates()
             renamed = {parent: child for child, parent in zip(child_columns, parent_columns)}
-            orphaned = child_keys.merge(parent_keys.rename(columns=renamed), on=child_columns, how="left", indicator=True)
+            orphaned = child_keys.merge(
+                parent_keys.rename(columns=renamed), on=child_columns, how="left", indicator=True
+            )
             orphaned = orphaned[orphaned["_merge"].eq("left_only")]
             key = f"{table_name}:{','.join(child_columns)}->{parent_name}"
             results[key] = len(orphaned)

@@ -5,6 +5,7 @@ They are never assigned to Mexico just because the crosswalk lacks a match.
 """
 
 import hashlib
+import json
 import math
 from collections import defaultdict
 
@@ -13,6 +14,20 @@ from src.parse.afac.monthly_stats import _mapped_carrier, _normalize
 TOTAL_FORMULA = "AFAC_MEXICAN_NATIVE_TOTAL_V2:scheduled+charter;foreign_excluded;exact_reconciliation"
 RETAINED_TOTAL_FORMULA = "AFAC_MEXICAN_RETAINED_TOTAL_V2:published_baseline;not_recertified"
 TOTAL_KEY = "MARKET_TOTAL_MX"
+
+
+def cells_sha256(cells):
+    """Canonical native/Gold cell identity, compact sorted JSON plus one LF."""
+    rows = [
+        dict(carrier_key=key, period_id=period, segment=segment, value=float(value))
+        for (key, period, segment), value in sorted(cells.items())
+    ]
+    return hashlib.sha256(
+        (
+            json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+            + "\n"
+        ).encode()
+    ).hexdigest()
 
 
 def carrier_identity(row, crosswalk):

@@ -93,6 +93,40 @@ def test_market_rejects_legacy_mixed_total_and_missing_native_total(tmp_path):
         build_market_payload(str(path))
 
 
+@pytest.mark.parametrize("timestamp_type", ["TIMESTAMPTZ", "TIMESTAMP"])
+def test_market_capture_date_is_utc_even_in_mexico_session(tmp_path, monkeypatch, timestamp_type):
+    path = tmp_path / "utc.duckdb"
+    with duckdb.connect(str(path)) as db:
+        db.execute(
+            "CREATE TABLE v_carrier_default(carrier_key VARCHAR,period_id VARCHAR,segment VARCHAR,"
+            "value DOUBLE,metric_key VARCHAR,period_type VARCHAR,derivation_formula VARCHAR)"
+        )
+        for month in range(1, 4):
+            for segment in ("domestic", "international", "total"):
+                for key, value in (
+                    ("AEROMEXICO", 10),
+                    ("VOLARIS", 20),
+                    ("VIVA_AEROBUS", 30),
+                    (TOTAL_KEY, 100),
+                ):
+                    db.execute(
+                        "INSERT INTO v_carrier_default VALUES(?,?,?,?,'passengers_afac','month',?)",
+                        [key, f"2026M{month:02d}", segment, value, TOTAL_FORMULA],
+                    )
+        db.execute(f"CREATE TABLE dim_source_artifact(source_system VARCHAR,downloaded_at {timestamp_type})")
+        db.execute("INSERT INTO dim_source_artifact VALUES('afac','2026-11-02T00:17:23+00:00')")
+    connect = duckdb.connect
+
+    def mexico(*args, **kwargs):
+        db = connect(*args, **kwargs)
+        db.execute("SET TimeZone='America/Mexico_City'")
+        return db
+
+    monkeypatch.setattr(duckdb, "connect", mexico)
+    payload = build_market_payload(str(path))
+    assert payload["metadata"]["data_as_of"] == "2026-11-02"
+
+
 @pytest.mark.local_data
 def test_retained_2019_2026_originals_reconcile_every_mexican_total(tmp_path):
     archive = PATHS.root.parent / "private-linux-release/snapshot/data/bronze/afac"
