@@ -22,7 +22,7 @@ def publication(tmp_path, monkeypatch):
     ledger = tmp_path / "analysis_runs/lifecycle"
     site = tmp_path / "site"
     before = {"index.html": b"approved original frontend", "data/v1/market.json": b"old"}
-    parent_raw = contract.encoded({"fixture": "unserved B"})
+    parent_raw = contract.encoded({"fixture": "unserved B", "files": contract.pins(before)})
     contract.materialize_site(site, parent_raw, before)
     approved = [
         {
