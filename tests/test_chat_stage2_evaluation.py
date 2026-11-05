@@ -128,6 +128,19 @@ def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewritin
 
     profile = verifier_for(root / "site", root)
     native = profile == "src.publish.afac_history_scope"
+    if profile == "src.publish.source_data_scope":
+        from src.publish import source_data_scope
+
+        # The official map overlays the site without changing the AFAC market data.
+        spec = source_data_scope.anchor(root)
+        assert spec["product"] == "official_routes"
+        assert [row["path"] for row in spec["data_files"]] == ["data/v1/official-routes.json"]
+        baseline, _ = source_data_scope.transport.baseline(root, spec)
+        retained = {row["path"]: row["sha256"] for row in baseline["files"]}
+        assert hashlib.sha256(market_raw).hexdigest() == retained["data/v1/market.json"]
+        afac_proof = "afac-history-publication.json"
+        assert hashlib.sha256((root / "site" / afac_proof).read_bytes()).hexdigest() == retained[afac_proof]
+        native = True
     assert native or profile == "src.publish.quarterly_story_scope"
     anchor_name = "afac-history-release.json" if native else "quarterly-story-release.json"
     anchor = json.loads((root / "config/publish" / anchor_name).read_bytes())
