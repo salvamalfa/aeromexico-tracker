@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { OfficialRoutesDocument } from "../../types/official-routes";
 import { initPeriods } from "../../state/period";
 import { mountOfficialMap, renderOfficialMap } from "./official-map";
@@ -7,12 +7,51 @@ import { officialState } from "./official-routes";
 import { state } from "./state";
 vi.mock("./official-map-chart", () => ({ drawOfficialMap: vi.fn(async () => {}) }));
 const wire = JSON.parse(readFileSync("../tests/fixtures/official-routes.example.json", "utf8")) as OfficialRoutesDocument;
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 beforeEach(() => {
   document.body.innerHTML = readFileSync("index.html", "utf8");
   window.history.replaceState(null, "", "/");
   initPeriods(["2026Q2", "2026Q3"], "2026Q3");
   state.dataRoot = "data/v1";
   Object.assign(officialState, { document: null, network: null, scope: "national", region: null, view: "volume", carriers: ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"] });
+});
+it("opens the search icon with focus, clears pending queries on close/Escape, and preserves the selected route", async () => {
+  vi.useFakeTimers();
+  officialState.document = structuredClone(wire);
+  mountOfficialMap(); await renderOfficialMap("2026Q3");
+  const route = officialState.routes[0]!; officialState.selectedRoute = route.route_key;
+  const toggle = document.getElementById("official-map-search-toggle") as HTMLButtonElement;
+  const box = document.getElementById("official-map-search-box")!;
+  const input = document.getElementById("official-map-search") as HTMLInputElement;
+  expect(box.hidden).toBe(true); expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  toggle.click(); expect(box.hidden).toBe(false); expect(document.activeElement).toBe(input);
+  input.value = "Mexico"; input.dispatchEvent(new Event("input")); toggle.click();
+  vi.advanceTimersByTime(200);
+  expect(box.hidden).toBe(true); expect(input.value).toBe("");
+  expect(document.getElementById("official-map-search-results")!.childElementCount).toBe(0);
+  expect(officialState.selectedRoute).toBe(route.route_key);
+  toggle.click(); input.value = "Mexico"; input.dispatchEvent(new Event("input")); vi.advanceTimersByTime(200);
+  const result = document.querySelector<HTMLButtonElement>("#official-map-search-results button")!;
+  result.focus(); result.dispatchEvent(new KeyboardEvent("keydown", { key:"Escape", bubbles:true }));
+  expect(box.hidden).toBe(true); expect(input.value).toBe(""); expect(document.activeElement).toBe(toggle);
+  expect(toggle.getAttribute("aria-label")).toBe("Buscar ruta"); expect(officialState.selectedRoute).toBe(route.route_key);
+});
+it("finds a city outside the top 12 through the icon and opens it from the keyboard", async () => {
+  vi.useFakeTimers(); vi.stubGlobal("matchMedia", vi.fn(() => ({ matches:false })));
+  const doc = structuredClone(wire), original = doc.networks[0]!.routes[0]!;
+  doc.networks[0]!.routes = Array.from({ length:14 }, (_, i) => ({ ...original, route_key:`CITY_MX_MEXICO--CITY_${i}`, departures:14-i,
+    destination:{...original.destination, id:`CITY_${i}`, label:i===13 ? "Ciudad fuera del top" : `Ciudad ${i}`} }));
+  officialState.document = doc; mountOfficialMap(); await renderOfficialMap("2026Q3");
+  expect(document.querySelectorAll("[data-official-route]")).toHaveLength(12);
+  document.getElementById("official-map-search-toggle")!.click();
+  const input = document.getElementById("official-map-search") as HTMLInputElement;
+  input.value = "Ciudad fuera del top"; input.dispatchEvent(new Event("input"));
+  input.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", bubbles:true }));
+  expect(officialState.selectedNode).toBe("CITY_13");
+  expect(document.querySelectorAll("[data-official-route]")).toHaveLength(1);
+  expect(document.getElementById("official-map-search-box")!.hidden).toBe(true);
+  expect(document.getElementById("official-map-back")!.hidden).toBe(false);
+  expect(input.value).toBe("");
 });
 it("installs only the latest scope and quarter when a shared network fetch resolves late", async () => {
   let finish!: (value: unknown) => void;

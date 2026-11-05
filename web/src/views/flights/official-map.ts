@@ -10,6 +10,16 @@ import { geographicRoutes, incidentOfficialRoutes, loadOfficialRoutes, MAP_CARRI
   searchOfficialPoints, selectOfficialNetwork, syncMapUrl, visibleOfficialRoutes } from "./official-routes";
 
 const el = (id: string) => document.getElementById(id);
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+function setSearchOpen(open: boolean, restoreFocus = false): void {
+  clearTimeout(searchTimer);
+  const box = el("official-map-search-box"), toggle = el("official-map-search-toggle");
+  const input = el("official-map-search") as HTMLInputElement | null;
+  if (box) box.hidden = !open;
+  if (toggle) { toggle.setAttribute("aria-expanded", String(open)); toggle.setAttribute("aria-label", open ? "Cerrar búsqueda" : "Buscar ruta"); }
+  if (open) input?.focus();
+  else { if (input) input.value = ""; el("official-map-search-results")?.replaceChildren(); if (restoreFocus) toggle?.focus(); }
+}
 function monthsLabel(months: string[]): string { return months.length ? months.map(mapPeriodLabel).join(", ") : "Sin meses disponibles"; }
 function comparisonLabel(route: OfficialRoute): string {
   const c = route.comparison;
@@ -46,7 +56,7 @@ function renderSearch(): void {
   for (const { point, count } of searchOfficialPoints(input.value)) {
     const button = document.createElement("button"); button.type = "button";
     button.textContent = `${point.label}${point.iata ? ` · ${point.iata}` : ""} · ${count} rutas`;
-    button.addEventListener("click", () => { input.value = ""; results.replaceChildren(); focusNode(point.id); });
+    button.addEventListener("click", () => { setSearchOpen(false); focusNode(point.id); el("official-map-back")?.focus(); });
     results.append(button);
   }
   if (input.value.trim() && !results.children.length) results.textContent = "Sin coincidencias en esta selección";
@@ -132,6 +142,7 @@ export async function renderOfficialMap(period = currentPeriodId() ?? ""): Promi
   const current = ++request;
   const signature = `${period}|${officialState.scope}|${officialState.carriers.join(",")}|${officialState.region}`;
   officialState.period = period; officialState.loading = true; officialState.error = "";
+  setSearchOpen(false);
   const map = el("route-flow-map"); if (map) map.dataset.mapStatus = "loading";
   officialState.selectedNode = null; officialState.selectedRoute = null;
   officialState.network = null; officialState.routes = [];
@@ -184,10 +195,13 @@ export function mountOfficialMap(): void {
     officialState.view = view; officialState.selectedNode = null; officialState.selectedRoute = null; renderSummary(); void redrawOfficialMap();
   });
   el("official-map-back")?.addEventListener("click", () => { officialState.selectedNode = null; officialState.selectedRoute = null; renderRouteList(); void redrawOfficialMap(); });
-  el("official-map-search")?.addEventListener("input", renderSearch);
+  el("official-map-search-toggle")?.addEventListener("click", () => setSearchOpen(el("official-map-search-box")?.hidden ?? true, true));
+  el("official-map-search")?.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderSearch, 120); });
   el("official-map-search")?.addEventListener("keydown", event => {
-    if (event.key === "Enter") el("official-map-search-results")?.querySelector<HTMLButtonElement>("button")?.click();
-    if (event.key === "Escape") { (event.target as HTMLInputElement).value = ""; renderSearch(); }
+    if (event.key === "Enter") { event.preventDefault(); clearTimeout(searchTimer); renderSearch(); el("official-map-search-results")?.querySelector<HTMLButtonElement>("button")?.click(); }
+  });
+  el("official-map-search-box")?.addEventListener("keydown", event => {
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setSearchOpen(false, true); }
   });
   // Both selectors preserve their independent selection when their scope is hidden.
   document.addEventListener("pointerdown", event => { if (pick && !pick.contains(event.target as Node)) pick.removeAttribute("open"); });
