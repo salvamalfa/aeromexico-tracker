@@ -63,7 +63,12 @@ it("shows exactly four sourced points with no redundant controls or footers", as
     for (const [index, entity] of entities.entries()) {
       const document = approved(entity, "2026Q3")!;
       expect(document.summary_items).toHaveLength(1);
-      expect(plain(items[index]!.querySelector("span")!)).toBe(document.summary_items[0]!.text);
+      const summary = document.summary_items[0]!;
+      // AM's short summary omits its lead; its full approved text stays below.
+      if (entity === "AEROMEXICO") {
+        expect(summary.text.startsWith(summary.lead!)).toBe(true);
+        expect(plain(items[index]!.querySelector("span")!)).toBe(summary.text.slice(summary.lead!.length).trim());
+      } else expect(plain(items[index]!.querySelector("span")!)).toBe(summary.text);
       const claim = document.claims.find(claim => claim.claim_id === document.summary_items[0]!.claim_id)!;
       expect([...items[index]!.querySelectorAll("a.source-note")].map(a => a.getAttribute("href")).sort())
         .toEqual(claim.citations.map(citation => citation.href).sort());

@@ -78,7 +78,8 @@ for (const entity of ["AEROMEXICO","VIVA_AEROBUS","VOLARIS","INDUSTRY"]) {
         const total = (routes: {departures?: number|null}[]) => routes.reduce((sum,row) => sum+(row.departures ?? 0),0);
         expect(total(state.routes)).toBe(total(july.routes));
         expect(document.getElementById("flight-map-coverage-info")?.textContent).toContain("parcial: 1 de 3 meses");
-        expect(document.getElementById("mix-coverage")?.textContent).toContain("No se calcula un trimestre");
+        // AFAC passenger mix is complete; the route map above remains July-only.
+        expect(document.getElementById("mix-coverage")?.textContent).toContain("ventana mensual completa: 3 de 3 meses (julio, agosto, septiembre)");
         state.networkMode = "international"; await renderNetworkPeriod(id);
         const international = data<{routes: {departures?: number|null}[]}>(`${prefix}/international/2026Q3`);
         expect(total(state.routes)).toBe(total(international.routes) - ({AEROMEXICO:840,VIVA_AEROBUS:162,VOLARIS:150,INDUSTRY:1152}[entity] ?? 0));

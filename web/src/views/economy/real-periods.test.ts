@@ -79,17 +79,30 @@ for (const entity of ["AEROMEXICO", "VIVA_AEROBUS", "VOLARIS", "INDUSTRY"] as En
   });
 }
 
-it("real AFAC keeps every reported share unchanged, joins June to July and stops in August", () => {
+it("real AFAC keeps every reported share unchanged, joins June to July and completes Q3 in September", () => {
   renderMarket("2026Q3");
-  expect(market.months.at(-1)?.period_id).toBe("2026M08");
-  expect(market.quarters.some(row => row.period_id === "2026Q3")).toBe(false);
+  expect(market.months.at(-1)?.period_id).toBe("2026M09");
+  expect(market.quarters.some(row => row.period_id === "2026Q3")).toBe(true);
+  expect(market.months.some(row => row.period_id === "2026M10")).toBe(false);
+  const q3Months = market.months.filter(row => /^2026M0[789]$/.test(row.period_id));
+  expect(q3Months.map(row => row.period_id)).toEqual(["2026M07", "2026M08", "2026M09"]);
+  const quarter = market.quarters.find(row => row.period_id === "2026Q3")!;
+  for (const segment of ["total", "domestic", "international"] as const) {
+    const denominator = q3Months.reduce((sum, row) => sum + row.segments[segment].mexican_carriers_passengers!, 0);
+    expect(quarter.segments[segment].mexican_carriers_passengers).toBe(denominator);
+    for (const key of ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"]) {
+      const passengers = q3Months.reduce((sum, row) => sum + row.segments[segment].carriers[key]!.passengers!, 0);
+      expect(quarter.segments[segment].carriers[key]!.passengers).toBe(passengers);
+      expect(quarter.segments[segment].carriers[key]!.share).toBeCloseTo(passengers / denominator, 12);
+    }
+  }
   const call = vi.mocked(Plotly.react).mock.calls.at(-1)!;
   const trace = call[1][0] as {x: string[]; y: Array<number|null>};
   const july = trace.x.indexOf("2026-07-01");
   expect(trace.x[july - 1]).toBe("2026-06-01");
   expect(trace.y[july - 1]).toBeTypeOf("number");
   expect(trace.y[july]).toBeTypeOf("number");
-  expect(trace.x.at(-1)).toBe("2026-08-01");
+  expect(trace.x.at(-1)).toBe("2026-09-01");
   expect(new Set(trace.x).size).toBe(trace.x.length);
   for (const [i, key] of ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"].entries()) {
     const actual = call[1][i] as { y: Array<number|null> };
@@ -100,7 +113,7 @@ it("real AFAC keeps every reported share unchanged, joins June to July and stops
     }));
   }
   expect(document.getElementById("market-method-note")).toBeNull();
-  expect(document.getElementById("market-source-note")?.textContent).toContain("agosto de 2026");
+  expect(document.getElementById("market-source-note")?.textContent).toContain("septiembre de 2026");
 });
 
 it("a later complete issuer quarter controls the default even before AM or Industry has it", () => {
@@ -113,17 +126,22 @@ it("a later complete issuer quarter controls the default even before AM or Indus
   expect(financialPeriods(later).at(-1)).toBe("2026Q3");
 });
 
-it("comparison modes retain Q3 gaps for Industry and select the actual issuer points", async () => {
+it("comparison modes use the approved Q3 Industry projection and the actual issuer points", async () => {
   const entities: EntityKey[] = ["INDUSTRY","AEROMEXICO","VIVA_AEROBUS","VOLARIS"];
   initPeriods(financialPeriods(payload),"2026Q3");
   setUnitEntities(entities); setVolumeEntities(entities); setLoadEntities(entities);
   renderUnitEconomics(); renderVolumeMonetization(); renderLoadMonetization("2026Q3"); await Promise.resolve();
   const calls = vi.mocked(Plotly.react).mock.calls;
   const unit = calls.find(call => call[0] === "unit-chart")!;
-  expect((unit[1][0] as {y: unknown[]}).y.at(-1)).toBeNull();
-  for (let index=1;index<entities.length;index++) {
+  const issuers = entities.slice(1).map(entity => entityRecords(entity).find(r => r.period_id === "2026Q3")!);
+  const industry = entityRecords("INDUSTRY").find(r => r.period_id === "2026Q3")!;
+  expect(industry.ask_km).toBeCloseTo(issuers.reduce((sum, row) => sum + row.ask_km, 0), 4);
+  expect(industry.rask_cents_per_km).toBeCloseTo(
+    issuers.reduce((sum, row) => sum + row.rask_cents_per_km * row.ask_km, 0) / industry.ask_km, 12,
+  );
+  for (let index=0;index<entities.length;index++) {
     const row = entityRecords(entities[index]!).find(r => r.period_id === "2026Q3")!;
     expect((unit[1][index] as {y: unknown[]}).y.at(-1)).toBe(row.rask_cents_per_km);
   }
-  expect(calls.find(call => call[0] === "load-chart")![1].filter(trace => (trace as {showlegend?: boolean}).showlegend === false)).toHaveLength(3);
+  expect(calls.find(call => call[0] === "load-chart")![1].filter(trace => (trace as {showlegend?: boolean}).showlegend === false)).toHaveLength(4);
 });
