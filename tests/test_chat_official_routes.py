@@ -344,6 +344,40 @@ def test_stale_chip_version_months_entity_and_wrong_card_rejected():
             validate_context(context)
 
 
+@pytest.mark.parametrize(
+    "selection",
+    [
+        list(order)
+        for count in (2, 3)
+        for selected in itertools.combinations(OFFICIAL_CARRIERS, count)
+        for order in itertools.permutations(selected)
+    ],
+)
+def test_carrier_order_cannot_bypass_month_guard_and_valid_selection_keeps_exact_results(selection):
+    snapshot = PublicSnapshot()
+    tools = registry(snapshot)
+    stale = map_context(snapshot.document, "us", map_carriers=selection, map_months=[])
+    with pytest.raises(PlanValidationError, match="meses"):
+        tools.invoke("query_official_routes", {}, stale)
+    valid = map_context(snapshot.document, "us", map_carriers=selection)
+    result = tools.invoke("query_official_routes", {}, valid)
+    assert result["observed_months"] == ["2026M07"]
+    assert result["total_departures"] == 3 * len(selection)
+
+
+def test_unpublished_quarter_requires_empty_attached_month_support():
+    snapshot = PublicSnapshot()
+    tools = registry(snapshot)
+    context = map_context(snapshot.document, map_months=["2026M07"])
+    context["period"] = "2026Q4"
+    with pytest.raises(PlanValidationError, match="meses"):
+        tools.invoke("query_official_routes", {}, context)
+    context["filters"]["map_months"] = []
+    result = tools.invoke("query_official_routes", {}, context)
+    assert result["availability"] == "missing" and result["total_departures"] is None
+    assert result["observed_months"] == [] and result["query"]["period"] == "2026Q4"
+
+
 def test_tampered_payload_or_pin_rejected_and_registry_is_default_off():
     snapshot = PublicSnapshot()
     disabled = ToolRegistry(snapshot)
