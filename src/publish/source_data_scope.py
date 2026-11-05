@@ -169,7 +169,13 @@ def preserved_files(site: Path, repo: Path, spec: dict):
     old_names = {p["path"] for p in old["files"]}
     before = {p: transport._git(repo, "show", f"{spec['baseline_commit']}:site/{p}") if p in old_names
               else members.initial_bytes(p, units, adapter) for p in targets}
-    outputs = members.compose(before, units, adapter)
+    if units[0]["product"] == "official_routes":
+        # Only this sole-source surface verifies its already approved public
+        # JSON without private originals. All writing paths still use compose
+        # and the native source replay, before and after the build.
+        outputs = adapter("official_routes").verify_public_outputs(site, units[0], repo)
+    else:
+        outputs = members.compose(before, units, adapter)
     if pins(outputs) != spec["data_files"] or set(outputs) != targets:
         raise ValueError("Source projection differs from its reviewed exact data pins")
     names = {p["path"] for p in current["files"]}

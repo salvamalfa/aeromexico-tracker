@@ -89,6 +89,11 @@ mapa histórico. Preparar esta continuación no modifica la tarea nativa.
 contrato; preserva datos históricos, ocho lecturas, noticias, manifiesto editorial
 y aprobaciones. La inspección fija baseline, productor, fuentes, interfaz compilada
 y archivos exactos. Su autoridad exige ese scope y el consentimiento auténtico.
+Inspección, preparación y publicación requieren siempre los originales privados
+y su replay completo. La verificación posterior del sitio usa únicamente el
+JSON público ya fijado: contrato, semántica, identidad, hash, vínculo del perfil
+y los 14 pins numéricos. No es una opción para publicar sin originales ni copia
+los crudos al repositorio público.
 
 ```powershell
 python -m src.publish.source_data_update --inspect tmp/<request-revisable>.json
