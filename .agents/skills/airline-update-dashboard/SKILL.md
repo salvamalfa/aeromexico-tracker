@@ -7,6 +7,13 @@ Para el candidato `official_routes`, usar la [receta del mapa oficial](../../../
 y `src.publish.official_routes_projection` dentro del gate selectivo. El JSON
 nuevo puede añadirse sólo con su contrato, perfil reproducido y autorización
 humana de su scope exacto. No trasladar aprobaciones AFAC carrier ni financieras.
+El [handoff mensual oficial](../../../docs/calendario-ejecucion.md#continuación-explícita-para-el-mapa-oficial)
+es explícito: `source_data` no acredita permiso ni publicación. Conservar el
+perfil completo AFAC+BTS y la relación de hashes/periodos con la fuente validada.
+Para ausencia de cambio usar `src.source_updates.official_routes_handoff.verify_nochange`,
+guardar su resultado exacto y `source_profile` físico/SHA; no usar un mapa legacy
+como sustituto. Cualquier periodo nuevo o revisión que cambie la salida necesita
+la autorización y el gate normales. `served` sigue requiriendo HTTP/SHA real.
 
 # Agente de actualización del dashboard
 

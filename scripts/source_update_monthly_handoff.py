@@ -83,7 +83,12 @@ def publication_scope(product):
 def verify_release(job, source, binding):
     from src.publish.source_data_members import members
     from src.publish.source_data_scope import anchor
+    from src.source_updates import official_routes_handoff as official
 
+    if official.selected(source):
+        from src.source_updates.catalog import ROOT
+
+        return official.verify_release(job, source, ROOT)
     spec = anchor()
     item = source["source_binding"]["item"]
     product = item["product"]
@@ -101,7 +106,11 @@ def verify_release(job, source, binding):
         )
 
 
-def impact_status(product):
+def impact_status(product, source=None):
+    from src.source_updates.official_routes_handoff import selected
+
+    if selected(source):
+        return "official_routes_candidate_requires_exact_release"
     if product == "afac_margins":
         return "official_routes_dependency_assessment"
     if product == "bts_segments":
@@ -113,7 +122,15 @@ def impact_status(product):
     )
 
 
-def scope_or_financial(product):
+def scope_or_financial(product, source=None):
+    from src.source_updates.official_routes_handoff import selected
+
+    if selected(source):
+        return (publication_scope(product) + ". Selected consumer: official_routes source_data; "
+                "prepare/check candidates without publishing; finish only after real exact authorization "
+                "and the source-data gate, preserving both originals, coverage and baseline approvals. "
+                "No-change requires src.source_updates.official_routes_handoff.verify_nochange; "
+                "never use a legacy flight-map equivalence or infer completion from readiness.")
     return (
         publication_scope(product)
         if product in IMPACTS
@@ -121,7 +138,11 @@ def scope_or_financial(product):
     )
 
 
-def release_kind(product):
+def release_kind(product, source=None):
+    from src.source_updates.official_routes_handoff import selected
+
+    if selected(source):
+        return "source_data"
     return "source_dependency_assessment" if product in {"bts_segments", "afac_margins"} else "source_data"
 
 
