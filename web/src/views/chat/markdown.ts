@@ -1,5 +1,6 @@
 import type { ChatChart, ChatDisplay, ChatMessage, ChatReference } from "../../types/chat";
 import { renderDisplay, safeDisplays } from "./display";
+import { officialRouteSourceUrl } from "./official-source";
 
 const TRUSTED_HOSTS = new Set([
   "sec.gov", "www.sec.gov", "ir.aeromexico.com", "cdn.investorcloud.net", "www.flightglobal.com",
@@ -8,6 +9,8 @@ const TRUSTED_HOSTS = new Set([
 ]);
 
 function trustedSourceUrl(raw: string): string | undefined {
+  const official = officialRouteSourceUrl(raw);
+  if (official) return official;
   try {
     const url = new URL(raw);
     const approvedQuery=url.hostname==="api.mziq.com"&&url.search==="?origin=2"&&/^\/mzfilemanager\/v2\/d\/[a-f0-9-]+\/[a-f0-9-]+$/.test(url.pathname);
