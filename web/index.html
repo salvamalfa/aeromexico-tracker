@@ -247,7 +247,17 @@
                   </div>
                   <div class="route-detail-column" id="route-detail-column">
                     <div class="network-volume official-map-summary"><span>Vuelos regulares</span><strong id="official-map-total">N/D</strong><span id="official-map-months">0/3 meses</span></div>
-                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Resumen trimestral de rutas"><div class="official-list-heading"><h3 id="official-route-heading">Rutas destacadas</h3><small id="official-map-route-count"></small></div><label class="sr-only" for="official-map-search">Buscar ciudad o aeropuerto en toda la selección</label><input type="search" id="official-map-search" placeholder="Buscar ciudad o aeropuerto" autocomplete="off"><div id="official-map-search-results" aria-live="polite"></div><button type="button" id="official-map-back" class="route-overview-back" hidden>← Toda la red</button><div class="official-list-columns"><span>Ruta</span><span>Vuelos</span></div><ol id="official-route-list" class="official-route-list"></ol></aside>
+                    <aside class="airport-tooltip" id="airport-tooltip" role="region" aria-label="Resumen trimestral de rutas">
+                      <div class="official-list-heading"><h3 id="official-route-heading">Rutas destacadas</h3><div class="official-list-tools"><small id="official-map-route-count"></small><button type="button" class="airport-search-toggle" id="official-map-search-toggle" aria-label="Buscar ruta" aria-expanded="false" aria-controls="official-map-search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg></button></div></div>
+                      <div class="official-map-search-box" id="official-map-search-box" hidden>
+                        <label class="sr-only" for="official-map-search">Buscar ciudad o aeropuerto en toda la selección</label>
+                        <input type="search" id="official-map-search" placeholder="Buscar ciudad o aeropuerto" autocomplete="off">
+                        <div id="official-map-search-results" aria-live="polite"></div>
+                      </div>
+                      <button type="button" id="official-map-back" class="route-overview-back" hidden>← Toda la red</button>
+                      <div class="official-list-columns"><span>Ruta</span><span>Vuelos</span></div>
+                      <ol id="official-route-list" class="official-route-list"></ol>
+                    </aside>
                   </div>
                 </div>
               </article>

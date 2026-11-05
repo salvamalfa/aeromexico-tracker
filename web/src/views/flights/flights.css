@@ -320,6 +320,9 @@
 .flights-view #map-panel .official-partial { color:#8a5900; background:#fff1ba; border-radius:4px; }
 .flights-view #map-panel .official-list-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:6px; margin-bottom:10px; }
 .flights-view #map-panel .official-list-heading small { color:var(--muted); font-size:10px; }
+.flights-view #map-panel .official-list-tools { display:flex; gap:8px; align-items:center; margin-left:auto; }
+.flights-view #map-panel .official-list-tools small { white-space:nowrap; }
+.flights-view #map-panel .official-map-search-box { margin-bottom:10px; }
 .flights-view #map-panel #official-map-search { min-height:34px; font-size:11px; }
 .flights-view #map-panel #official-map-search-results { display:grid; max-height:220px; overflow:auto; }
 .flights-view #map-panel #official-map-search-results button { min-height:40px; padding:8px; text-align:left; background:#fff; color:var(--brand-blue); border:0; border-bottom:1px solid var(--line); cursor:pointer; }
@@ -337,8 +340,9 @@
 .flights-view #map-panel .official-route-detail dl > div { display:flex; justify-content:space-between; gap:10px; }
 .flights-view #map-panel .official-route-detail dd { margin:0; text-align:right; color:var(--brand-blue-dark); }
 .flights-view #map-panel .official-map-empty { color:var(--muted); padding:16px 0; font-size:12px; }
-.flights-view #map-panel .map-canvas-column { overflow:hidden; min-width:0; }
-.flights-view #map-panel .flow-map { min-width:0; width:100%; }
+.flights-view #map-panel .map-canvas-column { overflow:hidden; min-width:0; border-radius:var(--radius-sm); }
+.flights-view #map-panel .flow-map { min-width:0; width:100%; margin:0; overflow:hidden; border-radius:var(--radius-sm); }
+.flights-view #map-panel .route-detail-column { border-radius:var(--radius-sm); }
 @media(max-width:1100px) {
   .flights-view #map-panel .map-detail-layout { grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr); }
 }
@@ -353,6 +357,7 @@
   .flights-view #map-panel .route-detail-column { height:auto; max-height:540px; }
   .flights-view #map-panel .airport-tooltip { max-height:450px; }
   .flights-view #map-panel .official-route-button { min-height:44px; }
+  .flights-view #map-panel .official-list-tools .airport-search-toggle { width:36px; height:36px; }
 }
 @media(max-width:420px) {
   .flights-view #map-panel .flow-map { height:290px; }

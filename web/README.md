@@ -85,6 +85,8 @@ es único y nunca se sustituye por otro disponible.
   comparable. Un resultado regional vacío conserva su filtro y muestra N/D.
   `comparison_months` conserva el soporte del año actual; las fechas de la
   base interanual se rotulan un año antes, sin modificar ese soporte ni cifras.
+  La lupa del encabezado abre y enfoca la búsqueda; cerrar o pulsar Esc limpia
+  la consulta. La búsqueda consulta toda la selección, también fuera del top.
 - `map_scope`, `map_region` y `map_carriers` guardan los filtros propios.
   `sel_map` antiguo inicializa sólo la selección BTS; `INDUSTRY` conserva el
   significado de las tres mexicanas. Los filtros financieros son independientes.
