@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-05 · Noticias sigue el trimestre global
+
+- El archivo muestra las fichas con el mismo trimestre que el dashboard, según
+  fecha de publicación. Las fichas de otros periodos siguen disponibles con
+  su fecha y mes, incluidas las nueve publicaciones de octubre fuera de 3T26.
+- La cobertura parcial queda a la vista. Chat, mapa, fuentes y datos publicados
+  no cambian.
+
 ## 2026-11-05 · Corrección histórica AFAC y comparativos BTS verificados
 
 - Nuevo perfil de publicación que conserva el padre trimestral original como

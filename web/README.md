@@ -395,13 +395,17 @@ el área útil de pantalla, incluida la barra de desplazamiento. Escape cierra e
 detalle antes que el chat; cambiar de pestaña o tamaño lo cierra. Las ayudas de
 fuente también se cierran al cambiar de tamaño para evitar posiciones antiguas.
 
-### Noticias · candidato del PR #136
+### Noticias por trimestre
 
-El archivo mensual mantiene tarjetas con resúmenes originales, tres fechas y
-fuentes trazables. Los filtros incluyen disponibilidad en el chat; la cobertura
-parcial se consulta con el botón de información del título. Los controles de
-aprobación pertenecen al expediente, fuera de la pestaña. La navegación desde
-el chat valida corpus y cita. Decisiones de revisión:
+Noticias sigue el trimestre del estado global compartido con Lectura, Economía
+y Mercado. Asigna el trimestre solo desde `published_at`; `event_date` no se
+usa para completar ni mover una publicación. La fecha aparece en cada ficha y
+la nota de cobertura parcial queda visible junto al contador. Las fichas de
+otros trimestres se conservan en un elemento `details` con total y meses a la
+vista, y su lista se puede abrir con teclado o puntero. Una fecha inválida se
+conserva en el grupo sin fecha verificable. La navegación desde el chat mantiene
+la validación de corpus y cita, y abre la sección de fuera del periodo si el
+resultado no pertenece al trimestre elegido. Decisiones de revisión:
 `docs/etapas/noticias-ajustes-ui-20261018.md`.
 
 ### Corte financiero Aeroméxico 3T26

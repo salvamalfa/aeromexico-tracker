@@ -41,7 +41,9 @@ Cambios recientes: [`CHANGELOG.md`](CHANGELOG.md). Lo que sigue:
 
 - **Dashboard:** cuatro vistas, Lectura, Mercado, Economía y Noticias, con un
   trimestre global. Mercado integra los indicadores y el mapa existentes.
-  Noticias muestra 26 fichas aprobadas y mantiene cobertura parcial. El gate
+  Noticias filtra 26 fichas aprobadas por el trimestre global, según fecha de
+  publicación; las demás siguen accesibles con fecha visible. El archivo
+  mantiene cobertura parcial. El gate
   distingue el artefacto verificado de su integración y comprobación en Pages.
 - **Corrección estadística:** el artefacto Linux reconstruye AFAC 2019–2025
   desde los originales oficiales, conserva las cifras de 2026 y extiende la
@@ -196,11 +198,13 @@ Por la decisión explícita de **no versionar bronze**, una reconstrucción con 
 
 ## Noticias y estrategia
 
-El archivo mensual presenta las tres fichas aprobadas con fuentes, resúmenes
-breves y fechas de publicación, hecho y primera captura separadas. Permite
-filtrar por mes, tema y aerolínea, y buscar desde el chat con navegación citada.
-La cobertura es parcial. Las once candidatas del [corte de investigación](docs/etapas/noticias-candidato-20261015.md)
-siguen pendientes de revisión y no amplían la evidencia del chat.
+El archivo presenta las 26 fichas aprobadas del índice y responde al trimestre
+global usando `published_at`; no infiere periodo desde la fecha del hecho.
+Las fichas fuera del trimestre permanecen en un desplegable identificado con
+su mes y fecha. La cobertura parcial se muestra junto al archivo. Se puede
+buscar desde el chat con navegación citada. Las once candidatas del
+[corte de investigación](docs/etapas/noticias-candidato-20261015.md) siguen
+pendientes de revisión y no amplían la evidencia del chat.
 La [auditoría Gold](docs/gold-exposure.md) conserva los datos y sus dependencias.
 La combinación de Noticias y las herramientas de actualización usa tres pares
 técnicos de 2T26 con auditoría independiente y consentimiento específico del dueño.
