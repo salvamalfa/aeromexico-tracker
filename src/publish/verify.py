@@ -110,6 +110,8 @@ def _data_schema_for(
     analysis_schema: dict[str, Any] = ANALYSIS_SCHEMA,
     market_schema: dict[str, Any] = MARKET_SCHEMA,
     demand_schema: dict[str, Any] | None = None,
+    *,
+    official_routes_schema: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
@@ -128,6 +130,8 @@ def _data_schema_for(
         )
     if parts[2:] == ["market.json"]:
         return market_schema
+    if parts[2:] == ["official-routes.json"]:
+        return official_routes_schema
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
         return quarters_schema
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:
@@ -225,6 +229,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
     quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
     analysis_schema, market_schema = ANALYSIS_SCHEMA, MARKET_SCHEMA
     demand_schema = None
+    official_routes_schema = None
     editorial_schema = None
     industry_story_schema = None
     try:
@@ -271,6 +276,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
                     market_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "market_demand.schema.json":
                     demand_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == "official-routes.schema.json":
+                    official_routes_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "analysis.schema.json":
                     analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
@@ -310,7 +317,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
         schema = _data_schema_for(
-            rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema
+            rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema,
+            official_routes_schema=official_routes_schema,
         )
         if editorial_schema is not None and (
             rel == manifest_mod.EDITORIAL_ANALYSIS_PATH
