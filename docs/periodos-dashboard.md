@@ -817,6 +817,30 @@ sin abrir los reportes ni las noticias anteriores y sin cambiar el índice,
 sus recibos o el pin externo. Son reparaciones de consumidores; el sitio y
 el productor original permanecen ligados a sus identidades aprobadas.
 
+## Corrección histórica antes de publicar
+
+El CI completo de `5e09a8eb` pasó, pero no se integra ni despliega ese candidato.
+Los originales AFAC prueban totales sin etiqueta mal leídos en 2019–2020 y
+operadores mexicanos omitidos de los denominadores retenidos de 2021–2025.
+Los libros sí contienen tráfico internacional mexicano en 2019–2020 y datos
+por operador extranjero; el universo mexicano de esta vista es una elección.
+
+La corrección aislada reproduce ocho originales con sus sidecars, manifiestos
+y crosswalk fijados. El normalizador común reconcilia cuatro totales mexicanos
+por mes y conserva fletamento sin mapeo. La proyección mensual compartida
+corrige los registros AFAC afectados y añade septiembre de 2026, para 141 meses
+desde enero de 2015. Los registros previos correctos y los valores 2026 se
+contrastan con los originales antes de conservarlos. No crea tesis ni cambia
+los financieros, Noticias o los activos de interfaz.
+
+La pérdida de comparativas BTS en dos archivos de julio requiere un miembro
+tipado separado, con evidencia física y métodos compatibles; no se restauran
+valores arbitrariamente. El alcance final declarará los archivos y campos.
+El padre preparado `842d140a` y su productor `602ea2a4` permanecen separados del
+baseline servido real `4c8dd92a`. La composición tendrá su propia autoridad de
+datos: el permiso `708bedf9` no se transfiere a salidas distintas ni se regeneran
+las ocho versiones de lectura. Los candidatos actuales no son publicación.
+
 ## Pendientes
 
 - La corrección AFAC preparada en la rama de continuidad exige cuatro totales
