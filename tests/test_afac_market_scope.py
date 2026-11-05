@@ -115,6 +115,7 @@ def test_retained_2019_2026_originals_reconcile_every_mexican_total(tmp_path):
         2026: (18, 29, 19, 32),
     }
     baseline = {"months": []}
+    all_cells, sources = {}, {}
     checked = 0
     for year in range(2019, 2027):
         path = (
@@ -127,6 +128,12 @@ def test_retained_2019_2026_originals_reconcile_every_mexican_total(tmp_path):
         facts, checks = parse_annual_passenger_workbook(path, year)
         through = 9 if year == 2026 else 12
         cells, receipt = market_cells(facts, checks, year, through, _load_crosswalk())
+        all_cells.update(cells)
+        sources[year] = {
+            "sha256": metadata["sha256"],
+            "downloaded_at": metadata["downloaded_at"],
+            "through": through,
+        }
         assert receipt["total_formula"] == TOTAL_FORMULA
         book = openpyxl.load_workbook(path, read_only=True, data_only=True)
         try:
@@ -158,3 +165,20 @@ def test_retained_2019_2026_originals_reconcile_every_mexican_total(tmp_path):
     assert january["international"]["carriers"]["AEROMEXICO"]["passengers"] == 677_190
     assert baseline["metadata"]["last_period"] == "2026M09"
     assert baseline["metadata"]["default_quarter"] == "2026Q3"
+    from src.publish.afac_native_monthly import project_monthly_series
+
+    before = json.loads((PATHS.root / "site/data/v1/flights/quarters.json").read_bytes())
+    after = project_monthly_series(before, all_cells, sources)
+    assert len(after["monthly_passengers"]["records"]) == 141
+    assert after["monthly_passengers"]["records"][-1]["period_id"] == "2026M09"
+    unchanged = [
+        row
+        for row in before["monthly_passengers"]["records"]
+        if row["period_id"] < "2019M01" or row["period_id"].startswith("2026")
+    ]
+    projected = {row["period_id"]: row for row in after["monthly_passengers"]["records"]}
+    assert all(projected[row["period_id"]] == row for row in unchanged)
+    assert {k: v for k, v in after.items() if k != "monthly_passengers"} == {
+        k: v for k, v in before.items() if k != "monthly_passengers"
+    }
+    assert project_monthly_series(after, all_cells, sources) == after
