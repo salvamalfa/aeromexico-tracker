@@ -446,10 +446,9 @@ fuente también se cierran al cambiar de tamaño para evitar posiciones antiguas
 
 Noticias sigue el trimestre del estado global compartido con Lectura, Economía
 y Mercado. Asigna el trimestre solo desde `published_at`; `event_date` no se
-usa para completar ni mover una publicación. La fecha aparece en cada ficha y
-la nota de cobertura parcial queda visible junto al contador. Las fichas de
-otros trimestres se conservan en un elemento `details` con total y meses a la
-vista, y su lista se puede abrir con teclado o puntero. Una fecha inválida se
+usa para completar ni mover una publicación. La fecha aparece en cada ficha.
+Las noticias del trimestre aparecen primero. Al final, «Ver todas» abre las
+demás fichas mediante el desplegable nativo con teclado o puntero. Una fecha inválida se
 conserva en el grupo sin fecha verificable. La navegación desde el chat mantiene
 la validación de corpus y cita, y abre la sección de fuera del periodo si el
 resultado no pertenece al trimestre elegido. El contexto adjunto al chat recibe
