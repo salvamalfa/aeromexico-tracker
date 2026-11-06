@@ -1,8 +1,7 @@
-import type { ChatChart, ChatContext, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
+import type { ChatChart, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
 import { mountChatPrompt } from "./prompt";
-import { isOfficialMapCard, mountChatCardActions } from "./card-actions";
-import { attachChatCard } from "./attachment";
-import { buildChatContext, describeChatContext } from "./context";
+import { mountChatCardActions } from "./card-actions";
+import { createChatAttachment } from "./attachment";
 import { messageFromPayload, safeReferences } from "./markdown";
 import { mountChatModal } from "./modal-controls";
 import { mountChatLayout } from "./layout";
@@ -12,9 +11,8 @@ import { createTurnSettler } from "./settle-turn";
 import { ChatSubmissionLedger } from "./submission-ledger";
 import { createSubmitController } from "./submit-controller";
 import { createChatPanel, MAX_INPUT } from "./template";
-import { ChatApiError, ChatTransport, type ChatHealth } from "./transport";
+import { ChatApiError, ChatTransport } from "./transport";
 import { errorText, randomId, storage } from "./util";
-import { officialState } from "../flights/official-routes";
 import "./chat.css";
 
 const MAX_ANSWER = 20_000;
@@ -32,11 +30,8 @@ interface ChatUiState {
 }
 
 export function mountChat(): () => void {
-  let attachedContext: ChatContext | undefined;
   let session: string | undefined;
   let authMode: "local" | "password" | undefined;
-  let officialDataset: string | undefined;
-  const mapAvailable = () => Boolean(officialDataset && !officialState.loading && officialDataset === officialState.document?.dataset_version);
   const transport = new ChatTransport(API_URL, () => session);
   const state: ChatUiState = { messages: [], lastSequence: 0 };
   const panel = createChatPanel();
@@ -48,6 +43,7 @@ export function mountChat(): () => void {
   const messagesNode = query<HTMLOListElement>("[data-chat-messages]");
   const statusNode = query<HTMLElement>("[data-chat-status]");
   const noticeNode = query<HTMLElement>("[data-chat-notice]");
+  const attachment = createChatAttachment(panel, noticeNode);
   const input = query<HTMLTextAreaElement>("#chat-input");
   const form = query<HTMLFormElement>("[data-chat-form]");
   const sendButton = query<HTMLButtonElement>("[data-chat-send]");
@@ -83,11 +79,6 @@ export function mountChat(): () => void {
     cancelButton.hidden = !busy;
     sendButton.setAttribute("aria-label", busy ? "En proceso" : "Enviar pregunta");
     sendButton.title = busy ? "En proceso" : "Enviar pregunta";
-  };
-
-  const setContextLabel = () => {
-    query<HTMLElement>("[data-chat-context]").textContent = attachedContext
-      ? `Contexto: ${describeChatContext(attachedContext)}` : "Contexto: vista actual al enviar";
   };
 
   const requireLogin = (message = "Ingresa la contraseña para preguntar.") => {
@@ -202,23 +193,12 @@ export function mountChat(): () => void {
     return ensuring;
   }
 
-  function updateMapCapability(health?: ChatHealth): void {
-    officialDataset = Array.isArray(health?.enabled_capabilities) && health.enabled_capabilities.includes("official_route_queries")
-      ? health.official_route_dataset_version : undefined;
-    disposeCardActions.refresh();
-    if (attachedContext?.filters?.map_scope && attachedContext.filters.map_dataset_version !== officialDataset) {
-      attachedContext = attachChatCard(panel);
-      setContextLabel();
-      noticeNode.textContent = "Se quitó el mapa adjunto porque su versión no está disponible para el chat.";
-    }
-  }
-
   async function connectConversation(): Promise<void> {
     noticeNode.textContent = "";
     statusNode.textContent = "";
     try {
       const health = await transport.health();
-      updateMapCapability(health);
+      attachment.updateCapability(health, disposeCardActions.refresh);
       authMode = health.auth;
       if (authMode === "password" && !session) { requireLogin(); return; }
       let conversation: ChatConversation | undefined;
@@ -247,7 +227,7 @@ export function mountChat(): () => void {
       paintMessages();
       if (!state.activeTurn) statusNode.textContent = "";
     } catch (error) {
-      updateMapCapability();
+      attachment.updateCapability(undefined, disposeCardActions.refresh);
       statusNode.textContent = "";
       if (handleAuthError(error)) return;
       noticeNode.textContent = "El chat no está disponible en este momento. Intenta de nuevo.";
@@ -293,16 +273,14 @@ export function mountChat(): () => void {
   const submitMessage = createSubmitController({
     state, input, count: query<HTMLElement>("[data-chat-count]"), status: statusNode,
     ledger: submissions, send: (id, content, context, key) => transport.sendMessage(id, content, context, key),
-    context: () => structuredClone(attachedContext ?? buildChatContext(undefined, mapAvailable())), ensureConversation, listen, setBusy,
+    context: attachment.contextForSend, ensureConversation, listen, setBusy,
     handleAuthError, paint: paintMessages,
   });
 
   function resetConversation(forgetStored = true, preserveUnresolved = false): void {
     state.abort?.abort();
     setBusy(false);
-    attachedContext = undefined;
-    query<HTMLElement>("[data-chat-attachment]").hidden = true;
-    setContextLabel();
+    attachment.select();
     state.conversationId = undefined; state.snapshotVersion = undefined; state.messages = []; state.activeTurn = undefined; state.lastSequence = 0;
     if (!preserveUnresolved) submissions.clear();
     if (forgetStored) storage((store) => store.removeItem(STORAGE_KEY));
@@ -337,14 +315,12 @@ export function mountChat(): () => void {
   });
 
   async function openChat(card?: Element, opener?: HTMLElement, initial = false): Promise<void> {
-    if (card && isOfficialMapCard(card) && !mapAvailable()) return;
-    attachedContext = attachChatCard(panel, card, mapAvailable());
+    if (!attachment.select(card)) return;
     panel.hidden = false;
     modal.open(opener);
     launcher.setAttribute("aria-expanded", "true");
     launcher.hidden = true;
     document.body.classList.add("chat-open");
-    setContextLabel();
     resizeDashboardCharts();
     if (initial && panel.getAttribute("aria-modal") === "true") closeButton.focus();
     if (!state.conversationId) await ensureConversation();
@@ -396,14 +372,12 @@ export function mountChat(): () => void {
     }
   });
 
-  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener), mapAvailable);
+  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener), attachment.mapAvailable);
   query<HTMLButtonElement>("[data-chat-attachment-remove]").addEventListener("click", () => {
-    attachedContext = undefined;
-    query<HTMLElement>("[data-chat-attachment]").hidden = true;
-    setContextLabel(); input.focus();
+    attachment.select();
+    input.focus();
   });
   const disposePanelControls = mountPanelControls(panel, resizer, closeChat);
-  setContextLabel();
   void openChat(undefined, launcher, true);
   return () => {
     state.abort?.abort();
