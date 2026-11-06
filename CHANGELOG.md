@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-11-05 · Noticias sigue el trimestre global
+
+- El archivo muestra las fichas con el mismo trimestre que el dashboard, según
+  fecha de publicación. Las fichas de otros periodos siguen disponibles con
+  su fecha y mes, incluidas las nueve publicaciones de octubre fuera de 3T26.
+- El botón contextual de chat comparte el trimestre global de Noticias.
+- La cobertura parcial queda a la vista. El contexto del chat comparte el
+  trimestre de Noticias; mapa, fuentes, ingestas y datos publicados no cambian.
+
+## 2026-11-05 · Verifica la huella histórica AFAC en su commit original
+
+- El verificador de la composición AFAC acepta cambios posteriores de runtime
+  solo si el `code_commit` del manifiesto conserva la misma ancla comprometida
+  y su árbol reproduce exactamente la huella de productor inspeccionada. Las
+  comprobaciones del padre, pruebas, payloads y sitio siguen ejecutándose.
+- La prueba negativa rechaza una huella histórica alterada o un commit que no
+  contiene el ancla actual.
+
 ## 2026-11-05 · Conserva la finalización de observaciones AFAC
 
 - La corrección nativa de AFAC versiona el cambio de preliminar a definitivo,

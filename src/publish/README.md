@@ -728,6 +728,14 @@ esperas acotadas; un HTTP200 con tamaño/SHA distintos, 403 o 404 falla sin retr
 El witness V1 original no cambia. El selector sólo trata la prueba B como una
 dependencia cuando verifica ese enlace exacto; los empates V1 siguen fallando.
 
+El verificador público conserva la huella de productor fijada en el ancla. Si el
+runtime actual cambió después de generar el sitio, vuelve a calcular esa huella
+en el `code_commit` del manifiesto publicado. Solo acepta ese replay si el
+commit es antecesor de `HEAD`, contiene los mismos bytes del ancla comprometida
+y reproduce la huella exacta. Después ejecuta las verificaciones completas de
+la composición, el padre, los payloads y el manifiesto; no actualiza pins ni
+permite cambiar datos o autoridad.
+
 Esta implementación está preparada para revisión. Antes de activarla faltan el
 cierre físico de Gold AFAC derivado, el replay privado completo en Linux, la
 inspección del candidato final y su autoridad de datos. PR, CI y comprobación del

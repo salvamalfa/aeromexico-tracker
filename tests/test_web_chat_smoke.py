@@ -292,7 +292,10 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             assert bounds["y"] >= 0 and bounds["y"] + bounds["height"] <= 844
             page.keyboard.press("Escape")
             page.click("#tab-news")
-            page.wait_for_selector("#news-count:text-is('0 noticias')")
+            page.wait_for_function(
+                "document.getElementById('news-count')?.textContent === "
+                "'0 noticias publicadas en 2T26 · 0 fichas en archivo parcial'"
+            )
             before_count = len(sent_context)
             page.locator("#news-heading > .chat-card-action").click()
             prompt = page.get_by_label("Pregunta sobre los datos publicados")
@@ -303,7 +306,7 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             password_field.wait_for(state="hidden")
             send_question()
             assert sent_context[-1]["tab"] == "news"
-            assert sent_context[-1]["period"] == ""
+            assert sent_context[-1]["period"] == "2026Q2"
             assert sent_context[-1]["entity"] == "INDUSTRY"
             page.keyboard.press("Escape")
             page.locator("#news-heading > .chat-card-action").click()
