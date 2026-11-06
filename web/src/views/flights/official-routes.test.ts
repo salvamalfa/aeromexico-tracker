@@ -3,7 +3,7 @@ import { beforeEach, expect, it } from "vitest";
 import type { OfficialNetwork, OfficialRoutesDocument } from "../../types/official-routes";
 import { geographicRoutes, MAP_CARRIERS, officialState, parseMapSelection, routeHasGeometry,
   previousComparisonMonths, searchOfficialPoints, selectOfficialNetwork, syncMapUrl, visibleOfficialRoutes } from "./official-routes";
-import { officialArc, officialMapTraces } from "./official-map-chart";
+import { officialArc, officialMapBounds, officialMapTraces } from "./official-map-chart";
 import { vi } from "vitest";
 vi.mock("../../lib/plotly", () => ({ default: {} }));
 const wire = JSON.parse(readFileSync("../tests/fixtures/official-routes.example.json", "utf8")) as OfficialRoutesDocument;
@@ -46,10 +46,23 @@ it("searches routes outside the top 12 and bounds render traces for large all-ro
   expect(officialMapTraces(officialState.routes, null, null).length).toBeLessThanOrEqual(10);
   officialState.view = "all"; expect(visibleOfficialRoutes()).toHaveLength(900);
 });
-it("splits arcs at the antimeridian instead of drawing a line across the world", () => {
+it("fits the full Tokyo–México arc at desktop and mobile aspect ratios", () => {
   const original = wire.networks[0]!.routes[0]!;
-  const route = { ...original, origin: { ...original.origin, lat: 30, lon: -117 }, destination: { ...original.destination, lat: 35, lon: 139 } };
-  expect(officialArc(route).lon).toContain(null);
+  const route = { ...original, origin: { ...original.origin, lat: 35.6895, lon: 139.69171 },
+    destination: { ...original.destination, lat: 19.42847, lon: -99.12766 } };
+  const arc = officialArc(route);
+  expect(arc.lon).toHaveLength(25);
+  expect(arc.lon.some((lon, i) => i > 0 && Math.abs(lon - arc.lon[i - 1]!) > 180)).toBe(true);
+  for (const ratio of [678 / 570, 318 / 290]) {
+    const { lat, lon } = officialMapBounds([route], "international", ratio);
+    const [west, east] = lon;
+    expect(east).toBeGreaterThan(180);
+    expect(east - west).toBeLessThan(180);
+    expect(arc.lon.every(value => ((value - west + 360) % 360) < east - west)).toBe(true);
+    expect(arc.lat.every(value => value > lat[0] && value < lat[1])).toBe(true);
+  }
+  const line = officialMapTraces([route], null, null)[0] as unknown as { lon: (number | null)[] };
+  expect(line.lon).toEqual([...arc.lon, null]);
 });
 it("retains an explicit reported zero in the list but draws no zero-flight arc or airport marker", () => {
   const route = { ...wire.networks[0]!.routes[0]!, departures:0 };
