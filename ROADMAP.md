@@ -58,12 +58,6 @@ La CI remota del head corregido y la integración son controles distintos.
 
 ## Backlog
 
-- **Airline Monthly:** el dueño lo dejó en backlog el 28/oct. No es trabajo
-  activo ni bloquea fuentes/calendario. Se conserva privado el corte24/oct,
-  HTML/PR140, QA estático/funcional (23 afirmaciones, seis fuentes, cuatro hashes;
-  dos PDF AM HTTP503), QA visual completo y aprobación editorial final pendientes.
-  No publicar, modificar ni enviar correo.
-
 - Ampliar la cobertura internacional de rutas más allá de EE. UU. (BTS
   T-100): candidatos con evidencia parcial en Brasil (ANAC), Colombia
   (Aerocivil), Reino Unido (CAA) y Perú (DGAC); España sigue bloqueada por

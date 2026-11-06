@@ -12,6 +12,7 @@
   dependencias, salidas generadas y el historial privado del dashboard anterior.
 - Conserva las skills instaladas, las corridas y sus rutas. No activa
   capturas, ingestas, sincronizaciones ni publicaciones del dashboard.
+
 ## 2026-11-06 · CI por impacto y particiones completas
 
 - Los PR de interfaz o documentación pura conservan controles de lifecycle,
