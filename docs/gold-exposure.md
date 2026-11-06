@@ -3,7 +3,9 @@
 ## Resumen
 
 El mapa Gold conserva el corte del 19 de octubre de 2026. La auditoría de
-archivos y el cierre obligatorio se revisaron de nuevo el 21 de octubre.
+archivos se revisó de nuevo el 6 de noviembre: se retiran dos imágenes sin
+consumidores, dos documentos reemplazados y dos marcadores de directorios que
+ya tienen archivos. Se conserva su recuperación en Git. El detalle está en el apéndice.
  Se verificaron **43 tablas públicas y
 4 privadas**. De las **23 tablas analíticas públicas**, **7** aportan cifras
 visibles y otras **4** sirven de contexto o control. Las **12** restantes
@@ -17,10 +19,9 @@ el corte del 15 de octubre. La clasificación de interfaz se revisó en el códi
 no mide visitas ni el porcentaje de filas o campos visibles.
 
 Las tres instrucciones reemplazadas del chat ya fueron archivadas por PR144.
-Sus originales siguen en el [índice histórico](archivo/README.md). Esta pasada
-no vuelve a archivarlas y no retira otros archivos. Conserva aprobaciones,
-presupuestos, fuentes y registros de publicación. La propuesta actual prioriza
-dos imágenes sin referencias; el detalle está en el apéndice.
+Sus originales siguen en el [índice histórico](archivo/README.md), junto con
+las imágenes y los documentos retirados en noviembre. Se conservan aprobaciones,
+presupuestos, fuentes y registros de publicación.
 
 El [Lifecycle canónico](../AGENTS.md#ciclo-de-vida-de-la-documentación) ya existía.
 Su control solo cubría parte de los documentos. Ahora exige inventario y
@@ -252,8 +253,8 @@ firmados. Retirar un JSON exige cambiar consumidores, contratos y manifiesto;
 no basta con que no se vea en una gráfica.
 
 **Propuesta de archivo, sin ejecutar.**
-[`anatomia-chat.png`](assets/chat/anatomia-chat.png), 117.200 bytes, y
-[`anatomia-herramientas.png`](assets/chat/anatomia-herramientas.png),
+[`anatomia-chat.png`](https://github.com/salvamalfa/aeromexico-tracker/blob/27cd579e1d8b613e915f2f51f49918618dfe44c9/docs/assets/chat/anatomia-chat.png), 117.200 bytes, y
+[`anatomia-herramientas.png`](https://github.com/salvamalfa/aeromexico-tracker/blob/27cd579e1d8b613e915f2f51f49918618dfe44c9/docs/assets/chat/anatomia-herramientas.png),
 116.529 bytes. No se encontraron referencias literales en código, documentación,
 configuración o build. El README usa los GIF y las versiones HTML; esos sí se
 conservan. Los PNG nacieron como imágenes de esos diagramas en
@@ -294,10 +295,60 @@ la prueba del repositorio completo con un asset inexistente tarda 0,742 segundos
 También se rechaza declarar «archivado» o «retirado» un original que siga presente.
 La comprobación local no equivale a CI remota ni integración.
 
+### Limpieza del árbol vigente · 6 de noviembre de 2026
+
+La base pública `29c61a1cadc266733861e25e68791b71ce1c7669` contiene 2.555
+archivos y 204.537.159 bytes en Git. Se inventarió todo el árbol versionado:
+833 archivos de `site/`, 61 de `data/`, 287 de `docs/`, 505 de `tests/`,
+482 de `src/`, 191 de `web/` y 196 en las demás áreas. No se encontraron
+entornos virtuales, `node_modules`, bytecode, cachés ni temporales de build
+versionados. El número de archivos del disco incluye dependencias y datos
+locales; no representa el tamaño del repositorio.
+
+Se archivan los dos PNG propuestos arriba, con un total de 233.729 bytes.
+La búsqueda literal en todo el checkout, incluidos los archivos ocultos y
+excluyendo `.git`, solo encontró los enlaces de esta propuesta. Los blobs del
+commit fijo de recuperación coinciden con los de la base. Los GIF y HTML
+actuales permanecen disponibles desde el README. El
+[índice histórico](archivo/README.md#imágenes-estáticas-del-chat-6-de-noviembre-de-2026)
+conserva los originales; se retiran del árbol, sin purgar historia.
+
+Se archivan también el diagnóstico de paridad del 15 de octubre y su traspaso
+de Mercado (6.256 bytes). El bloqueo descrito fue sustituido por la
+[combinación autorizada de Mercado y Noticias](publicacion-mercado-noticias.md#combinación-y-comprobaciones)
+y la [verificación posterior del artefacto](periodos-dashboard.md#cierre-del-artefacto-y-autorización-exacta-4-de-noviembre).
+Ningún código, contrato o prueba cita esos documentos. El único enlace de otra
+bitácora pasa al original fijo; su relato histórico permanece intacto. Se
+conservan el generador de auditoría y sus JSON de evidencia. El índice histórico
+enlaza ambos originales en la base pública de esta tarea.
+
+Se retiran los marcadores de [notebooks](https://github.com/salvamalfa/aeromexico-tracker/blob/29c61a1cadc266733861e25e68791b71ce1c7669/notebooks/.gitkeep)
+y [SQL Gold](https://github.com/salvamalfa/aeromexico-tracker/blob/29c61a1cadc266733861e25e68791b71ce1c7669/sql/gold/.gitkeep) (un byte cada uno): ambos
+directorios ya contienen archivos versionados y no hay consumidores de esos
+marcadores. Se conserva el marcador de `sql/silver/`, cuyo directorio sigue vacío.
+Los seis archivos retirados suman 239.987 bytes; Git conserva todos los originales.
+
+El dashboard publicado sigue siendo `web/`, compilado y firmado en `site/`.
+No hay una app «Radar de Tarifas» en este árbol. La app Streamlit y la ruta HTML
+anterior ya se retiraron; su recuperación está en el índice histórico.
+`src/dashboard/` produce datos de la página vigente y se conserva.
+Los siete prototipos conservan productores, referencias o evidencia de revisión.
+
+Se conserva íntegro el sitio firmado: sus 832 entradas y el manifiesto
+coinciden con los 833 archivos versionados. Este cambio no modifica `site/`,
+datos, generadores, contratos ni corridas de precios o puntos. Tampoco cambia
+los trabajos activos de mapa (#199), Monthly (#200) y unificación de skills
+(#201), ni la revisión separada de pruebas y arquitectura de CI. No se activa
+ninguna fuente, calendario o tesis.
+
+El cierre de los nueve archivos afectados, la revisión independiente y los
+checks del commit final se registran en el PR de esta limpieza. El inventario
+del respaldo y sus límites permanecen privados.
+
 ## Pendientes
 
-- Revisar los dos PNG propuestos antes de archivarlos. No se autorizó ni ejecutó
-  su retiro. No hay otro archivo del sitio demostrado como sobrante.
+- No hay otro archivo del sitio demostrado como sobrante. Cualquier retiro
+  adicional requiere comprobar consumidores, sustitución y recuperación.
 - La implementación, CI y revisión remota del cierre se siguen en el
   [PR #148](https://github.com/salvamalfa/aeromexico-tracker/pull/148). El commit
   del control fijado por el privado ya está disponible en GitHub. Sus estados

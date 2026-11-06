@@ -23,6 +23,43 @@ archivos, así que un merge solo de documentación o de `web/` no lo reinicia.
 de 2026), no dependas de que Railway lea ese archivo: si agregas un `COPY`,
 agrega su patrón en `railway.toml` **y** en la configuración del servicio.
 
+## Activar el mapa oficial
+
+La nueva herramienta queda preparada y apagada por omisión. El paso final de
+entrega requiere la aprobación del dueño para la versión exacta de los datos,
+según [AGENTS.md](../../AGENTS.md). Un build, una prueba sintética o la aprobación
+de código no reemplazan esa decisión. No se han modificado variables ni
+despliegues de Railway durante la preparación del backend.
+
+Después de esa aprobación:
+
+1. Publica el dataset oficial mediante el gate del proyecto con su contrato y
+   manifiesto exactos. Verifica `site/` y el JSON servido en Pages.
+2. Prepara la imagen del chat con ese mismo `site/`, incluido
+   `src/dashboard/official_routes_contract.py` y `official_routes_geo.py`. Estos
+   helpers no cargan pandas en el chat; el constructor y sus insumos quedan fuera.
+3. Conserva el prompt R2 y sus recibos aprobados. Configura juntos
+   `CHAT_ENABLE_OFFICIAL_ROUTE_TOOLS=true` y
+   `CHAT_OFFICIAL_ROUTE_DATASET_SHA256=<dataset_version aprobado>`. El segundo
+   valor es el digest canónico del payload excluyendo únicamente su propio
+   campo `dataset_version`; no es el hash de todos los bytes del archivo.
+   Snapshot verifica ese segundo hash, distinto, contra el manifiesto.
+4. Incluye ambos helpers `src/dashboard/official_routes_*.py` en los watch paths reales
+   del servicio, además de la lista versionada de `railway.toml`. Despliega la
+   imagen final. Mantén las banderas y los pins existentes de métricas y noticias.
+5. Comprueba health: `official_route_queries` debe estar en
+   `enabled_capabilities`, y `official_route_dataset_version` debe coincidir con
+   el `dataset_version` servido y el chip de Mercado. Verifica primero con
+   llamadas directas y proveedor falso; no consumas el modelo real sin
+   autorización específica. Las conversaciones anteriores requieren una nueva
+   conversación por el cambio explícito de `snapshot_version` y semántica.
+
+Un pin distinto o un contrato no verificable impide iniciar la herramienta.
+Para desactivarla, usa `CHAT_ENABLE_OFFICIAL_ROUTE_TOOLS=false`; el catálogo
+deja de exponerla. Esto no revierte la versión de los datos publicada ni cambia
+las consultas históricas. No marques la entrega como activada hasta comprobar
+la misma versión en interfaz y backend.
+
 ## Configuración de una sola instancia
 
 En **Variables** del servicio agrega:

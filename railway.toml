@@ -17,6 +17,8 @@ watchPatterns = [
   "src/publish/manifest.py",
   "src/dashboard/__init__.py",
   "src/dashboard/flights_html.py",
+  "src/dashboard/official_routes_contract.py",
+  "src/dashboard/official_routes_geo.py",
   "config/chat/**",
   "contracts/chat/**",
   "contracts/web/**",

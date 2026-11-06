@@ -24,7 +24,9 @@ def encoded(value):
 
 
 def adapter(product):
-    if product == "am_traffic_ir":
+    if product == "official_routes":
+        from . import official_routes_projection as module
+    elif product == "am_traffic_ir":
         from . import am_monthly_projection as module
     elif product in {"viva_traffic", "volaris_traffic_ir"}:
         from . import peer_monthly_projection as module
@@ -164,14 +166,21 @@ def preserved_files(site: Path, repo: Path, spec: dict):
         raise ValueError("Source data update changed an unrelated contract")
     units = members.members(spec)
     targets = members.target_names(units, adapter)
-    before = {p: transport._git(repo, "show", f"{spec['baseline_commit']}:site/{p}") for p in targets}
-    outputs = members.compose(before, units, adapter)
+    old_names = {p["path"] for p in old["files"]}
+    before = {p: transport._git(repo, "show", f"{spec['baseline_commit']}:site/{p}") if p in old_names
+              else members.initial_bytes(p, units, adapter) for p in targets}
+    if units[0]["product"] == "official_routes":
+        # Only this sole-source surface verifies its already approved public
+        # JSON without private originals. All writing paths still use compose
+        # and the native source replay, before and after the build.
+        outputs = adapter("official_routes").verify_public_outputs(site, units[0], repo)
+    else:
+        outputs = members.compose(before, units, adapter)
     if pins(outputs) != spec["data_files"] or set(outputs) != targets:
         raise ValueError("Source projection differs from its reviewed exact data pins")
-    old_names = {p["path"] for p in old["files"]}
     names = {p["path"] for p in current["files"]}
     frontend = {p["path"] for p in spec["frontend_files"]}
-    if names != old_names | frontend | {PROOF}:
+    if names != old_names | frontend | targets | {PROOF}:
         raise ValueError("Source release added or deleted unrelated surfaces")
     actual = {p.relative_to(site).as_posix() for p in site.rglob("*") if p.is_file()}
     if any(p.is_symlink() for p in site.rglob("*")) or actual != names | {manifests.MANIFEST_NAME}:

@@ -10,6 +10,7 @@ enabled there — see web/README.md.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import threading
 from functools import partial
@@ -32,6 +33,12 @@ pytestmark = pytest.mark.browser
 
 
 def _chromium_executable() -> str | None:
+    override = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+    if override:
+        candidate = Path(override)
+        if not candidate.is_file():
+            raise ValueError("PLAYWRIGHT_CHROMIUM_EXECUTABLE does not name a browser executable")
+        return str(candidate)
     candidate = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
     return str(candidate) if candidate.exists() else None
 
@@ -58,6 +65,7 @@ def web_server(tmp_path_factory, web_dist_dir):
     write_json(root / "api/chat/health", {"status": "ok", "auth": "password", "snapshot_version": "synthetic-ui-only"})
 
     out_dir = root / "data" / "v1"
+    write_json(out_dir / "official-routes.json", _load_fixture("official_routes_sample.json"))
     flights_fixture = _load_fixture("flights_sample.json")
     flights_payload = {**flights_fixture, "international_networks": flights_fixture["route_networks"]}
     export_flights(flights_payload, out_dir, skip_input_check=True)
@@ -299,7 +307,7 @@ def test_economy_tab_renders_kpis_and_charts(page_with_console_capture) -> None:
 def test_flights_tab_renders_the_synthetic_fixture(page_with_console_capture) -> None:
     page, console_errors = page_with_console_capture
     page.click("#tab-flights")
-    page.wait_for_selector("#network-volume:not([hidden])")
+    page.wait_for_selector("#route-flow-map[data-map-status=ready]")
     page.wait_for_selector("#route-flow-map .scattergeo .js-line")
     assert page.is_visible("#panel-flights")
     assert page.inner_text("#flight-kpi-passengers") != "—"
@@ -407,9 +415,10 @@ def test_missing_reading_catalog_keeps_indicators_and_lazy_views_available(web_s
         assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
         page.click("#tab-flights")
         assert page.is_visible("#panel-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
-        page.wait_for_function("document.getElementById('flight-map-coverage-info').textContent.includes('1T26')")
-        assert "sin datos: 0 de 3 meses" in page.locator("#flight-map-coverage-info").text_content()
+        page.wait_for_selector("#route-flow-map[data-map-status=ready]")
+        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapPeriod === '2026Q1'")
+        assert page.locator("#official-map-months").text_content() == "0/3 meses"
+        assert page.locator("#official-map-total").text_content() == "N/D"
         assert errors == []
         assert analysis_requests == []
         browser.close()
@@ -476,9 +485,10 @@ def test_slow_reading_requests_do_not_block_financial_controls_or_lazy_views(web
         assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
         page.click("#tab-flights")
         assert page.is_visible("#panel-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
-        page.wait_for_function("document.getElementById('flight-map-coverage-info').textContent.includes('1T26')")
-        assert "sin datos: 0 de 3 meses" in page.locator("#flight-map-coverage-info").text_content()
+        page.wait_for_selector("#route-flow-map[data-map-status=ready]")
+        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapPeriod === '2026Q1'")
+        assert page.locator("#official-map-months").text_content() == "0/3 meses"
+        assert page.locator("#official-map-total").text_content() == "N/D"
         page.click("#tab-reading")
         if stalled == "catalog":
             held[0].continue_()

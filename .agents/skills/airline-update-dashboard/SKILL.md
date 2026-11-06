@@ -3,6 +3,18 @@ name: airline-update-dashboard
 description: Incorporar un producto validado y una tesis aprobada al dashboard, generar el sitio, integrar y comprobar la publicación servida con recuperación idempotente.
 ---
 
+Para el candidato `official_routes`, usar la [receta del mapa oficial](../../../docs/mapa-oficial.md)
+y `src.publish.official_routes_projection` dentro del gate selectivo. El JSON
+nuevo puede añadirse sólo con su contrato, perfil reproducido y autorización
+humana de su scope exacto. No trasladar aprobaciones AFAC carrier ni financieras.
+El [handoff mensual oficial](../../../docs/calendario-ejecucion.md#continuación-explícita-para-el-mapa-oficial)
+es explícito: `source_data` no acredita permiso ni publicación. Conservar el
+perfil completo AFAC+BTS y la relación de hashes/periodos con la fuente validada.
+Para ausencia de cambio usar `src.source_updates.official_routes_handoff.verify_nochange`,
+guardar su resultado exacto y `source_profile` físico/SHA; no usar un mapa legacy
+como sustituto. Cualquier periodo nuevo o revisión que cambie la salida necesita
+la autorización y el gate normales. `served` sigue requiriendo HTTP/SHA real.
+
 # Agente de actualización del dashboard
 
 Leer `AGENTS.md`, `REPO_MAP.md`, `src/publish/README.md`, `web/README.md` y
@@ -206,7 +218,8 @@ no dividirlos entre dos ni convertir un faltante en cero.
    permanecer idéntico; todos los demás archivos de datos se conservan byte a byte.
    Para una modificación real de interfaz, usar el modo aplicable de `src.publish`
    y revisar el diff; no editar HTML compilado manualmente ni borrar recibos.
-7. Para una actualización general que sí requiere fuentes/warehouse completos,
+7. Mientras el baseline no contenga el mapa oficial, para una actualización
+   general que sí requiere fuentes/warehouse completos,
    restaurar solo insumos privados verificados conforme a `docs/cloud-development.md`.
    Tras cambios de Vuelos, ejecutar primero `python -m src.dashboard.build_flights`;
    exportar `python -m src.web_export --out web/public/data/v1 --analysis-manifest <manifest-exacto>`.
@@ -214,6 +227,11 @@ no dividirlos entre dos ni convertir un faltante en cero.
    y `python -m src.publish.verify site/`. `--allow-missing-analysis` es solo de
    desarrollo y no publica un expediente incompleto. Nunca usar `--ui-only` para
    introducir datos nuevos.
+   Una vez publicado el mapa oficial, usar los tramos selectivos documentados
+   arriba para finanzas/lecturas, movimientos o datos de fuentes. El ensamblado
+   rechaza reemplazar ese sitio con una salida que pierda el JSON, su pin de
+   contrato o el recibo `source-data-publication.json`. Para otros cambios,
+   preparar un candidato y revisar su gate de preservación antes de publicar.
 
 ## Publicar la corrección de movimientos Aerocivil
 

@@ -16,11 +16,8 @@ import { currentPeriodId, subscribe } from "../../state/period";
 import { loadQuarters, state } from "./state";
 import { renderQuarter } from "./quarter";
 import { renderMix } from "./mix";
-import { renderNetworkPeriod, renderRouteMode } from "./network";
-import { alignRouteDetailToGeo, canvasSize, mapFittedCanvasSize, renderFlowMap } from "./map";
+import { mountOfficialMap, redrawOfficialMap } from "./official-map";
 import { mountPicker } from "../shell/carriers";
-import { setMapEntities } from "./state";
-import { mountMapPeriodControl } from "./map-periods";
 import { state as executiveState } from "../executive/state";
 import { selectedFlightQuarter } from "./selected-period";
 
@@ -38,32 +35,6 @@ function mountFlightPickers(): void {
   if (kpiHost) {
     mountPicker(kpiHost, { card: "flight-kpis", multi: false, defaults: ["INDUSTRY"] }, () => void renderQuarter());
   }
-  // Route map (fase 3): one entity at a time, Industria by default.
-  const mapHost = $("pick-map") as HTMLElement | null;
-  if (mapHost && state.availablePeriods.entities) {
-    const mapUrl = new URL(window.location.href);
-    const incoming = mapUrl.searchParams.get("sel_map")?.split(",") ?? [];
-    if (incoming.includes("INDUSTRY") && incoming.length > 1) {
-      mapUrl.searchParams.set("sel_map", "INDUSTRY");
-      window.history.replaceState(null, "", mapUrl);
-    }
-    const initial = mountPicker(mapHost, { card: "map", multi: true, defaults: ["INDUSTRY"] }, async (keys) => {
-      if (!setMapEntities(keys)) return;
-      state.pinnedAirport = null;
-      state.selectedMarket = null;
-      if (await renderNetworkPeriod(selectedFlightQuarter().period_id)) renderFlowMap();
-    });
-    setMapEntities(initial);
-    // In this map picker, Industry means all three carriers and is exclusive.
-    // Capture runs before the shared checkbox listener reads/paints selection.
-    mapHost.addEventListener("change", (event) => {
-      const box = event.target as HTMLInputElement;
-      if (box.type !== "checkbox" || !box.checked) return;
-      for (const other of mapHost.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
-        if (other !== box && (box.value === "INDUSTRY" || other.value === "INDUSTRY")) other.checked = false;
-      }
-    }, true);
-  }
   const mixHost = $("pick-mix") as HTMLElement | null;
   if (mixHost) {
     mountPicker(mixHost, { card: "mix", multi: true, defaults: ["INDUSTRY"] }, () => renderMix(selectedFlightQuarter()));
@@ -72,19 +43,11 @@ function mountFlightPickers(): void {
 
 function wireControls(): void {
   mountFlightPickers();
-  mountMapPeriodControl(() => void renderNetworkPeriod(selectedFlightQuarter().period_id));
+  mountOfficialMap();
   subscribe((periodId) => {
     syncPeriodIndex(periodId);
     state.mapPeriodId = null;
     void renderQuarter();
-  });
-  $("network-mode-domestic")!.addEventListener("click", async () => {
-    state.networkMode = "domestic";
-    await renderNetworkPeriod(selectedFlightQuarter().period_id);
-  });
-  $("network-mode-international")!.addEventListener("click", async () => {
-    state.networkMode = "international";
-    await renderNetworkPeriod(selectedFlightQuarter().period_id);
   });
   $("passenger-basis")?.addEventListener("change", (event) => {
     state.passengerBasis = (event.target as HTMLSelectElement).value === "corporate" ? "corporate" : "afac";
@@ -97,16 +60,6 @@ function wireControls(): void {
     state.passengerPeriod = (event.target as HTMLSelectElement).value as "quarter" | "month";
     renderMix(selectedFlightQuarter());
   });
-  for (const [id, view] of [["map-routes-featured", "volume"], ["map-routes-change", "change"], ["map-routes-all", "all"]] as const) {
-    $(id)!.addEventListener("click", () => {
-      state.routeView = view;
-      state.pinnedAirport = null;
-      state.selectedMarket = null;
-      renderRouteMode();
-      renderFlowMap();
-    });
-  }
-  window.addEventListener("flight-route-overview", () => renderFlowMap());
   // El recorte del mapa (fitViewToCanvas) depende del aspecto del lienzo:
   // si cambia el ancho o el alto hay que recalcularlo, no solo realinear el
   // detalle (el alto cambia solo, p. ej., en el corte de 420px con el ancho
@@ -119,22 +72,18 @@ function wireControls(): void {
       resizeQueued = false;
       const panel = $("panel-flights");
       const width = $("route-flow-map")?.clientWidth ?? 0;
-      if (state.network && panel && !panel.hidden && width && canvasSize() !== mapFittedCanvasSize()) {
-        renderFlowMap();
-      }
-      alignRouteDetailToGeo();
+      if (panel && !panel.hidden && width) void redrawOfficialMap();
     });
   });
   window.addEventListener("reader-tab-visible", () => {
     const panel = $("panel-flights");
     if (!panel || panel.hidden) return;
     window.requestAnimationFrame(() => {
-      renderFlowMap();
+      void redrawOfficialMap();
       for (const id of ["route-flow-map", "mix-chart"]) {
         const graph = $(id);
         if (graph?.classList.contains("js-plotly-plot")) Plotly.Plots.resize(graph);
       }
-      alignRouteDetailToGeo();
     });
   });
 }
@@ -146,5 +95,5 @@ export async function mountFlights(dataRoot = "data/v1"): Promise<void> {
   if (periodId) syncPeriodIndex(periodId);
   await renderQuarter();
   const panel = $("panel-flights");
-  if (!panel || !panel.hidden) window.requestAnimationFrame(renderFlowMap);
+  if (!panel || !panel.hidden) window.requestAnimationFrame(() => void redrawOfficialMap());
 }

@@ -34,6 +34,64 @@ interfaz no presenta respuestas ni conexión simuladas.
 
 ## Datos y contexto
 
+### Mapa de vuelos regulares
+
+`query_official_routes` consulta exclusivamente el JSON público
+`data/v1/official-routes.json`, contrato `official_route_network_v1`. Su
+activación es separada y está apagada por omisión. No modifica `query_routes`,
+`find_shared_routes`, las lecturas, las noticias ni las métricas financieras.
+El catálogo identifica la versión exacta para que una sesión del proveedor
+no reutilice herramientas fijadas a otros datos.
+
+El botón «Pregunta» de `route-flow-map` en Mercado adjunta el trimestre global
+y los filtros `map_dataset_version`, `map_scope`, `map_grain`, `map_months`,
+`map_carriers` y, cuando corresponde, `map_region`. La versión es
+`dataset_version` del payload: SHA-256 de su contenido canónico excluyendo
+únicamente ese campo. Snapshot verifica además el hash de los bytes completos
+del archivo y el contrato declarados en el manifiesto de publicación.
+La vista general de Mercado envía esos filtros también cuando no hay tarjeta
+adjunta. Las tarjetas de participación, mezcla y métricas mantienen su propio
+contexto. Un contexto oficial rechaza las herramientas de rutas anteriores y
+las redirige a `query_official_routes`; no las ejecuta con otra evidencia.
+
+Nacional e Internacional usan pares de ciudades AFAC y todas las aerolíneas.
+No admiten una entidad o filtro de aerolínea y no observan celdas
+ciudad × aerolínea. Internacional excluye Estados Unidos geográfico y permite
+Canadá, Centroamérica y Caribe —incluidos Puerto Rico e Islas Vírgenes—,
+Sudamérica, Europa y Asia. EEUU usa pares de aeropuertos BTS y admite cualquier
+selección no vacía de Grupo Aeroméxico, Volaris y Viva; por omisión usa las tres.
+Aerovías y Connect conservan sus identificadores y cifras por separado.
+El universo es regular de pasajeros y carga; BTS incluye F y G y excluye L y P.
+
+Los argumentos explícitos prevalecen sobre el contexto. Un cambio de alcance
+no hereda filtros exclusivos del alcance anterior.
+En los argumentos de `query_official_routes`, `region: "all"` selecciona todas
+las regiones internacionales. `region: null` u omisión heredan la región del
+contexto; otra región explícita la reemplaza. Esto conserva el significado de
+los campos opcionales enviados como `null` por el esquema estricto del proveedor.
+La herramienta rechaza
+un chip de otra versión o con meses distintos de los publicados. Una selección
+de aerolíneas conserva su significado en cualquier orden. Un trimestre sin red
+publicada exige meses adjuntos vacíos. Una selección
+sin observaciones devuelve `missing` y totales nulos, sin buscar otro trimestre.
+Las filas conservan la comparación publicada, sus meses y su motivo de ausencia.
+`comparison.comparison_months` conserva el soporte del año actual, tal como está
+publicado. `comparison_calendar` nombra por separado el trimestre y los meses del
+año anterior: julio de 2026 se compara con julio de 2025, nunca consigo mismo.
+La cobertura y los totales de toda la selección permanecen visibles cuando
+el límite de transporte recorta el detalle de rutas.
+
+La [guía de Railway](railway.md#activar-el-mapa-oficial) define el paso final
+de activación con la misma versión servida por la interfaz. El código y las
+pruebas con cifras sintéticas no conceden aprobación a un dataset candidato.
+La verificación reproducible vive en `tests/test_chat_official_routes.py`,
+`test_chat_official_routes_flow.py`, `test_chat_official_routes_openai.py` y
+`test_chat_official_routes_snapshot.py`. Cubre llamadas directas, API, worker,
+almacenamiento, SDK con sesiones falsas, hashes alterados y la copia mínima
+del contenedor. No usa claves ni envía preguntas a un modelo real.
+
+### Contexto y métricas
+
 La interfaz y el backend deben tomar la pestaña, tarjeta y filtros como contexto
 no confiable y validado. El contexto puede resolver una pregunta, pero nunca
 concede permisos o amplía cobertura. Los filtros propios de una tarjeta tienen

@@ -22,7 +22,7 @@ Se probó API real → worker → herramienta → historial/SSE → navegación 
 
 **Inferencia de modelo real no verificada.** Existe clave en el entorno (no se muestra ni copia); faltan el opt-in y la configuración local efectiva del runtime de producción. Se reutiliza la integración y el prompt existentes, sin nueva clave, presupuesto ni aprobación. No se hizo una petición pagada ni se afirma que el modelo ya elija la herramienta en todos estos casos.
 
-La [paridad de presentación](../paridad-presentacion-20261015.md) conserva un fallo y un error de fixture en los dos controles locales, ambos por la misma huella técnica heredada que también falla en master. Datos numéricos, cuatro tesis y 68 afirmaciones permanecen iguales. Tres nuevas versiones técnicas requieren revisión/aprobación independiente antes de exportar. No se declara presentación verificada.
+La [paridad de presentación](https://github.com/salvamalfa/aeromexico-tracker/blob/29c61a1cadc266733861e25e68791b71ce1c7669/docs/paridad-presentacion-20261015.md) conserva un fallo y un error de fixture en los dos controles locales, ambos por la misma huella técnica heredada que también falla en master. Datos numéricos, cuatro tesis y 68 afirmaciones permanecen iguales. Tres nuevas versiones técnicas requieren revisión/aprobación independiente antes de exportar. No se declara presentación verificada.
 
 ## Entregables y pendientes
 

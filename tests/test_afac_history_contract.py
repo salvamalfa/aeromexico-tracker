@@ -13,6 +13,7 @@ from src.publish import afac_history_parent as parent
 
 ROOT = Path(__file__).resolve().parents[1]
 PARENT = "842d140a983f785e9d39e7d3d378fdfebe79981e"
+PUBLISHED_HISTORY = "e9a375dcd3286e71780cd32aabf1c9dd8e8436c2"
 SCOPE = "708bedf937af692fc87de96cace34cbf55269ea27fb5b7196d74b31bcd026695"
 
 

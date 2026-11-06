@@ -177,7 +177,7 @@ def test_editorial_evidence_unavailability_fails_in_strict_mode_without_a_wareho
     expected = pytest.fail.Exception if strict else pytest.skip.Exception
     with pytest.raises(expected):
         if missing == "candidate":
-            module.editorial_site.__wrapped__(request)
+            module.editorial_site.__wrapped__(request, module.SITE)
         else:
             module._required_source_record({"version": "a" * 64}, request)
     assert not (tmp_path / "data/warehouse.duckdb").exists()
@@ -193,7 +193,7 @@ def test_editorial_receipt_without_manifest_is_invalid_even_when_data_is_optiona
     (module.SITE / editorial.PROOF).write_text("{}")
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     with pytest.raises(AssertionError, match="receipt requires its manifest"):
-        module.editorial_site.__wrapped__(request)
+        module.editorial_site.__wrapped__(request, module.SITE)
 
 
 @pytest.mark.parametrize("strict", [False, True])
@@ -244,9 +244,9 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
     module.SITE = site
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     if damage is None:
-        assert module.editorial_site.__wrapped__(request)["analysis_entry"] == entry
+        assert module.editorial_site.__wrapped__(request, module.SITE)["analysis_entry"] == entry
         with pytest.raises(pytest.skip.Exception):
-            module.test_editorial_site_preserves_every_historical_file({})
+            module.test_editorial_site_preserves_every_historical_file({}, module.SITE)
         # Later normal publications still require the complete new-source replay.
         module.ROOT = tmp_path
         expected = pytest.fail.Exception if strict else pytest.skip.Exception
@@ -259,7 +259,7 @@ def test_editorial_fixture_recognizes_only_a_verified_later_normal_publication(t
             else AssertionError
         )
         with pytest.raises(expected):
-            module.editorial_site.__wrapped__(request)
+            module.editorial_site.__wrapped__(request, module.SITE)
 
 
 @pytest.mark.parametrize("strict", [False, True])
@@ -276,7 +276,7 @@ def test_editorial_corrupt_publication_is_not_an_optional_missing_candidate(tmp_
         (module.SITE / "issuer-publication.json").symlink_to(module.SITE / "absent.json")
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     with pytest.raises(AssertionError, match="manifest"):
-        module.editorial_site.__wrapped__(request)
+        module.editorial_site.__wrapped__(request, module.SITE)
 
 
 @pytest.mark.parametrize("strict", [False, True])
@@ -294,7 +294,7 @@ def test_editorial_unknown_verifier_never_falls_back_to_a_general_check(tmp_path
     )
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     with pytest.raises(AssertionError, match="Unsupported publication verifier"):
-        module.editorial_site.__wrapped__(request)
+        module.editorial_site.__wrapped__(request, module.SITE)
 
 
 @pytest.mark.parametrize("strict", [False, True])
@@ -331,7 +331,7 @@ def test_incomplete_publication_artifacts_never_become_optional_missing_data(tmp
         (module.SITE / "publication_manifest.json").symlink_to(module.SITE / "absent-manifest-target")
     request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: strict))
     with pytest.raises(AssertionError, match="manifest"):
-        module.editorial_site.__wrapped__(request)
+        module.editorial_site.__wrapped__(request, module.SITE)
 
 
 @pytest.mark.parametrize("strict", [False, True])
@@ -391,10 +391,10 @@ def test_editorial_fixture_uses_the_strict_source_data_verifier(tmp_path, monkey
         getfixturevalue=lambda name: lambda *args: pytest.fail("financial fallback"),
     )
     if failure is None:
-        assert module.editorial_site.__wrapped__(request) == spec
+        assert module.editorial_site.__wrapped__(request, module.SITE) == spec
     else:
         with pytest.raises(AssertionError, match=failure):
-            module.editorial_site.__wrapped__(request)
+            module.editorial_site.__wrapped__(request, module.SITE)
     assert calls == [(module.SITE, tmp_path)]
 
 
@@ -421,8 +421,8 @@ def test_editorial_history_is_checked_by_source_data_preservation(tmp_path, monk
 
     monkeypatch.setattr(source_data_scope, "preserved_files", preserved)
     if failure is None:
-        module.test_editorial_site_preserves_every_historical_file(spec)
+        module.test_editorial_site_preserves_every_historical_file(spec, module.SITE)
     else:
         with pytest.raises(ValueError, match=failure):
-            module.test_editorial_site_preserves_every_historical_file(spec)
+            module.test_editorial_site_preserves_every_historical_file(spec, module.SITE)
     assert calls == [(module.SITE, tmp_path, spec)]

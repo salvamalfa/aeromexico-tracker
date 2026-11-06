@@ -22,6 +22,15 @@ def verify(job: dict, source: dict, result: dict, expected_binding: dict, root: 
     expected_status = "no_material_analysis_change" if job["stage"] == "analysis" else "no_visual_change"
     if result["status"] != expected_status:
         raise ValueError("No-change receipt has the wrong stage")
+    from src.source_updates import official_routes_handoff as official
+
+    if official.selected(source):
+        if job["stage"] != "dashboard" or job.get("release_kind") != "source_data":
+            raise ValueError("Official no-change requires the selected source-data consumer")
+        observed = official.verify_nochange(source, reference(result["source_profile"]), root)
+        if observed != proof:
+            raise ValueError("No-change receipt differs from the physical official equivalence replay")
+        return
     if (
         job["stage"] == "dashboard"
         and job.get("release_kind") == "source_dependency_assessment"

@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from .markdown_tables import remove_numeric_markdown_tables
+from .official_route_sources import BTS_SOURCE_HOSTS, approved_bts_query
 
 LOG = logging.getLogger("conversational_analytics.presentation")
 _MARKER = re.compile(r"\{\{(tabla|grafica):([A-Za-z0-9][A-Za-z0-9_.-]{0,95})\}\}")
@@ -34,6 +35,12 @@ _SAFE_HOSTS = {
     "www.sec.gov",
     "gob.mx",
     "www.gob.mx",
+    "www.sct.gob.mx",
+    "www.transtats.bts.gov",
+    "transtats.bts.gov",
+    "www.bts.gov",
+    "bts.gov",
+    "data.transportation.gov",
     "github.com",
     "salvamalfa.github.io",
     "ir.aeromexico.com",
@@ -79,7 +86,12 @@ def _safe_sources(*candidates: Any) -> list[dict[str, str]]:
                         label = f"{label.strip()} · miembro ZIP {member.group(1)}"
                     url = parsed._replace(fragment="").geturl()
                 else:
-                    approved_query = parsed.hostname == "api.mziq.com" and parsed.query == "origin=2" and re.fullmatch(r"/mzfilemanager/v2/d/[a-f0-9-]+/[a-f0-9-]+", parsed.path)
+                    approved_query = (
+                        parsed.hostname == "api.mziq.com" and parsed.query == "origin=2"
+                        and re.fullmatch(r"/mzfilemanager/v2/d/[a-f0-9-]+/[a-f0-9-]+", parsed.path)
+                    )
+                    if parsed.hostname in BTS_SOURCE_HOSTS:
+                        approved_query = approved_bts_query(parsed)
                     if (parsed.query and not approved_query) or parsed.fragment:
                         continue
                     url = parsed.geturl()
@@ -545,7 +557,9 @@ class DisplayRegistry:
         shown_urls = {source["url"] for display in selected for source in display.get("sources", [])}
         for display in selected:
             for displayed_source in display.get("sources", []):
-                merged = next((source for source in unique_sources if source["url"] == displayed_source["url"]), None)
+                merged = next(
+                    (source for source in unique_sources if source["url"] == displayed_source["url"]), None
+                )
                 if merged:
                     displayed_source["label"] = merged["label"]
         return (

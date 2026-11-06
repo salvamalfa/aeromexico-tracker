@@ -29,6 +29,8 @@ COPY src/conversational_analytics/ ./src/conversational_analytics/
 COPY src/web_export/ ./src/web_export/
 COPY src/publish/__init__.py src/publish/manifest.py ./src/publish/
 COPY src/dashboard/__init__.py src/dashboard/flights_html.py ./src/dashboard/
+COPY src/dashboard/official_routes_contract.py ./src/dashboard/
+COPY src/dashboard/official_routes_geo.py ./src/dashboard/
 # Copy only the runtime configuration. Candidate evidence and collection
 # inboxes stay out of the image; approval receipts bind the exact owner-reviewed inputs.
 COPY config/chat/*.yaml ./config/chat/

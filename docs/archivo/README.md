@@ -119,3 +119,30 @@ Se mantienen las decisiones y recibos de aprobación, los presupuestos de
 etapas 2/3, las entradas de generadores/pruebas y las bitácoras de entrega.
 El [índice vigente del chat](../chat/README.md#cierre-documental-del-19-de-octubre)
 explica la disposición de los siete candidatos iniciales. No se purga Git.
+
+## Imágenes estáticas del chat (6 de noviembre de 2026)
+
+Se retiran dos PNG sin consumidores actuales: la búsqueda del árbol solo
+encontró la propuesta de archivo en [la auditoría de Gold](../gold-exposure.md).
+El README conserva los diagramas GIF y HTML que sí se consultan. Los originales
+íntegros siguen disponibles en el commit fijo `27cd579`:
+
+- [anatomia-chat.png](https://github.com/salvamalfa/aeromexico-tracker/blob/27cd579e1d8b613e915f2f51f49918618dfe44c9/docs/assets/chat/anatomia-chat.png).
+- [anatomia-herramientas.png](https://github.com/salvamalfa/aeromexico-tracker/blob/27cd579e1d8b613e915f2f51f49918618dfe44c9/docs/assets/chat/anatomia-herramientas.png).
+
+Los blobs coinciden con los del árbol anterior al retiro: 117.200 y 116.529
+bytes, respectivamente. Se libera ese formato estático del checkout sin
+alterar el sitio publicado, sus datos ni las corridas.
+
+## Diagnóstico de paridad sustituido (6 de noviembre de 2026)
+
+Se archivan el [diagnóstico del 15 de octubre](https://github.com/salvamalfa/aeromexico-tracker/blob/29c61a1cadc266733861e25e68791b71ce1c7669/docs/paridad-presentacion-20261015.md)
+y el [traspaso de Mercado de ese corte](https://github.com/salvamalfa/aeromexico-tracker/blob/29c61a1cadc266733861e25e68791b71ce1c7669/docs/etapas/mercado-paridad-diagnostico-20261015.md).
+Describían un bloqueo técnico previo a la
+[combinación autorizada](../publicacion-mercado-noticias.md#combinación-y-comprobaciones)
+y a la [verificación posterior del artefacto](../periodos-dashboard.md#cierre-del-artefacto-y-autorización-exacta-4-de-noviembre).
+Los originales completos se conservan en el commit fijo de esos enlaces.
+El generador `scripts/audit/presentation_parity.py`, los JSON de
+`docs/referencias/presentation-parity-20261015/` y las aprobaciones permanecen
+intactos. La bitácora de Noticias conserva su relato y enlaza el diagnóstico
+original, sin presentarlo como un bloqueo vigente.

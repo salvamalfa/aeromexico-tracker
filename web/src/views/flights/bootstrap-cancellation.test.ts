@@ -1,57 +1,85 @@
-import { beforeEach, expect, it, vi } from "vitest";
-import type { QuarterRecord } from "../../types/domain";
-
-const mocks = vi.hoisted(() => ({
-  renderMap: vi.fn(), renderNetwork: vi.fn(), pickerChanged: null as null | ((keys: string[]) => Promise<void>),
-}));
-vi.mock("../../lib/plotly", () => ({ default: { Plots: { resize: vi.fn() } } }));
-vi.mock("../../state/period", () => ({ currentPeriodId: () => null, subscribe: vi.fn() }));
-vi.mock("./state", async (original) => ({ ...await original<typeof import("./state")>(), loadQuarters: vi.fn() }));
-vi.mock("./quarter", () => ({ renderQuarter: vi.fn() }));
-vi.mock("./mix", () => ({ renderMix: vi.fn() }));
-vi.mock("./network", () => ({ renderNetworkPeriod: mocks.renderNetwork, renderRouteMode: vi.fn() }));
-vi.mock("./map", () => ({ renderFlowMap: mocks.renderMap, alignRouteDetailToGeo: vi.fn(),
-  canvasSize: () => "", mapFittedCanvasSize: () => "" }));
-vi.mock("../executive/state", () => ({ state: { entities: {} } }));
-vi.mock("../shell/carriers", () => ({ mountPicker: (_host: HTMLElement, _config: unknown, callback: typeof mocks.pickerChanged) => {
-  mocks.pickerChanged = callback;
-  return ["INDUSTRY"];
-} }));
-
-import { mountFlights } from "./bootstrap";
+import { readFileSync } from "node:fs";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import type { OfficialRoutesDocument } from "../../types/official-routes";
+import { initPeriods } from "../../state/period";
+import { mountOfficialMap, renderOfficialMap } from "./official-map";
+import { officialState } from "./official-routes";
 import { state } from "./state";
-
+vi.mock("./official-map-chart", () => ({ drawOfficialMap: vi.fn(async () => {}) }));
+const wire = JSON.parse(readFileSync("../tests/fixtures/official-routes.example.json", "utf8")) as OfficialRoutesDocument;
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 beforeEach(() => {
-  mocks.renderMap.mockReset();
-  mocks.renderNetwork.mockReset();
-  mocks.pickerChanged = null;
-  state.network = null;
-  state.periodIndex = 0;
-  state.quarters = [{ period_id: "2026Q2" } as QuarterRecord];
-  state.baseAvailablePeriods = null;
-  state.availablePeriods = { domestic: [], domestic_monthly: [], international: [], entities: {
-    INDUSTRY: { label: "Industria", domestic_monthly: [], international: [] },
-    VOLARIS: { label: "Volaris", domestic_monthly: [], international: [] },
-    VIVA_AEROBUS: { label: "Viva", domestic_monthly: [], international: [] },
-  } };
-  document.body.innerHTML = '<section id="panel-flights" hidden></section><div id="pick-map"></div>'
-    + ["network-mode-domestic", "network-mode-international", "passenger-period", "map-routes-featured",
-      "map-routes-change", "map-routes-all"].map((id) => `<button id="${id}"></button>`).join("");
+  document.body.innerHTML = readFileSync("index.html", "utf8");
+  window.history.replaceState(null, "", "/");
+  initPeriods(["2026Q2", "2026Q3"], "2026Q3");
+  state.dataRoot = "data/v1";
+  Object.assign(officialState, { document: null, network: null, scope: "national", region: null, view: "volume", carriers: ["AEROMEXICO", "VOLARIS", "VIVA_AEROBUS"] });
 });
-
-it("does not draw after a cancelled picker callback while a newer carrier is loading", async () => {
-  await mountFlights();
-  let finishOld!: (installed: boolean) => void;
-  let finishNew!: (installed: boolean) => void;
-  mocks.renderNetwork.mockReturnValueOnce(new Promise<boolean>((resolve) => { finishOld = resolve; }))
-    .mockReturnValueOnce(new Promise<boolean>((resolve) => { finishNew = resolve; }));
-  const oldPicker = mocks.pickerChanged!(["VOLARIS"]);
-  const newPicker = mocks.pickerChanged!(["VIVA_AEROBUS"]);
-  finishOld(false);
-  await oldPicker;
-  expect(state.network).toBeNull();
-  expect(mocks.renderMap).not.toHaveBeenCalled();
-  finishNew(true);
-  await newPicker;
-  expect(mocks.renderMap).toHaveBeenCalledTimes(1);
+it("opens the search icon with focus, clears pending queries on close/Escape, and preserves the selected route", async () => {
+  vi.useFakeTimers();
+  officialState.document = structuredClone(wire);
+  mountOfficialMap(); await renderOfficialMap("2026Q3");
+  const route = officialState.routes[0]!; officialState.selectedRoute = route.route_key;
+  const toggle = document.getElementById("official-map-search-toggle") as HTMLButtonElement;
+  const box = document.getElementById("official-map-search-box")!;
+  const input = document.getElementById("official-map-search") as HTMLInputElement;
+  expect(box.hidden).toBe(true); expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  toggle.click(); expect(box.hidden).toBe(false); expect(document.activeElement).toBe(input);
+  input.value = "Mexico"; input.dispatchEvent(new Event("input")); toggle.click();
+  vi.advanceTimersByTime(200);
+  expect(box.hidden).toBe(true); expect(input.value).toBe("");
+  expect(document.getElementById("official-map-search-results")!.childElementCount).toBe(0);
+  expect(officialState.selectedRoute).toBe(route.route_key);
+  toggle.click(); input.value = "Mexico"; input.dispatchEvent(new Event("input")); vi.advanceTimersByTime(200);
+  const result = document.querySelector<HTMLButtonElement>("#official-map-search-results button")!;
+  result.focus(); result.dispatchEvent(new KeyboardEvent("keydown", { key:"Escape", bubbles:true }));
+  expect(box.hidden).toBe(true); expect(input.value).toBe(""); expect(document.activeElement).toBe(toggle);
+  expect(toggle.getAttribute("aria-label")).toBe("Buscar ruta"); expect(officialState.selectedRoute).toBe(route.route_key);
+});
+it("finds a city outside the top 12 through the icon and opens it from the keyboard", async () => {
+  vi.useFakeTimers(); vi.stubGlobal("matchMedia", vi.fn(() => ({ matches:false })));
+  const doc = structuredClone(wire), original = doc.networks[0]!.routes[0]!;
+  doc.networks[0]!.routes = Array.from({ length:14 }, (_, i) => ({ ...original, route_key:`CITY_MX_MEXICO--CITY_${i}`, departures:14-i,
+    destination:{...original.destination, id:`CITY_${i}`, label:i===13 ? "Ciudad fuera del top" : `Ciudad ${i}`} }));
+  officialState.document = doc; mountOfficialMap(); await renderOfficialMap("2026Q3");
+  expect(document.querySelectorAll("[data-official-route]")).toHaveLength(12);
+  document.getElementById("official-map-search-toggle")!.click();
+  const input = document.getElementById("official-map-search") as HTMLInputElement;
+  input.value = "Ciudad fuera del top"; input.dispatchEvent(new Event("input"));
+  input.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", bubbles:true }));
+  expect(officialState.selectedNode).toBe("CITY_13");
+  expect(document.querySelectorAll("[data-official-route]")).toHaveLength(1);
+  expect(document.getElementById("official-map-search-box")!.hidden).toBe(true);
+  expect(document.getElementById("official-map-back")!.hidden).toBe(false);
+  expect(input.value).toBe("");
+});
+it("installs only the latest scope and quarter when a shared network fetch resolves late", async () => {
+  let finish!: (value: unknown) => void;
+  vi.stubGlobal("fetch", vi.fn(() => new Promise(resolve => { finish = resolve; })));
+  mountOfficialMap();
+  const old = renderOfficialMap("2026Q3");
+  officialState.scope = "international";
+  const latest = renderOfficialMap("2026Q2");
+  finish({ ok: true, json: async () => wire });
+  await Promise.all([old, latest]);
+  expect(officialState.scope).toBe("international"); expect(officialState.period).toBe("2026Q2");
+  expect(officialState.network).toBeNull(); expect(officialState.routes).toEqual([]);
+  expect(document.getElementById("official-map-total")!.textContent).toBe("N/D");
+  expect(document.getElementById("official-route-list")!.textContent).toContain("Sin rutas disponibles");
+  expect(fetch).toHaveBeenCalledTimes(1);
+  vi.unstubAllGlobals();
+});
+it("shows partial months, keeps empty regions selected, and exposes directions/months without inventing a zero", async () => {
+  officialState.document = { ...wire, networks: [{ ...wire.networks[0]!, scope: "international", availability: "partial", observed_months: ["2026M07"] }] };
+  mountOfficialMap(); officialState.scope = "international";
+  await renderOfficialMap("2026Q3");
+  expect(document.getElementById("official-map-source")!.classList.contains("official-partial")).toBe(true);
+  document.querySelector<HTMLButtonElement>("[data-official-route]")!.click();
+  expect(document.querySelector(".official-route-detail")!.textContent).toContain("MEXICO → MONTERREY");
+  expect(document.querySelector(".official-route-detail")!.textContent).toContain("julio 2026");
+  const region = document.getElementById("official-map-region") as HTMLSelectElement;
+  region.value = "europe"; region.dispatchEvent(new Event("change"));
+  await vi.waitFor(() => expect(officialState.loading).toBe(false));
+  expect(officialState.region).toBe("europe"); expect(region.value).toBe("europe");
+  expect(document.getElementById("official-map-total")!.textContent).toBe("N/D");
 });

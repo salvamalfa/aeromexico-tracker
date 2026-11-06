@@ -1,5 +1,9 @@
 # `src/publish`
 
+El producto candidato `official_routes` añade únicamente el nuevo JSON de mapa
+mediante el gate selectivo con replay completo y consentimiento del scope exacto.
+No cambia lecturas ni datos históricos. Ver [receta y límites](../../docs/mapa-oficial.md).
+
 The publication gate for `site/`: the *signed object* the dashboard ships
 as — a directory built from `web/` plus the exported v1 payloads. See
 `web/README.md`.

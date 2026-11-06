@@ -51,7 +51,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError
 
 from src.config import PATHS
 from src.dashboard.route_entities import EXTRA_ROUTE_ENTITIES
@@ -110,6 +110,8 @@ def _data_schema_for(
     analysis_schema: dict[str, Any] = ANALYSIS_SCHEMA,
     market_schema: dict[str, Any] = MARKET_SCHEMA,
     demand_schema: dict[str, Any] | None = None,
+    *,
+    official_routes_schema: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
@@ -128,6 +130,8 @@ def _data_schema_for(
         )
     if parts[2:] == ["market.json"]:
         return market_schema
+    if parts[2:] == ["official-routes.json"]:
+        return official_routes_schema
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
         return quarters_schema
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:
@@ -225,6 +229,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
     quarters_schema, network_schema = QUARTERS_FILE_SCHEMA, NETWORK_FILE_SCHEMA
     analysis_schema, market_schema = ANALYSIS_SCHEMA, MARKET_SCHEMA
     demand_schema = None
+    official_routes_schema = None
     editorial_schema = None
     industry_story_schema = None
     try:
@@ -237,6 +242,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         has_business_metrics = "data/v1/business_metrics.json" in listed_paths
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
         optional_payload_contracts = {
+            "official-routes.schema.json": "data/v1/official-routes.json",
             manifest_mod.EDITORIAL_ANALYSIS_CONTRACT: manifest_mod.EDITORIAL_ANALYSIS_PATH,
             manifest_mod.INDUSTRY_STORY_CONTRACT: manifest_mod.INDUSTRY_STORY_PATH,
             "market_demand.schema.json": "data/v1/market-demand.json",
@@ -270,6 +276,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
                     market_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "market_demand.schema.json":
                     demand_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == "official-routes.schema.json":
+                    official_routes_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "analysis.schema.json":
                     analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
@@ -309,7 +317,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         parts = rel.split("/")
         is_data_file = parts[:2] == ["data", "v1"] and rel.endswith(".json")
         schema = _data_schema_for(
-            rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema
+            rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema,
+            official_routes_schema=official_routes_schema,
         )
         if editorial_schema is not None and (
             rel == manifest_mod.EDITORIAL_ANALYSIS_PATH
@@ -338,6 +347,13 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
             continue
         if isinstance(payload, dict):
             data_payloads[rel] = payload
+        if rel == "data/v1/official-routes.json":
+            from src.dashboard.official_routes_contract import validate as validate_official_routes
+
+            try:
+                validate_official_routes(payload)
+            except (ValueError, KeyError, TypeError, ValidationError) as error:
+                problems.append(f"{rel}: invalid official route surface: {error}")
         if rel == "data/v1/news.json" and rel not in preserved_approval_files:
             from src.web_export.news import news_export_payload
 

@@ -1,5 +1,6 @@
 import type { ChatDisplay, ChatDisplayColumn, ChatReference } from "../../types/chat";
 import { parseSafeChart, renderSafeChart } from "./chart";
+import { officialRouteSourceUrl } from "./official-source";
 
 const VALUE_KINDS = new Set([
   "reported", "observed", "calculated", "inferred", "estimated", "scheduled", "mixed",
@@ -33,7 +34,8 @@ function parseSources(value: unknown): ChatReference[] {
     if (typeof source.url === "string") {
       try {
         const url = new URL(source.url);
-        if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || !TRUSTED_HOSTS.has(url.hostname.toLowerCase())) continue;
+        const official = officialRouteSourceUrl(source.url);
+        if (!official && (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || !TRUSTED_HOSTS.has(url.hostname.toLowerCase()))) continue;
         const previousLabels = labelsByUrl.get(url.href);
         if (previousLabels) {
           if (!previousLabels.includes(label) && previousLabels.length < 12) {

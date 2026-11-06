@@ -7,16 +7,18 @@ contents. A dry run launches neither uv nor a publication verifier.
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import hashlib
 import json
 import os
-from pathlib import Path, PurePosixPath
 import re
+import shutil
 import stat
 import subprocess
 import tempfile
 import time
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALL = ("uv", "sync", "--locked", "--no-group", "dev", "--extra", "analytics")
@@ -24,8 +26,8 @@ VERIFY = (
     "uv", "run", "--locked", "--no-group", "dev", "--extra", "analytics",
     "python", "scripts/check_pages_publication.py", "site/",
 )
-# Match the public historical-test eligibility boundary; do not run or replace
-# that verifier here. The full public suite remains responsible for it.
+# Match the public historical-test eligibility boundary. Historical strong
+# verification is opt-in; the default retains the public suite's responsibility.
 AUTHORITY = (
     "config/publish", "config/chat", "src/publish",
     ".agents/skills/aeromexico-tracker-analysis/SKILL.md",
@@ -43,6 +45,12 @@ ENVIRONMENT_PROBE = (
     "module=verifier_for(Path('site'),Path.cwd()); import_module(module); print(module)"
 )
 ENVIRONMENT_VERIFY = (*VERIFY[:-2], "-c", ENVIRONMENT_PROBE)
+PUBLISHED_CONFIG = (AUTHORITY[0], AUTHORITY[1], AUTHORITY[3])
+DEPENDENCIES = ("uv.lock", "pyproject.toml")
+
+
+class HistoricalCleanupError(ValueError):
+    """A temporary Git worktree could not be removed safely."""
 
 
 def utc_now() -> str:
@@ -54,18 +62,23 @@ def log_identity(raw: bytes) -> dict:
 
 
 def git_head(root: Path) -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, check=True,
-    )
-    head = result.stdout.decode("ascii").strip()
+    head = git(root, "rev-parse", "HEAD").decode("ascii").strip()
     if not re.fullmatch(r"[a-f0-9]{40}", head):
         raise ValueError("Checkout HEAD must be an exact Git commit")
     return head
 
 
 def git(root: Path, *arguments: str) -> bytes:
+    # A detached worktree must belong to this checkout, without ambient Git
+    # redirects, replacement objects or checkout hooks changing its inputs.
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", GIT_TERMINAL_PROMPT="0")
     return subprocess.run(
-        ["git", *arguments], cwd=root, capture_output=True, check=True,
+        [
+            "git", "--no-replace-objects", "-c", f"core.hooksPath={os.devnull}",
+            "-c", "core.fsmonitor=false", *arguments,
+        ],
+        cwd=root, env=environment, capture_output=True, check=True,
     ).stdout
 
 
@@ -96,7 +109,10 @@ def excluded_bound_path(name: str) -> bool:
     )
 
 
-def git_files(root: Path, reference: str, roots: tuple[str, ...], *, runtime_only: bool = False) -> dict:
+def git_files(
+    root: Path, reference: str, roots: tuple[str, ...], *, runtime_only: bool = False,
+    exclude_local_only: bool = True,
+) -> dict:
     expected = {}
     for item in git(root, "ls-tree", "-r", "-z", reference, "--", *roots).split(b"\0"):
         if not item:
@@ -104,7 +120,9 @@ def git_files(root: Path, reference: str, roots: tuple[str, ...], *, runtime_onl
         header, raw_name = item.split(b"\t", 1)
         mode, kind, identity = header.decode("ascii").split()
         name = raw_name.decode("utf-8")
-        if (runtime_only and not runtime_path(name)) or (not runtime_only and name in LOCAL_ONLY):
+        if (runtime_only and not runtime_path(name)) or (
+            exclude_local_only and not runtime_only and name in LOCAL_ONLY
+        ):
             continue
         if kind != "blob" or mode not in {"100644", "100755"}:
             raise ValueError("Bound Git input is not a regular file")
@@ -181,6 +199,93 @@ def isolated_environment(root: Path, environment: dict[str, str]) -> Path:
     return path
 
 
+def published_base_plan(root: Path, policy: dict) -> dict:
+    """Bind the published producer to trusted BASE without running its code."""
+    manifest = json.loads((root / "site/publication_manifest.json").read_bytes())
+    producer = manifest.get("code_commit") if isinstance(manifest, dict) else None
+    if not isinstance(producer, str) or not re.fullmatch(r"[a-f0-9]{40}", producer):
+        raise ValueError("Historical verification requires an exact published producer commit")
+    git(root, "merge-base", "--is-ancestor", producer, policy["base"])
+    # Producer code can predate later code-only merges in BASE. Its complete
+    # publication configuration and locked dependencies must still be current.
+    for roots in (PUBLISHED_CONFIG, DEPENDENCIES):
+        if git_files(root, producer, roots) != git_files(root, policy["head"], roots):
+            raise ValueError("Published producer configuration or locked dependencies changed")
+    selector = "scripts/check_pages_publication.py"
+    if selector not in git_files(root, producer, (selector,)):
+        raise ValueError("Published producer has no strong publication selector")
+    return {
+        "base": policy["base"],
+        "producer": producer,
+        "checkout": "temporary_detached_producer_worktree",
+        "site": "complete_bound_current_site_copied_byte_for_byte",
+        "command": list(VERIFY),
+        "approval_scope": "historical_site_only",
+    }
+
+
+def revalidate_policy(root: Path, policy: dict) -> None:
+    if (
+        git_head(root) != policy["head"]
+        or verification_policy(root, policy["base"], policy["head"]) != policy
+    ):
+        raise ValueError("Historical verification policy or checkout changed")
+
+
+def historical_snapshot(root: Path, producer: str, expected: dict, marker: bytes) -> str:
+    """Bind every producer file plus the overlaid site, including ignored files."""
+    git_marker = root / ".git"
+    if git_marker.is_symlink() or not git_marker.is_file() or git_marker.read_bytes() != marker:
+        raise ValueError("Historical worktree Git marker changed")
+    if git_head(root) != producer:
+        raise ValueError("Historical worktree producer changed")
+    actual = {}
+    for path in root.rglob("*"):
+        relative = path.relative_to(root).as_posix()
+        if relative == ".git":
+            continue
+        if path.is_symlink():
+            raise ValueError("Historical worktree contains a symlink")
+        if not path.is_file():
+            if not path.is_dir():
+                raise ValueError("Historical worktree contains a nonregular input")
+            continue
+        raw = path.read_bytes()
+        actual[relative] = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+    if actual != expected:
+        raise ValueError("Historical worktree inputs changed")
+    return hashlib.sha256(json.dumps(expected, sort_keys=True).encode()).hexdigest()
+
+
+@contextmanager
+def published_worktree(root: Path, policy: dict, plan: dict):
+    """Use a disposable detached producer checkout; never create a branch."""
+    with tempfile.TemporaryDirectory(prefix="ci-pages-published-") as folder:
+        checkout = Path(folder) / "checkout"
+        added = False
+        try:
+            git(root, "worktree", "add", "--detach", str(checkout), plan["producer"])
+            added = True
+            expected = git_files(root, plan["producer"], (), exclude_local_only=False)
+            expected = {name: identity for name, identity in expected.items() if not name.startswith("site/")}
+            expected.update(git_files(root, policy["head"], ("site",), exclude_local_only=False))
+            site = checkout / "site"
+            if site.is_symlink() or (site.exists() and not site.is_dir()):
+                raise ValueError("Historical site is not a regular directory")
+            if site.exists():
+                shutil.rmtree(site)
+            shutil.copytree(root / "site", site, symlinks=True)
+            marker = (checkout / ".git").read_bytes()
+            historical_snapshot(checkout, plan["producer"], expected, marker)
+            yield checkout, expected, marker
+        finally:
+            if added or checkout.exists():
+                try:
+                    git(root, "worktree", "remove", "--force", str(checkout))
+                except (OSError, subprocess.CalledProcessError) as exc:
+                    raise HistoricalCleanupError("Temporary historical worktree removal failed") from exc
+
+
 def run_phase(name: str, command: tuple[str, ...], root: Path, environment: dict[str, str]) -> dict:
     started = utc_now()
     clock = time.perf_counter()
@@ -207,6 +312,7 @@ def run_phase(name: str, command: tuple[str, ...], root: Path, environment: dict
 
 def preflight(
     root: Path, *, execute: bool, cache_state: str, environment: dict[str, str], base: str | None = None,
+    verify_published_base: bool = False,
 ) -> dict:
     root = root.resolve()
     report = {
@@ -232,7 +338,10 @@ def preflight(
         "completed_at": None,
         "elapsed_seconds": None,
     }
+    if verify_published_base:
+        report.update(historical_site_strong_verified=False, historical_verification_plan=None)
     clock = time.perf_counter()
+    error_phase = "configuration"
     try:
         report["head"] = git_head(root)
         policy = verification_policy(root, base, report["head"])
@@ -243,6 +352,11 @@ def preflight(
         path = isolated_environment(root, environment)
         report["environment_path"] = str(path)
         report["environment_existed_before"] = path.exists()
+        historical = environment_only and verify_published_base
+        if historical:
+            error_phase = "historical_setup"
+            report["historical_verification_plan"] = published_base_plan(root, policy)
+            report["commands"].append(list(VERIFY))
         if execute:
             child_environment = dict(environment)
             child_environment["UV_PROJECT_ENVIRONMENT"] = str(path)
@@ -251,7 +365,16 @@ def preflight(
             child_environment.pop("OPENAI_API_KEY", None)
             child_environment.pop("PYTHONPATH", None)
             child_environment.pop("PYTHONHOME", None)
-            for name, command in (("install", INSTALL), ("imports" if environment_only else "verify", verify_command)):
+            if historical:
+                child_environment = {
+                    key: value for key, value in child_environment.items() if not key.startswith("GIT_")
+                }
+                child_environment.update(
+                    GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", GIT_NO_REPLACE_OBJECTS="1",
+                    PYTHONDONTWRITEBYTECODE="1",
+                )
+            phases = (("install", INSTALL), ("imports" if environment_only else "verify", verify_command))
+            for name, command in phases:
                 report["executed"] = True
                 phase = run_phase(name, command, root, child_environment)
                 report["phases"].append(phase)
@@ -260,21 +383,49 @@ def preflight(
                     report["failed_phase"] = name
                     break
                 if environment_only and (
-                    git_head(root) != report["head"] or verification_policy(root, base, report["head"]) != policy
+                    git_head(root) != report["head"]
+                    or verification_policy(root, base, report["head"]) != policy
                 ):
                     report["status"] = "failed"
                     report["failed_phase"] = "policy_revalidation"
                     break
             else:
-                report["status"] = "passed"
-                report["site_verification"] = (
-                    "historical_site_not_reapproved" if environment_only else "current_site_strong_verified"
-                )
-                report["current_site_strong_verified"] = not environment_only
+                if historical:
+                    error_phase = "policy_revalidation"
+                    revalidate_policy(root, policy)
+                    error_phase = "historical_setup"
+                    plan = report["historical_verification_plan"]
+                    with published_worktree(root, policy, plan) as (checkout, expected, marker):
+                        error_phase = "policy_revalidation"
+                        revalidate_policy(root, policy)
+                        error_phase = "historical_revalidation"
+                        historical_snapshot(checkout, plan["producer"], expected, marker)
+                        error_phase = "historical_verify"
+                        phase = run_phase("historical_verify", VERIFY, checkout, child_environment)
+                        report["phases"].append(phase)
+                        if phase["exit_code"] != 0:
+                            report["status"] = "failed"
+                            report["failed_phase"] = "historical_verify"
+                        error_phase = "historical_revalidation"
+                        historical_snapshot(checkout, plan["producer"], expected, marker)
+                        error_phase = "policy_revalidation"
+                        revalidate_policy(root, policy)
+                    if report["status"] != "failed":
+                        report["historical_site_strong_verified"] = True
+                if report["status"] != "failed":
+                    report["status"] = "passed"
+                    report["site_verification"] = (
+                        "historical_site_strong_verified" if historical
+                        else "historical_site_not_reapproved" if environment_only
+                        else "current_site_strong_verified"
+                    )
+                    report["current_site_strong_verified"] = not environment_only
     except (OSError, ValueError, subprocess.CalledProcessError, UnicodeError) as exc:
         report["status"] = "failed"
         report["error_type"] = type(exc).__name__
-        report["failed_phase"] = "configuration"
+        report["failed_phase"] = (
+            "historical_cleanup" if isinstance(exc, HistoricalCleanupError) else error_phase
+        )
     finally:
         report["completed_at"] = utc_now()
         report["elapsed_seconds"] = time.perf_counter() - clock
@@ -301,11 +452,19 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--execute", action="store_true")
     mode.add_argument("--dry-run", action="store_true")
     parser.add_argument("--report", type=Path)
-    parser.add_argument("--base", help="Exact event BASE SHA; uncertainty always retains current strong verification")
+    parser.add_argument(
+        "--base", help="Exact event BASE SHA; uncertainty always retains current strong verification",
+    )
+    parser.add_argument(
+        "--verify-published-base", action="store_true",
+        help="Strongly verify an unchanged historical site with its producer in environment-only mode",
+    )
     parser.add_argument("--cache-state", choices=("cold", "warm", "unknown"), default="unknown")
     args = parser.parse_args(argv)
     report = preflight(
-        ROOT, execute=args.execute, cache_state=args.cache_state, environment=dict(os.environ), base=args.base,
+        ROOT, execute=args.execute, cache_state=args.cache_state, environment=dict(os.environ),
+        base=args.base,
+        verify_published_base=args.verify_published_base,
     )
     if args.report is not None:
         write_report(args.report, report)

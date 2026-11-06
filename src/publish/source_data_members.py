@@ -11,6 +11,8 @@ def selections(request):
     if not isinstance(extra, list) or len(extra) > 15:
         raise ValueError("Select at most sixteen independently ready source units")
     values = [first, *extra]
+    if any(isinstance(u, dict) and u.get("product") == "official_routes" for u in values) and len(values) != 1:
+        raise ValueError("Official map exposure cannot coalesce unrelated source surfaces")
     seen = set()
     for unit in values:
         if not isinstance(unit, dict) or set(unit) != {"product", "period", "source_profile"}:
@@ -32,6 +34,8 @@ def members(spec):
     extra = spec.get("additional_sources", [])
     if not isinstance(extra, list) or len(extra) > 15:
         raise ValueError("Invalid additional source projection inventory")
+    if any(isinstance(u, dict) and u.get("product") == "official_routes" for u in [first, *extra]) and extra:
+        raise ValueError("Official map exposure cannot coalesce unrelated source surfaces")
     seen = set()
     for unit in [first, *extra]:
         if not isinstance(unit, dict) or set(unit) != {"product", "period", "source_binding", "projection"}:
@@ -59,6 +63,19 @@ def contract_names(units, adapter):
 
 def target_names(units, adapter):
     return set().union(*(set(adapter(u["product"]).TARGETS) for u in units))
+
+
+def initial_bytes(name, units, adapter):
+    """Only a reviewed adapter can introduce its explicitly declared new surface."""
+    modules = [adapter(u["product"]) for u in units if name in getattr(adapter(u["product"]), "ADDED_TARGETS", ())]
+    if len(modules) != 1:
+        raise ValueError("Missing historical target is not an explicitly reviewed new source surface")
+    return modules[0].initial_bytes(name)
+
+
+def baseline_bytes(baseline, units, adapter):
+    return {name: (baseline / name).read_bytes() if (baseline / name).is_file()
+            else initial_bytes(name, units, adapter) for name in target_names(units, adapter)}
 
 
 def compose(before, units, adapter):

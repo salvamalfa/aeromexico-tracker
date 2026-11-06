@@ -19,6 +19,8 @@ from src.conversational_analytics.semantic.plan import (
 )
 from src.conversational_analytics.tools.routes import ROUTE_TOOL_SPECS, RouteTools
 
+from .official_routes import configured_official_routes, reject_legacy_context
+
 ALLOWED_HOSTS = {"sec.gov", "www.sec.gov", "gob.mx", "www.gob.mx", "github.com", "salvamalfa.github.io"}
 TOOL_NAMES = (
     "get_data_catalog",
@@ -59,9 +61,13 @@ class ToolRegistry:
     def __init__(self, snapshot: Snapshot, config: Any | None = None):
         self.snapshot = snapshot
         self.enable_route_tools = bool(getattr(config, "enable_route_tools", False))
+        self._official_routes = configured_official_routes(snapshot, config)
+        self.enable_official_route_tools = self._official_routes is not None
         self.enable_business_metric_tools = bool(getattr(config, "enable_business_metric_tools", False))
         self.enable_evidence_tools = bool(getattr(config, "enable_evidence_tools", False))
         self._active_tool_names = set(TOOL_NAMES)
+        if self.enable_official_route_tools:
+            self._active_tool_names.add("query_official_routes")
         if self.enable_route_tools:
             self._active_tool_names.update(ROUTE_TOOL_NAMES)
         if self.enable_business_metric_tools:
@@ -96,6 +102,8 @@ class ToolRegistry:
 
     def _configured_specs(self) -> list[dict[str, Any]]:
         specs = self._make_specs()
+        if self._official_routes is not None:
+            specs.append(self._official_routes.tool_spec())
         if self.enable_route_tools:
             specs.extend(copy.deepcopy(ROUTE_TOOL_SPECS))
         if self.enable_business_metric_tools:
@@ -161,7 +169,7 @@ class ToolRegistry:
             }
             for item in self._catalog["metrics"]["inventory_not_enabled"]
         ]
-        return {
+        result = {
             "data_version": self.snapshot.version,
             "semantic_version": self.snapshot.semantic_version,
             "entities": copy.deepcopy(self._catalog["entities"]["entities"]),
@@ -174,6 +182,9 @@ class ToolRegistry:
                 "Use exact exported periods and never substitute a nearest period."
             ),
         }
+        if self._official_routes is not None:
+            result["official_routes"] = self._official_routes.catalog()
+        return result
 
     def _validate_context(self, context: dict[str, Any] | None) -> dict[str, Any]:
         return validate_context(context)
@@ -406,9 +417,12 @@ class ToolRegistry:
             raise PlanValidationError(f"Herramienta desconocida: {name}")
         if not isinstance(arguments, dict):
             raise PlanValidationError("arguments debe ser un objeto")
+        if name == "query_official_routes":
+            return self._official_routes.query(arguments, context)
         if name in ROUTE_TOOL_NAMES:
             route_context = self._validate_context(context)
             view_filters = route_context.get("filters", {})
+            reject_legacy_context(view_filters)
             return RouteTools(
                 self.snapshot,
                 evidence_view=view_filters.get("flight_evidence"),

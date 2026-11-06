@@ -12,6 +12,22 @@
   dependencias, salidas generadas y el historial privado del dashboard anterior.
 - Conserva las skills instaladas, las corridas y sus rutas. No activa
   capturas, ingestas, sincronizaciones ni publicaciones del dashboard.
+## 2026-11-06 · CI por impacto y particiones completas
+
+- Los PR de interfaz o documentación pura conservan controles de lifecycle,
+  código y publicación, y ejecutan las suites relacionadas. Cambios mixtos,
+  contratos, datos, publicación e incertidumbre conservan el perfil completo.
+- Los checks `test` y `web` recomputan la selección desde el checkout exacto;
+  un fallo o una omisión no prevista impide aprobar el PR.
+- La suite pública completa se reparte en tres particiones sin retirar casos.
+  Las pruebas financiera y editorial evitan verificaciones históricas repetidas.
+- Chromium prueba primero el arranque del shell fijado; instala dependencias
+  de Ubuntu solo si son necesarias y vuelve a comprobarlo antes de la suite.
+- Pages conserva la reutilización del mismo árbol de PR198. No se modifican
+  protecciones, pins, secretos, datos ni procesos de ingesta.
+- Mediciones y límites de esta entrega en la sección de eficiencia de
+  [REPO_MAP.md](REPO_MAP.md#eficiencia-de-pruebas-y-ci).
+
 
 ## 2026-11-05 · Pages reutiliza CI sólo para el mismo árbol validado
 

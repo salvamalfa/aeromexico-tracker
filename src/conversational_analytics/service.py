@@ -38,6 +38,13 @@ class ChatService:
             worker,
             provider,
         )
+        self._official_routes = None
+        if config.enable_official_route_tools:
+            from .tools.official_routes import OfficialRouteTools
+
+            self._official_routes = OfficialRouteTools(
+                snapshot, expected_version=config.official_route_dataset_sha256
+            )
 
     @property
     def snapshot_version(self) -> str:
@@ -124,6 +131,14 @@ class ChatService:
         ):
             raise InvalidRequest("client_message_id inválido")
         validated_context = validate_context(context)
+        if "map_scope" in validated_context.get("filters", {}):
+            if self._official_routes is None:
+                raise InvalidRequest("El mapa oficial no está habilitado en este backend")
+            try:
+                # Reject stale card versions/coverage before reserving or sending model input.
+                self._official_routes.query({"top_n": 1}, validated_context)
+            except PlanValidationError as error:
+                raise InvalidRequest(str(error)) from error
         try:
             # Same envelope limit the provider enforces, checked before admission.
             question_envelope(validated_context, content)
@@ -194,6 +209,7 @@ class ChatService:
                 name
                 for name, enabled in (
                     ("route_queries", self.config.enable_route_tools),
+                    ("official_route_queries", self.config.enable_official_route_tools),
                     ("business_metric_queries", self.config.enable_business_metric_tools),
                     ("evidence_search", self.config.enable_evidence_tools),
                 )
@@ -218,6 +234,8 @@ class ChatService:
         if self.config.enable_evidence_tools:
             index_path = self.snapshot.project_root / "config/chat/evidence/approved-index.json"
             result["evidence_index_sha256"] = hashlib.sha256(index_path.read_bytes()).hexdigest()
+        if self.config.enable_official_route_tools:
+            result["official_route_dataset_version"] = self._official_routes.version
         return result
 
 
