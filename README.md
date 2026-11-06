@@ -197,9 +197,31 @@ La [auditoría Gold](docs/gold-exposure.md) distingue exposición, contexto y li
 
 ## Actualización
 
-`.github/workflows/refresh.yml` se ejecuta trimestralmente y también de forma manual. Solo monitorea frescura y valida/confirma (commit) el gold ya reconstruido en el runner — no publica el sitio: eso es `.github/workflows/pages.yml`, sobre `site/`. Corre la suite completa y `src.dashboard.validate_stage8` (definición de terminado de Stage 8, sobre el gold público versionado); si algo falla abre un issue y no hace commit. También revisa la fecha de AFAC y abre un recordatorio cuando la fuente manual rebasa 62 días.
+`.github/workflows/refresh.yml` conserva su ejecución trimestral y manual.
+Monitorea frescura y valida el Gold público versionado; no descarga fuentes,
+reconstruye datos ni publica el sitio. Reutiliza `ci.yml` con `force_full: true`
+y permisos de lectura para las pruebas públicas y de navegador, con su preparación
+de dependencias, historial Git y pins existentes. No sustituye las pruebas privadas
+que requieren insumos locales.
 
-Por la decisión explícita de **no versionar bronze**, una reconstrucción con nuevas descargas sigue ejecutándose localmente, donde existen los crudos. El workflow remoto valida y confirma (commit) el gold ya reconstruido; no finge poder recrear fuentes manuales ausentes ni publica el sitio.
+Después ejecuta `src.dashboard.validate_stage8` sobre el mismo SHA validado por CI.
+Comprueba antes y después que Gold y el diccionario conservan los archivos y
+bytes de ese commit, incluidos archivos nuevos ignorados. Sólo permite el paso
+de commit cuando CI, Stage 8 y ambas comprobaciones terminan con éxito; un fallo,
+cancelación u omisión impide confirmar cambios. Tras un fallo ordinario conserva
+el diagnóstico y el issue `validation-failed`. Stage 8 escribe sus reportes en
+`data/quality/`, fuera de las rutas del commit.
+
+Revisa también AFAC y abre un recordatorio cuando la fuente manual rebasa 62 días.
+En eventos sin base histórica mantiene la verificación fuerte del sitio actual:
+un productor incompatible debe fallar, sin inventar una base ni relajar el gate.
+El calendario, la concurrencia y las rutas de commit se conservan. El sitio se
+publica por `.github/workflows/pages.yml`, sobre `site/`.
+
+Por la decisión de **no versionar bronze**, las nuevas descargas y reconstrucciones
+siguen siendo locales, donde existen los crudos. Un futuro productor remoto de Gold
+necesitaría validar su candidato exacto; el éxito de CI sobre un checkout anterior
+no autoriza confirmar archivos nuevos.
 
 ## Noticias y estrategia
 
