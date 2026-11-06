@@ -160,6 +160,13 @@ workflows, rutas desconocidas, retiros, renombres o historia incierta ejecutan
 el perfil completo. Pushes a `master` y llamadas desde Pages también conservan
 el perfil completo. La función del selector sin opt-in sigue en sombra.
 
+El verificador histórico de las pruebas materializa también
+`data/reference/official_route_cities.csv` desde el mismo `code_commit` del
+productor publicado. El mapa incluye esa referencia pública en su huella de
+código. Tomarla del checkout candidato cambiaría la evidencia verificada; por
+eso las pruebas exigen el blob del productor y rechazan su ausencia o alteración.
+El fixture de Git aplica los mismos prefijos de archivo que el helper real.
+
 `public-tests` distribuye **todos** los módulos entre tres jobs: `publication`
 contiene las dos pruebas costosas de paridad financiera/editorial; `core-a` y
 `core-b` reparten los demás por SHA-256 de su ruta. El inventario es disjunto y

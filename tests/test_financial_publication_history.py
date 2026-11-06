@@ -11,6 +11,17 @@ from tests import conftest
 
 BASE, CODE, HEAD = "a" * 40, "b" * 40, "c" * 40
 RUNTIME = "d" * 64
+REFERENCE = "data/reference/official_route_cities.csv"
+
+
+def test_official_route_fingerprint_inputs_are_covered_by_the_historical_archive():
+    from src.source_updates.official_routes import CODE_FILES
+
+    missing = [
+        name for name in CODE_FILES
+        if not any(name == prefix or name.startswith(prefix.rstrip("/") + "/") for prefix in history.RUNTIME)
+    ]
+    assert not missing, f"Published map fingerprint inputs missing from the archive: {missing}"
 
 
 @pytest.fixture(params=list(history.PROFILES))
@@ -37,6 +48,7 @@ def context(tmp_path, monkeypatch, request):
         "src/__init__.py": b"",
         "web/package.json": b'{"devDependencies":{"@types/plotly.js":"old"}}',
         "web/package-lock.json": b'{"locked":"old"}',
+        REFERENCE: b"city,country\nMEX,MX\n",
     }
     for name, raw in program.items():
         path = repo / name
@@ -62,7 +74,10 @@ def context(tmp_path, monkeypatch, request):
 
     def git_files(root, commit, prefixes):
         if commit == CODE:
-            return program
+            return {
+                name: raw for name, raw in program.items()
+                if any(name == prefix or name.startswith(prefix.rstrip("/") + "/") for prefix in prefixes)
+            }
         if prefixes == [selected_anchor, "site/publication_manifest.json"]:
             return {selected_anchor: anchor, "site/publication_manifest.json": manifest}
         return authority if commit == BASE else state["authority"]
@@ -150,7 +165,7 @@ def test_changed_public_inputs_block_before_archived_verification(context, monke
     assert history.verify_published(site, repo, base_commit=BASE, module=state["module"])
 
 
-@pytest.mark.parametrize("failure", ["exit", "runtime", "verdict", "archive_changed", "site_changed"])
+@pytest.mark.parametrize("failure", ["exit", "runtime", "verdict", "archive_changed", "reference_changed", "site_changed"])
 def test_verifier_failure_or_mutation_never_falls_back(context, monkeypatch, failure):
     repo, site, state = context
     calls = []
@@ -163,6 +178,8 @@ def test_verifier_failure_or_mutation_never_falls_back(context, monkeypatch, fai
         assert str(archive) not in str(repo)
         if failure == "archive_changed":
             (archive / "uv.lock").write_text("mutated")
+        if failure == "reference_changed":
+            (archive / REFERENCE).write_text("mutated")
         if failure == "site_changed":
             (site / "payload.json").write_text("{}")
         return SimpleNamespace(
@@ -200,6 +217,38 @@ def test_frontend_dependency_change_uses_only_pinned_published_producer(context,
 
     monkeypatch.setattr(history.subprocess, "run", run)
     assert history.verify_published(site, repo, base_commit=BASE, module=state["module"]) == []
+    assert len(calls) == 1
+
+
+def test_candidate_reference_change_does_not_replace_the_published_producer_blob(context, monkeypatch):
+    repo, site, state = context
+    expected = state["program"][REFERENCE]
+    (repo / REFERENCE).write_text("unreviewed candidate city mapping\n")
+    calls = []
+
+    def run(command, **kwargs):
+        calls.append(command)
+        assert (kwargs["cwd"] / REFERENCE).read_bytes() == expected
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"runtime": RUNTIME, "problems": []}))
+
+    monkeypatch.setattr(history.subprocess, "run", run)
+    assert history.verify_published(site, repo, base_commit=BASE, module=state["module"]) == []
+    assert len(calls) == 1
+
+
+def test_missing_producer_reference_never_borrows_candidate_bytes_or_falls_back(context, monkeypatch):
+    repo, site, state = context
+    state["program"].pop(REFERENCE)
+    assert (repo / REFERENCE).is_file()
+    calls = []
+
+    def run(command, **kwargs):
+        calls.append(command)
+        (kwargs["cwd"] / REFERENCE).read_bytes()
+        pytest.fail("The missing archived reference was replaced")
+
+    monkeypatch.setattr(history.subprocess, "run", run)
+    assert history.verify_published(site, repo, base_commit=BASE, module=state["module"])
     assert len(calls) == 1
 
 
