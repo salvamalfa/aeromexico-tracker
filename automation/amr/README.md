@@ -2,8 +2,8 @@
 
 ## Resumen
 
-El código de referencia de AMR forma parte de Aerolíneas MX Tracker. Aquí se
-versionan las tres skills de búsqueda vigentes, sus validadores y el contrato
+El código de referencia local de AMR forma parte de Aerolíneas MX Tracker.
+Aquí se versionan las tres skills de búsqueda instaladas, sus validadores y el contrato
 del libro de puntos. La incorporación conserva las corridas configuradas:
 no instala skills, no cambia frecuencias y no inicia búsquedas ni sincronizaciones.
 
@@ -45,11 +45,28 @@ privados, exportaciones de Excel, launchers y estado de ejecución permanecen en
 el espacio local o en el respaldo privado autorizado. Su historia Git tampoco
 se importa al público: podría contener datos aunque el árbol actual se limpiara.
 
-El dashboard AMR anterior se conserva con su repositorio Git y sus cambios
-locales dentro de la carpeta unificada. Su `quotes.json` y su HTML incluyen
-observaciones de los libros; no se incorporan al público. Son una instantánea
-derivada, no una conexión viva. La organización de fuentes no activa la vista de
-Puntos ni publica sus datos en el dashboard de Tracker.
+El único dashboard del proyecto es el de Pages, con fuentes en `web/`.
+Radar de Tarifas se retira de la carpeta unificada. Su código, dependencias,
+HTML, imágenes, observaciones e historial Git no forman parte de esta integración.
+Se conserva un archivo recuperable externo al proyecto, sin enlaces internos
+que vuelvan a incorporarlo al árbol de Tracker.
+
+La revisión clasificó 10.165 archivos del proyecto anterior: 10.010 eran
+dependencias de `node_modules` (98,48 %). El resto contiene el Git anterior,
+salidas generadas, imágenes, una instantánea de datos, código del dashboard y
+un archivo histórico de Chrome. Ninguno es una dependencia de las tres skills
+instaladas. Las fuentes útiles para esta integración son los 13 archivos de
+`skills/`, el contrato y las referencias sanitizadas; no se copian miles de
+archivos generados al repositorio.
+
+Un sincronizador local antiguo, pausado, todavía referencia la ruta anterior.
+Su configuración permanece intacta y esa ruta apunta al archivo externo por
+compatibilidad. Conservar la ruta no activa el sincronizador ni incorpora el
+dashboard retirado al proyecto. No se cambia ninguna corrida ni su estado.
+
+Esta copia documenta las skills locales instaladas. El runtime de pruebas cloud
+es una fuente distinta; esta integración no lo reemplaza ni modifica. Tampoco
+activa la vista de Puntos ni publica observaciones en Pages.
 
 ## Apéndice técnico
 
@@ -77,10 +94,3 @@ viajes capturados son redondos. A:N son valores del coordinador; O:R pertenecen
 a fórmulas del libro. El contrato conserva la distinción entre impuestos al
 pagar con puntos y cargos e impuestos al pagar con dinero. No redefine fórmulas,
 no reemplaza faltantes por cero y no recalcula el valor por punto histórico.
-
-## Pendientes
-
-La incorporación del dashboard y de observaciones a una salida pública requiere
-una revisión del contenido y de su autorización de publicación. Esta entrega
-prepara fuentes y organización; mantiene esas observaciones en su ubicación
-privada y conserva todas las corridas tal como estaban configuradas.

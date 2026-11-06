@@ -16,3 +16,13 @@ automation.toml
 .env*
 __pycache__/
 *.py[cod]
+
+# Legacy dashboard and generated dependencies never enter the AMR source tree.
+node_modules/
+.build/
+.next/
+.cache/
+.pytest_cache/
+dist/
+*.log
+Radar de Tarifas.html
