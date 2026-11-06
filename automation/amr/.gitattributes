@@ -1,2 +1,4 @@
 # Audit hashes describe source bytes, including installed CRLF metadata.
 skills/** -text
+# Existing CRLF YAML metadata is intentional; keep ordinary whitespace checks.
+skills/*/agents/*.yaml whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
