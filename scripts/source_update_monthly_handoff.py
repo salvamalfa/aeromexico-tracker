@@ -10,6 +10,7 @@ IMPACTS = {
     "volaris_traffic_ir": ["VOLARIS"],
     "afac_carriers": ["AEROMEXICO", "VIVA_AEROBUS", "VOLARIS"],
     "afac_airports": [],
+    "afac_margins": [],
     "bts_segments": [],
     **{k: [] for k in ("aicm_traffic", "aifa_traffic", "asur_traffic", "gap_traffic", "oma_traffic")},
 }
@@ -45,10 +46,12 @@ def _single_publication_scope(product):
             "retired airport UI; preserve direct issuer reports, groups, flight maps and theses; "
             "no new airports, historical backfill or fabricated annual comparison"
         )
-    if product == "bts_segments":
+    if product in {"bts_segments", "afac_margins"}:
         return (
-            "Assess the existing July BTS flight-map dependency by exact physical replay; "
-            "no new source or public data/model activation"
+            "Assess the official regular-flight map by exact retained-source replay using "
+            "src.source_updates.official_routes_consumer.consumer_plan; preserve the other source's "
+            "actual months and all legacy surfaces. Prepare the complete official_routes package; "
+            "no activation or publication without exact owner authorization of its output scope"
         )
     if product == "afac_carriers":
         return (
@@ -67,7 +70,7 @@ def _single_publication_scope(product):
 
 def publication_scope(product):
     scope = _single_publication_scope(product)
-    if product == "bts_segments":
+    if product in {"bts_segments", "afac_margins"}:
         return scope
     return (
         "Default single-source scope: " + scope + ". "
@@ -80,7 +83,12 @@ def publication_scope(product):
 def verify_release(job, source, binding):
     from src.publish.source_data_members import members
     from src.publish.source_data_scope import anchor
+    from src.source_updates import official_routes_handoff as official
 
+    if official.selected(source):
+        from src.source_updates.catalog import ROOT
+
+        return official.verify_release(job, source, ROOT)
     spec = anchor()
     item = source["source_binding"]["item"]
     product = item["product"]
@@ -98,7 +106,13 @@ def verify_release(job, source, binding):
         )
 
 
-def impact_status(product):
+def impact_status(product, source=None):
+    from src.source_updates.official_routes_handoff import selected
+
+    if selected(source):
+        return "official_routes_candidate_requires_exact_release"
+    if product == "afac_margins":
+        return "official_routes_dependency_assessment"
     if product == "bts_segments":
         return "existing_flights_dependency_assessment"
     return (
@@ -108,7 +122,15 @@ def impact_status(product):
     )
 
 
-def scope_or_financial(product):
+def scope_or_financial(product, source=None):
+    from src.source_updates.official_routes_handoff import selected
+
+    if selected(source):
+        return (publication_scope(product) + ". Selected consumer: official_routes source_data; "
+                "prepare/check candidates without publishing; finish only after real exact authorization "
+                "and the source-data gate, preserving both originals, coverage and baseline approvals. "
+                "No-change requires src.source_updates.official_routes_handoff.verify_nochange; "
+                "never use a legacy flight-map equivalence or infer completion from readiness.")
     return (
         publication_scope(product)
         if product in IMPACTS
@@ -116,8 +138,12 @@ def scope_or_financial(product):
     )
 
 
-def release_kind(product):
-    return "source_dependency_assessment" if product == "bts_segments" else "source_data"
+def release_kind(product, source=None):
+    from src.source_updates.official_routes_handoff import selected
+
+    if selected(source):
+        return "source_data"
+    return "source_dependency_assessment" if product in {"bts_segments", "afac_margins"} else "source_data"
 
 
 def native_item(item):
@@ -156,7 +182,7 @@ def native_item(item):
         raise ValueError("Monthly source binding requires a literal native month")
     if source_period != item["period"] and (
         item["product"]
-        not in {"afac_carriers", "afac_airports", "bts_segments", "aicm_traffic", "aifa_traffic"}
+        not in {"afac_carriers", "afac_airports", "afac_margins", "bts_segments", "aicm_traffic", "aifa_traffic"}
         or not re.fullmatch(r"20\d{2}M(?:0[1-9]|1[0-2])", item["period"])
         or period_end(source_period) > period_end(item["period"])
     ):

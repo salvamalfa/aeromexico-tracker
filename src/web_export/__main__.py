@@ -28,7 +28,8 @@ from src.web_export.news import export_news
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--only", choices=("market",), help="Export only the normal AFAC market payload.")
+    parser.add_argument("--only", choices=("market", "official-routes"), help="Export one explicitly selected view.")
+    parser.add_argument("--official-routes-selection", type=Path, help="Retained candidate selection; no activation.")
     parser.add_argument("--database", type=Path, help="Explicit warehouse for --only market.")
     parser.add_argument(
         "--analysis-manifest",
@@ -57,6 +58,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Owner approval receipt; both business-metrics options are required together.",
     )
     args = parser.parse_args(argv)
+    if bool(args.official_routes_selection) != (args.only == "official-routes"):
+        parser.error("--official-routes-selection requires --only official-routes, and vice versa")
     if args.database and args.only != "market":
         parser.error("--database requires --only market")
     if args.only and (
@@ -67,6 +70,17 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--business-metrics-proposal and --business-metrics-receipt must be supplied together")
 
     try:
+        if args.only == "official-routes":
+            import json
+
+            from src.source_updates.official_routes_sources import replay
+            from src.web_export.official_routes import export_official_routes
+
+            selection_path = args.official_routes_selection.resolve()
+            payload, _, _ = replay(json.loads(selection_path.read_bytes()), selection_path.parent)
+            target = export_official_routes(payload, args.out)
+            print(f"{target.relative_to(args.out)}\t{target.stat().st_size:,} bytes; candidate, not activated")
+            return 0
         market_payload = build_market_payload(str(args.database)) if args.database else build_market_payload()
         if args.only == "market":
             written = export_market(

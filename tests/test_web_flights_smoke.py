@@ -7,6 +7,7 @@ in this package that could run once CI enables Playwright — see web/README.md.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import threading
 from functools import partial
@@ -29,6 +30,12 @@ pytestmark = pytest.mark.browser
 
 
 def _chromium_executable() -> str | None:
+    override = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+    if override:
+        candidate = Path(override)
+        if not candidate.is_file():
+            raise ValueError("PLAYWRIGHT_CHROMIUM_EXECUTABLE does not name a browser executable")
+        return str(candidate)
     candidate = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
     return str(candidate) if candidate.exists() else None
 
@@ -51,6 +58,7 @@ def web_server(tmp_path_factory, web_dist_dir):
     write_json(root / "api/chat/health", {"status": "ok", "auth": "password", "snapshot_version": "synthetic-ui-only"})
 
     out_dir = root / "data" / "v1"
+    write_json(out_dir / "official-routes.json", _load_fixture("official_routes_sample.json"))
     fixture = _load_fixture("flights_sample.json")
     payload = {**fixture, "international_networks": fixture["route_networks"]}
     export_flights(payload, out_dir, skip_input_check=True)
@@ -78,122 +86,110 @@ def web_server(tmp_path_factory, web_dist_dir):
         thread.join()
 
 
-def test_flights_view_renders_the_synthetic_fixture_without_console_errors(web_server) -> None:
-    console_errors: list[str] = []
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(executable_path=_chromium_executable())
-        page = browser.new_page()
+def _open_official_map(page, server):
+    page.goto(server)
+    page.get_by_role("button", name="Cerrar chat", exact=True).click()
+    page.click("#tab-flights")
+    page.wait_for_selector("#route-flow-map[data-map-status=ready]")
+    page.wait_for_function("document.getElementById('route-flow-map')._fullLayout.width === document.getElementById('route-flow-map').clientWidth")
+
+
+def test_flights_view_renders_the_official_fixture_without_console_errors(web_server):
+    errors = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page(viewport={"width": 1400, "height": 900})
         page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
-
-        def on_console_error(message: Any) -> None:
-            if message.type == "error":
-                console_errors.append(message.text)
-
-        page.on("console", on_console_error)
-        page.on("pageerror", lambda error: console_errors.append(str(error)))
-        page.goto(web_server)
-        page.get_by_role("button", name="Cerrar chat", exact=True).click()
-        page.click("#tab-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        _open_official_map(page, web_server)
         page.wait_for_selector("#route-flow-map .scattergeo .js-line")
         assert page.inner_text("#period-display") == "2T26"
+        assert page.inner_text("#official-map-total") == "6"
+        assert page.inner_text("#official-map-months") == "3/3 meses"
+        assert page.locator("[data-official-route]").count() == 1
+        page.locator("[data-official-route]").click()
+        assert "MEXICO → MONTERREY" in page.locator(".official-route-detail").inner_text()
+        assert "abril 2026" in page.locator(".official-route-detail").inner_text()
         assert page.inner_text("#flight-kpi-passengers") != "—"
+        assert page.locator("#official-map-carriers").is_hidden()
         browser.close()
-    assert console_errors == []
+    assert errors == []
 
 
-def test_region_map_refits_its_bounds_when_the_canvas_resizes(web_server) -> None:
-    # fitViewToCanvas freezes lat/lon ranges to the canvas aspect; a resize
-    # that changes the canvas width must recompute them (Codex finding #8).
-    read_map_bounds = (
-        "() => { const g = document.getElementById('route-flow-map');"
-        " if (!g || !g.layout) return null;"
-        " return JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]); }"
-    )
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+def test_region_map_refits_its_actual_width_without_mobile_horizontal_scroll(web_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(executable_path=_chromium_executable())
         page = browser.new_page(viewport={"width": 1400, "height": 900})
-        page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
-        page.goto(web_server)
-        page.get_by_role("button", name="Cerrar chat", exact=True).click()
-        page.click("#tab-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
-        # A region view uses fitViewToCanvas (the world view does not).
-        page.click("#network-region-switch button")
-        page.wait_for_function(f"({read_map_bounds})() !== null")
-        wide = page.evaluate(read_map_bounds)
-        page.set_viewport_size({"width": 700, "height": 900})
-        page.wait_for_function(
-            f"({read_map_bounds})() !== {json.dumps(wide)}", timeout=5000
-        )
-        narrow = page.evaluate(read_map_bounds)
+        _open_official_map(page, web_server)
+        wide = page.locator("#route-flow-map").evaluate("e => e._fullLayout.width")
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.wait_for_function("document.getElementById('route-flow-map')._fullLayout.width === document.getElementById('route-flow-map').clientWidth")
+        narrow = page.locator("#route-flow-map").evaluate("e => e._fullLayout.width")
+        assert 250 < narrow < wide
+        page.wait_for_function("document.documentElement.scrollWidth <= innerWidth", timeout=5000)
+        assert page.inner_text("#official-map-total") == "6"
         browser.close()
-    assert narrow != wide
 
 
-def test_region_map_refits_when_only_the_canvas_height_changes(web_server) -> None:
-    # Below 700px the map keeps a 700px min-width while its height drops at
-    # the 420px breakpoint: the refit must track height, not only width.
-    read_map_bounds = (
-        "() => { const g = document.getElementById('route-flow-map');"
-        " if (!g || !g.layout) return null;"
-        " return JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]); }"
-    )
-    read_size = (
-        "() => { const c = document.getElementById('route-flow-map');"
-        " return [c.clientWidth, c.clientHeight]; }"
-    )
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+def test_region_map_refits_when_only_the_canvas_height_changes(web_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(executable_path=_chromium_executable())
         page = browser.new_page(viewport={"width": 600, "height": 900})
-        page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
-        page.goto(web_server)
-        page.get_by_role("button", name="Cerrar chat", exact=True).click()
-        page.click("#tab-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
-        page.click("#network-region-switch button")
-        page.wait_for_function(f"({read_map_bounds})() !== null")
-        # Record the pre-breakpoint size through a resize event first.
-        page.set_viewport_size({"width": 599, "height": 900})
-        page.wait_for_timeout(300)
-        before_size = page.evaluate(read_size)
-        before = page.evaluate(read_map_bounds)
-        page.set_viewport_size({"width": 400, "height": 900})
-        after_size = page.evaluate(read_size)
-        if after_size[0] != before_size[0] or after_size[1] == before_size[1]:
-            browser.close()
-            pytest.skip(f"layout did not isolate a height-only change: {before_size} -> {after_size}")
-        page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(before)}", timeout=5000)
+        _open_official_map(page, web_server)
+        read = "e => [e._fullLayout.width, e._fullLayout.height, e.layout.geo.lataxis.range]"
+        before = page.locator("#route-flow-map").evaluate(read)
+        page.locator("#route-flow-map").evaluate("e => e.style.height='330px'")
+        page.wait_for_function("document.getElementById('route-flow-map')._fullLayout.height === 330")
+        after = page.locator("#route-flow-map").evaluate(read)
+        assert before[0] == after[0]
+        assert before[1] != after[1]
+        assert before[2] != after[2]
         browser.close()
 
 
-def test_region_map_refits_after_a_hidden_tab_redraw(web_server) -> None:
-    # Resize A->B visibly, B->A while Vuelos is hidden, reopen (redraw at A),
-    # then resize to B again: the resize guard must compare against the size
-    # of the latest draw, not the last resize it saw (Codex finding on #70).
-    read_map_bounds = (
-        "() => { const g = document.getElementById('route-flow-map');"
-        " if (!g || !g.layout) return null;"
-        " return JSON.stringify([g.layout.geo.lataxis.range, g.layout.geo.lonaxis.range]); }"
-    )
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(executable_path=_chromium_executable())
+def test_region_map_refits_after_a_hidden_tab_redraw(web_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(executable_path=_chromium_executable())
         page = browser.new_page(viewport={"width": 1400, "height": 900})
-        page.route("**/favicon.ico", lambda route: route.fulfill(status=204, body=""))
-        page.goto(web_server)
-        page.get_by_role("button", name="Cerrar chat", exact=True).click()
-        page.click("#tab-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
-        page.click("#network-region-switch button")
-        page.wait_for_function(f"({read_map_bounds})() !== null")
-        at_a = page.evaluate(read_map_bounds)
+        _open_official_map(page, web_server)
         page.set_viewport_size({"width": 1000, "height": 900})
-        page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(at_a)}", timeout=5000)
+        page.wait_for_function("document.getElementById('route-flow-map')._fullLayout.width === document.getElementById('route-flow-map').clientWidth")
+        at_b = page.locator("#route-flow-map").evaluate("e => e._fullLayout.width")
         page.click("#tab-reading")
         page.set_viewport_size({"width": 1400, "height": 900})
-        page.wait_for_timeout(300)
         page.click("#tab-flights")
-        page.wait_for_function(f"({read_map_bounds})() === {json.dumps(at_a)}", timeout=5000)
+        page.wait_for_function("document.getElementById('route-flow-map')._fullLayout.width === document.getElementById('route-flow-map').clientWidth")
+        assert page.locator("#route-flow-map").evaluate("e => e._fullLayout.width") > at_b
         page.set_viewport_size({"width": 1000, "height": 900})
-        page.wait_for_function(f"({read_map_bounds})() !== {json.dumps(at_a)}", timeout=5000)
+        page.wait_for_function("document.getElementById('route-flow-map')._fullLayout.width === document.getElementById('route-flow-map').clientWidth")
+        assert page.locator("#route-flow-map").evaluate("e => e._fullLayout.width") == at_b
+        assert page.inner_text("#official-map-total") == "6"
+        browser.close()
+
+
+def test_official_scope_carriers_empty_regions_and_global_quarter_do_not_fallback(web_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(executable_path=_chromium_executable())
+        page = browser.new_page()
+        _open_official_map(page, web_server)
+        page.locator('[data-map-scope="us"]').click()
+        page.wait_for_function("document.getElementById('official-map-total').textContent === '30'")
+        assert page.inner_text("#official-map-months") == "1/3 meses"
+        assert "official-partial" in page.locator("#official-map-source").get_attribute("class")
+        page.locator("#official-map-carriers summary").click()
+        page.locator('#official-map-carriers input[value="VOLARIS"]').uncheck()
+        page.wait_for_function("document.getElementById('official-map-total').textContent === '20'")
+        page.locator('[data-map-scope="international"]').click()
+        page.locator("#official-map-region").select_option("europe")
+        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapRegion === 'europe'")
+        assert page.inner_text("#official-map-total") == "N/D"
+        assert page.locator("#official-map-region").input_value() == "europe"
+        page.locator('[data-map-scope="national"]').click()
+        page.wait_for_function("document.getElementById('official-map-total').textContent === '6'")
+        page.click("#period-prev")
+        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapPeriod === '2026Q1'")
+        assert page.inner_text("#period-display") == "1T26"
+        assert page.inner_text("#official-map-total") == "N/D"
+        assert page.inner_text("#official-map-months") == "0/3 meses"
+        assert page.locator("[data-official-route]").count() == 0
         browser.close()

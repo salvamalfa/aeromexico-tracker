@@ -6,16 +6,6 @@ let pending:Promise<void>|null=null;
 let archive:NewsArchive|null=null;
 let selectResult:((ids:string[])=>void)|null=null;
 function node<K extends keyof HTMLElementTagNameMap>(tag:K,text:string,className="") { const el=document.createElement(tag);el.textContent=text;el.className=className;return el; }
-function outsideLabel(periodId:string|null,stories:NewsStory[],undated:NewsStory[]):string {
- const counts=new Map<string,number>();
- for(const story of stories){const month=story.published_at.slice(0,7);counts.set(month,(counts.get(month)??0)+1);}
- const months=[...counts].sort(([a],[b])=>a.localeCompare(b)).map(([month,count])=>{
-  const [year,number]=month.split("-").map(Number);const names=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];return `${count} ${names[number!-1]} de ${year}`;
- });
- const total=stories.length+undated.length;
- const prefix=periodId?`${total} ${total===1?"ficha fuera":"fichas fuera"} de ${quarterLabel(periodId)}`:`Fichas fuera del periodo seleccionado (${total})`;
- return `${prefix}${months.length?`: ${months.join(", ")}`:""}${undated.length?`${months.length?"; ":": "}${undated.length} sin fecha de publicación verificable`:""}. Se conservan aquí con su fecha de publicación.`;
-}
 function card(story:NewsStory) {
  const article=node("article","","news-card");article.id=`news-story-${story.id}`;article.dataset.newsId=story.id;article.tabIndex=-1;
  article.append(node("p",quarterForPublicationDate(story.published_at)?`Publicada: ${story.published_at}`:"Fecha de publicación no verificable","news-date"),node("h3",story.title),node("p",story.description,"news-description"));
@@ -33,6 +23,7 @@ export function mountNews(root:string):Promise<void> {
 }
 async function loadNews(root:string):Promise<void> {
  const status=document.getElementById("news-count")!;
+ status.hidden=false;
  status.textContent="Cargando noticias…";
  try {
   const response=await fetch(`${root}/news.json`);if(!response.ok)throw Error("No disponible");
@@ -42,9 +33,8 @@ async function loadNews(root:string):Promise<void> {
   let periodId=currentPeriodId()??null;
   let focusedIds:Set<string>|undefined;
   const resetFocus=node("button","Volver a todas las noticias","news-reset");resetFocus.type="button";resetFocus.hidden=true;grid.before(resetFocus);
-  const coverage=node("p",`Archivo parcial. La selección se basa en la fecha de publicación. ${data.coverage_note}`,"news-coverage");coverage.id="news-coverage";grid.before(coverage);
   const outside=document.createElement("details");outside.className="news-outside";outside.id="news-outside";
-  const outsideSummary=node("summary","");outside.append(outsideSummary);
+  outside.append(node("summary","Ver todas"));
   const outsideGrid=node("div","","news-grid");outsideGrid.id="news-outside-stories";outside.append(outsideGrid);grid.after(outside);
   function render(){
    const partition=storiesForQuarter(data.records,periodId);
@@ -52,21 +42,20 @@ async function loadNews(root:string):Promise<void> {
    const other=partition.outside.filter(r=>!focusedIds||focusedIds.has(r.id));
    const undated=partition.undated.filter(r=>!focusedIds||focusedIds.has(r.id));
    grid.replaceChildren(...stories.map(card));
-   status.textContent=periodId?`${stories.length} ${stories.length===1?"noticia":"noticias"} publicadas en ${quarterLabel(periodId)} · ${data.records.length} fichas en archivo parcial`:`${stories.length} noticias · archivo parcial`;
-   if(!stories.length)grid.append(node("p",`Sin fichas con fecha de publicación en ${periodId?quarterLabel(periodId):"el periodo seleccionado"}. El archivo es parcial; no demuestra que no hubiera noticias.`,"news-empty"));
-   const outsideTotal=other.length+undated.length;
-   outsideSummary.textContent=outsideLabel(periodId,other,undated);
+   if(!stories.length)grid.append(node("p",`No hay noticias en el archivo para ${periodId?quarterLabel(periodId):"el periodo seleccionado"}.`,"news-empty"));
    outsideGrid.replaceChildren(...other.map(card));
    if(undated.length){
     const undatedGroup=node("section","","news-undated");undatedGroup.append(node("h3","Sin fecha de publicación verificable"),...undated.map(card));outsideGrid.append(undatedGroup);
    }
-   outside.hidden=outsideTotal===0;
+   outside.hidden=!other.length&&!undated.length;
    window.dispatchEvent(new CustomEvent("news-filter-changed"));
   }
   resetFocus.addEventListener("click",()=>{focusedIds=undefined;resetFocus.hidden=true;render();});
   selectResult=ids=>{focusedIds=new Set(ids);resetFocus.hidden=false;render();const partition=storiesForQuarter(data.records,periodId);const outsideIds=new Set([...partition.outside,...partition.undated].map(story=>story.id));outside.open=ids.some(id=>outsideIds.has(id));};
   subscribe(next=>{periodId=next;focusedIds=undefined;resetFocus.hidden=true;render();});
   render();
+  status.textContent="";
+  status.hidden=true;
  }catch {status.textContent="No se pudo cargar el archivo de noticias. Intenta de nuevo más tarde.";pending=null;archive=null;}
 }
 

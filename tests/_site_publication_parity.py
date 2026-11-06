@@ -52,6 +52,41 @@ def verify_current_publication(site, repo, financial_checker, *, base_commit=Non
     assert not problems, problems
 
 
+@contextmanager
+def official_map_baseline(site, repo, financial_checker, *, base_commit=None):
+    """Select the historical site for financial/editorial parity of a map-only overlay."""
+    if (
+        not (site / "data/v1/official-routes.json").is_file()
+        or verifier_for(site, repo) != "src.publish.source_data_scope"
+    ):
+        yield site
+        return
+    spec = source_data_scope.anchor(repo)
+    if spec["product"] != "official_routes":
+        yield site
+        return
+    if base_commit:
+        verify_current_publication(site, repo, financial_checker, base_commit=base_commit)
+    else:
+        from src.analysis_agent.entity_adapter import code_version
+        from src.publish.verify import _verify_site
+
+        # Pages preflight replays the entire chain. Here verify the active
+        # overlay and let the parity assertions replay its historical edition.
+        assert code_version() == spec["producer_code_version"]
+        preserved = source_data_scope.preserved_files(site, repo, spec)
+        problems = _verify_site(site, preserved_approval_files=preserved)
+        assert not problems, problems
+    _, raw = source_data_scope.transport.baseline(repo, spec)
+    archive = _git(repo, "archive", spec["baseline_commit"], "site")
+    with tempfile.TemporaryDirectory(prefix="parity-before-official-map-") as folder:
+        with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
+            stream.extractall(folder, filter="data")
+        previous = Path(folder) / "site"
+        assert (previous / "publication_manifest.json").read_bytes() == raw
+        yield previous
+
+
 def _active_module(site, repo, manifest, commit):
     if commit is None:
         return verifier_for(site, repo)

@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { buildChatContext, describeChatContext } from "./context";
 import { mountPicker } from "../shell/carriers";
 import { state as flightState } from "../flights/state";
 import { initPeriods } from "../../state/period";
+import { officialState } from "../flights/official-routes";
+import type { OfficialRoutesDocument } from "../../types/official-routes";
+beforeEach(() => { Object.assign(officialState, { scope:"national", region:null, carriers:["AEROMEXICO","VOLARIS","VIVA_AEROBUS"], document:null, network:null }); });
 
 describe("chat dashboard context", () => {
   it("uses the global reading quarter and Industry even with obsolete selectors", () => {
@@ -71,7 +75,7 @@ it("passes the selected global quarter into News context along with other views"
   for (const tab of ["reading", "economy", "flights", "market", "news"]) {
     document.body.innerHTML = `<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-${tab}"></button></div><section id="panel-${tab}" role="tabpanel"></section>`;
     const context = buildChatContext();
-    expect(context.tab).toBe(tab);
+    expect(context.tab).toBe(tab === "flights" ? "market" : tab);
     expect(context.period).toBe("2026Q3");
   }
 });
@@ -96,31 +100,59 @@ it("attaches each flight graph with its own airlines and the global quarter", ()
   mountPicker(document.getElementById("pick-mix")!, {card:"mix", multi:true, defaults:["VIVA_AEROBUS"]}, () => {});
   flightState.networkMode = "international"; flightState.selectedRegion = "europa"; flightState.passengerPeriod = "month";
   flightState.periodIndex = 0; flightState.mapPeriodId = "2015M01";
+  officialState.scope = "us"; officialState.carriers = ["AEROMEXICO", "VOLARIS"];
   const map = buildChatContext(document.getElementById("ask-map"));
   expect(map.card_id).toBe("route-flow-map"); expect(map.entity).toEqual(["AEROMEXICO", "VOLARIS"]);
-  expect(map.period).toBe("2026Q3"); expect(map.filters?.entities).toEqual(["AEROMEXICO", "VOLARIS"]);
-  expect(map.filters?.region).toBe("europa"); expect(map.filters?.network_mode).toBe("international");
+  expect(map.period).toBe("2026Q3"); expect(map.filters?.map_carriers).toEqual(["AEROMEXICO", "VOLARIS"]);
+  expect(map.filters?.map_scope).toBe("us"); expect(map.filters?.map_grain).toBe("airport_pair");
+  expect(map.filters?.network_mode).toBeUndefined(); expect(map.filters?.entities).toBeUndefined();
   const mix = buildChatContext(document.getElementById("ask-mix"));
   expect(mix.card_id).toBe("mix-chart"); expect(mix.entity).toEqual(["VIVA_AEROBUS"]);
   expect(mix.filters).toMatchObject({start:"2026M07", end:"2026M09", entities:["VIVA_AEROBUS"]});
 });
 
-it("snapshots the observed North America map view without leaking it into other regions, financial cards or passenger mix",()=>{
+it("snapshots official map filters without attributing AFAC cities to the tracker airlines or leaking map filters",()=>{
   initPeriods(["2026Q3"],"2026Q3");
   document.body.innerHTML='<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-flights"></button></div><section id="panel-flights" role="tabpanel"><article class="panel flow-map-panel"><div class="chart" id="route-flow-map"></div></article><article class="panel chart-panel"><div class="chart" id="mix-chart"></div></article><article class="flight-kpi"><p id="flight-kpi-passengers">Pass</p></article></section>';
-  flightState.networkMode="international";flightState.evidenceView="north_america_observed";flightState.selectedRegion=null;
+  officialState.scope="us"; officialState.carriers=["AEROMEXICO","VOLARIS","VIVA_AEROBUS"];
   const map=document.getElementById("route-flow-map")!;
   const snapshot=structuredClone(buildChatContext(map));
-  expect(snapshot.filters?.flight_evidence).toBe("north_america_observed");
-  expect(describeChatContext(snapshot)).toContain("sólo vuelos observados");
-  for(const region of ["europa","sudamerica","asia"]) {
-    flightState.selectedRegion=region; expect(buildChatContext(map).filters?.flight_evidence).toBeUndefined();
+  expect(snapshot.filters?.map_scope).toBe("us");
+  expect(describeChatContext(snapshot)).toContain("EE. UU.");
+  officialState.scope="international";
+  for(const region of ["europe","south_america","asia"] as const) {
+    officialState.region=region;
+    const context=buildChatContext(map);
+    expect(context.entity).toBeUndefined(); expect(context.filters?.map_carriers).toBeUndefined();
+    expect(context.filters?.map_region).toBe(region); expect(describeChatContext(context)).toContain("Todas las aerolíneas");
   }
-  flightState.selectedRegion="norteamerica";
-  expect(buildChatContext(map).filters?.flight_evidence).toBe("north_america_observed");
-  expect(buildChatContext(document.getElementById("mix-chart")).filters?.flight_evidence).toBeUndefined();
-  expect(buildChatContext(document.getElementById("flight-kpi-passengers")).filters?.flight_evidence).toBeUndefined();
-  flightState.networkMode="domestic";expect(buildChatContext(map).filters?.flight_evidence).toBeUndefined();
-  expect(snapshot.filters?.flight_evidence).toBe("north_america_observed");
-  flightState.evidenceView="all";flightState.selectedRegion=null;
+  expect(buildChatContext(document.getElementById("mix-chart")).filters?.map_scope).toBeUndefined();
+  expect(buildChatContext(document.getElementById("flight-kpi-passengers")).filters?.map_scope).toBeUndefined();
+  document.querySelector('[role="tab"]')!.setAttribute("aria-controls","panel-market");
+  document.querySelector('section')!.id="panel-market";
+  expect(buildChatContext(map).entity).toBeUndefined(); expect(buildChatContext(map).filters?.map_scope).toBe("international");
+  officialState.scope="national"; officialState.region=null;
+  expect(snapshot.filters?.map_scope).toBe("us");
+});
+
+it("carries the same exact official dataset and visible month window for general and attached Mercado questions", () => {
+  const doc = JSON.parse(readFileSync("../tests/fixtures/web/official_routes_sample.json", "utf8")) as OfficialRoutesDocument;
+  initPeriods(["2026Q2", "2026Q3"], "2026Q2");
+  document.body.innerHTML='<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-flights"></button></div><section id="panel-flights" role="tabpanel"><article class="panel flow-map-panel"><div class="chart" id="route-flow-map"></div></article></section>';
+  officialState.document = doc;
+  for (const scope of ["national", "us", "international"] as const) {
+    officialState.scope = scope;
+    officialState.network = doc.networks.find(n => n.scope === scope && (scope !== "us" || n.carrier_keys.length === 3))!;
+    for (const attached of [false, true]) {
+      const snapshot = buildChatContext(attached ? document.getElementById("route-flow-map") : null);
+      expect(snapshot).toMatchObject({ tab:"market", period:"2026Q2", filters:{ map_scope:scope, map_dataset_version:doc.dataset_version, map_months:officialState.network.observed_months } });
+      expect(snapshot.card_id).toBe(attached ? "route-flow-map" : undefined);
+      if (scope !== "us") { expect(snapshot.entity).toBeUndefined(); expect(snapshot.filters?.map_carriers).toBeUndefined(); }
+      else expect(snapshot.filters?.map_carriers).toEqual(["AEROMEXICO","VOLARIS","VIVA_AEROBUS"]);
+      const months = [...snapshot.filters!.map_months!];
+      officialState.network = { ...officialState.network, observed_months:[...officialState.network.observed_months] };
+      expect(snapshot.filters!.map_months).toEqual(months);
+      expect(snapshot.filters!.map_months).not.toBe(officialState.network.observed_months);
+    }
+  }
 });

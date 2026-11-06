@@ -7,6 +7,7 @@ import pytest
 
 from src.publish.financial_scope import ANCHOR, EXECUTIVE, anchor, encoded, sha
 from tests._site_publication_parity import (
+    official_map_baseline,
     preserved_financial_projection,
     preserved_readings,
     verify_current_publication,
@@ -32,18 +33,18 @@ def financial_site(request):
     spec = anchor(ROOT)
     from scripts.check_pages_publication import verifier_for
 
-    # The story projection already invokes its strict publication verifier.
-    # Other profiles still require their explicit current/historical checker.
-    if verifier_for(SITE, ROOT) not in {
-        "src.publish.quarterly_story_scope", "src.publish.afac_history_scope"
-    }:
-        checker = request.getfixturevalue("verify_financial_publication")
-        verify_current_publication(
-            SITE, ROOT, checker, base_commit=request.config.getoption("--financial-publication-base")
-        )
-    original = preserved_financial_projection(SITE, ROOT, spec)
-    assert sha(encoded(original)) == spec["executive_sha256"]
-    return spec, original
+    checker = request.getfixturevalue("verify_financial_publication")
+    base_commit = request.config.getoption("--financial-publication-base")
+    with official_map_baseline(SITE, ROOT, checker, base_commit=base_commit) as comparison_site:
+        # The story projection already invokes its strict publication verifier.
+        # Other active profiles still require their current/historical checker.
+        if comparison_site == SITE and verifier_for(comparison_site, ROOT) not in {
+            "src.publish.quarterly_story_scope", "src.publish.afac_history_scope"
+        }:
+            verify_current_publication(SITE, ROOT, checker, base_commit=base_commit)
+        original = preserved_financial_projection(comparison_site, ROOT, spec)
+        assert sha(encoded(original)) == spec["executive_sha256"]
+        yield spec, comparison_site, original
 
 
 def test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources(
@@ -51,24 +52,25 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
 ):
     from src.publish.financial_scope import preserved_executive, preserved_files, transport
 
-    spec, after = financial_site
+    spec, comparison_site, after = financial_site
     before = json.loads(transport._git(ROOT, "show", f"{spec['baseline_commit']}:site/{EXECUTIVE}"))
-    preserved_readings(SITE, ROOT, spec)
+    preserved_readings(comparison_site, ROOT, spec)
     preserved_executive(before, after)
     assert after["metadata"]["default_period"] == before["metadata"]["default_period"]
     assert after["views"]["2026Q3"]["kpis"][0]["yoy"]["display"] == "+12.2%"
     from scripts.check_pages_publication import verifier_for
 
-    if verifier_for(SITE, ROOT) in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
+    profile = verifier_for(comparison_site, ROOT)
+    if profile in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
         from tests._quarterly_story_parity import missing_records, replay
 
-        if missing_records(SITE, ROOT):
+        if missing_records(comparison_site, ROOT):
             unavailable(request, "Restore the complete story/Q2/superseded ledger for full source replay")
-        result = replay(SITE, ROOT)
+        result = replay(comparison_site, ROOT)
         assert len(result["authorized"]) == len(result["payloads"]) == 8
         return
-    if verifier_for(SITE, ROOT) == "src.publish.financial_scope":
-        frozen = preserved_files(SITE, ROOT, spec)
+    if profile == "src.publish.financial_scope":
+        frozen = preserved_files(comparison_site, ROOT, spec)
         assert len([p for p in frozen if p.startswith("data/v1/analysis/")]) == 5
     from src.publish.financial_sources import approved_projection
 

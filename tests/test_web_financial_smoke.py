@@ -169,9 +169,10 @@ def test_lazy_flights_retain_their_real_cut_without_overwriting_q3_finance(web_s
         page.goto(web_server + "?period=2026Q3&sel_kpis=AEROMEXICO")
         page.wait_for_function("document.getElementById('period-display').textContent==='3T26'")
         page.click("#tab-flights")
-        page.wait_for_selector("#network-volume:not([hidden])")
-        page.wait_for_function("document.getElementById('flight-map-coverage-info').textContent.includes('3T26')")
-        assert "sin datos: 0 de 3 meses" in page.locator("#flight-map-coverage-info").text_content()
+        page.wait_for_selector("#route-flow-map[data-map-status=ready]")
+        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapPeriod === '2026Q3'")
+        assert page.locator("#official-map-months").text_content() == "0/3 meses"
+        assert page.locator("#official-map-total").text_content() == "N/D"
         assert page.locator("#route-flow-map .scattergeo .js-line").count() == 0
         assert page.inner_text("#period-display") == "3T26"
         page.click("#tab-economy")

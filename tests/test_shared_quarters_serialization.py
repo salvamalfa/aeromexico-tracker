@@ -3,10 +3,12 @@
 import copy
 import json
 from pathlib import Path
+import subprocess
 
 import pytest
 
 from src.publish import source_data_members, source_data_scope
+from tests.test_afac_history_contract import PUBLISHED_HISTORY
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,11 +16,22 @@ PRODUCTS = ("am_traffic_ir", "afac_carriers", "viva_traffic", "volaris_traffic_i
 QUARTERS = "data/v1/flights/quarters.json"
 
 
+@pytest.fixture(scope="module")
+def retained_spec():
+    """Use the historical projection named by its own published proof."""
+    def historical(path):
+        return subprocess.check_output(["git", "show", f"{PUBLISHED_HISTORY}:{path}"], cwd=ROOT)
+
+    raw = historical(source_data_scope.ANCHOR)
+    proof = json.loads(historical(f"site/{source_data_scope.PROOF}"))
+    assert source_data_scope.sha(raw) == proof["anchor_sha256"]
+    return json.loads(raw)
+
+
 @pytest.fixture
-def retained_contributor(request):
-    """Use the exact public projection and compact payload, without source replay."""
-    spec = json.loads((ROOT / "config/publish/source-data-release.json").read_bytes())
-    units = {unit["product"]: unit for unit in source_data_members.members(spec)}
+def retained_contributor(request, retained_spec):
+    """Replay the exact retained projection against the current compact payload."""
+    units = {unit["product"]: unit for unit in source_data_members.members(retained_spec)}
     product = request.param
     adapter = source_data_scope.adapter(product)
     before = {name: (ROOT / "site" / name).read_bytes() for name in adapter.TARGETS}
@@ -82,18 +95,16 @@ def test_shared_contributor_does_not_accept_an_extra_publication_target(retained
 
 
 @pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
-def test_afac_new_month_append_rejects_nonfinite_existing_field(nonfinite):
+def test_afac_new_month_append_rejects_nonfinite_existing_field(nonfinite, retained_spec):
     import math
-    import subprocess
     from jsonschema import ValidationError
 
-    spec = json.loads((ROOT / "config/publish/source-data-release.json").read_bytes())
     projection = copy.deepcopy(
-        next(u["projection"] for u in spec["additional_sources"] if u["product"] == "afac_carriers")
+        next(u["projection"] for u in retained_spec["additional_sources"] if u["product"] == "afac_carriers")
     )
     adapter = source_data_scope.adapter("afac_carriers")
     before = {
-        name: subprocess.check_output(["git", "show", f"{spec['baseline_commit']}:site/{name}"], cwd=ROOT)
+        name: subprocess.check_output(["git", "show", f"{retained_spec['baseline_commit']}:site/{name}"], cwd=ROOT)
         for name in adapter.TARGETS
     }
     quarters = json.loads(before["data/v1/flights/quarters.json"])

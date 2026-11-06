@@ -22,6 +22,8 @@
 !src/dashboard/
 !src/dashboard/__init__.py
 !src/dashboard/flights_html.py
+!src/dashboard/official_routes_contract.py
+!src/dashboard/official_routes_geo.py
 
 !config/
 !config/chat/

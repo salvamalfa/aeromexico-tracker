@@ -1,7 +1,6 @@
 .news-count { margin:18px 0; color:var(--muted); font-size:13px; }
 .news-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
 .news-card { background:#fff; border:1px solid var(--line); border-top:3px solid var(--brand-blue); border-radius:12px; padding:22px; box-shadow:var(--shadow); min-width:0; }
-.news-coverage { margin:14px 0; padding:12px 16px; border-left:3px solid var(--brand-blue); background:#f3f7fc; color:var(--muted); font-size:13px; line-height:1.55; }
 .news-date { margin:0 0 10px; color:var(--muted); font-size:12px; }
 .news-outside { margin:22px 0; padding:14px 16px; border:1px solid var(--line); border-radius:10px; background:#f8fafc; }
 .news-outside summary { cursor:pointer; color:var(--brand-blue); font-weight:700; line-height:1.5; }

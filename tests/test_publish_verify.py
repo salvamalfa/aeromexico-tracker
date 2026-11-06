@@ -4,10 +4,13 @@ private data (see tests/fixtures/site/_generate.py to regenerate).
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+import shutil
 
 import pytest
 
+from src.publish import manifest as manifest_mod
 from src.publish.verify import _data_schema_for, verify_site
 from src.web_export.schemas import NETWORK_FILE_SCHEMA
 
@@ -16,6 +19,30 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures" / "site"
 
 def test_valid_site_has_no_problems() -> None:
     assert verify_site(FIXTURES / "valid") == []
+
+
+@pytest.mark.parametrize("contract_pin", ["exact", "missing", "wrong"])
+def test_official_route_surface_requires_its_resolved_contract(tmp_path: Path, contract_pin: str) -> None:
+    site = shutil.copytree(FIXTURES / "valid", tmp_path / "site")
+    rel = "data/v1/official-routes.json"
+    contract = "official-routes.schema.json"
+    path = site / rel
+    path.write_bytes((FIXTURES.parent / "official-routes.example.json").read_bytes())
+    manifest_path = site / manifest_mod.MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_bytes())
+    manifest["files"].append(dict(path=rel, bytes=path.stat().st_size, sha256=manifest_mod.sha256_file(path)))
+    if contract_pin == "exact":
+        manifest["contracts"][contract] = manifest_mod.sha256_file(manifest_mod.CONTRACTS_DIR / contract)
+    elif contract_pin == "wrong":
+        manifest["contracts"][contract] = "0" * 64
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    problems = verify_site(site)
+    if contract_pin == "exact":
+        assert problems == []
+    else:
+        assert any(f"contracts[{contract!r}]" in problem for problem in problems)
+        assert any(problem.startswith(rel) and "found no sub-schema" in problem for problem in problems)
 
 
 @pytest.mark.parametrize(

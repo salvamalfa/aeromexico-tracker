@@ -1,5 +1,9 @@
 # Catálogo de fuentes, métricas y rondas de actualización
 
+Consumidor candidato de AFAC O-D y BTS: [mapa oficial de vuelos regulares](mapa-oficial.md).
+Se conserva el coordinador existente. Las llegadas evalúan dependencia y preparan
+un paquete; no activan el consumidor ni autorizan su exposición automáticamente.
+
 Revisión: 29 de octubre de 2026 (UTC). **Infraestructura de skills, coordinador y
 contratos AIFA/AICM/Viva/AFAC/BTS, tráfico IR Aeroméxico y consultas RSS/macro integrados. Calendario bloqueado, sin activar ni publicar datos nuevos.**
 

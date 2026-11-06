@@ -180,6 +180,7 @@ class Snapshot:
         for name, rel in (
             ("market.schema.json", "data/v1/market.json"),
             ("market_demand.schema.json", "data/v1/market-demand.json"),
+            ("official-routes.schema.json", "data/v1/official-routes.json"),
         ):
             if rel in payloads:
                 if name not in resolved_contracts:
@@ -188,6 +189,13 @@ class Snapshot:
         for rel, schema in schema_map.items():
             if rel in payloads:
                 self._validate_payload(paths[rel]["sha256"], schema, payloads[rel])
+        if "data/v1/official-routes.json" in payloads:
+            from src.dashboard.official_routes_contract import validate as validate_official_routes
+
+            try:
+                validate_official_routes(payloads["data/v1/official-routes.json"])
+            except (ValueError, KeyError, TypeError) as error:
+                raise SnapshotError("La identidad o semántica del mapa oficial no es válida") from error
         analysis_contracts = _analysis_contracts(manifest)
         for rel, payload in payloads.items():
             if rel.startswith("data/v1/analysis/"):
@@ -259,6 +267,10 @@ class Snapshot:
         semantic_digest.update(
             (Path(__file__).resolve().parent.parent / "tools/_route_provenance.py").read_bytes()
         )
+        if "data/v1/official-routes.json" in payloads:
+            for rel in ("semantic/context.py", "tools/official_routes.py"):
+                semantic_digest.update(rel.encode())
+                semantic_digest.update((Path(__file__).resolve().parent.parent / rel).read_bytes())
         self.semantic_version = semantic_digest.hexdigest()
 
     @staticmethod

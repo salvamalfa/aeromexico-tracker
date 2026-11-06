@@ -2,8 +2,26 @@ import { describe, expect, it } from "vitest";
 import { renderSafeMarkdown, safeReferences } from "./markdown";
 import { parseSafeChart } from "./chart";
 import tableCases from "./markdown_table_cases.json";
+import { officialRouteSourceUrl } from "./official-source";
 
 describe("safe response rendering", () => {
+  it("keeps exact BTS query references clickable in both answer and verified table sources", () => {
+    const url = "https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FJE&QO_fu146_anzr=Nv4%20Pn44vr45&requested_geography=Mexico&requested_year=2026";
+    const references = [{ label:"BTS T-100", url }];
+    expect(safeReferences(references)[0]?.url).toBe(url);
+    const host = document.createElement("div");
+    renderSafeMarkdown(host, `[BTS](${url}) {{tabla:official}}`, [url], [{ display_id:"tabla:official", kind:"table", title:"Vuelos", value_kind:"reported", columns:[{key:"departures",label:"Vuelos"}], rows:[{departures:6239}], sources:references }]);
+    expect([...host.querySelectorAll<HTMLAnchorElement>("a")].map(a => a.href)).toEqual([url, url]);
+    expect(officialRouteSourceUrl(url + "&extra=1")).toBeUndefined();
+    expect(officialRouteSourceUrl(url.replace("requested_geography=Mexico", "requested_geography=World"))).toBeUndefined();
+    expect(officialRouteSourceUrl(url + "&requested_year=2025")).toBeUndefined();
+    expect(officialRouteSourceUrl(url.replace("https:", "http:"))).toBeUndefined();
+    expect(officialRouteSourceUrl(url.replace("www.transtats.bts.gov", "www.transtats.bts.gov.attacker.example"))).toBeUndefined();
+    expect(officialRouteSourceUrl(url.replace("www.transtats.bts.gov", "user@www.transtats.bts.gov"))).toBeUndefined();
+    expect(officialRouteSourceUrl(url.replace("Nv4%20", "Nv4%2520"))).toBeUndefined();
+    expect(officialRouteSourceUrl(url + "#fragment")).toBeUndefined();
+    expect(officialRouteSourceUrl(url.replace("www.transtats.bts.gov", "www.transtats.bts.gov:444"))).toBeUndefined();
+  });
   it("renders same-turn reference tables and combines labels for duplicate source URLs", () => {
     const host = document.createElement("div");
     const market = {
