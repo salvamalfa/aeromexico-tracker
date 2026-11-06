@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-06 · Preparación única de pruebas para el monitor Gold
+
+- El monitor reutiliza el CI completo con permisos de lectura y conserva Stage 8.
+  Confirma el mismo SHA y Gold antes y después; cualquier control sin éxito
+  bloquea el commit y los fallos ordinarios conservan su issue de diagnóstico.
+- Pruebas del DAG y repositorios Git temporales cubren fallos, cancelaciones,
+  omisiones y cambios inesperados en Gold; los reportes de Stage 8 usan temporales.
+- Conserva calendario, concurrencia, recordatorio AFAC y rutas de commit.
+  No activa ingestas, corridas ni publicaciones.
+
 ## 2026-11-06 — Fuentes AMR en el repositorio de Tracker
 
 - Agrupa tres skills de búsqueda, sus scripts, esquemas y contrato de Sheets
