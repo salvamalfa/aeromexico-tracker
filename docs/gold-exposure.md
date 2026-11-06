@@ -326,7 +326,7 @@ Se retiran los marcadores de [notebooks](https://github.com/salvamalfa/aeromexic
 y [SQL Gold](https://github.com/salvamalfa/aeromexico-tracker/blob/29c61a1cadc266733861e25e68791b71ce1c7669/sql/gold/.gitkeep) (un byte cada uno): ambos
 directorios ya contienen archivos versionados y no hay consumidores de esos
 marcadores. Se conserva el marcador de `sql/silver/`, cuyo directorio sigue vacío.
-El árbol pierde seis archivos y 239.987 bytes; Git conserva todos los originales.
+Los seis archivos retirados suman 239.987 bytes; Git conserva todos los originales.
 
 El dashboard publicado sigue siendo `web/`, compilado y firmado en `site/`.
 No hay una app «Radar de Tarifas» en este árbol. La app Streamlit y la ruta HTML
