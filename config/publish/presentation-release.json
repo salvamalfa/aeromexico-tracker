@@ -1,0 +1,8 @@
+{
+  "schema_version": "presentation_release_v1",
+  "afac_producer_commit": "00a4353afe560ea81cd0a07190bb46c7cda2a3fa",
+  "afac_request": {
+    "path": "tmp/source-updates/afac-history-correction-20261104/request.json",
+    "sha256": "35401e58d25c690d4375aa0782b234c92cbf67206a3c8646fdb5b5cb53fe549c"
+  }
+}

@@ -5,6 +5,7 @@ import copy
 import pytest
 
 from src.publish import afac_history_scope as scope
+from src.publish import presentation_release
 from tests.test_afac_history_contract import ROOT
 
 
@@ -20,6 +21,7 @@ def test_changed_historical_fingerprint_still_fails(monkeypatch):
     manifest = scope.manifests.load_manifest(ROOT / "site")
     monkeypatch.setattr(scope, "producer_version", lambda _repo: "0" * 64)
     monkeypatch.setattr(scope, "producer_version_at_commit", lambda *_args: "1" * 64)
+    monkeypatch.setattr(presentation_release, "read_presentation_receipt", lambda _site: None)
 
     with pytest.raises(ValueError, match="differs from its inspected fingerprint"):
         scope.verify_producer_pin(ROOT, anchor, manifest)
@@ -29,6 +31,7 @@ def test_historical_verifier_commit_must_contain_the_committed_anchor(monkeypatc
     anchor = scope.anchor(ROOT)
     manifest = scope.manifests.load_manifest(ROOT / "site")
     monkeypatch.setattr(scope, "producer_version", lambda _repo: "0" * 64)
+    monkeypatch.setattr(presentation_release, "read_presentation_receipt", lambda _site: None)
     monkeypatch.setattr(
         scope.transport,
         "_git",
