@@ -43,6 +43,9 @@ RUNTIME = (
     "pyproject.toml",
     ".agents",
     "scripts/check_pages_publication.py",
+    # The released official-map verifier fingerprints this public reference
+    # as runtime input. Materialize its producer blob, never candidate bytes.
+    "data/reference/official_route_cities.csv",
 )
 
 

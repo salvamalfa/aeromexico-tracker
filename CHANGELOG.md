@@ -13,6 +13,14 @@
 - Conserva las skills instaladas, las corridas y sus rutas. No activa
   capturas, ingestas, sincronizaciones ni publicaciones del dashboard.
 
+## 2026-11-06 · Referencia geográfica en la verificación histórica
+
+- El entorno histórico de las pruebas incorpora la referencia pública de
+  ciudades fijada por el productor del mapa. Esto permite verificar el sitio
+  conservado con el mismo insumo que exige su huella aprobada.
+- Las regresiones comprueban la selección real de prefijos, el uso del blob del
+  productor y el rechazo de referencias ausentes o alteradas.
+
 ## 2026-11-06 · CI por impacto y particiones completas
 
 - Los PR de interfaz o documentación pura conservan controles de lifecycle,
