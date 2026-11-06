@@ -2,6 +2,8 @@
 
 import copy
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -182,6 +184,55 @@ def test_artifacts_are_attempt_scoped_and_required_preflight_reports_cannot_disa
                 assert "github.run_attempt" in step["with"]["name"]
                 if name in {"change-plan", "pages-preflight", "docker-preflight"}:
                     assert step["with"]["if-no-files-found"] == "error"
+
+
+@pytest.mark.parametrize(
+    "probes,download_code,deps_code,expected_calls,succeeds",
+    [
+        ([0], 0, 0, ["download", "probe"], True),
+        ([1, 0], 0, 0, ["download", "probe", "dependencies", "probe"], True),
+        ([1, 1], 0, 0, ["download", "probe", "dependencies", "probe"], False),
+        ([0], 1, 0, ["download"], False),
+        ([1, 0], 0, 1, ["download", "probe", "dependencies"], False),
+    ],
+)
+def test_browser_preparation_only_installs_system_packages_after_failed_probe(
+    tmp_path, probes, download_code, deps_code, expected_calls, succeeds,
+):
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    step = next(s for s in workflow["jobs"]["web-checks"]["steps"] if "probe pinned" in s.get("name", ""))
+    fake_uv = tmp_path / "uv"
+    fake_uv.write_text('''#!/usr/bin/env python3
+import json, os, sys
+from pathlib import Path
+log = Path(os.environ["BROWSER_CALLS"])
+calls = json.loads(log.read_text()) if log.exists() else []
+args = sys.argv[1:]
+if args == ["run", "--no-sync", "playwright", "install", "--only-shell", "chromium"]:
+    kind, code = "download", int(os.environ["DOWNLOAD_CODE"])
+elif args == ["run", "--no-sync", "playwright", "install-deps", "chromium"]:
+    kind, code = "dependencies", int(os.environ["DEPS_CODE"])
+elif args == ["run", "--no-sync", "python", "-"]:
+    kind = "probe"
+    assert "chromium.launch(headless=True" in sys.stdin.read()
+    code = json.loads(os.environ["PROBE_CODES"])[calls.count("probe")]
+else:
+    raise AssertionError(args)
+log.write_text(json.dumps(calls + [kind]))
+raise SystemExit(code)
+''')
+    fake_uv.chmod(0o755)
+    calls_path = tmp_path / "calls.json"
+    result = subprocess.run(
+        ["bash", "-e", "-o", "pipefail", "-c", step["run"]], capture_output=True, text=True,
+        env={
+            **os.environ, "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
+            "BROWSER_CALLS": str(calls_path), "PROBE_CODES": json.dumps(probes),
+            "DOWNLOAD_CODE": str(download_code), "DEPS_CODE": str(deps_code),
+        },
+    )
+    assert json.loads(calls_path.read_text()) == expected_calls, result.stderr
+    assert (result.returncode == 0) == succeeds, result.stderr
 
 
 def test_narrow_push_dedup_only_applies_where_pages_runs_full_ci():

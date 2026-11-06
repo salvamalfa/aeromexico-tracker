@@ -164,6 +164,16 @@ completo, incluidos módulos nuevos. Cada job conserva los marcadores públicos,
 dos procesos, agrupación por archivo y cero reinicios automáticos. El resultado
 agregado exige éxito de las tres particiones; `fail-fast: false` permite recoger
 todos los fallos sin cancelar particiones. Los agregadores mantienen `test` y `web`.
+Chromium instala solo el shell usado por las pruebas sin ventana. Antes de
+instalar paquetes de Ubuntu, una comprobación obligatoria abre el navegador fijado y
+comprueba texto en español. También prueba la ruta de navegador local si existe.
+Si el arranque falla, instala las dependencias de sistema de Playwright y vuelve
+a probar; un nuevo fallo cierra el check. La suite de navegador sigue completa.
+Esto aprovecha las bibliotecas ya presentes en los runners y evita instalar
+fuentes adicionales para otros idiomas cuando no son necesarias. No acredita
+reproducibilidad de capturas visuales ni reemplaza un perfil de fuentes fijado.
+Ver la [opción oficial del shell](https://playwright.dev/python/docs/browsers#chromium-headless-shell).
+
 Las pruebas de paridad reutilizan su proyección ya comprobada y evitan repetir
 el mismo verificador en fixture y cuerpo. Conservan las aserciones y el replay
 privado; ninguna caché general oculta cambios entre pruebas.
@@ -178,8 +188,15 @@ paridad acumularon 1.656,4 s de JUnit; esa suma incluye fixtures y no equivale a
 ahorro de reloj. El PR de documentación `42148115816` tardó **35 min 26 s**
 aunque el selector en sombra recomendaba documentación pura. Estas observaciones
 identifican los cuellos de botella; no son una comparación controlada con la
-implementación nueva. El resultado del CI del nuevo head y sus tiempos se
-registran en el PR. No se promete una duración fija: colas, cachés y concurrencia
+implementación nueva. La primera ejecución completa del
+[PR 203](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42165073872),
+head `ca6c04be`, pasó en **14 min 16 s**: 25 min 22 s menos (64,0 % observado)
+frente a master. Conservó 7.100 casos aprobados, once omisiones y 29 subpruebas;
+las pruebas nuevas corresponden a los controles del CI. Chromium ocupó 614 s,
+frente a 20 s en la base: el mirror de Ubuntu tardó 9 min 53 s en descargar
+15,5 MB de fuentes. El ajuste posterior de preparación del navegador se valida
+en otra ejecución del PR; sus tiempos y head final se registran allí.
+No se promete una duración fija: colas, cachés y concurrencia
 pueden cambiar.
 
 Para recuperar un fallo sin cambios de código, comprobar primero el SHA de la

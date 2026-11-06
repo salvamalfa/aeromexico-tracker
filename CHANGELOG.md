@@ -9,6 +9,8 @@
   un fallo o una omisión no prevista impide aprobar el PR.
 - La suite pública completa se reparte en tres particiones sin retirar casos.
   Las pruebas financiera y editorial evitan verificaciones históricas repetidas.
+- Chromium prueba primero el arranque del shell fijado; instala dependencias
+  de Ubuntu solo si son necesarias y vuelve a comprobarlo antes de la suite.
 - Pages conserva la reutilización del mismo árbol de PR198. No se modifican
   protecciones, pins, secretos, datos ni procesos de ingesta.
 - Mediciones y límites de esta entrega en la sección de eficiencia de

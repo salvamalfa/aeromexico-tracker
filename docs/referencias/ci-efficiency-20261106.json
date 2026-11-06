@@ -372,8 +372,207 @@
       "three complete deterministic public-test partitions",
       "eliminate duplicate parity verifications"
     ],
-    "github_ci_measurement": "See the implementing pull request check run and validation comment for the exact tested head; this source commit does not claim a measured speedup.",
-    "local_comparison": null
+    "github_ci_measurement": {
+      "candidate_run_id": 42165073872,
+      "candidate_url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42165073872",
+      "candidate_head_sha": "ca6c04be887b01d0046a6881cbe3c42fba57d1eb",
+      "conclusion": "success",
+      "elapsed_seconds": 856.0,
+      "comparisons": [
+        {
+          "baseline_run_id": 42146347355,
+          "baseline_elapsed_seconds": 2378.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1522.0,
+          "observed_reduction_percent": 64.003
+        },
+        {
+          "baseline_run_id": 42148115816,
+          "baseline_elapsed_seconds": 2126.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1270.0,
+          "observed_reduction_percent": 59.737
+        },
+        {
+          "baseline_run_id": 42147039861,
+          "baseline_elapsed_seconds": 2173.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1317.0,
+          "observed_reduction_percent": 60.607
+        },
+        {
+          "baseline_run_id": 42140619627,
+          "baseline_elapsed_seconds": 2782.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1926.0,
+          "observed_reduction_percent": 69.231
+        }
+      ],
+      "comparison_limits": [
+        "Different heads and runner instances, not a controlled A/B",
+        "Public suite gained and rewrote CI control tests",
+        "Chromium installation took 614 seconds versus 20 seconds in master baseline; slow Ubuntu apt mirror evidenced in web-apt-delay log",
+        "Job wall-time sums are runner occupancy observations; cumulative JUnit time is not CPU time and neither establishes monetary savings"
+      ],
+      "jobs": [
+        {
+          "id": 127719530944,
+          "name": "static",
+          "started_at": "2026-11-06T04:52:48Z",
+          "completed_at": "2026-11-06T04:53:27Z",
+          "elapsed_seconds": 39.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719531194,
+          "name": "change-plan",
+          "started_at": "2026-11-06T04:52:48Z",
+          "completed_at": "2026-11-06T04:52:58Z",
+          "elapsed_seconds": 10.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719596787,
+          "name": "pages-preflight",
+          "started_at": "2026-11-06T04:53:01Z",
+          "completed_at": "2026-11-06T04:57:21Z",
+          "elapsed_seconds": 260.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719596811,
+          "name": "chat-runtime",
+          "started_at": "2026-11-06T04:53:01Z",
+          "completed_at": "2026-11-06T04:54:04Z",
+          "elapsed_seconds": 63.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719596886,
+          "name": "docker-preflight",
+          "started_at": "2026-11-06T04:53:01Z",
+          "completed_at": "2026-11-06T04:55:23Z",
+          "elapsed_seconds": 142.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747657,
+          "name": "web-checks",
+          "started_at": "2026-11-06T04:53:30Z",
+          "completed_at": "2026-11-06T05:05:41Z",
+          "elapsed_seconds": 731.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747684,
+          "name": "public-tests (publication)",
+          "started_at": "2026-11-06T04:53:30Z",
+          "completed_at": "2026-11-06T05:06:46Z",
+          "elapsed_seconds": 796.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747689,
+          "name": "public-tests (core-a)",
+          "started_at": "2026-11-06T04:53:30Z",
+          "completed_at": "2026-11-06T05:02:32Z",
+          "elapsed_seconds": 542.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747700,
+          "name": "public-tests (core-b)",
+          "started_at": "2026-11-06T04:53:31Z",
+          "completed_at": "2026-11-06T05:02:51Z",
+          "elapsed_seconds": 560.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127723564509,
+          "name": "web",
+          "started_at": "2026-11-06T05:05:43Z",
+          "completed_at": "2026-11-06T05:05:51Z",
+          "elapsed_seconds": 8.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127723917758,
+          "name": "test",
+          "started_at": "2026-11-06T05:06:49Z",
+          "completed_at": "2026-11-06T05:07:00Z",
+          "elapsed_seconds": 11.0,
+          "conclusion": "success"
+        }
+      ],
+      "partitions": {
+        "core-a": {
+          "junit_cases": 3611,
+          "outcomes": {
+            "passed": 3604,
+            "skipped": 7
+          },
+          "pytest_wall_seconds": 521.38,
+          "cumulative_case_seconds": 996.997,
+          "junit_suite_test_count_including_subtests": 3635
+        },
+        "core-b": {
+          "junit_cases": 3497,
+          "outcomes": {
+            "passed": 3495,
+            "skipped": 2
+          },
+          "pytest_wall_seconds": 534.369,
+          "cumulative_case_seconds": 1010.92,
+          "junit_suite_test_count_including_subtests": 3502
+        },
+        "publication": {
+          "junit_cases": 3,
+          "outcomes": {
+            "passed": 1,
+            "skipped": 2
+          },
+          "pytest_wall_seconds": 772.029,
+          "cumulative_case_seconds": 1181.685,
+          "junit_suite_test_count_including_subtests": 3
+        }
+      },
+      "candidate_public_case_count": 7111,
+      "candidate_public_outcomes": {
+        "passed": 7100,
+        "skipped": 11
+      },
+      "baseline_public_case_count": 6894,
+      "baseline_public_outcomes": {
+        "passed": 6883,
+        "skipped": 11
+      },
+      "common_public_case_count": 6871,
+      "common_public_outcome_changes": [],
+      "rewritten_test_id_count": 23,
+      "new_control_test_id_count": 240,
+      "missing_non_ci_control_tests": [],
+      "runner_job_wall_seconds": {
+        "baseline": 2726,
+        "candidate": 3162,
+        "note": "Runner occupancy observations, not CPU time or monetary cost. Chromium apt outlier contributes to the increase."
+      }
+    },
+    "local_comparison": null,
+    "local_frontend_proof": {
+      "head": "c71b8c44b27d866491b75d6d162b4020775091ae",
+      "status": "passed",
+      "elapsed_seconds": 317.36532251699987,
+      "site_verification": "historical_site_strong_verified",
+      "historical_site_strong_verified": true,
+      "current_runtime_approved": false,
+      "base": "ca6c04be887b01d0046a6881cbe3c42fba57d1eb",
+      "scope": "Unpublished isolated CSS-only commit; exact locked Pages profile; concurrent local benchmark. Not GitHub end-to-end latency."
+    },
+    "browser_preparation_followup": {
+      "status": "validation_recorded_in_pull_request",
+      "reason": "Unchanged with-deps installed nine font packages from a slow Ubuntu mirror; measured 614s install, 56.284s browser pytest. Headless probe passed locally without installing system packages.",
+      "official_docs": "https://playwright.dev/python/docs/browsers#chromium-headless-shell"
+    }
   },
   "limits": [
     "Historical runs have different commits and queue/cache state; they are not a controlled A/B comparison.",

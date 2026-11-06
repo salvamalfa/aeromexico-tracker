@@ -244,8 +244,29 @@ jobs:
         enable-cache: true
     - name: Install locked dependencies
       run: uv sync --all-extras --all-groups --locked
-    - name: Install Playwright's chromium
-      run: uv run playwright install --with-deps chromium
+    - name: Install and probe pinned headless Chromium
+      timeout-minutes: 12
+      run: |
+        uv run --no-sync playwright install --only-shell chromium
+        probe_browser() {
+          timeout --kill-after=5s 60s uv run --no-sync python - <<'PYTHON'
+        from pathlib import Path
+        from playwright.sync_api import sync_playwright
+        legacy = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
+        executables = [None] + ([str(legacy)] if legacy.exists() else [])
+        with sync_playwright() as playwright:
+            for executable in executables:
+                browser = playwright.chromium.launch(headless=True, executable_path=executable)
+                page = browser.new_page()
+                page.set_content("<p>Información de Aeroméxico</p>")
+                assert page.locator("p").inner_text() == "Información de Aeroméxico"
+                browser.close()
+        PYTHON
+        }
+        if ! probe_browser; then
+          uv run --no-sync playwright install-deps chromium
+          probe_browser
+        fi
     - name: Browser smoke tests against the built site
       run: uv run pytest -m browser -q --durations=30 --junitxml=test-results/browser.xml tests/test_web_flights_smoke.py
         tests/test_web_page_smoke.py tests/test_web_chat_smoke.py tests/test_web_review_smoke.py tests/test_web_financial_smoke.py
