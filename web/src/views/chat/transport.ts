@@ -1,5 +1,13 @@
 import type { ChatConversation, ChatContext, ChatEvent } from "../../types/chat";
 
+export interface ChatHealth {
+  status?: string;
+  snapshot_version?: string;
+  auth?: "local" | "password";
+  enabled_capabilities?: string[];
+  official_route_dataset_version?: string;
+}
+
 export class ChatApiError extends Error {
   constructor(message: string, readonly status?: number, readonly retryAfterSeconds?: number) {
     super(message);
@@ -61,7 +69,7 @@ export class ChatTransport {
     }));
   }
 
-  health(): Promise<{ status?: string; snapshot_version?: string; auth?: "local" | "password" }> { return this.json("/health"); }
+  health(): Promise<ChatHealth> { return this.json("/health"); }
   login(password: string): Promise<{ session: string; expires_at: string }> {
     return this.json("/login", { method: "POST", body: JSON.stringify({ password }) });
   }

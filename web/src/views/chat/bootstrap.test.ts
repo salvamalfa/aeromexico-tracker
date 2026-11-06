@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import type { OfficialRoutesDocument } from "../../types/official-routes";
+import type { ChatHealth } from "./transport";
 
 vi.mock("../../lib/plotly", () => ({ default: { newPlot: () => Promise.resolve(), Plots: { resize: () => Promise.resolve() } } }));
 
@@ -26,10 +29,10 @@ let eventStreamStatus = 503;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 const frame = (seq: number, type: string, data: object) => enc.encode(`id: ${seq}\nevent: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
 
-function installFetch(auth: "password" | "local") {
+function installFetch(auth: "password" | "local", health: Partial<ChatHealth> = {}) {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input); const method = init?.method ?? "GET";
-    if (url.endsWith("/health")) return json({ status: "ok", auth, snapshot_version: "v1" });
+    if (url.endsWith("/health")) return json({ status: "ok", auth, snapshot_version: "v1", ...health });
     if (url.endsWith("/login")) return json({ session: "s-" + Math.random(), expires_at: "x" });
     if (url.endsWith("/conversations") && method === "POST") return json({ id: "c1", snapshot_version: "v1", created_at: "x" }, 201);
     if (url.includes("/conversations/c1/messages") && method === "POST") {
@@ -379,6 +382,47 @@ describe("chat bootstrap audit", () => {
     expect(launcher.inert).toBe(false);
     expect(document.activeElement).toBe(opener);
   });
+  it.each(["unsupported", "mismatched", "supported"] as const)("uses only compatible official routes in Mercado chat (%s)", async (mode) => {
+    const doc = JSON.parse(readFileSync("../tests/fixtures/web/official_routes_sample.json", "utf8")) as OfficialRoutesDocument;
+    const supported = mode === "supported";
+    installFetch("local", mode === "unsupported" ? {} : {
+      enabled_capabilities: ["official_route_queries"],
+      official_route_dataset_version: supported ? doc.dataset_version : "0".repeat(64),
+    });
+    terminalEvent = "turn.completed";
+    const { initPeriods } = await import("../../state/period");
+    const { officialState } = await import("../flights/official-routes");
+    initPeriods(["2026Q3"], "2026Q3");
+    document.body.innerHTML = '<main class="page-shell"><div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-flights"></button></div><section id="panel-flights" class="flights-view" role="tabpanel"><article class="panel flow-map-panel" id="map-panel"><div class="chart" id="route-flow-map"></div></article></section></main>';
+    const { mountChat } = await import("./bootstrap");
+    disposeChat = mountChat();
+    const action = document.querySelector<HTMLButtonElement>("#map-panel > .chat-card-action")!;
+    expect(action.disabled).toBe(true);
+    await flush();
+    expect(action.disabled).toBe(true);
+    officialState.document = doc;
+    document.getElementById("route-flow-map")!.append(document.createElement("div"));
+    await flush();
+    const input = document.querySelector<HTMLTextAreaElement>("#chat-input")!;
+    input.value = "Explica la participación de pasajeros";
+    document.querySelector<HTMLFormElement>("[data-chat-form]")!.requestSubmit();
+    await flush();
+    expect(action.disabled).toBe(!supported);
+    action.click();
+    expect(document.querySelector<HTMLElement>("[data-chat-attachment]")!.hidden).toBe(!supported);
+    if (supported) {
+      const context = { tab: "market", period: "2026Q3", filters: { map_scope: "national", map_dataset_version: doc.dataset_version } };
+      expect(postedBodies[0]?.context).toMatchObject(context);
+      input.value = "Explica el mapa";
+      document.querySelector<HTMLFormElement>("[data-chat-form]")!.requestSubmit();
+      await flush();
+      expect(postedBodies[1]?.context).toMatchObject({ ...context, card_id: "route-flow-map" });
+    } else {
+      expect(postedBodies[0]?.context).toMatchObject({ tab: "flights", period: "2026Q3" });
+      expect(postedBodies[0]?.context).not.toHaveProperty("filters.map_scope");
+    }
+  });
+
   it("attaches a quarter snapshot explicitly without pasting or sending card text", async () => {
     installFetch("local");
     const { initPeriods } = await import("../../state/period");

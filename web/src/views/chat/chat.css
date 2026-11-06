@@ -110,6 +110,7 @@ body.chat-open .chat-column { display: block; }
 .chat-card-host.kpi-card > .chat-card-action, .chat-card-host.flight-kpi > .chat-card-action { opacity:1; pointer-events:auto; }
 .chat-card-host.kpi-card > p:first-of-type, .chat-card-host.flight-kpi > p:first-of-type { padding-right:78px; }
 .chat-card-host:hover > .chat-card-action, .chat-card-host:focus-within > .chat-card-action, .chat-card-action:focus-visible { color:#fff; border-color:#16467f; background:#16467f; }
+.chat-card-host > .chat-card-action:disabled { color:var(--muted); border-color:var(--line); background:#fff; cursor:not-allowed; }
 .chat-card-host > .chart-heading-row, .chat-card-host > .card-head-row { padding-right:78px; }
 .chat-card-host.narrative-card > h2 { padding-right:78px; }
 

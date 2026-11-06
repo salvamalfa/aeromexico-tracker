@@ -1,12 +1,15 @@
 import type { ChatContext } from "../../types/chat";
-import { chatCardLabel } from "./card-actions";
+import { chatCardLabel, isOfficialMapCard } from "./card-actions";
 import { buildChatContext, describeChatContext } from "./context";
 
-export function attachChatCard(panel: HTMLElement, card?: Element): ChatContext | undefined {
+export function attachChatCard(panel: HTMLElement, card?: Element, useOfficialMap = false): ChatContext | undefined {
   const attachment = panel.querySelector<HTMLElement>("[data-chat-attachment]")!;
-  attachment.hidden = !card;
-  if (!card) return undefined;
-  const context = structuredClone(buildChatContext(card));
+  if (!card || (!useOfficialMap && isOfficialMapCard(card))) {
+    attachment.hidden = true;
+    return undefined;
+  }
+  attachment.hidden = false;
+  const context = structuredClone(buildChatContext(card, useOfficialMap));
   const title = chatCardLabel(card);
   const period = context.period.replace(/^(\d{2})(\d{2})Q([1-4])$/, "$3T$2");
   const entity = describeChatContext(context).split(" · ")[2];

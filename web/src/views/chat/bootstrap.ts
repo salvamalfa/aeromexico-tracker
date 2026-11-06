@@ -1,6 +1,6 @@
 import type { ChatChart, ChatContext, ChatConversation, ChatEvent, ChatMessage } from "../../types/chat";
 import { mountChatPrompt } from "./prompt";
-import { mountChatCardActions } from "./card-actions";
+import { isOfficialMapCard, mountChatCardActions } from "./card-actions";
 import { attachChatCard } from "./attachment";
 import { buildChatContext, describeChatContext } from "./context";
 import { messageFromPayload, safeReferences } from "./markdown";
@@ -12,8 +12,9 @@ import { createTurnSettler } from "./settle-turn";
 import { ChatSubmissionLedger } from "./submission-ledger";
 import { createSubmitController } from "./submit-controller";
 import { createChatPanel, MAX_INPUT } from "./template";
-import { ChatApiError, ChatTransport } from "./transport";
+import { ChatApiError, ChatTransport, type ChatHealth } from "./transport";
 import { errorText, randomId, storage } from "./util";
+import { officialState } from "../flights/official-routes";
 import "./chat.css";
 
 const MAX_ANSWER = 20_000;
@@ -34,6 +35,8 @@ export function mountChat(): () => void {
   let attachedContext: ChatContext | undefined;
   let session: string | undefined;
   let authMode: "local" | "password" | undefined;
+  let officialDataset: string | undefined;
+  const mapAvailable = () => Boolean(officialDataset && !officialState.loading && officialDataset === officialState.document?.dataset_version);
   const transport = new ChatTransport(API_URL, () => session);
   const state: ChatUiState = { messages: [], lastSequence: 0 };
   const panel = createChatPanel();
@@ -199,11 +202,23 @@ export function mountChat(): () => void {
     return ensuring;
   }
 
+  function updateMapCapability(health?: ChatHealth): void {
+    officialDataset = Array.isArray(health?.enabled_capabilities) && health.enabled_capabilities.includes("official_route_queries")
+      ? health.official_route_dataset_version : undefined;
+    disposeCardActions.refresh();
+    if (attachedContext?.filters?.map_scope && attachedContext.filters.map_dataset_version !== officialDataset) {
+      attachedContext = attachChatCard(panel);
+      setContextLabel();
+      noticeNode.textContent = "Se quitó el mapa adjunto porque su versión no está disponible para el chat.";
+    }
+  }
+
   async function connectConversation(): Promise<void> {
     noticeNode.textContent = "";
     statusNode.textContent = "";
     try {
       const health = await transport.health();
+      updateMapCapability(health);
       authMode = health.auth;
       if (authMode === "password" && !session) { requireLogin(); return; }
       let conversation: ChatConversation | undefined;
@@ -232,6 +247,7 @@ export function mountChat(): () => void {
       paintMessages();
       if (!state.activeTurn) statusNode.textContent = "";
     } catch (error) {
+      updateMapCapability();
       statusNode.textContent = "";
       if (handleAuthError(error)) return;
       noticeNode.textContent = "El chat no está disponible en este momento. Intenta de nuevo.";
@@ -277,7 +293,7 @@ export function mountChat(): () => void {
   const submitMessage = createSubmitController({
     state, input, count: query<HTMLElement>("[data-chat-count]"), status: statusNode,
     ledger: submissions, send: (id, content, context, key) => transport.sendMessage(id, content, context, key),
-    context: () => structuredClone(attachedContext ?? buildChatContext()), ensureConversation, listen, setBusy,
+    context: () => structuredClone(attachedContext ?? buildChatContext(undefined, mapAvailable())), ensureConversation, listen, setBusy,
     handleAuthError, paint: paintMessages,
   });
 
@@ -321,7 +337,8 @@ export function mountChat(): () => void {
   });
 
   async function openChat(card?: Element, opener?: HTMLElement, initial = false): Promise<void> {
-    attachedContext = attachChatCard(panel, card);
+    if (card && isOfficialMapCard(card) && !mapAvailable()) return;
+    attachedContext = attachChatCard(panel, card, mapAvailable());
     panel.hidden = false;
     modal.open(opener);
     launcher.setAttribute("aria-expanded", "true");
@@ -379,7 +396,7 @@ export function mountChat(): () => void {
     }
   });
 
-  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener));
+  const disposeCardActions = mountChatCardActions((card, opener) => void openChat(card, opener), mapAvailable);
   query<HTMLButtonElement>("[data-chat-attachment-remove]").addEventListener("click", () => {
     attachedContext = undefined;
     query<HTMLElement>("[data-chat-attachment]").hidden = true;

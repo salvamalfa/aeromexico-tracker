@@ -6,14 +6,28 @@ export function chatCardLabel(card: Element): string {
   return title?.textContent?.trim() || "esta tarjeta";
 }
 
+export function isOfficialMapCard(card: Element): boolean {
+  return card.matches("#map-panel, #route-flow-map, #flow-map, .flow-map-panel");
+}
+
 export function mountChatCardActions(
   openChat: (card: Element, opener: HTMLElement) => void,
-): () => void {
+  mapAvailable: () => boolean = () => true,
+): (() => void) & { refresh: () => void } {
   const cardButton = (card: HTMLElement, label: string) => {
     if (card.hasAttribute("data-chat-unavailable")) return;
+    const isMap = isOfficialMapCard(card);
+    const disabled = isMap && !mapAvailable();
+    const update = (button: HTMLButtonElement) => {
+      if (isMap) {
+        button.disabled = disabled;
+        button.title = disabled ? "El mapa oficial no está disponible para el chat." : "";
+      }
+      button.setAttribute("aria-label", disabled ? `Preguntar sobre ${label} (no disponible)` : `Preguntar sobre ${label}`);
+    };
     const existing = card.querySelector<HTMLButtonElement>(":scope > .chat-card-action");
     if (existing) {
-      existing.setAttribute("aria-label", `Preguntar sobre ${label}`);
+      update(existing);
       return;
     }
     card.classList.add("chat-card-host");
@@ -21,11 +35,13 @@ export function mountChatCardActions(
     button.type = "button";
     button.className = "chat-card-action";
     button.textContent = "Pregunta";
-    button.setAttribute("aria-label", `Preguntar sobre ${label}`);
+    update(button);
     button.addEventListener("click", () => openChat(card, button));
     card.append(button);
   };
+  let disposed = false;
   const bindCardActions = () => {
+    if (disposed) return;
     document.querySelectorAll<HTMLElement>(".chart-card, .kpi-card, .flight-kpi, .narrative-card, .flights-view .panel.chart-panel, .flights-view .panel.flow-map-panel, #news-heading").forEach((card) => {
       if (card.matches(".kpi-card, .flight-kpi")) {
         const label = card.querySelector(".kpi-label, :scope > p");
@@ -44,7 +60,8 @@ export function mountChatCardActions(
   observer.observe(document.querySelector(".page-shell") ?? document.body, { childList: true, subtree: true });
   window.addEventListener("reader-tab-visible", bindCardActions);
 
-  return () => {
+  return Object.assign(() => {
+    disposed = true;
     observer.disconnect();
     window.removeEventListener("reader-tab-visible", bindCardActions);
     document.querySelectorAll(".chat-card-action").forEach((button) => button.remove());
@@ -55,5 +72,5 @@ export function mountChatCardActions(
       }
       card.classList.remove("chat-card-host");
     });
-  };
+  }, { refresh: bindCardActions });
 }
