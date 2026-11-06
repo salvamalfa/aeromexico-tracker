@@ -87,7 +87,9 @@ def simulate(document, ci="success", stage8="success", *, overrides=None, stale=
             default = stage8 if key == "validate_stage8" else "failure" if key == "stop_on_failure" else "success"
             outcome = overrides.get(key, default)
             conclusion = "success" if outcome == "failure" and step.get("continue-on-error") else outcome
-            successful = successful and conclusion != "failure"
+            successful = successful and conclusion not in {"failure", "cancelled"}
+            if outcome == "cancelled":
+                cancelled = True
         else:
             outcome = "skipped"
         outcomes[key] = outcome
@@ -140,9 +142,10 @@ def test_every_non_success_result_blocks_commit_and_preserves_diagnosis(ci, stag
     trace, outcomes = simulate(workflow(), ci, stage8)
     good = ci == stage8 == "success"
     assert ("commit" in trace) == good
-    assert ("failure_issue" in trace) == (not good)
-    assert ("stop_on_failure" in trace) == (not good)
-    if not good:
+    diagnosis = not good and stage8 != "cancelled"
+    assert ("failure_issue" in trace) == diagnosis
+    assert ("stop_on_failure" in trace) == diagnosis
+    if diagnosis:
         assert outcomes["stop_on_failure"] == "failure"
     assert "manual_source" in trace
     assert "validate_stage8" in trace
@@ -153,7 +156,8 @@ def test_every_non_success_result_blocks_commit_and_preserves_diagnosis(ci, stag
 def test_setup_identity_or_freshness_without_success_cannot_commit(step, outcome):
     trace, _ = simulate(workflow(), overrides={step: outcome})
     assert "commit" not in trace
-    assert "failure_issue" in trace and "stop_on_failure" in trace
+    assert ("failure_issue" in trace) == (outcome != "cancelled")
+    assert ("stop_on_failure" in trace) == (outcome != "cancelled")
 
 
 @pytest.mark.parametrize("step", ["checkout", "dependencies"])
@@ -172,6 +176,24 @@ def test_issue_api_failure_still_reaches_nonzero_stop():
     trace, outcomes = simulate(workflow(), ci="failure", overrides={"failure_issue": "failure"})
     assert outcomes["failure_issue"] == outcomes["stop_on_failure"] == "failure"
     assert "commit" not in trace
+
+
+def test_actual_failure_stop_returns_nonzero_without_writes(tmp_path):
+    step = next(step for step in workflow()["jobs"]["validate"]["steps"] if step.get("id") == "stop_on_failure")
+    assert step["run"].strip() == "exit 1"
+    result = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", step["run"]], cwd=tmp_path)
+    assert result.returncode != 0
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "step", ["checkout", "action-1", "dependencies", "snapshot_before", "manual_source", "validate_stage8", "snapshot_after"],
+)
+def test_cancellation_during_a_step_stops_new_work_and_commit(step):
+    trace, outcomes = simulate(workflow(), overrides={step: "cancelled"})
+    assert outcomes[step] == "cancelled"
+    assert "commit" not in trace and "failure_issue" not in trace and "stop_on_failure" not in trace
+    assert trace[-1] == step
 
 
 def test_workflow_cancellation_does_not_start_validation_or_commit():
@@ -207,6 +229,7 @@ def snapshot_repo(tmp_path):
     (repo / "docs").mkdir()
     (repo / "data/gold/table.parquet").write_bytes(b"versioned Gold fixture")
     (repo / "docs/diccionario-datos.md").write_text("dictionary\n", encoding="utf-8")
+    (repo / ".gitattributes").write_text("* text=auto eol=lf\n", encoding="utf-8")
     (repo / ".gitignore").write_text("data/gold/ignored*\n", encoding="utf-8")
     git(repo, "init", "-q")
     git(repo, "add", ".")
@@ -223,7 +246,7 @@ def run_guard(repo, sha, identifier):
 
 
 @pytest.mark.parametrize("identifier", ["snapshot_before", "snapshot_after"])
-@pytest.mark.parametrize("mutation", ["none", "sha", "edit", "staged", "add", "ignored", "delete", "symlink", "dictionary"])
+@pytest.mark.parametrize("mutation", ["none", "sha", "edit", "staged", "add", "ignored", "delete", "symlink", "dictionary", "crlf", "assume", "outside"])
 def test_actual_snapshot_shell_rejects_different_sha_inventory_and_bytes(snapshot_repo, identifier, mutation):
     repo, sha = snapshot_repo
     table = repo / "data/gold/table.parquet"
@@ -242,11 +265,20 @@ def test_actual_snapshot_shell_rejects_different_sha_inventory_and_bytes(snapsho
         table.symlink_to(repo / "docs/diccionario-datos.md")
     elif mutation == "dictionary":
         (repo / "docs/diccionario-datos.md").write_text("changed\n", encoding="utf-8")
+    elif mutation == "crlf":
+        (repo / "docs/diccionario-datos.md").write_bytes(b"dictionary\r\n")
+    elif mutation == "assume":
+        git(repo, "update-index", "--assume-unchanged", "data/gold/table.parquet")
+        table.write_bytes(b"changed despite index flag")
+    elif mutation == "outside":
+        (repo / "outside.txt").write_text("unexpected staged file\n", encoding="utf-8")
+        git(repo, "add", "outside.txt")
     result = run_guard(repo, sha, identifier)
     assert (result.returncode == 0) == (mutation == "none"), result.stdout + result.stderr
 
 
-def test_inventory_command_failure_is_not_mistaken_for_empty_inventory(snapshot_repo, tmp_path, monkeypatch):
+@pytest.mark.parametrize("command", ["ls-files", "ls-tree", "hash-object"])
+def test_inventory_command_failure_is_not_mistaken_for_empty_inventory(snapshot_repo, tmp_path, monkeypatch, command):
     repo, sha = snapshot_repo
     real_git = shutil.which("git")
     assert real_git
@@ -254,7 +286,7 @@ def test_inventory_command_failure_is_not_mistaken_for_empty_inventory(snapshot_
     binary.mkdir()
     wrapper = binary / "git"
     wrapper.write_text(
-        '#!/bin/sh\nif [ "$1" = "ls-files" ]; then exit 1; fi\n'
+        f'#!/bin/sh\nif [ "$1" = "{command}" ]; then exit 1; fi\n'
         + f'exec {shlex.quote(real_git)} "$@"\n', encoding="utf-8",
     )
     wrapper.chmod(0o755)

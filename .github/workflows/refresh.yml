@@ -49,10 +49,22 @@ jobs:
         run: |
           current_sha="$(git rev-parse HEAD)"
           test "$current_sha" = "$REFRESH_SHA"
-          git -c core.fileMode=true diff --no-ext-diff --exit-code "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md
+          git -c core.fileMode=true diff --no-ext-diff --no-textconv --exit-code "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md
           # Include ignored files too: CI only validated the versioned snapshot.
           unexpected_files="$(git ls-files --others -- data/gold docs/diccionario-datos.md)"
           test -z "$unexpected_files"
+          # Refuse staging outside the authorized paths, too.
+          git diff --no-ext-diff --no-textconv --cached --exit-code "$REFRESH_SHA"
+          # Compare physical bytes, bypassing text normalization and index flags.
+          git ls-tree -rz "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md |
+            while IFS=$'\t' read -r -d '' header path; do
+              read -r mode kind expected_blob <<< "$header"
+              test "$kind" = blob
+              test -f "$path"
+              test ! -L "$path"
+              actual_blob="$(git hash-object --no-filters -- "$path")"
+              test "$actual_blob" = "$expected_blob"
+            done
 
       - name: Detect stale manual-source data
         id: manual_source
@@ -100,10 +112,22 @@ jobs:
         run: |
           current_sha="$(git rev-parse HEAD)"
           test "$current_sha" = "$REFRESH_SHA"
-          git -c core.fileMode=true diff --no-ext-diff --exit-code "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md
+          git -c core.fileMode=true diff --no-ext-diff --no-textconv --exit-code "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md
           # Include ignored files too: CI only validated the versioned snapshot.
           unexpected_files="$(git ls-files --others -- data/gold docs/diccionario-datos.md)"
           test -z "$unexpected_files"
+          # Refuse staging outside the authorized paths, too.
+          git diff --no-ext-diff --no-textconv --cached --exit-code "$REFRESH_SHA"
+          # Compare physical bytes, bypassing text normalization and index flags.
+          git ls-tree -rz "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md |
+            while IFS=$'\t' read -r -d '' header path; do
+              read -r mode kind expected_blob <<< "$header"
+              test "$kind" = blob
+              test -f "$path"
+              test ! -L "$path"
+              actual_blob="$(git hash-object --no-filters -- "$path")"
+              test "$actual_blob" = "$expected_blob"
+            done
 
       - name: Open validation-failed issue
         id: failure_issue
