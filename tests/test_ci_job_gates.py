@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from scripts.check_ci_jobs import GATES, check, main
+from scripts.check_ci_jobs import GATES, WAIVED, check, main
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,28 +37,113 @@ def test_cli_rejects_invalid_or_empty_results(monkeypatch, value):
 
 
 def test_cli_success_uses_json_data_instead_of_shell(monkeypatch):
-    monkeypatch.setenv("CI_REQUIRED_RESULTS", json.dumps({name: {"result": "success"} for name in GATES["test"]}))
+    results = {name: {"result": "success"} for name in GATES["test"]}
+    results["change-plan"]["outputs"] = {"execution": "full"}
+    monkeypatch.setenv("CI_REQUIRED_RESULTS", json.dumps(results))
     assert main(["test"]) == 0
 
 
-def test_actual_dag_runs_preflights_before_both_expensive_suites():
+@pytest.mark.parametrize("outputs", [None, [], "full", 1, {}, {"execution": "web_only"}])
+def test_cli_reports_invalid_selector_outputs_as_closed_gate(monkeypatch, outputs):
+    results = {name: {"result": "success"} for name in GATES["test"]}
+    results["change-plan"]["outputs"] = outputs
+    monkeypatch.setenv("CI_REQUIRED_RESULTS", json.dumps(results))
+    with pytest.raises(SystemExit) as failure:
+        main(["test"])
+    assert failure.value.code == 1
+
+
+@pytest.mark.parametrize("execution", ["docs_only", "web_only"])
+@pytest.mark.parametrize("gate", ["test", "web"])
+def test_only_proven_omissions_are_allowed_and_other_results_fail(gate, execution):
+    good = {
+        name: {"result": "skipped" if name in WAIVED[execution] else "success"}
+        for name in GATES[gate]
+    }
+    assert check(gate, good, execution=execution) == []
+    for name in good:
+        for result in ("failure", "cancelled", "neutral", None):
+            bad = copy.deepcopy(good)
+            bad[name]["result"] = result
+            assert check(gate, bad, execution=execution), (name, result)
+        bad = copy.deepcopy(good)
+        bad[name]["result"] = "success" if good[name]["result"] == "skipped" else "skipped"
+        assert check(gate, bad, execution=execution)
+        assert check(gate, {key: value for key, value in good.items() if key != name}, execution=execution)
+    assert check(gate, good, execution="invented")
+
+
+@pytest.mark.parametrize("force_full", ["false", "true"])
+@pytest.mark.parametrize("event", ["pull_request", "push", "workflow_call", ""])
+@pytest.mark.parametrize("gate", ["test", "web"])
+def test_cli_recomputes_checkout_profile_and_rejects_disagreement(tmp_path, monkeypatch, event, gate, force_full):
+    from tests.test_ci_change_plan import commit, git, write
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q")
+    write(repo, "README.md", "base\n")
+    base = commit(repo)
+    write(repo, "web/src/main.ts", "export const answer = 42;\n")
+    head = commit(repo)
+    monkeypatch.chdir(repo)
+    monkeypatch.setenv("CI_PLAN_BASE", base)
+    monkeypatch.setenv("CI_PLAN_HEAD", head)
+    monkeypatch.setenv("CI_PLAN_EVENT", event)
+    monkeypatch.setenv("CI_PLAN_FORCE_FULL", force_full)
+    expected = "web_only" if event == "pull_request" and force_full == "false" else "full"
+    results = {
+        name: {"result": "skipped" if name in WAIVED[expected] else "success"}
+        for name in GATES[gate]
+    }
+    results["change-plan"]["outputs"] = {"execution": expected}
+    monkeypatch.setenv("CI_REQUIRED_RESULTS", json.dumps(results))
+    assert main([gate]) == 0
+    for reported in ("docs_only", "invented", "", None):
+        results["change-plan"]["outputs"]["execution"] = reported
+        monkeypatch.setenv("CI_REQUIRED_RESULTS", json.dumps(results))
+        with pytest.raises(SystemExit) as failure:
+            main([gate])
+        assert failure.value.code == 1
+    # A stale SHA must fail rather than authorize skips from the selector.
+    results["change-plan"]["outputs"]["execution"] = "web_only"
+    monkeypatch.setenv("CI_REQUIRED_RESULTS", json.dumps(results))
+    monkeypatch.setenv("CI_PLAN_HEAD", base)
+    with pytest.raises(SystemExit):
+        main([gate])
+
+
+def test_actual_dag_preserves_required_gates_and_profile_prerequisites():
     workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
     jobs = workflow["jobs"]
     for gate in ("test", "web"):
         assert set(jobs[gate]["needs"]) == GATES[gate]
         assert "always()" in jobs[gate]["if"]
         assert any(f"scripts/check_ci_jobs.py {gate}" in step.get("run", "") for step in jobs[gate]["steps"])
-    for name in ("public-tests", "web-checks"):
-        assert set(jobs[name]["needs"]) == GATES["test"] - {"public-tests"}
-        assert "if" not in jobs[name]  # Normal success-only needs semantics.
+        checkout = next(step for step in jobs[gate]["steps"] if "checkout@" in step.get("uses", ""))
+        assert checkout["with"]["fetch-depth"] == 0
+        environment = next(step["env"] for step in jobs[gate]["steps"] if "CI_REQUIRED_RESULTS" in step.get("env", {}))
+        assert environment["CI_PLAN_HEAD"] == "${{ github.sha }}"
+        assert environment["CI_PLAN_EVENT"] == "${{ github.event_name }}"
+    assert set(jobs["public-tests"]["needs"]) == {"change-plan", "static"}
+    assert jobs["public-tests"]["if"] == "${{ needs.change-plan.outputs.execution == 'full' }}"
+    assert set(jobs["web-checks"]["needs"]) == {"change-plan", "static"}
+    assert jobs["web-checks"]["if"] == "${{ needs.change-plan.outputs.execution != 'docs_only' }}"
+    for name in ("docker-preflight", "chat-runtime"):
+        assert jobs[name]["needs"] == ["change-plan"]
+        assert jobs[name]["if"] == "${{ needs.change-plan.outputs.execution == 'full' }}"
     assert "--fixture-only" not in str(jobs)
     assert workflow["permissions"] == {"contents": "read"}
     assert all("permissions" not in job for job in jobs.values())
 
 
-def test_shadow_plan_never_drives_a_job_condition_or_pytest_selection():
+def test_opt_in_plan_retains_full_public_selection_and_lightweight_controls():
     jobs = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())["jobs"]
-    assert "outputs" not in jobs["change-plan"]
+    assert jobs["change-plan"]["outputs"] == {"execution": "${{ steps.plan.outputs.execution }}"}
+    plan = next(step for step in jobs["change-plan"]["steps"] if step.get("id") == "plan")
+    assert "--enable-selection" in plan["run"] and '--event "$PLAN_EVENT"' in plan["run"]
+    assert plan["env"]["PLAN_HEAD"] == "${{ github.sha }}"
+    assert plan["env"]["PLAN_FORCE_FULL"] == "${{ inputs.force_full || false }}"
     for name, job in jobs.items():
         assert "recommended" not in job.get("if", "")
         if name != "change-plan":
@@ -66,6 +151,10 @@ def test_shadow_plan_never_drives_a_job_condition_or_pytest_selection():
     script = "\n".join(step.get("run", "") for step in jobs["public-tests"]["steps"])
     assert '-m "not local_data and not browser"' in script
     assert "-n 2 --dist=loadfile --max-worker-restart=0" in script
+    controls = "\n".join(step.get("run", "") for step in jobs["static"]["steps"])
+    for name in ("test_ci_change_plan.py", "test_ci_job_gates.py", "test_pages_ci_evidence.py", "test_repo_budgets.py"):
+        assert name in controls
+    assert "if" not in jobs["static"]
 
 
 def test_pages_profile_matches_deployment_and_is_isolated_per_step():
@@ -80,6 +169,8 @@ def test_pages_profile_matches_deployment_and_is_isolated_per_step():
     step = next(s for s in ci["jobs"]["pages-preflight"]["steps"] if "check_ci_pages.py" in s.get("run", ""))
     assert "runner.temp" in step["env"]["UV_PROJECT_ENVIRONMENT"]
     assert '--base "$PUBLICATION_BASE_COMMIT"' in step["run"]
+    assert "--verify-published-base" in step["run"]
+    assert ci["jobs"]["pages-preflight"]["needs"] == ["change-plan"]
     assert ci["env"] == pages["env"]
 
 
@@ -103,6 +194,7 @@ def test_narrow_push_dedup_only_applies_where_pages_runs_full_ci():
     assert "paths" not in ci_events["pull_request"]
     assert "edited" in ci_events["pull_request"]["types"]
     assert "workflow_call" in ci_events
+    assert ci_events["workflow_call"]["inputs"]["force_full"] == {"type": "boolean", "default": True}
     pages_ci = pages["jobs"]["ci"]
     assert pages_ci["uses"] == "./.github/workflows/ci.yml"
     assert pages_ci["needs"] == ["ci-evidence"]

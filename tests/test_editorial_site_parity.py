@@ -104,9 +104,17 @@ def test_editorial_site_preserves_every_historical_file(editorial_site):
 
     module = verifier_for(SITE, ROOT)
     if module in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
-        from tests._quarterly_story_parity import publication
+        # The fixture already checked the complete publication. Independently
+        # load its expected anchor without repeating that expensive verifier.
+        if module == "src.publish.afac_history_scope":
+            from src.publish import afac_history_contract, afac_history_scope
 
-        spec, _, _ = publication(SITE, ROOT)
+            final = afac_history_scope.anchor(ROOT)
+            spec = afac_history_contract.parent_public(ROOT, final["scope"]["candidate_parent"])[3]
+        else:
+            from src.publish.quarterly_story_scope import anchor as story_anchor
+
+            spec = story_anchor(ROOT)
         assert spec == editorial_site
         return
     if module in {

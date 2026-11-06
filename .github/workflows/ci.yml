@@ -1,5 +1,5 @@
 # Required test/web names stay stable; components fail closed.
-# Shadow recommendations never reduce execution.
+# Narrow PR profiles are independently recomputed by both required gates.
 name: CI
 'on':
   pull_request:
@@ -14,7 +14,11 @@ name: CI
     paths-ignore:
     - site/**
     - .github/pages-preview.json
-  workflow_call: null
+  workflow_call:
+    inputs:
+      force_full:
+        type: boolean
+        default: true
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -26,15 +30,25 @@ permissions:
 jobs:
   change-plan:
     runs-on: ubuntu-latest
+    outputs:
+      execution: ${{ steps.plan.outputs.execution }}
     steps:
     - uses: actions/checkout@v7
       with:
         fetch-depth: 0
-    - name: Report conservative selection in shadow mode only
+    - id: plan
+      name: Select conservative PR profile with a full fallback
       env:
         PLAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
         PLAN_HEAD: ${{ github.sha }}
-      run: python3 scripts/ci_change_plan.py --base "$PLAN_BASE" --head "$PLAN_HEAD" --output test-results/change-plan.json
+        PLAN_EVENT: ${{ github.event_name }}
+        PLAN_FORCE_FULL: ${{ inputs.force_full || false }}
+      run: |
+        selection_args=()
+        if [[ "$PLAN_FORCE_FULL" == false ]]; then
+          selection_args+=(--enable-selection)
+        fi
+        python3 scripts/ci_change_plan.py --base "$PLAN_BASE" --head "$PLAN_HEAD" --event "$PLAN_EVENT" "${selection_args[@]}" --output test-results/change-plan.json --github-output "$GITHUB_OUTPUT"
     - name: Retain ci-change-plan
       if: always()
       uses: actions/upload-artifact@v4
@@ -44,6 +58,7 @@ jobs:
         if-no-files-found: error
         retention-days: 7
   pages-preflight:
+    needs: [change-plan]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -54,10 +69,16 @@ jobs:
         python-version: '3.13'
         enable-cache: true
     - name: Verify the exact locked Pages environment and publication
-      run: python3 scripts/check_ci_pages.py --execute --report test-results/pages-preflight.json --cache-state
-        unknown --base "$PUBLICATION_BASE_COMMIT"
+      run: |
+        publication_args=()
+        if [[ "$CI_EXECUTION" == docs_only || "$CI_EXECUTION" == web_only ]]; then
+          publication_args+=(--verify-published-base)
+        fi
+        python3 scripts/check_ci_pages.py --execute --report test-results/pages-preflight.json \
+          --cache-state unknown --base "$PUBLICATION_BASE_COMMIT" "${publication_args[@]}"
       env:
         UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/pages-preflight-venv
+        CI_EXECUTION: ${{ needs.change-plan.outputs.execution }}
         PUBLICATION_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
     - name: Retain pages-preflight
       if: always()
@@ -68,6 +89,8 @@ jobs:
         if-no-files-found: error
         retention-days: 7
   docker-preflight:
+    needs: [change-plan]
+    if: ${{ needs.change-plan.outputs.execution == 'full' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -108,9 +131,21 @@ jobs:
         uv run python scripts/check_document_lifecycle.py --base "$DOC_LIFECYCLE_BASE" --head "$DOC_LIFECYCLE_HEAD"
     - name: Ruff pyflakes check on src/ and scripts/
       run: uv run ruff check --select F src scripts
+    - name: Check CI selection, gates, publication reuse and module budgets
+      run: uv run --no-sync pytest -q tests/test_ci_change_plan.py tests/test_ci_job_gates.py tests/test_pages_ci_evidence.py tests/test_ci_pages_preflight.py tests/test_ci_pages_historical.py tests/test_ci_public_test_files.py tests/test_repo_budgets.py --junitxml=test-results/controls.xml
+    - name: Retain CI control timings
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-control-results-${{ github.run_attempt }}
+        path: test-results/controls.xml
+        if-no-files-found: error
+        retention-days: 7
     - name: Check ruff format on migrated modules
       run: uv run ruff format --check src/dashboard/international_routes.py src/analysis_agent/lifecycle.py
   chat-runtime:
+    needs: [change-plan]
+    if: ${{ needs.change-plan.outputs.execution == 'full' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -129,12 +164,14 @@ jobs:
       env:
         UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/chat-runtime-venv
   public-tests:
+    if: ${{ needs.change-plan.outputs.execution == 'full' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [core-a, core-b, publication]
     needs:
     - change-plan
-    - pages-preflight
-    - docker-preflight
     - static
-    - chat-runtime
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -154,6 +191,7 @@ jobs:
     - name: Run the public test subset
       env:
         PYTHONUNBUFFERED: '1'
+        PYTEST_PARTITION: ${{ matrix.partition }}
         PUBLICATION_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
       run: |
         # A code-only PR verifies the existing publication with its released
@@ -165,17 +203,21 @@ jobs:
           && git diff --quiet "$PUBLICATION_BASE_COMMIT" HEAD -- site; then
           pytest_args+=(--financial-publication-base "$PUBLICATION_BASE_COMMIT")
         fi
+        mkdir -p test-results
+        python3 scripts/ci_public_test_files.py --partition "$PYTEST_PARTITION" > test-results/public-files.zlist
+        mapfile -d '' -t pytest_files < test-results/public-files.zlist
         uv run --no-sync pytest -n 2 --dist=loadfile --max-worker-restart=0 \
-          "${pytest_args[@]}" --junitxml=test-results/public.xml
+          "${pytest_args[@]}" "${pytest_files[@]}" --junitxml="test-results/public-${PYTEST_PARTITION}.xml"
     - name: Retain public test timings
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: public-test-results-${{ github.run_attempt }}
-        path: test-results/public.xml
+        name: public-test-results-${{ matrix.partition }}-${{ github.run_attempt }}
+        path: test-results/public-*.xml
         if-no-files-found: ignore
         retention-days: 7
   web-checks:
+    if: ${{ needs.change-plan.outputs.execution != 'docs_only' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -217,10 +259,7 @@ jobs:
         retention-days: 7
     needs:
     - change-plan
-    - pages-preflight
-    - docker-preflight
     - static
-    - chat-runtime
   test:
     if: ${{ always() }}
     needs:
@@ -233,9 +272,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
     - name: Require success from every component
       env:
         CI_REQUIRED_RESULTS: ${{ toJSON(needs) }}
+        CI_PLAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        CI_PLAN_HEAD: ${{ github.sha }}
+        CI_PLAN_EVENT: ${{ github.event_name }}
+        CI_PLAN_FORCE_FULL: ${{ inputs.force_full || false }}
       run: python3 scripts/check_ci_jobs.py test
   web:
     if: ${{ always() }}
@@ -249,7 +294,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
     - name: Require success from every component
       env:
         CI_REQUIRED_RESULTS: ${{ toJSON(needs) }}
+        CI_PLAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        CI_PLAN_HEAD: ${{ github.sha }}
+        CI_PLAN_EVENT: ${{ github.event_name }}
+        CI_PLAN_FORCE_FULL: ${{ inputs.force_full || false }}
       run: python3 scripts/check_ci_jobs.py web

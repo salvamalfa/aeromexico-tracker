@@ -30,13 +30,20 @@ def financial_site(request):
     if "2026Q3" not in doc["views"]:
         unavailable(request, "Financial 3Q26 candidate has not been assembled")
     spec = anchor(ROOT)
-    checker = request.getfixturevalue("verify_financial_publication")
-    verify_current_publication(
-        SITE, ROOT, checker, base_commit=request.config.getoption("--financial-publication-base")
-    )
+    from scripts.check_pages_publication import verifier_for
+
+    # The story projection already invokes its strict publication verifier.
+    # Other profiles still require their explicit current/historical checker.
+    if verifier_for(SITE, ROOT) not in {
+        "src.publish.quarterly_story_scope", "src.publish.afac_history_scope"
+    }:
+        checker = request.getfixturevalue("verify_financial_publication")
+        verify_current_publication(
+            SITE, ROOT, checker, base_commit=request.config.getoption("--financial-publication-base")
+        )
     original = preserved_financial_projection(SITE, ROOT, spec)
     assert sha(encoded(original)) == spec["executive_sha256"]
-    return spec
+    return spec, original
 
 
 def test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources(
@@ -44,9 +51,8 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
 ):
     from src.publish.financial_scope import preserved_executive, preserved_files, transport
 
-    spec = financial_site
+    spec, after = financial_site
     before = json.loads(transport._git(ROOT, "show", f"{spec['baseline_commit']}:site/{EXECUTIVE}"))
-    after = preserved_financial_projection(SITE, ROOT, spec)
     preserved_readings(SITE, ROOT, spec)
     preserved_executive(before, after)
     assert after["metadata"]["default_period"] == before["metadata"]["default_period"]
@@ -66,7 +72,7 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
         assert len([p for p in frozen if p.startswith("data/v1/analysis/")]) == 5
     from src.publish.financial_sources import approved_projection
 
-    path = ROOT / "analysis_runs/drafts/2026Q3" / (financial_site["analysis_entry"]["version"] + ".json")
+    path = ROOT / "analysis_runs/drafts/2026Q3" / (spec["analysis_entry"]["version"] + ".json")
     if not path.is_file():
         unavailable(request, "Financial source record is not restored; complete replay is required")
     from src.analysis_agent import lifecycle as flow

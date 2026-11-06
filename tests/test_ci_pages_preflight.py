@@ -3,10 +3,10 @@
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 import yaml
@@ -117,7 +117,8 @@ def test_verifier_exit_is_preserved_without_fallback(prepared, monkeypatch, veri
 
     def run(command, **kwargs):
         calls.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 0 if command == pages.INSTALL else verify_exit, b"ok", b"")
+        code = 0 if command == pages.INSTALL else verify_exit
+        return subprocess.CompletedProcess(command, code, b"ok", b"")
 
     monkeypatch.setattr(pages.subprocess, "run", run)
     report = pages.preflight(root, execute=True, cache_state="warm", environment=environment)
