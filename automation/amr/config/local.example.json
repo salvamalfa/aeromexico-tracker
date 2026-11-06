@@ -1,0 +1,7 @@
+{
+  "purpose": "Reference only; no runner reads or installs this file automatically",
+  "AMR_SPREADSHEET_ID": "{{AMR_SPREADSHEET_ID}}",
+  "AMR_QUEUE_SHEET_ID": "{{AMR_QUEUE_SHEET_ID}}",
+  "AMR_DATA_SHEET_ID": "{{AMR_DATA_SHEET_ID}}",
+  "AMR_LEASE_SHEET_ID": "{{AMR_LEASE_SHEET_ID}}"
+}

@@ -1,0 +1,18 @@
+# Private local references and data; source/contract examples stay versioned.
+/config/local.json
+/config/*.local.json
+/data/exports/
+/data/private/
+/data/quotes.json
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.url
+/legacy/
+/runtime/
+/dashboard/
+automation.toml
+.env*
+__pycache__/
+*.py[cod]

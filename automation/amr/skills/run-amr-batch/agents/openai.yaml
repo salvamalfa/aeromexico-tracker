@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run AMR Batch"
+  short_description: "Run fenced AMR jobs through an ordered pool"
+  default_prompt: "Use $run-amr-batch to process due Control_AMR jobs through the fenced, globally ordered worker pool."

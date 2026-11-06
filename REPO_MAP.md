@@ -22,6 +22,13 @@ la [skill de dashboard](.agents/skills/airline-update-dashboard/SKILL.md)
 describen los comandos, los recibos y la recuperación. Una fuente sin cambio
 real o sin consumidor visible conserva su comprobación sin generar otra publicación.
 
+Las [fuentes AMR](automation/amr/README.md) reúnen las skills de búsquedas,
+validadores y contrato del libro de puntos. La carpeta conserva una copia
+de referencia auditada; no instala skills ni modifica las corridas. El libro
+vivo sigue en Google Sheets y sus identificadores y observaciones quedan
+fuera del repositorio público. El dashboard AMR anterior y su Git se
+conservan localmente con sus cambios pendientes.
+
 ## Qué vive dónde
 
 | Área | Módulos | Rol |

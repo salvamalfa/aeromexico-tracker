@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-06 — Fuentes AMR en el repositorio de Tracker
+
+- Agrupa tres skills de búsqueda, sus scripts, esquemas y contrato de Sheets
+  en `automation/amr/`, con huellas de procedencia y verificación offline.
+- Documenta Google Sheets como fuente de puntos, Main/Premier y la frontera
+  entre código público, datos y archivo local. Los identificadores privados
+  se sustituyen por marcadores en las copias de referencia.
+- Conserva las skills instaladas, las corridas y sus rutas. No activa
+  capturas, ingestas, sincronizaciones ni publicaciones del dashboard.
+
 ## 2026-11-05 · Pages reutiliza CI sólo para el mismo árbol validado
 
 - Después de integrar un PR, Pages exige una sola asociación de GitHub con un

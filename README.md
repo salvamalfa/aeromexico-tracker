@@ -4,6 +4,11 @@ Sistema reproducible de ingesta, consolidación, análisis y visualización de i
 
 El proyecto transforma fuentes regulatorias, operativas y de mercado en una lectura trimestral de negocio. Conserva los datos crudos con hash, separa cifras reportadas de derivadas, explicita faltantes y nunca rellena una ausencia como cero. Es un proyecto independiente de portafolio; **no es oficial ni constituye consejo de inversión**.
 
+Las skills de búsqueda con puntos y el contrato del libro AMR se organizan en
+[`automation/amr/`](automation/amr/README.md), dentro de este mismo repositorio.
+Las corridas conservan sus skills instaladas y su configuración; los resultados
+y las referencias privadas de Google Sheets permanecen fuera del público.
+
 ## Dashboard
 
 La revisión actual reúne cuatro vistas: Lectura, Mercado, Economía y Noticias.
