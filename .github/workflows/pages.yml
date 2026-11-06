@@ -169,6 +169,7 @@ jobs:
 
   deploy:
     needs: [verify, preview, ci-gate]
+    if: ${{ !cancelled() && needs.verify.result == 'success' && needs.preview.result == 'success' && needs.ci-gate.result == 'success' }}
     runs-on: ubuntu-latest
     # Only copies files (never runs the preview's code) and publishes them.
     permissions:

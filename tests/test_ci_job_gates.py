@@ -250,5 +250,11 @@ def test_narrow_push_dedup_only_applies_where_pages_runs_full_ci():
     assert pages_ci["uses"] == "./.github/workflows/ci.yml"
     assert pages_ci["needs"] == ["ci-evidence"]
     assert pages_ci["if"] == "${{ always() && needs.ci-evidence.outputs.reuse != 'true' }}"
-    assert "ci-gate" in pages["jobs"]["deploy"]["needs"]
-    assert "if" not in pages["jobs"]["deploy"]  # No always()/skipped bypass.
+    deploy = pages["jobs"]["deploy"]
+    assert deploy["needs"] == ["verify", "preview", "ci-gate"]
+    # Reuse can skip the transitive fallback. Each direct gate must
+    # still succeed, and a cancelled workflow must never deploy.
+    assert deploy["if"] == (
+        "${{ !cancelled() && needs.verify.result == 'success' && "
+        "needs.preview.result == 'success' && needs.ci-gate.result == 'success' }}"
+    )
