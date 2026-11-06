@@ -1,0 +1,583 @@
+{
+  "schema_version": "ci_efficiency_20261106_v1",
+  "audited_master": "29c61a1cadc266733861e25e68791b71ce1c7669",
+  "observed_date_utc": "2026-11-06",
+  "timing_source": "GitHub Actions REST job/step timestamps and retained workflow artifacts; plugin omitted job timestamps so gh API supplied them",
+  "baseline_runs": [
+    {
+      "run_id": 42146347355,
+      "url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42146347355",
+      "event": "push",
+      "head_sha": "29c61a1cadc266733861e25e68791b71ce1c7669",
+      "checkout_sha": "29c61a1cadc266733861e25e68791b71ce1c7669",
+      "workflow_elapsed_seconds": 2378.0,
+      "plan": {
+        "recommended_execution": "full",
+        "actual_execution": "full",
+        "reason": "shared_unknown_or_mixed_paths"
+      },
+      "pages_phases": [
+        {
+          "name": "install",
+          "elapsed_seconds": 1.1107389649999995
+        },
+        {
+          "name": "verify",
+          "elapsed_seconds": 405.14282579
+        }
+      ],
+      "parity_cases": [
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_site_preserves_every_historical_file",
+          "elapsed_seconds": 556.088,
+          "outcome": "passed",
+          "skip_message": null
+        },
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_new_payload_matches_its_full_approved_source_replay",
+          "elapsed_seconds": 1.632,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        },
+        {
+          "id": "tests.test_financial_site_parity::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "elapsed_seconds": 1100.309,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        }
+      ],
+      "jobs": [
+        {
+          "name": "static",
+          "id": 127658957155,
+          "elapsed_seconds": 17.0
+        },
+        {
+          "name": "change-plan",
+          "id": 127658957327,
+          "elapsed_seconds": 11.0
+        },
+        {
+          "name": "docker-preflight",
+          "id": 127658957374,
+          "elapsed_seconds": 144.0
+        },
+        {
+          "name": "pages-preflight",
+          "id": 127658957408,
+          "elapsed_seconds": 423.0
+        },
+        {
+          "name": "chat-runtime",
+          "id": 127658957422,
+          "elapsed_seconds": 80.0
+        },
+        {
+          "name": "web-checks",
+          "id": 127661407028,
+          "elapsed_seconds": 151.0
+        },
+        {
+          "name": "public-tests",
+          "id": 127661407081,
+          "elapsed_seconds": 1883.0
+        },
+        {
+          "name": "web",
+          "id": 127662268925,
+          "elapsed_seconds": 10.0
+        },
+        {
+          "name": "test",
+          "id": 127672560719,
+          "elapsed_seconds": 7.0
+        }
+      ]
+    },
+    {
+      "run_id": 42148115816,
+      "url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42148115816",
+      "event": "pull_request",
+      "head_sha": "10e47a60cc0c6657d822425fa1fdddbcd6f94460",
+      "checkout_sha": "77169935902b399cb09cff0961878d7551b30803",
+      "workflow_elapsed_seconds": 2126.0,
+      "plan": {
+        "recommended_execution": "docs_only",
+        "actual_execution": "full",
+        "reason": "documentation_text_only_shadow_recommendation"
+      },
+      "pages_phases": [
+        {
+          "name": "install",
+          "elapsed_seconds": 5.228289378000007
+        },
+        {
+          "name": "verify",
+          "elapsed_seconds": 239.04464428199998
+        }
+      ],
+      "parity_cases": [
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_site_preserves_every_historical_file",
+          "elapsed_seconds": 545.681,
+          "outcome": "passed",
+          "skip_message": null
+        },
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_new_payload_matches_its_full_approved_source_replay",
+          "elapsed_seconds": 1.605,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        },
+        {
+          "id": "tests.test_financial_site_parity::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "elapsed_seconds": 1104.662,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        }
+      ],
+      "jobs": [
+        {
+          "name": "docker-preflight",
+          "id": 127664419728,
+          "elapsed_seconds": 118.0
+        },
+        {
+          "name": "pages-preflight",
+          "id": 127664419874,
+          "elapsed_seconds": 265.0
+        },
+        {
+          "name": "chat-runtime",
+          "id": 127664419902,
+          "elapsed_seconds": 43.0
+        },
+        {
+          "name": "change-plan",
+          "id": 127664419924,
+          "elapsed_seconds": 9.0
+        },
+        {
+          "name": "static",
+          "id": 127664419999,
+          "elapsed_seconds": 24.0
+        },
+        {
+          "name": "web-checks",
+          "id": 127666030386,
+          "elapsed_seconds": 156.0
+        },
+        {
+          "name": "public-tests",
+          "id": 127666030528,
+          "elapsed_seconds": 1843.0
+        },
+        {
+          "name": "web",
+          "id": 127666976498,
+          "elapsed_seconds": 7.0
+        },
+        {
+          "name": "test",
+          "id": 127676834434,
+          "elapsed_seconds": 7.0
+        }
+      ]
+    },
+    {
+      "run_id": 42147039861,
+      "url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42147039861",
+      "event": "pull_request",
+      "head_sha": "342716938ee4b7056c7bbf7f8397af16f7bbd453",
+      "checkout_sha": "068a0c0d07ad2b9fd75c9dee564fbfbcf206136e",
+      "workflow_elapsed_seconds": 2173.0,
+      "plan": {
+        "recommended_execution": "full",
+        "actual_execution": "full",
+        "reason": "shared_unknown_or_mixed_paths"
+      },
+      "pages_phases": [
+        {
+          "name": "install",
+          "elapsed_seconds": 1.342337769000011
+        },
+        {
+          "name": "verify",
+          "elapsed_seconds": 217.499046355
+        }
+      ],
+      "parity_cases": [
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_site_preserves_every_historical_file",
+          "elapsed_seconds": 568.525,
+          "outcome": "passed",
+          "skip_message": null
+        },
+        {
+          "id": "tests.test_financial_site_parity::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "elapsed_seconds": 1078.521,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        },
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_new_payload_matches_its_full_approved_source_replay",
+          "elapsed_seconds": 1.533,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        }
+      ],
+      "jobs": [
+        {
+          "name": "pages-preflight",
+          "id": 127661304760,
+          "elapsed_seconds": 236.0
+        },
+        {
+          "name": "chat-runtime",
+          "id": 127661304975,
+          "elapsed_seconds": 67.0
+        },
+        {
+          "name": "static",
+          "id": 127661305051,
+          "elapsed_seconds": 21.0
+        },
+        {
+          "name": "change-plan",
+          "id": 127661305088,
+          "elapsed_seconds": 10.0
+        },
+        {
+          "name": "docker-preflight",
+          "id": 127661305109,
+          "elapsed_seconds": 109.0
+        },
+        {
+          "name": "web-checks",
+          "id": 127662674707,
+          "elapsed_seconds": 145.0
+        },
+        {
+          "name": "public-tests",
+          "id": 127662674864,
+          "elapsed_seconds": 1843.0
+        },
+        {
+          "name": "web",
+          "id": 127663553710,
+          "elapsed_seconds": 7.0
+        },
+        {
+          "name": "test",
+          "id": 127673618834,
+          "elapsed_seconds": 14.0
+        }
+      ]
+    },
+    {
+      "run_id": 42140619627,
+      "url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42140619627",
+      "event": "pull_request",
+      "head_sha": "d95bc753fb4083a48b89ad8a9deb70a7efc59a41",
+      "checkout_sha": "1964acc37d1f63ec7a7ee52c88105b8211045b6a",
+      "workflow_elapsed_seconds": 2782.0,
+      "plan": {
+        "recommended_execution": "full",
+        "actual_execution": "full",
+        "reason": "shared_unknown_or_mixed_paths"
+      },
+      "pages_phases": [
+        {
+          "name": "install",
+          "elapsed_seconds": 1.253131407999998
+        },
+        {
+          "name": "verify",
+          "elapsed_seconds": 398.633669935
+        }
+      ],
+      "parity_cases": [
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_site_preserves_every_historical_file",
+          "elapsed_seconds": 692.407,
+          "outcome": "passed",
+          "skip_message": null
+        },
+        {
+          "id": "tests.test_editorial_site_parity::test_editorial_new_payload_matches_its_full_approved_source_replay",
+          "elapsed_seconds": 1.945,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        },
+        {
+          "id": "tests.test_financial_site_parity::test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources",
+          "elapsed_seconds": 1367.098,
+          "outcome": "skipped",
+          "skip_message": "Restore the complete story/Q2/superseded ledger for full source replay"
+        }
+      ],
+      "jobs": [
+        {
+          "name": "pages-preflight",
+          "id": 127640015513,
+          "elapsed_seconds": 416.0
+        },
+        {
+          "name": "change-plan",
+          "id": 127640015750,
+          "elapsed_seconds": 9.0
+        },
+        {
+          "name": "static",
+          "id": 127640015784,
+          "elapsed_seconds": 24.0
+        },
+        {
+          "name": "docker-preflight",
+          "id": 127640015803,
+          "elapsed_seconds": 139.0
+        },
+        {
+          "name": "chat-runtime",
+          "id": 127640016029,
+          "elapsed_seconds": 41.0
+        },
+        {
+          "name": "public-tests",
+          "id": 127642700122,
+          "elapsed_seconds": 2303.0
+        },
+        {
+          "name": "web-checks",
+          "id": 127642700157,
+          "elapsed_seconds": 120.0
+        },
+        {
+          "name": "web",
+          "id": 127643514616,
+          "elapsed_seconds": 8.0
+        },
+        {
+          "name": "test",
+          "id": 127656959845,
+          "elapsed_seconds": 8.0
+        }
+      ]
+    }
+  ],
+  "candidate": {
+    "status": "implementation_measurements_recorded_in_pull_request",
+    "changes": [
+      "PR-only bounded impact selection",
+      "three complete deterministic public-test partitions",
+      "eliminate duplicate parity verifications"
+    ],
+    "github_ci_measurement": {
+      "candidate_run_id": 42165073872,
+      "candidate_url": "https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42165073872",
+      "candidate_head_sha": "ca6c04be887b01d0046a6881cbe3c42fba57d1eb",
+      "conclusion": "success",
+      "elapsed_seconds": 856.0,
+      "comparisons": [
+        {
+          "baseline_run_id": 42146347355,
+          "baseline_elapsed_seconds": 2378.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1522.0,
+          "observed_reduction_percent": 64.003
+        },
+        {
+          "baseline_run_id": 42148115816,
+          "baseline_elapsed_seconds": 2126.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1270.0,
+          "observed_reduction_percent": 59.737
+        },
+        {
+          "baseline_run_id": 42147039861,
+          "baseline_elapsed_seconds": 2173.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1317.0,
+          "observed_reduction_percent": 60.607
+        },
+        {
+          "baseline_run_id": 42140619627,
+          "baseline_elapsed_seconds": 2782.0,
+          "candidate_elapsed_seconds": 856.0,
+          "observed_reduction_seconds": 1926.0,
+          "observed_reduction_percent": 69.231
+        }
+      ],
+      "comparison_limits": [
+        "Different heads and runner instances, not a controlled A/B",
+        "Public suite gained and rewrote CI control tests",
+        "Chromium installation took 614 seconds versus 20 seconds in master baseline; slow Ubuntu apt mirror evidenced in web-apt-delay log",
+        "Job wall-time sums are runner occupancy observations; cumulative JUnit time is not CPU time and neither establishes monetary savings"
+      ],
+      "jobs": [
+        {
+          "id": 127719530944,
+          "name": "static",
+          "started_at": "2026-11-06T04:52:48Z",
+          "completed_at": "2026-11-06T04:53:27Z",
+          "elapsed_seconds": 39.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719531194,
+          "name": "change-plan",
+          "started_at": "2026-11-06T04:52:48Z",
+          "completed_at": "2026-11-06T04:52:58Z",
+          "elapsed_seconds": 10.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719596787,
+          "name": "pages-preflight",
+          "started_at": "2026-11-06T04:53:01Z",
+          "completed_at": "2026-11-06T04:57:21Z",
+          "elapsed_seconds": 260.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719596811,
+          "name": "chat-runtime",
+          "started_at": "2026-11-06T04:53:01Z",
+          "completed_at": "2026-11-06T04:54:04Z",
+          "elapsed_seconds": 63.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719596886,
+          "name": "docker-preflight",
+          "started_at": "2026-11-06T04:53:01Z",
+          "completed_at": "2026-11-06T04:55:23Z",
+          "elapsed_seconds": 142.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747657,
+          "name": "web-checks",
+          "started_at": "2026-11-06T04:53:30Z",
+          "completed_at": "2026-11-06T05:05:41Z",
+          "elapsed_seconds": 731.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747684,
+          "name": "public-tests (publication)",
+          "started_at": "2026-11-06T04:53:30Z",
+          "completed_at": "2026-11-06T05:06:46Z",
+          "elapsed_seconds": 796.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747689,
+          "name": "public-tests (core-a)",
+          "started_at": "2026-11-06T04:53:30Z",
+          "completed_at": "2026-11-06T05:02:32Z",
+          "elapsed_seconds": 542.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127719747700,
+          "name": "public-tests (core-b)",
+          "started_at": "2026-11-06T04:53:31Z",
+          "completed_at": "2026-11-06T05:02:51Z",
+          "elapsed_seconds": 560.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127723564509,
+          "name": "web",
+          "started_at": "2026-11-06T05:05:43Z",
+          "completed_at": "2026-11-06T05:05:51Z",
+          "elapsed_seconds": 8.0,
+          "conclusion": "success"
+        },
+        {
+          "id": 127723917758,
+          "name": "test",
+          "started_at": "2026-11-06T05:06:49Z",
+          "completed_at": "2026-11-06T05:07:00Z",
+          "elapsed_seconds": 11.0,
+          "conclusion": "success"
+        }
+      ],
+      "partitions": {
+        "core-a": {
+          "junit_cases": 3611,
+          "outcomes": {
+            "passed": 3604,
+            "skipped": 7
+          },
+          "pytest_wall_seconds": 521.38,
+          "cumulative_case_seconds": 996.997,
+          "junit_suite_test_count_including_subtests": 3635
+        },
+        "core-b": {
+          "junit_cases": 3497,
+          "outcomes": {
+            "passed": 3495,
+            "skipped": 2
+          },
+          "pytest_wall_seconds": 534.369,
+          "cumulative_case_seconds": 1010.92,
+          "junit_suite_test_count_including_subtests": 3502
+        },
+        "publication": {
+          "junit_cases": 3,
+          "outcomes": {
+            "passed": 1,
+            "skipped": 2
+          },
+          "pytest_wall_seconds": 772.029,
+          "cumulative_case_seconds": 1181.685,
+          "junit_suite_test_count_including_subtests": 3
+        }
+      },
+      "candidate_public_case_count": 7111,
+      "candidate_public_outcomes": {
+        "passed": 7100,
+        "skipped": 11
+      },
+      "baseline_public_case_count": 6894,
+      "baseline_public_outcomes": {
+        "passed": 6883,
+        "skipped": 11
+      },
+      "common_public_case_count": 6871,
+      "common_public_outcome_changes": [],
+      "rewritten_test_id_count": 23,
+      "new_control_test_id_count": 240,
+      "missing_non_ci_control_tests": [],
+      "runner_job_wall_seconds": {
+        "baseline": 2726,
+        "candidate": 3162,
+        "note": "Runner occupancy observations, not CPU time or monetary cost. Chromium apt outlier contributes to the increase."
+      }
+    },
+    "local_comparison": null,
+    "local_frontend_proof": {
+      "head": "c71b8c44b27d866491b75d6d162b4020775091ae",
+      "status": "passed",
+      "elapsed_seconds": 317.36532251699987,
+      "site_verification": "historical_site_strong_verified",
+      "historical_site_strong_verified": true,
+      "current_runtime_approved": false,
+      "base": "ca6c04be887b01d0046a6881cbe3c42fba57d1eb",
+      "scope": "Unpublished isolated CSS-only commit; exact locked Pages profile; concurrent local benchmark. Not GitHub end-to-end latency."
+    },
+    "browser_preparation_followup": {
+      "status": "validation_recorded_in_pull_request",
+      "reason": "Unchanged with-deps installed nine font packages from a slow Ubuntu mirror; measured 614s install, 56.284s browser pytest. Headless probe passed locally without installing system packages.",
+      "official_docs": "https://playwright.dev/python/docs/browsers#chromium-headless-shell"
+    }
+  },
+  "limits": [
+    "Historical runs have different commits and queue/cache state; they are not a controlled A/B comparison.",
+    "Job and workflow durations include different scopes; summed JUnit time is not wall time.",
+    "Full profile retains every test and all selected profiles retain strong publication verification.",
+    "Public suite excludes browser and local_data; those scopes are reported independently."
+  ]
+}
