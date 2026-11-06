@@ -41,6 +41,23 @@ as — a directory built from `web/` plus the exported v1 payloads. See
   and compares every data hash and size again, closing changes to dist during
   the second approval check. This mode cannot bless edited data by
   rebuilding its manifest, and it never invokes warehouse exporters.
+  `--presentation-only` is a stricter profile for the current release chain.
+  It verifies the trusted served site, replays the retained and current
+  quarterly approvals and revocations through the exact approved quarterly
+  parent, and reproduces the AFAC source/audit chain using the pinned published
+  producer and private request. It checks those chains
+  before and after the frontend build under the lifecycle writer lock. The
+  candidate may change only the dashboard `index.html` and `assets/**`; other
+  HTML entrypoints such as `access.html` and `review.html` remain byte-identical
+  to the served baseline, and their existing assets are retained. Every other site path,
+  byte count, and SHA-256 must match the trusted served baseline, including
+  data, contract pins, source records, receipts, and evidence. A missing,
+  changed, unknown, or revoked authority/source fails closed. A marker embedded
+  in the dashboard HTML binds the frontend build to the trusted site commit and
+  carries the original AFAC producer identity forward across subsequent
+  presentation releases. The historical
+  `--ui-only` verifier remains unchanged. This profile does not regenerate data,
+  modify approval records, or make a new approval.
 - `--business-metrics-only` uses the same immutable published-site baseline
   and exact current analysis approval, then adds only the separately pinned
   business-metrics payload and receipt. It requires the baseline data files to

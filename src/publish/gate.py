@@ -1,13 +1,6 @@
-"""Assemble approved Analysis Agent records into a verified, atomic site.
+"""Build a verified site and atomically publish it with a lifecycle receipt.
 
-The normal gate reuses lifecycle verification and schema/privacy-checked
-exporters, builds the web app, then revalidates approvals under the ledger
-writer lock immediately before swapping the candidate into place. The lock
-covers the swap to reject revocations racing the slow export and build.
-
-The publication manifest records every file hash/size, code commit, contracts
-and analysis identities. Local publication receipts record intent and outcome;
-this module never grants or modifies human approval.
+Each profile preserves its approval, source, and revocation boundary.
 """
 
 from __future__ import annotations
@@ -40,13 +33,11 @@ from src.web_export.writer import write_json
 from . import manifest as manifest_mod
 from . import receipts as receipt_mod
 from .official_routes_preservation import require_preserved_release
-from .records import (
-    ANALYSIS_MANIFEST_FIELDS as ANALYSIS_MANIFEST_FIELDS,
-    PublicationRefused as PublicationRefused,
-    _analysis_manifest_entry as _analysis_manifest_entry,
-    _reject_duplicate_periods as _reject_duplicate_periods,
-    load_records as load_records,
-)
+from .records import ANALYSIS_MANIFEST_FIELDS as ANALYSIS_MANIFEST_FIELDS
+from .records import PublicationRefused as PublicationRefused
+from .records import _analysis_manifest_entry as _analysis_manifest_entry
+from .records import _reject_duplicate_periods as _reject_duplicate_periods
+from .records import load_records as load_records
 
 WEB_DIR = PATHS.root / "web"
 WEB_DATA_V1 = WEB_DIR / "public" / "data" / "v1"
@@ -55,13 +46,8 @@ PUBLICATIONS_ROOT = PATHS.root / "analysis_runs" / "publications"
 
 
 def _trusted_site_commit(root: Path, trusted_ref: str = "origin/master") -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "--verify", f"{trusted_ref}^{{commit}}"],
-        cwd=Path(root),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    command = ["git", "rev-parse", "--verify", f"{trusted_ref}^{{commit}}"]
+    result = subprocess.run(command, cwd=Path(root), capture_output=True, text=True, check=False)
     if result.returncode != 0 or not result.stdout.strip():
         raise PublicationRefused(f"trusted site base {trusted_ref!r} is unavailable")
     return result.stdout.strip()
@@ -414,7 +400,7 @@ def publish_ui_only(
         raise PublicationRefused(f"existing site is not valid for UI-only publication: {site_problems[:5]}")
     current_manifest = manifest_mod.load_manifest(out_dir)
     from .approval_cohorts import verify_approval_cohorts
-    from .financial_sources import verify_preserved_financial, validate_ui_financial_candidate
+    from .financial_sources import validate_ui_financial_candidate, verify_preserved_financial
 
     try:
         with flow.writer(root):
@@ -502,8 +488,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--record", type=Path, action="append", default=[], dest="records")
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
     publish_modes = parser.add_mutually_exclusive_group()
-    publish_modes.add_argument("--quarterly-story-request", type=Path,
-                               help="publish the reviewed Q3 original-source replacement")
+    publish_modes.add_argument(
+        "--quarterly-story-request", type=Path, help="publish the reviewed Q3 original-source replacement"
+    )
     publish_modes.add_argument(
         "--financial-kpis-only",
         action="store_true",
@@ -523,6 +510,11 @@ def main(argv: list[str] | None = None) -> int:
         "--ui-only",
         action="store_true",
         help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
+    )
+    publish_modes.add_argument(
+        "--presentation-only",
+        action="store_true",
+        help="replay current approval and AFAC chains while preserving protected publication bytes",
     )
     publish_modes.add_argument(
         "--preserve-published-data",
@@ -550,6 +542,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.quarterly_story_request:
             from .quarterly_story_update import publish_from_gate
+
             result = publish_from_gate(args.quarterly_story_request, args.out)
         elif args.financial_kpis_only:
             from .financial_update import publish_financial
@@ -581,6 +574,10 @@ def main(argv: list[str] | None = None) -> int:
             from .financial_overlay import publish_business_metrics_only
 
             result = publish_business_metrics_only(args.records, args.out)
+        elif args.presentation_only:
+            from .presentation_release import publish_from_gate
+
+            result = publish_from_gate(args.records, args.out)
         elif args.ui_only:
             result = publish_ui_only(args.records, args.out)
         else:
