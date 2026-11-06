@@ -77,8 +77,33 @@ def official_map_baseline(site, repo, financial_checker, *, base_commit=None):
         preserved = source_data_scope.preserved_files(site, repo, spec)
         problems = _verify_site(site, preserved_approval_files=preserved)
         assert not problems, problems
-    _, raw = source_data_scope.transport.baseline(repo, spec)
-    archive = _git(repo, "archive", spec["baseline_commit"], "site")
+    commit = spec["baseline_commit"]
+    manifest, raw = source_data_scope.transport.baseline(repo, spec)
+    while (
+        any(row["path"] == "data/v1/official-routes.json" for row in manifest["files"])
+        and _active_module(site, repo, manifest, commit) == "src.publish.source_data_scope"
+    ):
+        # A later map overlay retains the previous one in Git. Read that
+        # release's own producer anchor before following its reviewed parent.
+        producer = manifest["code_commit"]
+        _git(repo, "merge-base", "--is-ancestor", producer, commit)
+        anchor_raw = _git(repo, "show", f"{producer}:{source_data_scope.ANCHOR}")
+        proof = json.loads(_git(repo, "show", f"{commit}:site/{source_data_scope.PROOF}"))
+        assert proof["schema_version"] == "source_data_publication_v1"
+        assert proof["anchor_sha256"] == sha(anchor_raw)
+        previous = json.loads(anchor_raw)
+        assert previous["schema_version"] == "source_data_release_v1"
+        if previous["product"] != "official_routes":
+            break
+        assert not previous.get("additional_sources"), "Expected a map-only historical overlay"
+        parent = previous["baseline_commit"]
+        assert parent != commit, "Historical map overlay must point to an earlier site"
+        _git(repo, "merge-base", "--is-ancestor", parent, producer)
+        assert proof["remote_witness"]["baseline_commit"] == parent
+        assert proof["remote_witness"]["manifest_sha256"] == previous["baseline_manifest_sha256"]
+        manifest, raw = source_data_scope.transport.baseline(repo, previous)
+        commit = parent
+    archive = _git(repo, "archive", commit, "site")
     with tempfile.TemporaryDirectory(prefix="parity-before-official-map-") as folder:
         with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
             stream.extractall(folder, filter="data")
