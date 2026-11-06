@@ -18,6 +18,12 @@
 - La prueba negativa rechaza una huella histórica alterada o un commit que no
   contiene el ancla actual.
 
+## 2026-11-05 · Conserva la finalización de observaciones AFAC
+
+- La corrección nativa de AFAC versiona el cambio de preliminar a definitivo,
+  aunque el valor, la fórmula y la condición de estimación no cambien. El
+  contrato SCD2 reconoce ese estado y sigue rechazando versiones idénticas.
+
 ## 2026-11-05 · Corrección histórica AFAC y comparativos BTS verificados
 
 - Nuevo perfil de publicación que conserva el padre trimestral original como

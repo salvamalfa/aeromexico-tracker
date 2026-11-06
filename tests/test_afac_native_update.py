@@ -65,6 +65,32 @@ def test_source_reported_estimation_flag_is_a_material_version():
     validate_table("fact_carrier_metrics",output)
 
 
+def test_preliminary_only_finalization_is_versioned_and_idempotent():
+    baseline = old_fact()
+    baseline["derivation_formula"] = TOTAL_FORMULA
+    baseline["is_preliminary"] = True
+    incoming = baseline.drop(columns="record_id").copy()
+    incoming["is_preliminary"] = False
+
+    output, count = append_versions(baseline, incoming, "2026-11-05T04:00:00+00:00")
+
+    assert count == 1
+    assert output["is_preliminary"].tolist() == [True, False]
+    assert output["value"].nunique() == 1
+    assert output["derivation_formula"].nunique() == 1
+    assert output["is_estimated"].nunique() == 1
+    assert output["is_current"].tolist() == [False, True]
+    assert output["restatement_count"].tolist() == [0, 1]
+    validate_table("fact_carrier_metrics", output)
+
+    repeated = output.loc[output.is_current].drop(columns="record_id").copy()
+    repeated_output, repeated_count = append_versions(
+        output, repeated, "2026-11-05T04:00:00+00:00"
+    )
+    assert repeated_count == 0
+    pd.testing.assert_frame_equal(repeated_output, output)
+
+
 def test_unknown_formula_cannot_manufacture_restatement():
     baseline = old_fact()
     incoming = baseline.drop(columns="record_id").copy()
@@ -81,6 +107,7 @@ def test_scd2_contract_still_rejects_equal_state_and_cosmetic_only_version():
     output, _ = append_versions(baseline, incoming, "2026-11-05T04:00:00+00:00")
     output.loc[1, "value"] = output.loc[0, "value"]
     output.loc[1, "derivation_formula"] = "  " + TOTAL_FORMULA + "\n"
+    output.loc[1, "is_preliminary"] = output.loc[0, "is_preliminary"]
     with pytest.raises(ValueError, match="without a value change"):
         validate_table("fact_carrier_metrics", output)
 
