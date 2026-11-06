@@ -67,15 +67,16 @@ function selectedEntities(cardId?: string, tab = activeTab()): string | string[]
   return "AEROMEXICO";
 }
 
-export function buildChatContext(cardElement?: Element | null): ChatContext {
+export function buildChatContext(cardElement?: Element | null, useOfficialMap = false): ChatContext {
   const visualTab = activeTab();
   const focusedCard = cardElement ?? document.activeElement;
   const cardTab = tabForCard(focusedCard);
-  const cardId = cardTab && cardTab !== visualTab ? undefined : cardIdFrom(focusedCard);
+  const resolvedCardId = cardTab && cardTab !== visualTab ? undefined : cardIdFrom(focusedCard);
   // Resolve the map by its card, including inside the merged Mercado tab.
   // AFAC city totals have no airline attribution. Never inherit the market chart's three entities.
-  const officialMapCard = cardId === "route-flow-map" || cardId === "flow-map";
-  if (officialMapCard || (!cardId && !focusedCard?.closest("[data-chat-unavailable]") && (visualTab === "flights" || visualTab === "market"))) {
+  const officialMapCard = resolvedCardId === "route-flow-map" || resolvedCardId === "flow-map";
+  const cardId = officialMapCard && !useOfficialMap ? undefined : resolvedCardId;
+  if (useOfficialMap && (officialMapCard || (!cardId && !focusedCard?.closest("[data-chat-unavailable]") && (visualTab === "flights" || visualTab === "market")))) {
     const us = officialState.scope === "us";
     return { tab: "market", ...(officialMapCard ? { card_id: cardId } : {}), period: currentPeriodId() ?? officialState.period,
       ...(us ? { entity: [...officialState.carriers] } : {}),

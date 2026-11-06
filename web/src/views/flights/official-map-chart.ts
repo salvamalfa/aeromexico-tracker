@@ -1,14 +1,14 @@
 import type { Data } from "plotly.js";
 import Plotly, { type PlotlyHTMLElement } from "../../lib/plotly";
-import type { OfficialPoint, OfficialRoute } from "../../types/official-routes";
+import type { MapScope, OfficialPoint, OfficialRoute } from "../../types/official-routes";
 import { state as flights } from "./state";
 import { esc, integer } from "./dom";
 import { mapPeriodLabel } from "./map-periods";
 import { hasGeometry, officialRouteTitle, officialState, previousComparisonMonths, routeHasGeometry, visibleOfficialRoutes } from "./official-routes";
 
-const arcs = new Map<string, { lat: Array<number | null>; lon: Array<number | null> }>();
+const arcs = new Map<string, { lat: number[]; lon: number[] }>();
 /** Great-circle geometry is cached independently of quarter and volume. */
-export function officialArc(route: OfficialRoute): { lat: Array<number | null>; lon: Array<number | null> } {
+export function officialArc(route: OfficialRoute): { lat: number[]; lon: number[] } {
   const a = route.origin, b = route.destination;
   if (!hasGeometry(a) || !hasGeometry(b)) return { lat: [], lon: [] };
   const key = `${a.id}:${a.lat}:${a.lon}|${b.id}:${b.lat}:${b.lon}`;
@@ -18,18 +18,60 @@ export function officialArc(route: OfficialRoute): { lat: Array<number | null>; 
     return [Math.cos(lat) * Math.cos(lon), Math.cos(lat) * Math.sin(lon), Math.sin(lat)];
   };
   const x = xyz(a), y = xyz(b), omega = Math.acos(Math.max(-1, Math.min(1, x.reduce((sum, v, i) => sum + v * y[i]!, 0))));
-  const sin = Math.sin(omega), result = { lat: [] as Array<number | null>, lon: [] as Array<number | null> };
-  let previous = a.lon;
+  const sin = Math.sin(omega), result = { lat: [] as number[], lon: [] as number[] };
   for (let i = 0; i <= 24; i++) {
     const t = i / 24, first = Math.abs(sin) < 1e-8 ? 1 - t : Math.sin((1 - t) * omega) / sin;
     const second = Math.abs(sin) < 1e-8 ? t : Math.sin(t * omega) / sin;
     const v = x.map((n, j) => first * n + second * y[j]!);
     const length = Math.hypot(...v);
-    const lon = Math.atan2(v[1]!, v[0]!) * 180 / Math.PI;
-    if (Math.abs(lon - previous) > 180) { result.lat.push(null); result.lon.push(null); }
-    result.lat.push(Math.asin(v[2]! / length) * 180 / Math.PI); result.lon.push(lon); previous = lon;
+    // Leave the arc continuous so Plotly splits it only at its projection seam.
+    result.lat.push(Math.asin(v[2]! / length) * 180 / Math.PI);
+    result.lon.push(Math.atan2(v[1]!, v[0]!) * 180 / Math.PI);
   }
   arcs.set(key, result); return result;
+}
+
+function wrappedLongitudeRange(values: number[]): [number, number] {
+  const angles = values.map(lon => lon < 0 ? lon + 360 : lon).sort((a, b) => a - b);
+  let gap = 0, start = 0;
+  for (let i = 0; i < angles.length; i++) {
+    const next = angles[i + 1] ?? angles[0]! + 360;
+    if (next - angles[i]! > gap) { gap = next - angles[i]!; start = next % 360; }
+  }
+  // Keep the largest empty longitude interval outside the view. An east
+  // bound above 180 makes Plotly center the projection across the Pacific.
+  if (start > 180) start -= 360;
+  const halfSpan = (360 - gap) / 2;
+  const center = start + halfSpan, padded = Math.min(180, halfSpan + 10);
+  return [center - padded, center + padded];
+}
+
+export function officialMapBounds(routes: OfficialRoute[], scope: MapScope, ratio: number) {
+  const points = routes.flatMap(route => [route.origin, route.destination]).filter(hasGeometry);
+  const internationalArcs = scope === "international"
+    ? routes.filter(route => route.departures > 0 && routeHasGeometry(route)).map(officialArc) : [];
+  const wraps = internationalArcs.some(arc => arc.lon.some((lon, i) => i > 0 && Math.abs(lon - arc.lon[i - 1]!) > 180));
+  let lat: [number, number] = [13, 34], lon: [number, number] = [-119, -86];
+  if (scope !== "national") {
+    const latitudes = points.map(p => p.lat), longitudes = points.map(p => p.lon);
+    if (wraps) {
+      for (const arc of internationalArcs) { latitudes.push(...arc.lat); longitudes.push(...arc.lon); }
+    }
+    lat = points.length ? [Math.max(-80, Math.min(...latitudes) - 7), Math.min(85, Math.max(...latitudes) + 7)] : [-60, 80];
+    lon = wraps ? wrappedLongitudeRange(longitudes) : points.length
+      ? [Math.max(-180, Math.min(...longitudes) - 10), Math.min(180, Math.max(...longitudes) + 10)] : [-180, 180];
+  }
+  // Expand to the canvas aspect without clamping a wrapped Pacific range at 180.
+  const latSpan = lat[1] - lat[0], lonSpan = lon[1] - lon[0];
+  if (lonSpan / latSpan < ratio) {
+    const middle = (lon[0] + lon[1]) / 2, span = Math.min(360, latSpan * ratio);
+    lon = wraps ? [middle - span / 2, middle + span / 2]
+      : [Math.max(-180, middle - span / 2), Math.min(180, middle + span / 2)];
+  } else {
+    const middle = (lat[0] + lat[1]) / 2, span = Math.min(170, lonSpan / ratio);
+    lat = [Math.max(-85, middle - span / 2), Math.min(85, middle + span / 2)];
+  }
+  return { lat, lon };
 }
 
 /** Bounded traces: eight volume buckets, focus, markers and the local basemap. */
@@ -90,22 +132,8 @@ async function draw(request: number, onNode: (id: string) => void, onRoute: (id:
   traces.unshift({ type: "choropleth", geojson: world.geojson, featureidkey: "id", locations: world.geojson.features.map(f => f.id),
     z: world.geojson.features.map(() => 0), colorscale: [[0, "#e4edf8"], [1, "#e4edf8"]],
     marker: { line: { color: "#b9c8d9", width: .45 } }, showscale: false, hoverinfo: "skip" } as Data);
-  const points = officialState.routes.flatMap(route => [route.origin, route.destination]).filter(hasGeometry);
-  let lat: [number, number] = [13, 34], lon: [number, number] = [-119, -86];
-  if (officialState.scope !== "national") {
-    lat = points.length ? [Math.max(-80, Math.min(...points.map(p => p.lat)) - 7), Math.min(85, Math.max(...points.map(p => p.lat)) + 7)] : [-60, 80];
-    lon = points.length ? [Math.max(-180, Math.min(...points.map(p => p.lon)) - 10), Math.min(180, Math.max(...points.map(p => p.lon)) + 10)] : [-180, 180];
-  }
-  // Expand the view to the actual canvas aspect; avoid letterboxing and stale desktop widths on touch devices.
-  const width = element.clientWidth || 700, height = element.clientHeight || 420, ratio = width / height;
-  const latSpan = lat[1] - lat[0], lonSpan = lon[1] - lon[0];
-  if (lonSpan / latSpan < ratio) {
-    const middle = (lon[0] + lon[1]) / 2, span = Math.min(360, latSpan * ratio);
-    lon = [Math.max(-180, middle - span / 2), Math.min(180, middle + span / 2)];
-  } else {
-    const middle = (lat[0] + lat[1]) / 2, span = Math.min(170, lonSpan / ratio);
-    lat = [Math.max(-85, middle - span / 2), Math.min(85, middle + span / 2)];
-  }
+  const width = element.clientWidth || 700, height = element.clientHeight || 420;
+  const { lat, lon } = officialMapBounds(officialState.routes, officialState.scope, width / height);
   await Plotly.react(element, traces, { width, height, margin: { l: 0, r: 0, t: 0, b: 0 },
     paper_bgcolor: "rgba(0,0,0,0)", showlegend: false, dragmode: false,
     geo: { projection: { type: "equirectangular" }, bgcolor: "rgba(0,0,0,0)", showframe: true, framecolor: "#9fb2c8", showcoastlines: false,

@@ -74,7 +74,7 @@ it("passes the selected global quarter into News context along with other views"
   initPeriods(["2026Q2", "2026Q3"], "2026Q3");
   for (const tab of ["reading", "economy", "flights", "market", "news"]) {
     document.body.innerHTML = `<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-${tab}"></button></div><section id="panel-${tab}" role="tabpanel"></section>`;
-    const context = buildChatContext();
+    const context = buildChatContext(undefined, true);
     expect(context.tab).toBe(tab === "flights" ? "market" : tab);
     expect(context.period).toBe("2026Q3");
   }
@@ -101,7 +101,7 @@ it("attaches each flight graph with its own airlines and the global quarter", ()
   flightState.networkMode = "international"; flightState.selectedRegion = "europa"; flightState.passengerPeriod = "month";
   flightState.periodIndex = 0; flightState.mapPeriodId = "2015M01";
   officialState.scope = "us"; officialState.carriers = ["AEROMEXICO", "VOLARIS"];
-  const map = buildChatContext(document.getElementById("ask-map"));
+  const map = buildChatContext(document.getElementById("ask-map"), true);
   expect(map.card_id).toBe("route-flow-map"); expect(map.entity).toEqual(["AEROMEXICO", "VOLARIS"]);
   expect(map.period).toBe("2026Q3"); expect(map.filters?.map_carriers).toEqual(["AEROMEXICO", "VOLARIS"]);
   expect(map.filters?.map_scope).toBe("us"); expect(map.filters?.map_grain).toBe("airport_pair");
@@ -116,21 +116,21 @@ it("snapshots official map filters without attributing AFAC cities to the tracke
   document.body.innerHTML='<div class="reader-tabs"><button role="tab" aria-selected="true" aria-controls="panel-flights"></button></div><section id="panel-flights" role="tabpanel"><article class="panel flow-map-panel"><div class="chart" id="route-flow-map"></div></article><article class="panel chart-panel"><div class="chart" id="mix-chart"></div></article><article class="flight-kpi"><p id="flight-kpi-passengers">Pass</p></article></section>';
   officialState.scope="us"; officialState.carriers=["AEROMEXICO","VOLARIS","VIVA_AEROBUS"];
   const map=document.getElementById("route-flow-map")!;
-  const snapshot=structuredClone(buildChatContext(map));
+  const snapshot=structuredClone(buildChatContext(map, true));
   expect(snapshot.filters?.map_scope).toBe("us");
   expect(describeChatContext(snapshot)).toContain("EE. UU.");
   officialState.scope="international";
   for(const region of ["europe","south_america","asia"] as const) {
     officialState.region=region;
-    const context=buildChatContext(map);
+    const context=buildChatContext(map, true);
     expect(context.entity).toBeUndefined(); expect(context.filters?.map_carriers).toBeUndefined();
     expect(context.filters?.map_region).toBe(region); expect(describeChatContext(context)).toContain("Todas las aerolíneas");
   }
-  expect(buildChatContext(document.getElementById("mix-chart")).filters?.map_scope).toBeUndefined();
-  expect(buildChatContext(document.getElementById("flight-kpi-passengers")).filters?.map_scope).toBeUndefined();
+  expect(buildChatContext(document.getElementById("mix-chart"), true).filters?.map_scope).toBeUndefined();
+  expect(buildChatContext(document.getElementById("flight-kpi-passengers"), true).filters?.map_scope).toBeUndefined();
   document.querySelector('[role="tab"]')!.setAttribute("aria-controls","panel-market");
   document.querySelector('section')!.id="panel-market";
-  expect(buildChatContext(map).entity).toBeUndefined(); expect(buildChatContext(map).filters?.map_scope).toBe("international");
+  expect(buildChatContext(map, true).entity).toBeUndefined(); expect(buildChatContext(map, true).filters?.map_scope).toBe("international");
   officialState.scope="national"; officialState.region=null;
   expect(snapshot.filters?.map_scope).toBe("us");
 });
@@ -144,7 +144,7 @@ it("carries the same exact official dataset and visible month window for general
     officialState.scope = scope;
     officialState.network = doc.networks.find(n => n.scope === scope && (scope !== "us" || n.carrier_keys.length === 3))!;
     for (const attached of [false, true]) {
-      const snapshot = buildChatContext(attached ? document.getElementById("route-flow-map") : null);
+      const snapshot = buildChatContext(attached ? document.getElementById("route-flow-map") : null, true);
       expect(snapshot).toMatchObject({ tab:"market", period:"2026Q2", filters:{ map_scope:scope, map_dataset_version:doc.dataset_version, map_months:officialState.network.observed_months } });
       expect(snapshot.card_id).toBe(attached ? "route-flow-map" : undefined);
       if (scope !== "us") { expect(snapshot.entity).toBeUndefined(); expect(snapshot.filters?.map_carriers).toBeUndefined(); }

@@ -1,13 +1,13 @@
 {
-  "anchor_sha256": "ab239b5a2585ee8f5f488a9606955a59173b375b97be441ec565036efbb8a9fb",
+  "anchor_sha256": "e7c650920a6e5e6752b8b9426683b0af518dcfd8081cacf0177f435e1e9882b3",
   "remote_witness": {
-    "baseline_commit": "29c61a1cadc266733861e25e68791b71ce1c7669",
-    "deployment_commit": "80498b9c667dc2e1dd40aa9f2e9d0e9d4d150dec",
-    "deployment_run": 42140294085,
-    "files_verified": 832,
-    "manifest_sha256": "2c188d12c4001a372c4dbb801467633e800b3bcfcee5ab9cd98afaa1b2901ca4",
+    "baseline_commit": "59740b50e28c16415a5e046f92b40955a94ab2bd",
+    "deployment_commit": "94cc9c75812b00f9e3f60b50a6e707952cd62fa6",
+    "deployment_run": 42170567337,
+    "files_verified": 841,
+    "manifest_sha256": "2b88e884312f5f4397ce375109175900f1e73f16e75554660aaea4a94d33e6f9",
     "origin": "https://salvamalfa.github.io/aeromexico-tracker/",
-    "verified_at": "2026-11-06T05:01:24.077982+00:00"
+    "verified_at": "2026-11-06T15:39:38.618617+00:00"
   },
   "schema_version": "source_data_publication_v1"
 }
