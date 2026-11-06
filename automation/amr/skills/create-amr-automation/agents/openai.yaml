@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create AMR Automation"
+  short_description: "Register a fenced AMR queue job"
+  default_prompt: "Use $create-amr-automation to register or update one destination and month offset under the shared AMR named-range fence."

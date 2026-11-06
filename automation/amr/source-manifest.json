@@ -1,0 +1,109 @@
+[
+  {
+    "path": "automation/amr/skills/run-amr-batch/SKILL.md",
+    "original_source": "installed:skills/run-amr-batch/SKILL.md",
+    "original_sha256": "67c4e7a35cd4e87d662e6e932be6b4fe26dafb1604d06ec92b4e385b08429565",
+    "staged_sha256": "d9d9225c24a856960584b4d2cde3462119d059b866806ab49367d65e3b6b9892",
+    "bytes": 8579,
+    "status": "account_identifiers_redacted_with_reference_notice",
+    "staged_bytes": 8993
+  },
+  {
+    "path": "automation/amr/skills/run-amr-batch/agents/openai.yaml",
+    "original_source": "installed:skills/run-amr-batch/agents/openai.yaml",
+    "original_sha256": "76b921db16da42732b37c0e82e19894cb8ce30b5bd71e1d3f84332fe2b5ac35a",
+    "staged_sha256": "76b921db16da42732b37c0e82e19894cb8ce30b5bd71e1d3f84332fe2b5ac35a",
+    "bytes": 231,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-batch/references/sheets-protocol.md",
+    "original_source": "installed:skills/run-amr-batch/references/sheets-protocol.md",
+    "original_sha256": "d796b64a18897d10498506470ae77663436d8f7bc0c5eb2358b8cc8c10169e9d",
+    "staged_sha256": "26e162fc2c75efb69e46e666d9ef5008c5fea1fa08bb2dec47afb79c53cd013f",
+    "bytes": 8562,
+    "status": "account_identifiers_redacted_with_reference_notice",
+    "staged_bytes": 8976
+  },
+  {
+    "path": "automation/amr/skills/run-amr-batch/references/state-machine.md",
+    "original_source": "installed:skills/run-amr-batch/references/state-machine.md",
+    "original_sha256": "c97c03805c5e604d98de2abba29b70a60f755b9f6a4375d0d005dbe32d35ebb9",
+    "staged_sha256": "c97c03805c5e604d98de2abba29b70a60f755b9f6a4375d0d005dbe32d35ebb9",
+    "bytes": 12299,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-batch/scripts/amr_dates.py",
+    "original_source": "installed:skills/run-amr-batch/scripts/amr_dates.py",
+    "original_sha256": "377aeca57e3c75158411df5199b90155e63a20976db26746a49891a5d35e7ae9",
+    "staged_sha256": "377aeca57e3c75158411df5199b90155e63a20976db26746a49891a5d35e7ae9",
+    "bytes": 3091,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-batch/scripts/queue_decision.py",
+    "original_source": "installed:skills/run-amr-batch/scripts/queue_decision.py",
+    "original_sha256": "f73cdbf8061485bf99ced126e60a46be7523b5eb59d2c1cd80c4abd8adba5ee5",
+    "staged_sha256": "f73cdbf8061485bf99ced126e60a46be7523b5eb59d2c1cd80c4abd8adba5ee5",
+    "bytes": 11569,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-batch/scripts/validate_worker_result.py",
+    "original_source": "installed:skills/run-amr-batch/scripts/validate_worker_result.py",
+    "original_sha256": "e069108f84c0e701ed44c2b6cf0e533d18d3a0d11a3750e113a94041b7e74605",
+    "staged_sha256": "e069108f84c0e701ed44c2b6cf0e533d18d3a0d11a3750e113a94041b7e74605",
+    "bytes": 14596,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-worker/SKILL.md",
+    "original_source": "installed:skills/run-amr-worker/SKILL.md",
+    "original_sha256": "a6a4442a25d458e45430bef5edd457f3d26fc7c00d03b594e2ae098e1e7b031e",
+    "staged_sha256": "a6a4442a25d458e45430bef5edd457f3d26fc7c00d03b594e2ae098e1e7b031e",
+    "bytes": 8045,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-worker/agents/openai.yaml",
+    "original_source": "installed:skills/run-amr-worker/agents/openai.yaml",
+    "original_sha256": "e661472ec16d29875d16871d5e2f4ec756fa17f9dc0e735a9e3c97a04891f816",
+    "staged_sha256": "e661472ec16d29875d16871d5e2f4ec756fa17f9dc0e735a9e3c97a04891f816",
+    "bytes": 276,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-worker/references/worker-assignment.schema.json",
+    "original_source": "installed:skills/run-amr-worker/references/worker-assignment.schema.json",
+    "original_sha256": "946704a1f4a3d0a79d8b36fce6b70066d9bfc4e4296f9b2886528af2d622555b",
+    "staged_sha256": "946704a1f4a3d0a79d8b36fce6b70066d9bfc4e4296f9b2886528af2d622555b",
+    "bytes": 2364,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/run-amr-worker/references/worker-result.schema.json",
+    "original_source": "installed:skills/run-amr-worker/references/worker-result.schema.json",
+    "original_sha256": "10c7c592408276b1ba7e5019182ddc732c937dd34ef772294990075d1e6ed28c",
+    "staged_sha256": "10c7c592408276b1ba7e5019182ddc732c937dd34ef772294990075d1e6ed28c",
+    "bytes": 5938,
+    "status": "byte_identical"
+  },
+  {
+    "path": "automation/amr/skills/create-amr-automation/SKILL.md",
+    "original_source": "installed:skills/create-amr-automation/SKILL.md",
+    "original_sha256": "51bfa6a7aa94a721eca968bf3e0e9619bab72d772cb5024f1505c3ffc1ddb974",
+    "staged_sha256": "9e6483dfe7075afe6b929c0ce6006590546c8cbbb4a8a9500498dd92df6167fa",
+    "bytes": 4052,
+    "status": "account_identifiers_redacted_with_reference_notice",
+    "staged_bytes": 4455
+  },
+  {
+    "path": "automation/amr/skills/create-amr-automation/agents/openai.yaml",
+    "original_source": "installed:skills/create-amr-automation/agents/openai.yaml",
+    "original_sha256": "93f32961397bee83d1fbd230d2c59c28fd0c73745ef4ff2f8eb7c45275c7f742",
+    "staged_sha256": "93f32961397bee83d1fbd230d2c59c28fd0c73745ef4ff2f8eb7c45275c7f742",
+    "bytes": 252,
+    "status": "byte_identical"
+  }
+]

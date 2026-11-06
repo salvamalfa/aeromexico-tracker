@@ -1,0 +1,28 @@
+# Private local references and data; source/contract examples stay versioned.
+/config/local.json
+/config/*.local.json
+/data/exports/
+/data/private/
+/data/quotes.json
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.url
+/legacy/
+/runtime/
+/dashboard/
+automation.toml
+.env*
+__pycache__/
+*.py[cod]
+
+# Legacy dashboard and generated dependencies never enter the AMR source tree.
+node_modules/
+.build/
+.next/
+.cache/
+.pytest_cache/
+dist/
+*.log
+Radar de Tarifas.html

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run AMR Worker"
+  short_description: "Collect and clean up one AMR fare search"
+  default_prompt: "Use $run-amr-worker for exactly one validated Aeromexico assignment and return only the strict JSON result defined by worker-result.schema.json."
