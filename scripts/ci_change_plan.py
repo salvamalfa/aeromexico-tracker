@@ -1,8 +1,8 @@
-"""Describe a conservative committed-tree CI selection without enabling it.
+"""Plan conservative committed-tree CI selection, with an explicit PR opt-in.
 
-The report is diagnostic, never an execution receipt or a source of job
-conditions. Every recommendation retains the full execution policy while the
-selector is in shadow mode. Missing or uncertain Git input recommends full CI.
+The report is never an execution receipt. By default, recommendations retain
+the full execution policy in shadow mode. Opt-in selection permits only a
+bounded allowlist on pull requests. Missing or uncertain input retains full CI.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from pathlib import Path
 FULL_GROUPS = (
     "lifecycle",
     "lint",
+    "ci_controls",
     "pages_preflight",
     "docker_preflight",
     "public_tests",
@@ -26,9 +27,13 @@ FULL_GROUPS = (
     "web",
     "browser",
 )
+DOCS_GROUPS = ("lifecycle", "lint", "ci_controls", "pages_preflight")
+WEB_GROUPS = (*DOCS_GROUPS, "web", "browser")
 SHA = re.compile(r"[a-f0-9]{40}\Z")
 ROOT_DOCS = {"README.md", "REPO_MAP.md", "ROADMAP.md", "CHANGELOG.md"}
 WEB_SUFFIXES = {".ts", ".tsx", ".css", ".html"}
+ACTIVE_WEB_SUFFIXES = {".ts", ".tsx", ".css"}
+TEST_DIRECTORIES = {"test", "tests", "spec", "specs", "__tests__", "__specs__"}
 
 
 class PlanInputError(ValueError):
@@ -104,11 +109,10 @@ def _category(name: str) -> str:
     path = Path(name)
     if (
         name.startswith(("tests/", "scripts/", "src/", "contracts/", "config/", "data/", "site/", ".github/"))
-        or "tests" in path.parts
-        or "__tests__" in path.parts
+        or TEST_DIRECTORIES.intersection(path.parts)
         or path.name == "conftest.py"
-        or path.name.startswith(("test_", "spec_", "Dockerfile"))
-        or re.search(r"\.(test|spec)\.[^/]+$", path.name)
+        or path.name.startswith("Dockerfile")
+        or re.search(r"(?:^|[._-])(?:test|spec)(?:[._-]|$)", path.name)
         or name in {"pyproject.toml", "uv.lock", ".dockerignore", "AGENTS.md"}
     ):
         return "shared"
@@ -119,11 +123,51 @@ def _category(name: str) -> str:
     return "unknown"
 
 
-def build_plan(repo: Path, base: str, head: str) -> dict:
+def _active_path(name: str, category: str) -> bool:
+    # Markdown under docs/ can be a machine-read prompt, evidence or Gold
+    # input. The initial rollout allows only these canonical root documents.
+    if category == "docs":
+        return name in ROOT_DOCS
+    if category == "web":
+        return name == "web/index.html" or (
+            name.startswith("web/src/")
+            and not name.startswith("web/src/types/generated/")
+            and Path(name).suffix in ACTIVE_WEB_SUFFIXES
+        )
+    return False
+
+
+def _require_regular_files(repo: Path, commit: str, names: set[str]) -> None:
+    """Verify committed modes without following checkout symlinks or pathspecs."""
+    if not names:
+        return
+    wanted = {name.encode("utf-8") for name in names}
+    # --full-tree avoids subdirectory-relative queries. Reading literal tree
+    # entries also avoids interpreting a filename as a Git pathspec.
+    raw = _git(repo, "ls-tree", "--full-tree", "-r", "-z", commit).stdout
+    if not raw.endswith(b"\0"):
+        raise PlanInputError("malformed_tree_modes")
+    seen = set()
+    for entry in raw.split(b"\0")[:-1]:
+        metadata, separator, name = entry.partition(b"\t")
+        if not separator:
+            raise PlanInputError("malformed_tree_modes")
+        if name in wanted:
+            fields = metadata.split(b" ")
+            if len(fields) != 3 or fields[:2] != [b"100644", b"blob"]:
+                raise PlanInputError("non_regular_file_mode")
+            seen.add(name)
+    if seen != wanted:
+        raise PlanInputError("changed_path_missing_from_tree")
+
+
+def build_plan(
+    repo: Path, base: str, head: str, *, event: str = "", enable_selection: bool = False
+) -> dict:
     """Return a deterministic report; an input failure never narrows CI."""
     plan = {
         "schema_version": "ci_change_plan_v1",
-        "shadow_only": True,
+        "shadow_only": not enable_selection,
         "plan_is_execution_receipt": False,
         "base_sha": base if SHA.fullmatch(base) else None,
         "head_sha": head if SHA.fullmatch(head) else None,
@@ -178,6 +222,10 @@ def build_plan(repo: Path, base: str, head: str) -> dict:
         elif any(change["status"] not in {"A", "M"} for change in changes):
             plan["reason"] = "rename_delete_copy_or_type_change"
         else:
+            _require_regular_files(repo, head, set(plan["changed_paths"]))
+            _require_regular_files(
+                repo, base, {change["paths"][0] for change in changes if change["status"] == "M"}
+            )
             categories = {_category(name) for name in plan["changed_paths"]}
             if categories == {"docs"}:
                 plan.update(
@@ -193,6 +241,20 @@ def build_plan(repo: Path, base: str, head: str) -> dict:
                 )
             else:
                 plan["reason"] = "shared_unknown_or_mixed_paths"
+            if enable_selection:
+                if event != "pull_request":
+                    plan["reason"] = "event_requires_full_execution"
+                elif categories in ({"docs"}, {"web"}):
+                    category = next(iter(categories))
+                    if all(_active_path(name, category) for name in plan["changed_paths"]):
+                        groups = DOCS_GROUPS if category == "docs" else WEB_GROUPS
+                        plan.update(
+                            actual_execution=f"{category}_only",
+                            actual_groups=list(groups),
+                            reason=f"{category}_only_selection_enabled",
+                        )
+                    else:
+                        plan["reason"] = "outside_active_allowlist"
     except PlanInputError as exc:
         plan["reason"] = str(exc)
     except FileNotFoundError:
@@ -210,15 +272,31 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base", default="")
     parser.add_argument("--head", default="")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--event", default="")
+    parser.add_argument("--enable-selection", action="store_true")
+    parser.add_argument("--github-output", type=Path)
     arguments = parser.parse_args(argv)
-    report = json.dumps(build_plan(arguments.repo, arguments.base, arguments.head), indent=2, sort_keys=True)
+    plan = build_plan(
+        arguments.repo, arguments.base, arguments.head,
+        event=arguments.event, enable_selection=arguments.enable_selection,
+    )
+    report = json.dumps(plan, indent=2, sort_keys=True)
     try:
         if arguments.output is not None:
             arguments.output.parent.mkdir(parents=True, exist_ok=True)
             arguments.output.write_text(report + "\n", encoding="utf-8")
+        if arguments.github_output is not None:
+            # Only these fixed literals may enter GitHub's output protocol.
+            output = {
+                "full": "execution=full\n",
+                "docs_only": "execution=docs_only\n",
+                "web_only": "execution=web_only\n",
+            }[plan["actual_execution"]]
+            with arguments.github_output.open("a", encoding="utf-8") as stream:
+                stream.write(output)
         print(report)
     except OSError as exc:
-        print(f"cannot write CI shadow plan: {exc}", file=sys.stderr)
+        print(f"cannot write CI shadow plan or execution output: {exc}", file=sys.stderr)
         return 1
     return 0
 

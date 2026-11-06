@@ -1,4 +1,4 @@
-"""Real Git histories exercise the informational selector's fail-closed policy."""
+"""Real Git histories exercise shadow and opt-in selection's fail-closed policy."""
 
 import json
 import subprocess
@@ -35,8 +35,8 @@ def repository(tmp_path):
     return repo, commit(repo, "initial")
 
 
-def assert_full_execution(plan):
-    assert plan["shadow_only"] is True
+def assert_full_execution(plan, *, shadow_only=True):
+    assert plan["shadow_only"] is shadow_only
     assert plan["plan_is_execution_receipt"] is False
     assert plan["actual_execution"] == "full"
     assert plan["actual_groups"] == list(planner.FULL_GROUPS)
@@ -69,33 +69,24 @@ def test_narrow_recommendation_never_changes_actual_execution(repository, name, 
 @pytest.mark.parametrize(
     "name",
     [
-        "src/shared.py",
-        "scripts/check.py",
-        "tests/test_example.py",
-        "conftest.py",
-        "web/src/main.test.ts",
-        "web/src/__tests__/main.ts",
-        "web/tests/smoke.ts",
-        "contracts/web/schema.json",
-        "config/runtime.json",
-        "data/gold/facts.parquet",
-        "site/index.html",
-        "pyproject.toml",
-        "uv.lock",
-        "web/package-lock.json",
-        ".github/workflows/ci.yml",
-        "Dockerfile.chat",
-        ".dockerignore",
-        "AGENTS.md",
-        "docs/referencias/source.json",
-        "unrecognized.file",
-    ],
+        "src/shared.py", "scripts/check.py", "tests/test_example.py", "conftest.py",
+        "web/tests/smoke.ts", "web/tests/main.ts", "contracts/web/schema.json", "config/runtime.json",
+        "data/gold/facts.parquet", "site/index.html", "pyproject.toml", "uv.lock",
+        "web/package.json", "web/package-lock.json", "web/vite.config.ts", ".github/workflows/ci.yml",
+        "Dockerfile.chat", ".dockerignore", "AGENTS.md", "docs/referencias/source.json", "unrecognized.file",
+        "web/src/types/generated.json", "web/src/main.js",
+    ] + [f"web/src/{directory}/main.ts" for directory in ("test", "tests", "spec", "specs", "__tests__", "__specs__")]
+    + [f"web/src/{name}" for name in (
+        "main.test.ts", "main-test.ts", "main_test.ts", "main.spec.ts", "main-spec.ts", "main_spec.ts",
+        "test.ts", "spec.ts", "test_component.tsx", "component_spec.css",
+    )],
 )
-def test_shared_test_dependency_and_unknown_paths_recommend_full(repository, name):
+@pytest.mark.parametrize("enable_selection", [False, True])
+def test_shared_test_dependency_and_unknown_paths_recommend_full(repository, name, enable_selection):
     repo, base = repository
     write(repo, name)
-    plan = planner.build_plan(repo, base, commit(repo))
-    assert_full_execution(plan)
+    plan = planner.build_plan(repo, base, commit(repo), event="pull_request", enable_selection=enable_selection)
+    assert_full_execution(plan, shadow_only=not enable_selection)
     assert plan["recommended_execution"] == "full"
     assert plan["recommended_groups"] == list(planner.FULL_GROUPS)
     assert plan["reason"] == "shared_unknown_or_mixed_paths"
@@ -293,13 +284,289 @@ def test_cli_writes_json_even_with_missing_refs(repository, tmp_path):
     assert_full_execution(plan)
 
 
-def test_cli_output_failure_is_not_silently_successful(repository, tmp_path, capsys):
+def active_plan(repo, base, head, *, event="pull_request"):
+    return planner.build_plan(repo, base, head, event=event, enable_selection=True)
+
+
+@pytest.mark.parametrize(
+    "name,scope,groups",
+    [
+        ("README.md", "docs_only", planner.DOCS_GROUPS),
+        ("REPO_MAP.md", "docs_only", planner.DOCS_GROUPS),
+        ("ROADMAP.md", "docs_only", planner.DOCS_GROUPS),
+        ("CHANGELOG.md", "docs_only", planner.DOCS_GROUPS),
+        ("web/index.html", "web_only", planner.WEB_GROUPS),
+        ("web/src/main.ts", "web_only", planner.WEB_GROUPS),
+        ("web/src/component.tsx", "web_only", planner.WEB_GROUPS),
+        ("web/src/style.css", "web_only", planner.WEB_GROUPS),
+    ],
+)
+def test_opt_in_pr_activates_only_bounded_profiles(repository, name, scope, groups):
+    repo, base = repository
+    write(repo, name)
+    head = commit(repo)
+    plan = active_plan(repo, base, head)
+    assert plan["shadow_only"] is False
+    assert plan["plan_is_execution_receipt"] is False
+    assert plan["actual_execution"] == scope
+    assert plan["actual_groups"] == list(groups)
+    assert set(planner.DOCS_GROUPS) <= set(groups)
+    assert plan["history_verified"] is True
+    assert plan == active_plan(repo, base, head)
+
+
+@pytest.mark.parametrize("event", ["", "push", "workflow_call", "workflow_dispatch", "pull_request_target", "unknown"])
+@pytest.mark.parametrize("name", ["README.md", "web/src/main.ts"])
+def test_every_event_except_explicit_pull_request_keeps_full(repository, event, name):
+    repo, base = repository
+    write(repo, name)
+    plan = active_plan(repo, base, commit(repo), event=event)
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "event_requires_full_execution"
+
+
+def test_event_without_opt_in_stays_shadow(repository):
+    repo, base = repository
+    write(repo, "README.md")
+    plan = planner.build_plan(repo, base, commit(repo), event="pull_request")
+    assert_full_execution(plan)
+    assert plan["recommended_execution"] == "docs_only"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "docs/guide.md",
+        "docs/glosario-kpis.md",
+        "docs/chat/revision-fase-2/F2.1-prompt-aprobado.md",
+        "docs/analysis-agent/narrativa-trimestral.md",
+        "web/src/types/generated/flights.ts",
+        "web/src/templates/index.html",
+    ],
+)
+def test_historical_shadow_recommendations_cannot_expand_active_allowlist(repository, name):
+    repo, base = repository
+    write(repo, name)
+    head = commit(repo)
+    assert planner.build_plan(repo, base, head)["recommended_execution"] != "full"
+    plan = active_plan(repo, base, head)
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "outside_active_allowlist"
+
+
+@pytest.mark.parametrize(
+    "names",
+    [
+        ("README.md", "web/src/main.ts"),
+        ("README.md", "src/runtime.py"),
+        ("README.md", "docs/glosario-kpis.md"),
+        ("web/src/main.ts", "web/src/types/generated/flights.ts"),
+        ("web/src/main.ts", "web/package-lock.json"),
+    ],
+)
+def test_opt_in_mixed_changes_always_keep_full(repository, names):
+    repo, base = repository
+    for name in names:
+        write(repo, name)
+    assert_full_execution(active_plan(repo, base, commit(repo)), shadow_only=False)
+
+
+def test_multiple_files_in_one_safe_category_can_be_selected(repository):
+    repo, base = repository
+    write(repo, "README.md")
+    write(repo, "CHANGELOG.md")
+    plan = active_plan(repo, base, commit(repo))
+    assert plan["actual_execution"] == "docs_only"
+    assert plan["changed_paths"] == ["CHANGELOG.md", "README.md"]
+
+
+@pytest.mark.parametrize("action", ["delete", "rename", "symlink_type_change"])
+def test_opt_in_delete_rename_and_type_changes_keep_full(repository, action):
+    repo, base = repository
+    if action == "delete":
+        (repo / "README.md").unlink()
+    elif action == "rename":
+        git(repo, "mv", "README.md", "ROADMAP.md")
+    else:
+        (repo / "README.md").unlink()
+        (repo / "README.md").symlink_to("ROADMAP.md")
+    plan = active_plan(repo, base, commit(repo))
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "rename_delete_copy_or_type_change"
+
+
+@pytest.mark.parametrize("name", ["README.md", "ROADMAP.md", "web/src/main.ts"])
+def test_executable_added_modified_or_mode_only_files_keep_full(repository, name):
+    repo, base = repository
+    if name != "README.md":
+        write(repo, name)
+    (repo / name).chmod(0o755)
+    head = commit(repo)
+    for enabled in (False, True):
+        plan = planner.build_plan(repo, base, head, event="pull_request", enable_selection=enabled)
+        assert_full_execution(plan, shadow_only=not enabled)
+        assert plan["reason"] == "non_regular_file_mode"
+        assert plan["recommended_execution"] == "full"
+
+
+def test_executable_base_cannot_be_disguised_as_regular_modified_doc(repository):
+    repo, _ = repository
+    (repo / "README.md").chmod(0o755)
+    base = commit(repo)
+    (repo / "README.md").chmod(0o644)
+    write(repo, "README.md", "ordinary replacement\n")
+    plan = active_plan(repo, base, commit(repo))
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "non_regular_file_mode"
+
+
+@pytest.mark.parametrize("name", ["ROADMAP.md", "web/src/main.ts"])
+def test_added_symlink_cannot_be_selected_by_its_suffix(repository, name):
+    repo, base = repository
+    target = repo / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.symlink_to("README.md")
+    plan = active_plan(repo, base, commit(repo))
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "non_regular_file_mode"
+
+
+def test_modified_symlink_is_not_treated_as_documentation_text(repository):
+    repo, _ = repository
+    (repo / "ROADMAP.md").symlink_to("README.md")
+    base = commit(repo)
+    (repo / "ROADMAP.md").unlink()
+    (repo / "ROADMAP.md").symlink_to("CHANGELOG.md")
+    plan = active_plan(repo, base, commit(repo))
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["changes"] == [{"status": "M", "paths": ["ROADMAP.md"]}]
+    assert plan["reason"] == "non_regular_file_mode"
+
+
+def test_added_gitlink_cannot_be_selected_by_documentation_name(repository):
+    repo, base = repository
+    git(repo, "update-index", "--add", "--cacheinfo", f"160000,{base},ROADMAP.md")
+    git(repo, "-c", "user.name=CI Fixture", "-c", "user.email=ci@example.invalid", "commit", "-qm", "gitlink")
+    plan = active_plan(repo, base, git(repo, "rev-parse", "HEAD"))
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "non_regular_file_mode"
+
+
+@pytest.mark.parametrize("fault", ["invalid_ref", "missing_commit", "wrong_checkout", "shallow", "empty"])
+def test_opt_in_retains_history_and_checkout_fallbacks(repository, fault):
+    repo, base = repository
+    write(repo, "README.md")
+    head = commit(repo)
+    if fault == "invalid_ref":
+        base = "master"
+    elif fault == "missing_commit":
+        base = "0" * 40
+    elif fault == "wrong_checkout":
+        head = base
+    elif fault == "shallow":
+        (repo / ".git" / "shallow").write_text(base + "\n")
+    else:
+        base = head
+    assert_full_execution(active_plan(repo, base, head), shadow_only=False)
+
+
+def test_opt_in_non_ancestor_still_keeps_full(repository):
+    repo, common = repository
+    write(repo, "README.md")
+    base = commit(repo)
+    git(repo, "switch", "-qc", "sibling", common)
+    write(repo, "CHANGELOG.md")
+    assert_full_execution(active_plan(repo, base, commit(repo)), shadow_only=False)
+
+
+def test_git_tree_mode_failure_keeps_active_execution_full(repository, monkeypatch):
+    repo, base = repository
+    write(repo, "README.md")
+    head = commit(repo)
+    actual_git = planner._git
+
+    def fail_modes(repo, *args, **kwargs):
+        if args[0] == "ls-tree":
+            raise subprocess.CalledProcessError(1, "git ls-tree")
+        return actual_git(repo, *args, **kwargs)
+
+    monkeypatch.setattr(planner, "_git", fail_modes)
+    plan = active_plan(repo, base, head)
+    assert_full_execution(plan, shadow_only=False)
+    assert plan["reason"] == "git_history_unavailable"
+
+
+@pytest.mark.parametrize("profile,name", [("docs_only", "README.md"), ("web_only", "web/src/main.ts"), ("full", "src/x.py")])
+def test_cli_explicit_output_contains_only_fixed_execution_literal(repository, tmp_path, profile, name):
+    repo, base = repository
+    write(repo, name)
+    head = commit(repo)
+    output = tmp_path / "github-output"
+    output.write_text("existing=value\n")
+    report = tmp_path / "plan.json"
+    assert planner.main([
+        "--repo", str(repo), "--base", base, "--head", head, "--event", "pull_request",
+        "--enable-selection", "--output", str(report), "--github-output", str(output),
+    ]) == 0
+    assert output.read_text() == f"existing=value\nexecution={profile}\n"
+    assert json.loads(report.read_text())["actual_execution"] == profile
+
+
+def test_cli_does_not_implicitly_use_ambient_github_output(repository, tmp_path, monkeypatch):
     repo, head = repository
+    output = tmp_path / "github-output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    assert planner.main(["--repo", str(repo), "--base", head, "--head", head]) == 0
+    assert not output.exists()
+
+
+def test_cli_untrusted_event_cannot_inject_github_output(repository, tmp_path):
+    repo, base = repository
+    write(repo, "README.md")
+    head = commit(repo)
+    output = tmp_path / "github-output"
+    assert planner.main([
+        "--repo", str(repo), "--base", base, "--head", head,
+        "--event", "pull_request\nexecution=docs_only", "--enable-selection", "--github-output", str(output),
+    ]) == 0
+    assert output.read_text() == "execution=full\n"
+
+
+@pytest.mark.parametrize("enable_selection", [False, True])
+def test_cli_report_failure_cannot_emit_a_selected_profile(repository, tmp_path, capsys, enable_selection):
+    repo, base = repository
+    write(repo, "README.md")
+    head = commit(repo)
     blocked = tmp_path / "regular-file"
     blocked.write_text("preserve me")
-    result = planner.main(
-        ["--repo", str(repo), "--base", head, "--head", head, "--output", str(blocked / "plan.json")]
-    )
+    output = tmp_path / "github-output"
+    arguments = [
+        "--repo", str(repo), "--base", base, "--head", head, "--event", "pull_request",
+        "--output", str(blocked / "plan.json"), "--github-output", str(output),
+    ]
+    result = planner.main(arguments + (["--enable-selection"] if enable_selection else []))
     assert result == 1
     assert "cannot write CI shadow plan" in capsys.readouterr().err
+    assert not output.exists()
     assert blocked.read_text() == "preserve me"
+
+
+def test_cli_github_output_failure_is_nonzero(repository, tmp_path, capsys):
+    repo, base = repository
+    write(repo, "README.md")
+    head = commit(repo)
+    blocked = tmp_path / "output-directory"
+    blocked.mkdir()
+    result = planner.main([
+        "--repo", str(repo), "--base", base, "--head", head, "--event", "pull_request",
+        "--enable-selection", "--github-output", str(blocked),
+    ])
+    assert result == 1
+    assert "cannot write CI shadow plan" in capsys.readouterr().err
+
+
+def test_opt_in_subdirectory_queries_still_see_every_changed_path(repository):
+    repo, base = repository
+    write(repo, "web/src/main.ts")
+    head = commit(repo)
+    assert active_plan(repo / "web", base, head)["actual_execution"] == "web_only"

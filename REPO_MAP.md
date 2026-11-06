@@ -115,8 +115,15 @@ autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
 ### Eficiencia de pruebas y CI
 
 CI conserva los checks obligatorios `test` y `web`. Son agregadores que exigen
-éxito de cada componente; una dependencia ausente, omitida, cancelada o fallida
-los cierra. Antes de las suites completas se ejecutan en jobs separados:
+éxito de cada componente seleccionado. Cada agregador vuelve a calcular el
+perfil desde la base del evento y el checkout exacto. Rechaza salidas del
+selector que no coincidan, dependencias ausentes y fallos o cancelaciones.
+Solo permite el estado `skipped` para una omisión prevista por ese mismo perfil.
+Las protecciones, los pins y los permisos no cambian. Tras `static`, las suites
+pueden ejecutarse en paralelo con Pages, Docker y el smoke del chat. Los
+agregadores siguen esperando todos sus controles: se reduce la espera en un
+head válido, a cambio de consumir pruebas si otro componente falla.
+Los componentes son:
 
 - `pages-preflight`: entorno aislado con el mismo lock, extra `analytics`, ausencia
   del grupo `dev` y comando de verificación que Pages. Una dependencia instalada
@@ -126,23 +133,74 @@ los cierra. Antes de las suites completas se ejecutan en jobs separados:
   `environment_only`, sin aprobar el runtime ni volver a aprobar el sitio antiguo.
   Exige base exacta en `origin/master`, ascendencia y bytes/inventario conservados;
   Git incierto conserva la verificación fuerte actual. La suite pública mantiene
-  su perfil histórico existente. Cuando cambia la publicación, se ejecuta el
+  su perfil histórico existente en el perfil completo. En un PR de interfaz
+  pura, la comprobación previa también ejecuta una verificación fuerte del
+  sitio conservado con su productor publicado: checkout temporal del
+  `code_commit`, mismo lock y configuración vigente, todos los bytes de `site/`
+  conservados, sin aprobar el runtime nuevo. Si una entrada cambia o el
+  verificador falla, el check falla sin fallback. Cuando cambia la publicación, se ejecuta el
   verificador fuerte actual, sin fallback ante un fallo.
 - `docker-preflight`: build del `Dockerfile.chat` real y smoke de su imagen por
   ID, sin red ni carpetas del checkout montadas. Carga el snapshot empaquetado
   y el worker mock; conserva la exclusión de fixtures y credenciales del proveedor.
-- `static`: lifecycle, Ruff y formato; `chat-runtime`: instalación y smoke del
-  perfil mínimo aislado. Los pins aprobados siguen siendo los existentes.
-- `change-plan`: recomendación conservadora **en sombra**. Ninguna recomendación
-  modifica los jobs ni los argumentos de pytest: la ejecución sigue completa.
-  Cambios compartidos, pruebas, contratos, datos, dependencias o rutas desconocidas
-  recomiendan el perfil completo; Git incompleto o un corte no confiable también.
+- `static`: lifecycle, Ruff, formato, límites de tamaño y las pruebas de los
+  controles del CI. Se ejecuta en todos los perfiles. `chat-runtime` conserva
+  su instalación y smoke aislados para el perfil completo.
+- `change-plan`: selección habilitada solo para `pull_request`. Documentación
+  pura significa únicamente `README.md`, `REPO_MAP.md`, `ROADMAP.md` y
+  `CHANGELOG.md`. Interfaz pura significa `web/index.html` o fuentes
+  `.ts`, `.tsx` y `.css` bajo `web/src/`, fuera de pruebas y tipos generados.
+  Todos deben ser archivos regulares añadidos o modificados. Documentación bajo
+  `docs/` puede ser entrada ejecutable y conserva el perfil completo.
 
-`public-tests` conserva el perfil público completo, dos procesos, agrupación por
-archivo y cero reinicios automáticos. `web-checks` conserva tipos, unitarias,
-build y navegador. Sus agregadores mantienen los nombres `test` y `web`.
+Documentación pura ejecuta `change-plan`, `pages-preflight` y `static`.
+Interfaz pura añade `web-checks` completo: tipos, unitarias, build y navegador.
+Cambios mixtos, pruebas, código Python, contratos, datos, `site/`, dependencias,
+workflows, rutas desconocidas, retiros, renombres o historia incierta ejecutan
+el perfil completo. Pushes a `master` y llamadas desde Pages también conservan
+el perfil completo. La función del selector sin opt-in sigue en sombra.
+
+`public-tests` distribuye **todos** los módulos entre tres jobs: `publication`
+contiene las dos pruebas costosas de paridad financiera/editorial; `core-a` y
+`core-b` reparten los demás por SHA-256 de su ruta. El inventario es disjunto y
+completo, incluidos módulos nuevos. Cada job conserva los marcadores públicos,
+dos procesos, agrupación por archivo y cero reinicios automáticos. El resultado
+agregado exige éxito de las tres particiones; `fail-fast: false` permite recoger
+todos los fallos sin cancelar particiones. Los agregadores mantienen `test` y `web`.
+Chromium instala solo el shell usado por las pruebas sin ventana. Antes de
+instalar paquetes de Ubuntu, una comprobación obligatoria abre el navegador fijado y
+comprueba texto en español. También prueba la ruta de navegador local si existe.
+Si el arranque falla, instala las dependencias de sistema de Playwright y vuelve
+a probar; un nuevo fallo cierra el check. La suite de navegador sigue completa.
+Esto aprovecha las bibliotecas ya presentes en los runners y evita instalar
+fuentes adicionales para otros idiomas cuando no son necesarias. No acredita
+reproducibilidad de capturas visuales ni reemplaza un perfil de fuentes fijado.
+Ver la [opción oficial del shell](https://playwright.dev/python/docs/browsers#chromium-headless-shell).
+
+Las pruebas de paridad reutilizan su proyección ya comprobada y evitan repetir
+el mismo verificador en fixture y cuerpo. Conservan las aserciones y el replay
+privado; ninguna caché general oculta cambios entre pruebas.
 Los JUnit y recibos de preflight se conservan siete días, con sufijo
 `-<intento>` para distinguir intentos del mismo SHA.
+
+La [auditoría del 6/nov](docs/referencias/ci-efficiency-20261106.json) conserva
+cuatro ejecuciones exitosas anteriores con sus commits y artefactos. En
+`42146347355`, el workflow tardó **39 min 38 s**; Pages ocupó **7 min 3 s**
+y la suite pública **31 min 23 s** después de esa espera. Las dos pruebas de
+paridad acumularon 1.656,4 s de JUnit; esa suma incluye fixtures y no equivale a
+ahorro de reloj. El PR de documentación `42148115816` tardó **35 min 26 s**
+aunque el selector en sombra recomendaba documentación pura. Estas observaciones
+identifican los cuellos de botella; no son una comparación controlada con la
+implementación nueva. La primera ejecución completa del
+[PR 203](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42165073872),
+head `ca6c04be`, pasó en **14 min 16 s**: 25 min 22 s menos (64,0 % observado)
+frente a master. Conservó 7.100 casos aprobados, once omisiones y 29 subpruebas;
+las pruebas nuevas corresponden a los controles del CI. Chromium ocupó 614 s,
+frente a 20 s en la base: el mirror de Ubuntu tardó 9 min 53 s en descargar
+15,5 MB de fuentes. El ajuste posterior de preparación del navegador se valida
+en otra ejecución del PR; sus tiempos y head final se registran allí.
+No se promete una duración fija: colas, cachés y concurrencia
+pueden cambiar.
 
 Para recuperar un fallo sin cambios de código, comprobar primero el SHA de la
 ejecución y utilizar el [reintento nativo de GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs?tool=cli):
@@ -155,7 +213,7 @@ gh run rerun --job JOB_ID
 ```
 
 El reintento conserva el SHA/ref originales; un commit nuevo del PR requiere su
-propia validación completa. No se importan artefactos para poner un check en
+propia validación según su impacto. No se importan artefactos para poner un check en
 verde. Pages puede reutilizar checks del segundo padre sólo si el árbol completo
 del merge coincide exactamente; esa condición se verifica antes del deploy y
 se detalla abajo. Una edición del cuerpo del PR mantiene su evento `edited`: el
@@ -174,8 +232,8 @@ evento, la asociación, la evidencia o la consulta son dudosos, ejecuta el
 corriendo sobre el commit integrado. Esto evita la segunda suite pública en un
 merge validado, pero no reduce la suite que bloquea el PR.
 
-Los PR y `workflow_call` no se filtran. Pages no reutiliza artefactos ni checks
-de otro árbol. La verificación fuerte de publicación, la CI completa del PR,
+Los eventos de PR y `workflow_call` no se filtran por rutas. Pages no reutiliza artefactos ni checks
+de otro árbol. La verificación fuerte de publicación, el perfil seleccionado del PR,
 los checks obligatorios `test` y `web`, y el deploy continúan siendo puertas
 separadas. El job de evidencia usa un token efímero con permisos de sólo lectura
 para Actions, pull requests y contenido.

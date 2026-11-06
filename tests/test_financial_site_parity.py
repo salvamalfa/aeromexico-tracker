@@ -31,14 +31,20 @@ def financial_site(request):
     if "2026Q3" not in doc["views"]:
         unavailable(request, "Financial 3Q26 candidate has not been assembled")
     spec = anchor(ROOT)
+    from scripts.check_pages_publication import verifier_for
+
     checker = request.getfixturevalue("verify_financial_publication")
     base_commit = request.config.getoption("--financial-publication-base")
     with official_map_baseline(SITE, ROOT, checker, base_commit=base_commit) as comparison_site:
-        if comparison_site == SITE:
+        # The story projection already invokes its strict publication verifier.
+        # Other active profiles still require their current/historical checker.
+        if comparison_site == SITE and verifier_for(comparison_site, ROOT) not in {
+            "src.publish.quarterly_story_scope", "src.publish.afac_history_scope"
+        }:
             verify_current_publication(SITE, ROOT, checker, base_commit=base_commit)
         original = preserved_financial_projection(comparison_site, ROOT, spec)
         assert sha(encoded(original)) == spec["executive_sha256"]
-        yield spec, comparison_site
+        yield spec, comparison_site, original
 
 
 def test_financial_site_preserves_all_history_peers_and_five_readings_and_replays_sources(
@@ -46,9 +52,8 @@ def test_financial_site_preserves_all_history_peers_and_five_readings_and_replay
 ):
     from src.publish.financial_scope import preserved_executive, preserved_files, transport
 
-    spec, comparison_site = financial_site
+    spec, comparison_site, after = financial_site
     before = json.loads(transport._git(ROOT, "show", f"{spec['baseline_commit']}:site/{EXECUTIVE}"))
-    after = preserved_financial_projection(comparison_site, ROOT, spec)
     preserved_readings(comparison_site, ROOT, spec)
     preserved_executive(before, after)
     assert after["metadata"]["default_period"] == before["metadata"]["default_period"]
