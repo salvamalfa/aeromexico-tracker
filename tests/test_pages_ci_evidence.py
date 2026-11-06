@@ -171,5 +171,6 @@ def test_gate_accepts_only_successful_reuse_or_full_fallback() -> None:
         True,
         "Pages passed the full CI fallback.",
     )
-    assert evidence.gate_result("false", "success", "failure")[0] is False
+    for fallback in ("failure", "skipped", "cancelled"):
+        assert evidence.gate_result("false", "success", fallback)[0] is False
     assert evidence.gate_result("true", "failure", "success")[0] is False
