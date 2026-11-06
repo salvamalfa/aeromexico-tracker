@@ -159,11 +159,12 @@ def test_spanish_chat_question_opens_the_verified_news_card(news_chat_server, wi
         q2_stories = [record for record in archive["records"] if record["published_at"][:7] in {"2026-04", "2026-05", "2026-06"}]
         outside_stories = [record for record in archive["records"] if record not in q2_stories]
         page.get_by_role("tab", name="Noticias").click()
-        page.wait_for_function("document.querySelector('#news-count')?.textContent?.includes('2T26')")
-        assert page.locator("#news-stories .news-card").count() == len(q2_stories)
-        assert page.locator("#news-coverage").is_visible()
         summary = page.locator("#news-outside summary")
-        assert str(len(outside_stories)) in summary.inner_text()
+        summary.wait_for()
+        assert page.locator("#news-stories .news-card").count() == len(q2_stories)
+        assert not page.locator("#news-count").is_visible()
+        assert page.locator("#news-coverage").count() == 0
+        assert summary.inner_text() == "Ver todas"
         summary.focus()
         page.keyboard.press("Enter")
         assert page.locator("#news-outside").evaluate("el => el.open")

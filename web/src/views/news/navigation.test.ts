@@ -35,29 +35,31 @@ test("selected quarter follows the shared period and preserves out-of-quarter st
  const news=await import("./bootstrap");await news.mountNews("data/v1");
  expect(document.querySelectorAll("#news-stories .news-card")).toHaveLength(1);
  expect(document.querySelector("#news-stories .news-date")?.textContent).toBe("Publicada: 2026-04-30");
- expect(document.getElementById("news-coverage")?.textContent).toContain("Archivo parcial");
+ expect(document.getElementById("news-coverage")).toBeNull();
+ expect(document.getElementById("news-count")).toHaveProperty("hidden",true);
+ expect(document.getElementById("news-count")?.textContent).toBe("");
  const summary=document.querySelector<HTMLElement>("#news-outside summary")!;
- expect(summary.textContent).toContain("2 fichas fuera de 2T26");
+ expect(summary.textContent).toBe("Ver todas");
  summary.click();
  expect(document.querySelectorAll("#news-outside-stories .news-card")).toHaveLength(2);
  period.selected="2026Q3";period.listeners.forEach(listener=>listener("2026Q3"));
  expect(document.querySelectorAll("#news-stories .news-card")).toHaveLength(1);
  expect(document.querySelector("#news-stories .news-date")?.textContent).toBe("Publicada: 2026-09-30");
- expect(document.querySelector("#news-count")?.textContent).toContain("3T26");
- expect(document.querySelector("#news-outside summary")?.textContent).toContain("2 fichas fuera de 3T26");
- expect(document.querySelector("#news-outside summary")?.textContent).toContain("1 octubre de 2026");
+ expect(summary.textContent).toBe("Ver todas");
+ expect([...document.querySelectorAll("#news-outside-stories .news-date")].map(el=>el.textContent))
+  .toEqual(["Publicada: 2026-04-30","Publicada: 2026-10-01"]);
  period.selected="2026Q2";period.listeners.forEach(listener=>listener("2026Q2"));
  expect(document.querySelectorAll("#news-stories .news-card")).toHaveLength(1);
  expect(document.querySelector<HTMLElement>("#news-stories .news-card")?.dataset.newsId).toBe("known");
- expect(document.querySelector("#news-outside summary")?.textContent).toContain("2 fichas fuera de 2T26");
+ expect(summary.textContent).toBe("Ver todas");
 });
 
 test("direct quarter links initialize the news view from the dashboard period",async()=>{
  window.history.replaceState(null,"","/?period=2026Q3");period.selected=new URLSearchParams(window.location.search).get("period");
  const news=await import("./bootstrap");await news.mountNews("data/v1");
- expect(document.querySelector("#news-count")?.textContent).toContain("3T26");
  expect(document.querySelectorAll("#news-stories .news-card")).toHaveLength(1);
- expect(document.querySelector("#news-outside summary")?.textContent).toContain("2 fichas fuera de 3T26");
+ expect(document.querySelector("#news-stories .news-date")?.textContent).toBe("Publicada: 2026-09-30");
+ expect(document.querySelector("#news-outside summary")?.textContent).toBe("Ver todas");
 });
 
 test("real approved archive maps only published dates to quarters and retains all October notes outside Q3",()=>{
@@ -83,9 +85,11 @@ test("real archive UI shows Q3 and keeps October visible in the dated outside-pe
  const news=await import("./bootstrap");await news.mountNews("data/v1");
  expect(document.querySelectorAll("#news-stories .news-card")).toHaveLength(16);
  const summary=document.querySelector<HTMLElement>("#news-outside summary")!;
- expect(summary.textContent).toContain("10 fichas fuera de 3T26");
- expect(summary.textContent).toContain("9 octubre de 2026");
+ expect(summary.textContent).toBe("Ver todas");
+ expect(summary.parentElement?.previousElementSibling?.id).toBe("news-stories");
+ expect(summary.parentElement).toHaveProperty("open",false);
  summary.click();
+ expect(summary.parentElement).toHaveProperty("open",true);
  const outsideDates=[...document.querySelectorAll("#news-outside-stories .news-date")].map(el=>el.textContent);
  expect(outsideDates).toHaveLength(10);
  expect(outsideDates.filter(date=>date?.includes("2026-10"))).toHaveLength(9);

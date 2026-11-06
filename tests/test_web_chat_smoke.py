@@ -293,9 +293,10 @@ def test_chat_panel_browser_smoke_with_mock_backend() -> None:
             page.keyboard.press("Escape")
             page.click("#tab-news")
             page.wait_for_function(
-                "document.getElementById('news-count')?.textContent === "
-                "'0 noticias publicadas en 2T26 · 0 fichas en archivo parcial'"
+                "document.querySelector('#news-stories .news-empty')?.textContent === "
+                "'No hay noticias en el archivo para 2T26.'"
             )
+            assert not page.locator("#news-count").is_visible()
             before_count = len(sent_context)
             page.locator("#news-heading > .chat-card-action").click()
             prompt = page.get_by_label("Pregunta sobre los datos publicados")
