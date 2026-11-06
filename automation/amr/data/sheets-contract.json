@@ -1,0 +1,43 @@
+{
+  "source_kind": "google_sheets",
+  "source_name": "AMR POINTS VALUE",
+  "scope": "Documentation of the audited installed protocol; no live data or execution settings",
+  "trip_type": "round_trip",
+  "origin": "MEX",
+  "cabins": ["Main", "Premier"],
+  "sheets": {
+    "Control_AMR": {
+      "range": "A:M",
+      "columns": {
+        "A": "active", "B": "legacy_unused_day", "C": "processing_order",
+        "D": "region", "E": "destination", "F": "departure_offset_calendar_months",
+        "G": "status", "H": "last_attempt", "I": "last_success_query_date",
+        "J": "assigned_departure", "K": "assigned_return", "L": "attempt_count",
+        "M": "run_retry_error_detail"
+      },
+      "scheduling_authority": "Existing Scheduled automation; column B never decides when a job runs"
+    },
+    "Control_AMR_Run": {
+      "purpose": "Technical lease, fencing token and insertion cursor; preserve existing sheet",
+      "lock_name": "AMR_GLOBAL_LOCK",
+      "lock_range": "A2:G2",
+      "next_vuelos_row": "B4"
+    },
+    "Vuelos": {
+      "grain": "One observed available cabin per query date, route and round-trip dates",
+      "coordinator_value_range": "A:N",
+      "formula_owned_range": "O:R",
+      "columns": {
+        "A": "query_date", "B": "origin", "C": "destination",
+        "D": "departure_date", "E": "return_date", "F": "outbound_departure_time",
+        "G": "return_departure_time", "H": "cabin", "I": "promotion_Si_or_No",
+        "J": "carrier_points", "K": "award_taxes_mxn",
+        "L": "cash_carrier_mxn", "M": "cash_taxes_mxn", "N": "points_accrual"
+      },
+      "award_taxes_mxn_definition": "Exact Impuestos y Tasas (MXN) from points checkout; excludes carrier money component and is not checkout grand total",
+      "formulas": "Preserve the formulas already owned by O:R; do not infer or replace their definitions",
+      "partial_results": "One complete available cabin is valid; no blank row is allocated to an unavailable cabin"
+    }
+  },
+  "local_excel_policy": "A dated export is a private read-only snapshot, never the queue or results authority"
+}

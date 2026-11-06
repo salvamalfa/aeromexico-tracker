@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-06 — Fuentes AMR en el repositorio de Tracker
+
+- Agrupa tres skills de búsqueda, sus scripts, esquemas y contrato de Sheets
+  en `automation/amr/`, con huellas de procedencia y verificación offline.
+- Documenta Google Sheets como fuente de puntos, Main/Premier y la frontera
+  entre código público, datos y archivo local. Los identificadores privados
+  se sustituyen por marcadores en las copias de referencia.
+- Retira Radar de Tarifas de la carpeta unificada a un archivo recuperable
+  externo; el único dashboard del proyecto es Pages. La integración excluye las
+  dependencias, salidas generadas y el historial privado del dashboard anterior.
+- Conserva las skills instaladas, las corridas y sus rutas. No activa
+  capturas, ingestas, sincronizaciones ni publicaciones del dashboard.
+
 ## 2026-11-06 · Referencia geográfica en la verificación histórica
 
 - El entorno histórico de las pruebas incorpora la referencia pública de
