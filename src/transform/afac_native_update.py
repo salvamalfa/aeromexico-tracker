@@ -55,6 +55,7 @@ def append_versions(baseline, candidates, effective_at):
             if (
                 previous.value == row.value
                 and semantic_formula(previous.derivation_formula) == semantic_formula(row.derivation_formula)
+                and bool(previous.is_preliminary) == bool(row.is_preliminary)
                 and bool(previous.is_estimated) == bool(row.is_estimated)
             ):
                 continue
