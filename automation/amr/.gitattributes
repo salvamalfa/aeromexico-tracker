@@ -1,0 +1,2 @@
+# Audit hashes describe source bytes, including installed CRLF metadata.
+skills/** -text
