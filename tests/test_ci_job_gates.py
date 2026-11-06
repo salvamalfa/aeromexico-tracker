@@ -103,6 +103,9 @@ def test_narrow_push_dedup_only_applies_where_pages_runs_full_ci():
     assert "paths" not in ci_events["pull_request"]
     assert "edited" in ci_events["pull_request"]["types"]
     assert "workflow_call" in ci_events
-    assert pages["jobs"]["ci"] == {"uses": "./.github/workflows/ci.yml"}
-    assert "ci" in pages["jobs"]["deploy"]["needs"]
+    pages_ci = pages["jobs"]["ci"]
+    assert pages_ci["uses"] == "./.github/workflows/ci.yml"
+    assert pages_ci["needs"] == ["ci-evidence"]
+    assert pages_ci["if"] == "${{ always() && needs.ci-evidence.outputs.reuse != 'true' }}"
+    assert "ci-gate" in pages["jobs"]["deploy"]["needs"]
     assert "if" not in pages["jobs"]["deploy"]  # No always()/skipped bypass.

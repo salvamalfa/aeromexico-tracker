@@ -151,17 +151,31 @@ gh run rerun RUN_ID --failed
 gh run rerun --job JOB_ID
 ```
 
-El reintento conserva el SHA/ref originales; un commit nuevo requiere su propia
-validación completa. No se importan resultados de otro SHA ni artefactos como
-autoridad para poner un check en verde. Una edición del cuerpo del PR mantiene
-su evento `edited`: el lifecycle depende de esa metadata y vuelve a validarse.
+El reintento conserva el SHA/ref originales; un commit nuevo del PR requiere su
+propia validación completa. No se importan artefactos para poner un check en
+verde. Pages puede reutilizar checks del segundo padre sólo si el árbol completo
+del merge coincide exactamente; esa condición se verifica antes del deploy y
+se detalla abajo. Una edición del cuerpo del PR mantiene su evento `edited`: el
+lifecycle depende de esa metadata y vuelve a validarse.
 Preparar el bloque documental antes del push evita reinicios por presentación.
 
-Sólo un push a `master` compuesto enteramente por `site/**` y/o el pin de preview
-omite el CI independiente: Pages ya llama **el mismo CI completo en ese SHA** y
-su deploy exige su éxito. Ambos filtros usan las mismas rutas. Los pushes mixtos
-con código conservan las dos ejecuciones; no se amplían permisos para consultar
-y reutilizar resultados externos. Los PR y `workflow_call` no se filtran.
+Pages comprueba el sitio publicado en el commit integrado. Si ese commit es un
+merge de dos padres, GitHub asocia el segundo padre con un solo PR ya fusionado
+en `master` sobre el mismo primer padre, su árbol Git coincide
+exactamente con el merge y la última ejecución completa de
+`.github/workflows/ci.yml` para ese SHA del PR pasó `test`, `web` y sus
+componentes, Pages reutiliza esa CI. El check compara árboles completos, no
+rutas ni nombres de archivos; un cambio añadido al merge no califica. Si el
+evento, la asociación, la evidencia o la consulta son dudosos, ejecuta el
+`workflow_call` completo como antes. El verificador del sitio y el deploy siguen
+corriendo sobre el commit integrado. Esto evita la segunda suite pública en un
+merge validado, pero no reduce la suite que bloquea el PR.
+
+Los PR y `workflow_call` no se filtran. Pages no reutiliza artefactos ni checks
+de otro árbol. La verificación fuerte de publicación, la CI completa del PR,
+los checks obligatorios `test` y `web`, y el deploy continúan siendo puertas
+separadas. El job de evidencia usa un token efímero con permisos de sólo lectura
+para Actions, pull requests y contenido.
 Ver la [semántica de filtros de GitHub](https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions).
 
 Las mediciones del preflight distinguen entorno nuevo, caché de descargas y
