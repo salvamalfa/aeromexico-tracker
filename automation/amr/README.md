@@ -2,7 +2,7 @@
 
 ## Resumen
 
-El código de referencia local de AMR forma parte de Aerolíneas MX Tracker.
+El código de referencia local de AMR forma parte de Airlines Tracker.
 Aquí se versionan las tres skills de búsqueda instaladas, sus validadores y el contrato
 del libro de puntos. La incorporación conserva las corridas configuradas:
 no instala skills, no cambia frecuencias y no inicia búsquedas ni sincronizaciones.

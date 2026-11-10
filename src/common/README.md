@@ -1,27 +1,36 @@
-# `src/common`
+# Utilidades compartidas de Airlines Tracker
 
-Utilidades compartidas por todo el pipeline: almacenamiento inmutable, red,
-logging y el ledger de calidad de datos.
+Estos módulos dan al pipeline una forma común de guardar fuentes, consultar
+proveedores y registrar incidencias. Así cada conector conserva la misma
+trazabilidad sin volver a implementar esas tareas.
 
 ## Responsabilidad
 
-- `storage.py`: almacenamiento inmutable de bronze con hashes SHA-256,
-  metadata y linaje de restatements (`_manifest.jsonl`, `_restatements.jsonl`).
-- `quality.py`: ledger de incidencias de calidad de datos, de solo apéndice.
-- `http.py`: cliente HTTP compartido (reintentos, user-agent, límites).
-- `logging.py`: configuración de logging común al pipeline.
+| Módulo | Comportamiento |
+|---|---|
+| [storage.py](storage.py) | Guarda originales Bronze con SHA-256 y metadatos. Reutiliza contenido idéntico y conserva una nueva versión cuando cambia un documento lógico. |
+| [quality.py](quality.py) | Añade incidencias al registro de calidad con fuente, tipo, gravedad y filas afectadas. |
+| [http.py](http.py) | Aplica límites de solicitudes por fuente, reintentos de errores transitorios e identificación del cliente. |
+| [logging.py](logging.py) | Configura los registros de ejecución compartidos. |
+
+El almacenamiento escribe el manifiesto de procedencia en `_manifest.jsonl`
+y los cambios de contenido en `_restatements.jsonl`. Las incidencias de calidad
+se añaden sin sobrescribir las anteriores; `log_issue_once` evita repetir
+una incidencia con la misma firma.
 
 ## Entradas / salidas
 
-- **Entradas:** ninguna propia; recibe llamadas de `ingest/`, `parse/`,
-  `transform/` y `pipeline/`.
-- **Salidas:** escribe bajo `data/bronze/` (manifiesto/restatements) y
-  `data/quality/` (local), según el módulo que lo invoque.
+- **Entradas:** bytes, respuestas y eventos que entregan los módulos de
+  [ingesta](../ingest/README.md), [extracción](../parse/README.md),
+  [transformación](../transform/README.md) y [ejecución](../pipeline/README.md).
+- **Salidas:** archivos y manifiestos en `data/bronze/`, registros locales
+  en `data/quality/` y mensajes de ejecución, según la función invocada.
 
 ## Puntos de entrada
 
-Biblioteca, sin CLI propio. Se importa como `from src.common import storage`,
-`from src.common import quality`, etc.
+Es una biblioteca sin comando propio. Sus consumidores importan los módulos,
+por ejemplo `from src.common import storage` o `from src.common import quality`.
+Las rutas se resuelven con [la configuración del proyecto](../config.py).
 
 ## Comando de prueba focalizada
 

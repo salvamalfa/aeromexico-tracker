@@ -1,8 +1,12 @@
-# Roadmap
+# Hoja de ruta de Airlines Tracker
 
 Revisión: 29 de octubre de 2026 (UTC). Pendientes, trabajo en curso y backlog arriba;
 trabajos terminados al final, como pidió el dueño. No se activan fuentes ni
 calendarios por mover una tarea entre secciones.
+
+Para entender el producto, consulta la [portada](README.md); para ubicar código
+y guías de trabajo, el [mapa del repositorio](REPO_MAP.md). Esta hoja conserva
+las prioridades y el estado de cada pendiente en la revisión indicada.
 
 ## Ahora
 

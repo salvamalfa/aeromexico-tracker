@@ -1,4 +1,4 @@
-# Instrucciones para Claude y otros agentes de nube
+# Airlines Tracker: instrucciones para Claude y otros agentes de nube
 
 Lee primero [`AGENTS.md`](AGENTS.md) (reglas compartidas con otros agentes,
 incluida la autorización permanente para implementar, crear y fusionar PRs,

@@ -1,188 +1,181 @@
-# `src/publish`
+# Publicación de Airlines Tracker
 
-El producto candidato `official_routes` añade únicamente el nuevo JSON de mapa
-mediante el gate selectivo con replay completo y consentimiento del scope exacto.
-No cambia lecturas ni datos históricos. Ver [receta y límites](../../docs/mapa-oficial.md).
+Este paquete prepara `site/`: la interfaz compilada, los datos públicos y un
+manifiesto de integridad SHA-256. Comprueba fuentes, contratos y aprobaciones
+antes de sustituir el sitio. GitHub Pages despliega ese directorio sin
+reconstruirlo.
 
-The publication gate for `site/`: the *signed object* the dashboard ships
-as — a directory built from `web/` plus the exported v1 payloads. See
-`web/README.md`.
+Un build local, una aprobación y una versión servida son resultados distintos.
+El gate no concede aprobaciones; solo verifica las que exige cada alcance.
+Sin los expedientes locales requeridos, un clon público puede inspeccionar
+la publicación existente, pero no reproducir todos los pasos de publicación.
 
-## Responsabilidad
+## Qué necesitas y qué se genera
 
-- `gate.py`: given one or more `analysis_runs/drafts/<period>/<version>.json`
-  records, verifies each through
-  (`src.analysis_agent.lifecycle.consumer_payload`/`verified_inputs`, under
-  the ledger's writer lock) and refuses (raises `PublicationRefused`, CLI
-  exit 1) if any record is not exactly, currently approved — nothing is
-  written. On success it runs `src.web_export` into a temp directory
-  (flights and executive for every period, analysis only for the given,
-  now-verified records), copies that into `web/public/data/v1` (local,
-  gitignored dev scratch — see `.gitignore`), and runs `npm ci && npm run
-  build` in `web/`, all with the ledger lock released (an `npm run build`
-  is slow; a human's approval/revocation should not block on it). Records
-  are then **re-verified a second time**, under a fresh ledger lock held
-  through the swap itself, immediately before `site/` is replaced — closing
-  the window where a revocation could otherwise land between the first
-  check and the swap. Only after that second check passes does it assemble
-  `site/` from the built `web/dist/` (Vite already copies `public/` into
-  `dist/`, so this *is* "dist + data").
-  For a strictly interface-only change, `--ui-only` reuses the existing
-  public `data/v1/` payload. It first requires the whole tracked `site/` to
-  be byte-for-byte unchanged from one pinned `origin/master` commit, verifies the site manifest
-  and replays each exact approved analysis-manifest entry with its pinned
-  cohort implementation, then checks that the
-  frontend build preserved every data file hash and size. It retains the
-  trusted manifest's contract hashes too, so a UI release does not change the
-  conversation's data version merely because this codebase added a dormant,
-  optional contract. It repeats the trusted-site and approval checks
-  immediately before the atomic swap, and refuses if the trusted ref moved
-  during the build. Before the swap it also verifies the completed candidate
-  and compares every data hash and size again, closing changes to dist during
-  the second approval check. This mode cannot bless edited data by
-  rebuilding its manifest, and it never invokes warehouse exporters.
-  `--presentation-only` is a stricter profile for the current release chain.
-  It verifies the trusted served site, replays the retained and current
-  quarterly approvals and revocations through the exact approved quarterly
-  parent, and reproduces the AFAC source/audit chain using the pinned published
-  producer and private request. It checks those chains
-  before and after the frontend build under the lifecycle writer lock. The
-  candidate may change only the dashboard `index.html` and `assets/**`; other
-  HTML entrypoints such as `access.html` and `review.html` remain byte-identical
-  to the served baseline, and their existing assets are retained. Every other site path,
-  byte count, and SHA-256 must match the trusted served baseline, including
-  data, contract pins, source records, receipts, and evidence. A missing,
-  changed, unknown, or revoked authority/source fails closed. A marker embedded
-  in the dashboard HTML binds the frontend build to the trusted site commit and
-  carries the original AFAC producer identity forward across subsequent
-  presentation releases. The historical
-  `--ui-only` verifier remains unchanged. This profile does not regenerate data,
-  modify approval records, or make a new approval.
-- `--business-metrics-only` uses the same immutable published-site baseline
-  and exact current analysis approval, then adds only the separately pinned
-  business-metrics payload and receipt. It requires the baseline data files to
-  remain byte-identical, validates the completed candidate site before swap,
-  and rechecks both the trusted baseline and Analysis Agent approval under the
-  ledger lock immediately before the atomic replacement.
-- `--preserve-published-data` prepara el mapa solo de vuelos con el histórico
-  completo. Toma el `site/` firmado exacto de `origin/master`, revalida las
-  aprobaciones por su cohorte de implementación y los expedientes
-  actuales antes/después del build, y conserva **todos** los archivos de
-  `data/v1/` byte por byte. Protege los renderers de análisis, fuentes y
-  contratos; no reconstruye modelos, crea aprobaciones ni activa datos nuevos.
-  El gate normal conserva sus comprobaciones estrictas. El candidato se
-  verifica antes del reemplazo. Integrar y publicar requiere la autorización
-  aplicable al cambio y el flujo normal del repositorio.
-- `config/publish/preserved-analysis.json` conserva la referencia a la
-  implementación original de las tesis congeladas. El gate comprueba el hash
-  del manifiesto histórico, que sus commits pertenecen al historial publicado
-  confiable y que todas las identidades y bytes de tesis siguen idénticos.
-  Después revalida los cuatro registros completos con esa implementación,
-  incluyendo revocaciones y expedientes actuales, antes y después del build.
-  `code_commit` sigue identificando el código que genera la interfaz actual.
-  La referencia no autoriza versiones ni contenido nuevos, no cambia huellas
-  aprobadas y no evita ninguna validación de datos o de privacidad.
-- `config/publish/approval-cohorts.json` fija las ediciones posteriores por
-  cohorte: entrada completa de aprobación, commit del verificador y SHA/tamaño
-  del payload público. Conserva el ancla original sin modificarla. El gate lee
-  los pins del commit confiable, exige una partición completa sin duplicados ni
-  entradas huérfanas y reproduce autorización, fuentes y payload con cada
-  implementación. La rama y el verificador nuevo deben descender de la publicación
-  confiable; los verificadores históricos deben estar en su historial ya publicado.
-  La configuración de trabajo debe coincidir con la comprometida;
-  todo se vuelve a comprobar bajo lock. Para el nuevo trimestre solo admite un
-  pin adicional comprometido y ligado al registro aprobado actual. Un pin no
-  concede aprobación. Los modos que preservan datos, UI-only y el modo de vuelos reutilizan
-  esta comprobación; incorporar 3T26 no bloquea la siguiente publicación del sitio.
-- `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio público
-  auditado, sin reconstruir el warehouse ni los otros exportadores. Exige la
-  edición exacta de vuelos, el valor anterior de cada sustitución y la
-  conciliación por operador/mes/ámbito. Revalida las aprobaciones por cohorte con su
-  implementación publicada y conserva el resto de payloads e identidades antes
-  y después del build. La autorización específica del 19 de octubre cubre esta
-  proyección y su tarjeta ponderada; no aprueba tesis nuevas, M11 ni calendarios.
-- `manifest.py`: builds and (de)serializes `publication_manifest.json` —
-  the code commit (`git rev-parse HEAD`), each `contracts/web/*` file's own
-  SHA-256 (its "version"), every other file under `site/` with its
-  SHA-256/size (sorted, manifest itself excluded), and the current
-  analysis-manifest entries (`period_id`, `version`, `content_hash`,
-  `evidence_fingerprint`, `approval_event`, `audit_hash` — the same fields
-  the published page's `#analysis-manifest` carries).
-- `verify.py` (`python -m src.publish.verify site/`): CI-safe, no private
-  data. Checks the manifest against `contracts/web/
-  publication_manifest.schema.json`, every listed file's hash/size, no
-  unlisted file present, every `data/v1/**/*.json` file against its
-  `contracts/web/*.schema.json` sub-schema and `contracts/web/privacy.yaml`,
-  and that every `analysis_manifest` entry is well-formed. This is exactly
-  what `.github/workflows/pages.yml` runs before deploying.
-  El validador y el lector `Snapshot` usan los bytes del contrato exacto
-  declarado por el manifiesto, también para Mercado y demanda aeroportuaria.
-  Un campo incorporado en una edición nueva no se admite bajo el hash de una
-  edición histórica. Los archivos históricos conservan sus bytes y hashes;
-  privacidad y aprobación siguen exigiendo sus contratos vigentes.
-- `site/` itself is *not* gitignored: an approved run's output is committed
-  like any other file, then deployed as-is by CI (`.github/workflows/
-  pages.yml` never rebuilds it, never touches `analysis_runs/`).
-  Los perfiles fuertes de publicación cargan también dependencias del extra
-  `analytics` ya fijado en `uv.lock`. Pages instala y ejecuta el selector con
-  `--locked --no-group dev --extra analytics`, tanto para el sitio principal
-  como para la preview con su propio checkout y lockfile. Instalar ese entorno
-  no ejecuta ingestas, modelos ni un rebuild, ni requiere expedientes privados.
-- The `intent`/`published` receipt goes to
-  `analysis_runs/publications/` (local, gitignored — see `.gitignore`'s
-  `analysis_runs/` rule) and hashes the *manifest*, not the raw `site/`
-  bytes, since the manifest already lists every file's own hash.
+| Entradas | Salidas |
+|---|---|
+| Código de `web/`, Node/npm, contratos y configuración confirmados en Git. | `site/`, versionado para desplegar exactamente sus bytes. |
+| Warehouse y Gold para perfiles que reconstruyen datos. | `publication_manifest.json`, con commit de código, contratos, archivos, tamaños, hashes e identidades de análisis. |
+| Registros exactos de `analysis_runs/drafts/`, aprobaciones y fuentes exigidas por el perfil. | Recibos de intención/publicación en `analysis_runs/publications/`, privados e ignorados por Git. |
+| Baseline, autoridad y recibos adicionales del alcance seleccionado. | Pruebas públicas del alcance cuando el perfil las exige; no los expedientes privados. |
 
-Las pruebas de paridad usan el manifiesto firmado que existe en `site/` y la
-configuración comprometida con esa misma publicación. Leen esa configuración en
-un worktree temporal aislado; el ledger, los originales y los verificadores se
-reproducen sin sustituir sus controles. Un pin pendiente en HEAD no se trata como
-parte del sitio anterior. El sitio de cuatro tesis exige las cuatro identidades
-históricas; la quinta solo se exige cuando el manifiesto incorpora Aeroméxico
-3T26. Los artefactos del gate deben estar comprometidos antes de esa paridad.
+Para revisar el sitio existente sin publicar:
 
-El perfil público explícito `--financial-publication-base` también comprueba una
-publicación SourceData intacta con su productor publicado, en un proceso aislado
-y sin red. Exige base exacta del historial de `origin/master`, todos los bytes e
-inventario de `site/`, autoridad y contratos conservados y el mismo lock Python.
-Una actualización de dependencias frontend no vuelve a aprobar el runtime nuevo:
-sus tipos, build y pruebas se comprueban aparte; el gate actual conserva su rechazo
-si la huella difiere del productor revisado. Un fallo histórico no tiene fallback.
+```bash
+python -m http.server 4173 --bind 127.0.0.1 --directory site
+```
 
-Never writes to the approval ledger, never approves/revokes/records
-anything. `web/` is the only implementation of each view, this gate its
-only publication path. `AGENTS.md` permanently authorizes agents to run this
-gate for a requested routine site change using an already approved record, to
-commit `site/` in a PR, and to follow the Pages deploy through live
-verification. A new approval, changed data meaning, or another higher-risk
-action still needs the owner's specific authorization. See `REPO_MAP.md`.
+Para verificar una publicación conservada, usa el selector que ejecuta Pages:
 
-## Entradas / salidas
+```bash
+python scripts/check_pages_publication.py site/
+```
 
-- **Entradas:** one or more `analysis_runs/drafts/<period>/<version>.json`
-  record paths (local, non-versioned); the local warehouse (via
-  `src/dashboard/`, same as `src/web_export`); `web/` (Node/npm); `contracts/
-  web/`.
-- **Salidas:** `site/` (versioned); an intent/published receipt under
-  `analysis_runs/publications/` (local, non-versioned).
+Selecciona el verificador exigido por los recibos del manifiesto; un fallo no
+permite pasar a uno menos estricto. `src.publish.verify` es el verificador
+general y sigue disponible, pero no sustituye los perfiles específicos.
 
-Los nuevos registros de entidad viven en
-`analysis_runs/drafts/<entity_key>/<period>/<version>.json`. Para publicar el
-mismo trimestre de Aeroméxico, Volaris, Viva e Industria, pasar los cuatro
-registros mediante cuatro opciones `--record`. Cada uno debe conservar su
-aprobación vigente y su identidad de entidad, trimestre y versión. El gate
-rechaza dos versiones de una misma entidad y trimestre.
+## Flujo de trabajo
 
-El registro histórico de Aeroméxico conserva
-`data/v1/analysis/<period>.json` y sus bytes publicados. Los nuevos registros
-se exportan a `data/v1/analysis/<entity_key>/<period>.json`, con `entity_key`
-en el payload y el manifest. Una entrada histórica sin ese campo corresponde
-a Aeroméxico. El verificador comprueba que ruta, encabezado y manifest
-coincidan; la presencia de un archivo por sí sola no acredita aprobación.
+1. Identifica el cambio: presentación, fuente, datos financieros o lectura.
+   Usa el perfil correspondiente de la referencia de abajo.
+2. Confirma en Git el código y las entradas de compilación. El gate rechaza
+   entradas modificadas sin commit porque el manifiesto identifica ese código.
+3. Ejecuta el perfil con sus registros, fuentes y autorizaciones exactas.
+   No inventes expedientes, pins o aprobaciones para superar los controles.
+4. Verifica el resultado, incluye `site/` en el PR y sigue CI, revisión e
+   integración conforme a [`AGENTS.md`](../../AGENTS.md).
+5. Después de Pages, comprueba por HTTPS y navegador la versión servida.
+   Un recibo de build no acredita el despliegue.
 
-## Punto de entrada
+Ejemplo de la modalidad general con un registro ya aprobado:
 
-### Handoff independiente de Viva y Volaris 3T26
+```bash
+uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/
+uv run python -m src.publish.verify site/
+```
+
+Este ejemplo no reemplaza las recetas de perfiles acotados.
+La autorización permanente cubre cambios rutinarios solicitados sobre contenido
+ya aprobado. Datos nuevos, cambios de significado y aprobaciones conservan
+sus requisitos de autorización específica. No copies `web/dist/` a `site/`
+a mano. Véanse [la guía web](../../web/README.md) y [el mapa del repositorio](../../REPO_MAP.md).
+
+## Apéndice técnico: verificaciones comunes
+
+### Construcción y sustitución
+
+`gate.py` recibe uno o más registros y verifica
+`consumer_payload` y `verified_inputs` bajo el bloqueo de escritura del
+registro de aprobaciones. Si un registro no tiene aprobación vigente, lanza
+`PublicationRefused` y el comando devuelve código 1 sin publicar.
+
+En el perfil general, exporta los datos en una carpeta temporal, prepara
+`web/public/data/v1/` y ejecuta `npm ci && npm run build` en `web/`.
+Libera el bloqueo durante la compilación para no impedir una revocación humana.
+Antes del intercambio atómico vuelve a verificar los registros bajo un bloqueo
+nuevo, que conserva hasta sustituir `site/`. Así detecta una revocación
+ocurrida durante el build. Vite ya incluye `public/` en `dist/`.
+
+`manifest.py` registra el commit de código, los hashes de contratos y todos
+los archivos de `site/` excepto el propio manifiesto, con orden, SHA-256 y tamaño.
+Cada identidad de análisis conserva `period_id`, `version`,
+`content_hash`, `evidence_fingerprint`, `approval_event` y `audit_hash`.
+Los recibos privados identifican el hash del manifiesto; este ya enumera los
+bytes de cada archivo.
+
+`verify.py` valida el esquema del manifiesto, inventario completo, hashes,
+tamaños, esquemas JSON, privacidad e identidades de análisis sin datos privados.
+Los lectores resuelven los bytes del contrato exacto declarado, incluidos
+Mercado y demanda aeroportuaria. Una edición nueva no amplía un contrato histórico.
+
+`site/` se confirma en Git y Pages lo despliega sin modificar
+`analysis_runs/`. Los verificadores fuertes usan dependencias del extra
+`analytics` fijadas en `uv.lock`; Pages instala con
+`--locked --no-group dev --extra analytics`, también para la vista previa con
+su propio checkout. Instalar dependencias no ejecuta ingestas o modelos.
+
+### Cambios de presentación y datos preservados
+
+- `--ui-only` exige que todo `site/` coincida por bytes con un commit fijado
+  de `origin/master`. Reproduce cada aprobación exacta con su implementación
+  retenida y reutiliza los JSON públicos sin llamar al warehouse. Conserva
+  hashes y tamaños de todos los datos y los contratos del manifiesto confiable.
+  Repite las comprobaciones antes del intercambio, rechaza un remoto que se
+  movió y verifica el candidato después de los controles lentos.
+- `--presentation-only` comprueba además el sitio servido y la cadena exacta
+  trimestral/AFAC, con fuentes, aprobaciones, revocaciones y solicitud privada.
+  Solo permite cambiar `index.html` y `assets/**`; conserva los otros HTML,
+  sus recursos y todos los datos, contratos, fuentes, recibos y evidencias.
+  Repite la cadena bajo bloqueo antes y después del build. El marcador HTML
+  liga la interfaz al commit confiable y al productor AFAC original.
+  No reconstruye datos ni crea aprobaciones; el verificador `--ui-only`
+  histórico permanece separado.
+- `--business-metrics-only` conserva el baseline público exacto y la aprobación
+  editorial vigente. Añade solo métricas y recibo con sus pins independientes,
+  valida el candidato y repite baseline y aprobación bajo bloqueo antes del
+  reemplazo.
+- `--preserve-published-data` conserva todos los bytes de `data/v1/` del
+  sitio exacto de `origin/master`, con sus renderizadores, fuentes y contratos.
+  Reproduce expedientes y aprobaciones por cohorte antes y después del build;
+  no ejecuta modelos ni activa nuevos datos.
+- `--flights-only` proyecta las celdas aceptadas de 2T26 sobre el sitio
+  auditado. Exige la edición exacta, cada valor sustituido y reconciliación
+  por operador, mes y ámbito. Conserva el resto de los datos y aprobaciones
+  antes y después del build, sin reconstruir warehouse u otros exportadores.
+  La autorización retenida del 19 de octubre cubre esa proyección y su tarjeta
+  ponderada, no tesis nuevas, M11 o calendarios.
+
+Ninguna modalidad convierte datos editados en aprobados mediante un manifiesto
+nuevo. El producto `official_routes` tiene una receta separada:
+[alcance y controles del mapa oficial](../../docs/mapa-oficial.md).
+
+### Aprobaciones, entidades y reproducción histórica
+
+`config/publish/preserved-analysis.json` identifica la implementación original
+de lecturas congeladas. El gate contrasta manifiesto, ascendencia publicada,
+identidades y bytes, y repite los cuatro registros con expedientes y revocaciones
+actuales antes y después del build. `code_commit` identifica el código que
+genera la interfaz actual; conservar la implementación anterior no aprueba
+contenido nuevo.
+
+`config/publish/approval-cohorts.json` fija, por cohorte, aprobación completa,
+commit del verificador y hash/tamaño del JSON público. Los pins se leen del
+commit confiable y deben cubrir todas las identidades sin duplicados ni
+huérfanos. Rama y verificador nuevo deben descender de la publicación confiable;
+los verificadores históricos deben pertenecer a su historia publicada.
+La configuración de trabajo debe coincidir con la confirmada en Git.
+Un trimestre nuevo admite solo el pin adicional comprometido y ligado al
+registro aprobado; un pin no concede aprobación. Todo se repite bajo bloqueo.
+
+Los registros por entidad usan
+`analysis_runs/drafts/<entity_key>/<period>/<version>.json`.
+Pasa cada registro con `--record`; el gate rechaza dos versiones de la misma
+entidad y trimestre. La ruta histórica `data/v1/analysis/<period>.json`
+corresponde a Aeroméxico. Las nuevas lecturas usan
+`data/v1/analysis/<entity_key>/<period>.json`, con entidad coherente entre
+ruta, encabezado y manifiesto.
+
+La paridad reproduce la configuración del sitio publicado en un worktree
+aislado, no un pin pendiente de HEAD. El sitio de cuatro lecturas exige esas
+cuatro identidades; la quinta se exige cuando el manifiesto incorpora
+Aeroméxico 3T26. Los artefactos deben estar confirmados antes de esa prueba.
+
+`--financial-publication-base` verifica una publicación SourceData intacta
+con su productor publicado, aislado y sin red. Exige base exacta del historial
+de `origin/master`, inventario y bytes completos, autoridad y contratos
+conservados y el mismo lock de Python. No aprueba un runtime nuevo:
+sus tipos, build y pruebas se verifican aparte. El gate conserva su rechazo
+ante una huella distinta y no usa otra vía tras un fallo histórico.
+
+## Referencia de perfiles acotados
+
+Las recetas siguientes conservan los límites de cada entrega implementada.
+Un periodo citado restringe ese perfil; no describe por sí solo el último
+periodo del dashboard. Consulta el manifiesto servido y
+[la guía de periodos](../../docs/periodos-dashboard.md) para el estado actual.
+
+### Entrega independiente de Viva y Volaris 3T26
 
 `src.publish.issuer_update` incorpora una entidad por ejecución desde un paquete
 `issuer_quarter_v1` aprobado, con replay físico de fuentes, cálculo, auditoría y
@@ -450,13 +443,12 @@ uv run python -m src.publish.verify site/
 uv run pytest -q tests/test_publish_manifest.py tests/test_publish_verify.py tests/test_publish_ui_only.py
 ```
 
-The negative fixtures under `tests/fixtures/site/` (altered byte, extra
-file, missing file, disallowed carrier, undeclared field, malformed
-approval entry) run in CI with no private data. A full local run of
-`gate.py` itself (`local_data`, needs the warehouse and an approved
-`analysis_runs/` record) is exercised by `tests/test_publish_gate.py` and,
-for the built site's visible parity against the published page, by
-`tests/test_site_parity.py` (`browser` + `local_data`).
+Los casos negativos de `tests/fixtures/site/` prueban bytes alterados,
+archivos añadidos o ausentes, aerolíneas prohibidas, campos no declarados
+y aprobaciones mal formadas. Corren en CI sin datos privados.
+`tests/test_publish_gate.py` prueba el gate completo con warehouse y registros
+aprobados (`local_data`); `tests/test_site_parity.py` verifica la paridad
+visible del sitio (`browser` + `local_data`).
 
 El ledger conserva aprobaciones técnicas históricas cuando cambia la huella
 de implementación. Para reproducir una publicación, selecciona todos sus

@@ -1,4 +1,18 @@
-# Changelog
+# Historial de cambios
+
+## 2026-11-09 - Presentación y documentación de Airlines Tracker
+
+- Presenta el producto como **Airlines Tracker**, con una portada breve en español,
+  acceso al dashboard y recorridos hacia código, métodos y ejecución local.
+- Reescribe las guías vigentes de datos, modelos, chat, interfaz y publicación;
+  conserva comandos, referencias, límites y evidencia histórica.
+- Añade un diagrama del flujo de datos, la comparación del pronóstico con su
+  referencia estacional y alternativas estáticas para los GIFs del simulador.
+  La captura de Mercado muestra el sitio público en 3T26.
+- Incorpora la licencia MIT para el código. Los materiales y datos de terceros
+  conservan sus condiciones de origen.
+- La revisión pública puede servir `site/` sin reconstruir insumos privados.
+  Las instrucciones de desarrollo distinguen esa copia del flujo completo.
 
 ## 2026-11-06 · Preparación única de pruebas para el monitor Gold
 

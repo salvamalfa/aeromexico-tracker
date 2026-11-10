@@ -1,8 +1,9 @@
 # Guía para agentes de desarrollo
 
-Este repositorio construye un dashboard reproducible de Aeroméxico a partir de
-fuentes públicas. La prioridad es preservar el significado de cada cifra, su
-procedencia y el estado de aprobación humana. Una ejecución técnicamente válida
+Este repositorio construye Airlines Tracker, un dashboard reproducible de la
+industria aérea mexicana a partir de fuentes públicas. La prioridad es preservar
+el significado de cada cifra, su procedencia y el estado de aprobación humana.
+Una ejecución técnicamente válida
 no autoriza por sí sola a publicar datos nuevos.
 
 ## Antes de editar
@@ -25,7 +26,8 @@ no autoriza por sí sola a publicar datos nuevos.
 
 ### Dónde mirar
 
-`README.md`: estado actual. `CHANGELOG.md`: cambios recientes. `ROADMAP.md`:
+`README.md`: presentación del producto y entrada a su documentación.
+`CHANGELOG.md`: cambios recientes. `ROADMAP.md`:
 lo que sigue (propuesta, el dueño decide prioridades). `REPO_MAP.md`: mapa del
 árbol y recetas paso a paso. `docs/archivo/README.md`: resumen de la historia
 del proyecto con enlaces a los documentos originales en Git — no lo leas salvo
