@@ -2,6 +2,10 @@
 
 ## 2026-11-09 - Presentación y documentación de Airlines Tracker
 
+- El perfil histórico de pruebas permite actualizar el README de contratos web,
+  como ya permitía el de publicación. Conserva las comprobaciones de código,
+  esquemas y revocaciones; las regresiones verifican esa frontera.
+
 - Presenta el producto como **Airlines Tracker**, con una portada breve en español,
   acceso al dashboard y recorridos hacia código, métodos y ejecución local.
 - Reescribe las guías vigentes de datos, modelos, chat, interfaz y publicación;

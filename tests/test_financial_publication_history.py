@@ -39,6 +39,8 @@ def context(tmp_path, monkeypatch, request):
         "config/publish/revocations.json": b"{}",
         module.replace(".", "/") + ".py": b"# published strong verifier\n",
         "contracts/web/manifest.schema.json": b"{}",
+        "src/publish/README.md": b"# Published publication guide\n",
+        "contracts/web/README.md": b"# Published contract guide\n",
         "scripts/check_pages_publication.py": b"# published selector\n",
     }
     program = {
@@ -117,6 +119,8 @@ def test_history_requires_a_full_trusted_base_before_running_any_code(context, m
         "lock",
         "code_commit",
         "contract",
+        "verifier",
+        "policy_markdown",
         "missing_producer",
         "missing_producer_anchor",
         "selector",
@@ -144,6 +148,13 @@ def test_changed_public_inputs_block_before_archived_verification(context, monke
         (repo / "uv.lock").write_text("different dependencies")
     elif change == "contract":
         (repo / "contracts/web/manifest.schema.json").write_text('{"changed":true}')
+    elif change == "verifier":
+        name = state["module"].replace(".", "/") + ".py"
+        changed = b"# unreviewed publication verifier\n"
+        state["authority"][name] = changed
+        (repo / name).write_bytes(changed)
+    elif change == "policy_markdown":
+        (repo / "contracts/web/POLICY.md").write_text("# Nueva política no aprobada\n")
     elif change == "missing_producer":
         state["program"].pop(state["module"].replace(".", "/") + ".py")
     elif change == "missing_producer_anchor":
@@ -196,6 +207,30 @@ def test_verifier_failure_or_mutation_never_falls_back(context, monkeypatch, fai
     monkeypatch.setenv("PYTHONHOME", "/untrusted-head")
     monkeypatch.setattr(history.subprocess, "run", run)
     assert history.verify_published(site, repo, base_commit=BASE, module=state["module"])
+    assert len(calls) == 1
+
+
+
+@pytest.mark.parametrize("name", ["src/publish/README.md", "contracts/web/README.md"])
+def test_documentation_changes_keep_the_exact_published_producer(context, monkeypatch, name):
+    repo, site, state = context
+    original = state["program"][name]
+    changed = b"# Updated human-readable guide\n"
+    state["authority"][name] = changed
+    (repo / name).write_bytes(changed)
+    calls = []
+
+    def run(command, **kwargs):
+        calls.append(command)
+        # La documentación candidata no reemplaza ningún archivo del productor aprobado.
+        assert command[-2:] == [state["module"], history.PROFILES[state["module"]][1]]
+        assert (kwargs["cwd"] / name).read_bytes() == original
+        assert (kwargs["cwd"] / name).read_bytes() != changed
+        assert all((kwargs["cwd"] / key).read_bytes() == raw for key, raw in state["program"].items())
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"runtime": RUNTIME, "problems": []}))
+
+    monkeypatch.setattr(history.subprocess, "run", run)
+    assert history.verify_published(site, repo, base_commit=BASE, module=state["module"]) == []
     assert len(calls) == 1
 
 
