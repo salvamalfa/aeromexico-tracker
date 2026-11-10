@@ -33,6 +33,7 @@ LOCAL_ONLY = {
     "src/publish/financial_continuity.py",
     "src/publish/financial_continuity_inputs.py",
     "src/publish/README.md",
+    "contracts/web/README.md",
 }
 RUNTIME = (
     "src",

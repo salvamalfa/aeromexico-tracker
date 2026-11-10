@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg role="img" aria-labelledby="title desc" xmlns:xlink="http://www.w3.org/1999/xlink" width="864pt" height="468pt" viewBox="0 0 864 468" xmlns="http://www.w3.org/2000/svg" version="1.1"><title id="title">Evaluación del pronóstico mensual de pasajeros de Aeroméxico</title><desc id="desc">SARIMA: 2.50 % de sMAPE; referencia estacional: 3.36 %. Prueba de jul 2025 a jun 2026, con 12 predicciones mensuales de un paso. Este resultado no mide el error del horizonte futuro de doce meses.</desc>
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 468
+L 864 468
+L 864 0
+L 0 0
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 233.28 290.16
+L 786.24 290.16
+L 786.24 117
+L 233.28 117
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 233.28 290.16
+L 233.28 117
+" clip-path="url(#p294e3e2912)" style="fill: none; stroke: #e2e8f0; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2"/>
+     <g id="text_1">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #334155" x="233.28" y="313.797812" transform="rotate(-0 233.28 313.797812)">0 %</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 364.856012 290.16
+L 364.856012 117
+" clip-path="url(#p294e3e2912)" style="fill: none; stroke: #e2e8f0; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4"/>
+     <g id="text_2">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #334155" x="364.856012" y="313.797812" transform="rotate(-0 364.856012 313.797812)">1 %</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 496.432025 290.16
+L 496.432025 117
+" clip-path="url(#p294e3e2912)" style="fill: none; stroke: #e2e8f0; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6"/>
+     <g id="text_3">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #334155" x="496.432025" y="313.797812" transform="rotate(-0 496.432025 313.797812)">2 %</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 628.008037 290.16
+L 628.008037 117
+" clip-path="url(#p294e3e2912)" style="fill: none; stroke: #e2e8f0; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8"/>
+     <g id="text_4">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #334155" x="628.008037" y="313.797812" transform="rotate(-0 628.008037 313.797812)">3 %</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 759.584049 290.16
+L 759.584049 117
+" clip-path="url(#p294e3e2912)" style="fill: none; stroke: #e2e8f0; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10"/>
+     <g id="text_5">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #334155" x="759.584049" y="313.797812" transform="rotate(-0 759.584049 313.797812)">4 %</text>
+     </g>
+    </g>
+    <g id="text_6">
+     <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #334155" x="509.76" y="345.347188" transform="rotate(-0 509.76 345.347188)">sMAPE (%) · menor es mejor</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_11"/>
+     <g id="text_7">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #334155" x="220.28" y="155.717088" transform="rotate(-0 220.28 155.717088)">Referencia estacional</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_12"/>
+     <g id="text_8">
+      <text style="font-size: 14px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #334155" x="220.28" y="262.080724" transform="rotate(-0 220.28 262.080724)">SARIMA seleccionado</text>
+     </g>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 233.28 175.925455
+L 675.648 175.925455
+L 675.648 124.870909
+L 233.28 124.870909
+z
+" clip-path="url(#p294e3e2912)" style="fill: #94a3b8"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 233.28 282.289091
+L 562.262595 282.289091
+L 562.262595 231.234545
+L 233.28 231.234545
+z
+" clip-path="url(#p294e3e2912)" style="fill: #1d4ed8"/>
+   </g>
+   <g id="text_9">
+    <text style="font-weight: 700; font-size: 18px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #0f172a" x="687.489841" y="155.365057" transform="rotate(-0 687.489841 155.365057)">3,36 %</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 700; font-size: 18px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #0f172a" x="574.104436" y="261.728693" transform="rotate(-0 574.104436 261.728693)">2,50 %</text>
+   </g>
+  </g>
+  <g id="text_11">
+   <text style="font-weight: 700; font-size: 21px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #0f172a" x="43.2" y="42.12" transform="rotate(-0 43.2 42.12)">Pronóstico mensual: evaluación fuera de muestra</text>
+  </g>
+  <g id="text_12">
+   <text style="font-size: 14.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #475569" x="43.2" y="70.2" transform="rotate(-0 43.2 70.2)">Aeroméxico · pasajeros AFAC · prueba: jul 2025 a jun 2026</text>
+  </g>
+  <g id="text_13">
+   <text style="font-size: 13.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #334155" x="43.2" y="365.04" transform="rotate(-0 43.2 365.04)">Se predice un mes y se amplía la historia en cada paso: 12 observaciones.</text>
+  </g>
+  <g id="text_14">
+   <text style="font-size: 13.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #334155" x="43.2" y="393.12" transform="rotate(-0 43.2 393.12)">El horizonte futuro es de 12 meses; este error no mide la precisión a 12 meses.</text>
+  </g>
+  <g id="text_15">
+   <text style="font-size: 10.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #64748b" x="43.2" y="430.56" transform="rotate(-0 43.2 430.56)">Fuente: stage7_0c0cf3cf5cbe8226/performance.json · corte observado: jun 2026</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p294e3e2912">
+   <rect x="233.28" y="117" width="552.96" height="173.16"/>
+  </clipPath>
+ </defs>
+</svg>

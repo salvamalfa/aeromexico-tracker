@@ -1,144 +1,129 @@
-# `src/analysis_agent`
+# Analysis Agent de Airlines Tracker
 
-Evidencia, cálculo, revisión humana y **publicación controlada** del análisis
-narrativo trimestral (etapas 12–17). Es el único camino autorizado para que
-un análisis entre a `site/` (via `src/publish/gate.py`).
-
-The ledger and its approval semantics (`lifecycle.py`) are the single
-authority for what may reach `site/`; `src/publish/gate.py` re-verifies
-against those same functions before exporting or publishing anything.
+Este módulo convierte fuentes y cálculos verificables en lecturas trimestrales
+de negocio. Separa la preparación de evidencia, la redacción, la auditoría
+independiente y la autorización humana. El dashboard sólo recibe una versión
+aprobada cuyo contenido y fuentes siguen coincidiendo.
 
 ## Responsabilidad
 
-La [pauta narrativa trimestral](../../docs/analysis-agent/narrativa-trimestral.md)
-y la [skill de preparación](../../.agents/skills/airline-quarterly-story/SKILL.md)
-añaden investigación de ángulos antes de congelar el contexto. Las instrucciones
-históricas, los perfiles soportados y las aprobaciones se conservan; esta guía
-no es una migración de registros ni una nueva publicación.
+```mermaid
+flowchart TD
+    A["Fuentes retenidas"] --> B["Cálculos reproducibles"]
+    B --> C["Borrador con citas"]
+    C --> D["Auditoría independiente"]
+    D -->|Observaciones| C
+    D -->|Favorable| E["Autorización humana de la versión"]
+    E -->|Aprobada| F["Verificación de publicación"]
+    E -->|Falta autorización| G["Sin publicar"]
+    F --> H["Lectura en el dashboard"]
+```
 
-- Evidencia y expediente por trimestre (`evidence.py`, `flight_evidence.py`).
-- Cálculo cuantitativo trazable (`quantitative.py`) y su prototipo
-  (`stage15_html.py`).
-- Redacción/revisión asistida (`analyst.py`, `stage13*.py`, `stage16_html.py`,
-  `stage17_html.py`).
-- Importación por entidad (`entity_adapter.py`): cápsulas privadas congeladas,
-  originales y metadatos de captura verificados, replay offline de extractores
-  revisados y texto exacto. La primera versión admite Viva, Volaris e Industria
-  para 2T26; ampliar entidades o periodos exige adaptar y revisar el contrato.
-- **Ledger de aprobación** (`lifecycle.py`): registro local de solo apéndice
-  en `analysis_runs/` (local, no versionado) que autoriza qué versión de un
-  análisis puede publicarse — `consumer_payload(record)` es el paso fail-closed
-  que usa `src/publish/gate.py`.
+La [pauta narrativa](../../docs/analysis-agent/narrativa-trimestral.md) y la
+[skill de preparación](../../.agents/skills/airline-quarterly-story/SKILL.md)
+guían la investigación de una idea de negocio antes de cerrar la evidencia.
+El cálculo y la revisión deben sostener las cifras y atribuciones del texto.
 
-No cambies un registro de `lifecycle.py` sin una instrucción explícita del
-dueño (ver `CLAUDE.md`, `AGENTS.md`). Publicar de verdad es
-`python -m src.publish` (ver `src/publish/README.md`), no algo que vive en
-este módulo.
+| Paso | Implementación |
+|---|---|
+| Evidencia | `evidence.py`, `flight_evidence.py`: expediente y fuentes por trimestre. |
+| Cálculo | `quantitative.py`: resultados cuantitativos trazables. |
+| Redacción y revisión | `analyst.py`, `stage13*.py` y prototipos `stage15_html.py`, `stage16_html.py`, `stage17_html.py`. |
+| Importación por entidad | `entity_adapter.py`: paquetes privados congelados, originales, capturas verificadas y reproducción offline de extractores. |
+| Aprobación | `lifecycle.py`: registro de eventos de solo apéndice en `analysis_runs/`. `consumer_payload(record)` rechaza versiones sin aprobación vigente. |
+| Publicación | [`src/publish/`](../publish/README.md): vuelve a verificar el registro antes de exportar y ensamblar `site/`. |
 
 ## Entradas / salidas
 
-- **Entradas:** `data/gold/`, `analysis_runs/` (expediente local), payloads de
-  `src/dashboard/`.
-- **Salidas:** el estado del ledger de aprobación (`analysis_runs/`, local).
-  El artefacto publicado (`site/`) y sus recibos son responsabilidad de
-  `src/publish/`, no de este módulo.
+Las entradas son `data/gold/`, los resultados de `src/dashboard/` y el
+expediente local `analysis_runs/`. La salida del módulo es un análisis
+versionado con sus fuentes, cálculos, auditoría y estado de aprobación.
+
+`analysis_runs/` no se versiona en el repositorio público. El texto y las
+citas autorizadas pueden llegar al consumidor público; los paquetes privados,
+advertencias de revisión y originales retenidos permanecen fuera de `site/`.
+El sitio y sus recibos los produce `src/publish/`, no este módulo.
+
+## Identidad y promoción por entidad
+
+Los registros nuevos usan `(entity_key, period_id, version)` y la ruta
+`analysis_runs/drafts/{entity}/{period}/{version}.json`. Se conserva el formato
+histórico de Aeroméxico. La auditoría, la autorización y el exportador deben
+referir exactamente la misma identidad. Cambiar texto, fuentes, presentación o
+implementación puede invalidar su consumo y requerir otra versión.
+
+Importar un lote revisado del respaldo privado:
+
+```bash
+uv run python -m src.analysis_agent.entity_adapter --bundle <lote-privado>
+```
+
+Importar o preparar no aprueba ni publica. Una petición humana auténtica puede
+esperar la auditoría de esa versión; falla o pierde vigencia si cambia la
+versión, se rechaza la auditoría o se revoca. Nunca se reconstruye una
+autorización desde el HTML. La publicación se ejecuta con
+`python -m src.publish`, conforme a su [referencia](../publish/README.md).
+
+El adaptador inicial admite Viva, Volaris e Industria para 2T26, con corte
+retrospectivo de 2026-10-13. Las expectativas conservan la fecha de sus fuentes;
+Industria agrupa los tres grupos con sus límites contables y geográficos.
+Ampliar ese contrato exige adaptar y revisar el perfil correspondiente.
+
+### Lectura editorial de Aeroméxico 3T26
+
+`quarterly_release_v1` reproduce fuentes del emisor y cálculos con unidad y
+duración explícitas. Distingue trimestre, acumulado, variaciones interanuales
+y cifras calculadas. `analysis_editorial.schema.json` limita su contrato
+adicional a Aeroméxico 3T26 y sus citas de GlobeNewswire.
+
+La modalidad `--editorial-only` publica la lectura aprobada y sus recursos de
+interfaz, conservando los demás datos. Comprueba la versión anterior y la nueva
+antes del intercambio atómico. El selector de lectura es independiente del
+trimestre de indicadores. Una aprobación no demuestra que el despliegue terminó.
+
+<a id="handoff-independiente-de-viva-y-volaris-3t26"></a>
+
+### Entrega independiente de Viva y Volaris 3T26
+
+`issuer_quarter.py` implementa `issuer_quarter_v1`: reproduce extractores y
+compara las cuatro salidas del candidato. `source_binding` vincula entidad,
+periodo, corte, retención y hashes. Viva usa su PDF oficial; la versión de
+Volaris de este perfil conserva el aviso autorizado de reconstrucción, sin
+equipararla al original SEC.
+
+`prepare` congela evidencia y cálculos; `import-draft` crea un borrador
+inmutable. Cada entidad puede avanzar con su fuente validada, seguida de
+auditoría y aprobación de su versión exacta.
+
+### Perfil versionado de historias de negocio
+
+`quarterly_story.py` implementa `quarterly_business_story_v1` para las cuatro
+historias revisadas de 3T26. Resumen y desarrollo suman 200–400 palabras; la
+pauta general para propuestas nuevas prefiere 200–300. Los contratos
+históricos no se reescriben.
+
+Las cifras y atribuciones se resuelven desde paquetes cerrados y verificadores
+de fuente. Una comparación estructural impide cambiar texto, cifras, énfasis
+o colocación después de importar. Las citas públicas contienen URL, título,
+ancla y etiqueta. La skill narrativa y su hash forman parte del borrador.
+
+Volaris admite el paquete `volaris_original_quarter_v1`, reproducido desde
+cuatro capturas HTTP de SEC. Es una identidad distinta de la reconstrucción
+anterior y requiere su propia auditoría y autorización. Si el host no ofrece
+un identificador verificable, el modelo se registra como desconocido.
+
+La entrega prepara cada tesis y una candidata de Industria para revisión.
+No activa evidencia, aprueba datos ni publica por el hecho de generar contexto.
 
 ## Puntos de entrada
 
-- Etapas individuales vía `just stage12-*` … `just stage16-*` en el
-  `justfile`.
+Las etapas individuales usan `just stage12-*` a `just stage16-*` del
+[`justfile`](../../justfile). El [mapa del repositorio](../../REPO_MAP.md)
+reúne los comandos y el [módulo de publicación](../publish/README.md) documenta
+la entrega a Pages.
 
 ## Comando de prueba focalizada
 
 ```bash
 uv run pytest -q tests/test_stage17_lifecycle.py tests/test_stage18_literal_contract.py
 ```
-
-## Identidad y promoción por entidad
-
-Los registros nuevos usan `(entity_key, period_id, version)` y viven en
-`analysis_runs/drafts/{entity}/{period}/{version}.json`. El formato legado de
-Aeroméxico y su ruta publicada se conservan. La auditoría independiente, la
-autorización humana y el exportador deben referir la misma identidad exacta.
-Cambios de texto, fuentes o implementación invalidan la versión consumible.
-
-La importación toma un lote revisado del respaldo privado:
-
-```bash
-uv run python -m src.analysis_agent.entity_adapter --bundle <lote-privado>
-```
-
-Importar no aprueba ni publica. Conserva la petición humana real en el ledger,
-registra una auditoría independiente de esa versión y aprueba únicamente tras
-el resultado favorable. Una petición previa a la auditoría queda pendiente y
-se cancela si falla la revisión o cambia la versión. Nunca reconstruyas
-autorizaciones desde HTML o desde el estado deseado.
-
-El corte retrospectivo de las nuevas tesis es 2026-10-13; las expectativas
-conservan la fecha de sus informes. El panel Industria comprende los tres
-grupos, con límites de pasajeros, geografía y contabilidad declarados. El
-expediente y las advertencias de revisión permanecen privados; el consumidor
-público recibe el texto aprobado y enlaces de fuente, sin cápsulas internas.
-
-
-### Lectura editorial de Aeroméxico 3T26
-
-El perfil `quarterly_release_v1` reproduce fuentes primarias del emisor y sus
-cálculos, con unidades y duración explícitas. Distingue trimestre y acumulado,
-variaciones interanuales, cifras reportadas y cálculos propios. La revisión
-comprueba todas las afirmaciones, sus fuentes y la versión exacta aprobada.
-
-La modalidad `--editorial-only` publica únicamente la lectura aprobada y los
-recursos de interfaz necesarios. Conserva los datos financieros, vuelos,
-noticias y tesis anteriores. Su selector de lectura es independiente del
-trimestre de indicadores. Verifica los archivos del baseline remoto y servido,
-la identidad de la lectura nueva y las guardas previas al intercambio atómico.
-Los modos generales mantienen sus controles de reproducción completos.
-
-`analysis_editorial.schema.json` añade un contrato limitado a Aeroméxico 3T26
-para las citas del comunicado primario distribuido en GlobeNewswire. Los
-contratos históricos permanecen intactos. El manifiesto fija los contratos
-exactos y la aprobación correspondiente; la aprobación por sí sola no acredita
-un despliegue. El flujo y sus pruebas están en `src/publish/README.md`.
-
-
-### Handoff independiente de Viva y Volaris 3T26
-
-`issuer_quarter.py` añade `issuer_quarter_v1` para las dos ediciones revisadas de
-3T26, sin ampliar los perfiles históricos. Reproduce los extractores dedicados
-desde los originales retenidos y compara exactamente las cuatro salidas de cada
-candidato. Su paquete liga la entidad, periodo, corte original, retención y hashes
-de salidas (`source_binding`); los cálculos y la prosa conservan esa identidad.
-Viva usa su PDF oficial. Volaris conserva el aviso de reconstrucción visible
-autorizada, sin equivalencia binaria con el original SEC. No se cambian flags de
-las capturas ni se convierte una reconstrucción en un original.
-
-Cada tesis puede avanzar con su fuente propia validada. La nueva pauta de
-200–300 palabras vive en la skill existente y no reescribe versiones históricas.
-`prepare` solo congela evidencia/cálculos; `import-draft` solo crea un borrador
-inmutable. El lifecycle conserva petición auténtica, auditoría independiente y
-aprobación exacta antes del handoff al agente de dashboard. No hay aprobación,
-activación de Gold ni publicación implícita por generar este contexto.
-
-### Perfil versionado de historias de negocio
-
-`quarterly_story.py` añade `quarterly_business_story_v1` para las cuatro historias
-3T26 revisadas. Su resumen y desarrollo suman entre 200 y 400 palabras; la pauta
-general de nuevas propuestas continúa prefiriendo 200–300. Los contratos de
-registros históricos no cambian. Toda cifra y atribución se resuelve desde los
-paquetes cerrados, con los verificadores nativos de las fuentes; una comparación
-estructural completa impide cambiar palabras, cifras, énfasis o colocación tras
-la importación. Las citas públicas sólo contienen URL, título, ancla y etiqueta.
-
-Volaris admite aquí el paquete separado `volaris_original_quarter_v1`, reproducido
-desde cuatro capturas HTTP de SEC. No transforma una reconstrucción anterior en
-un original ni hereda su aprobación. Una fuente o frase distinta genera otra
-identidad. La revisión y la autorización deben apuntar a esa versión exacta.
-El modelo se conserva como desconocido cuando el host no ofrece un identificador
-verificable; no se atribuye un modelo a un registro por el nombre del agente.
-
-La skill narrativa y su hash forman parte del borrador. El handoff normal de
-análisis entrega tanto la pauta original como los criterios nuevos con hashes
-reales; cada reporte vuelve a evaluar la tesis individual y una candidata de
-Industria del mismo trimestre. Esto prepara análisis y auditoría; no activa una
-tesis de Industria ni sustituye una autorización humana.

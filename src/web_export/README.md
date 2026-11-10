@@ -1,105 +1,114 @@
-# `src/web_export`
+# Exportación web de Airlines Tracker
 
-`official_routes.export_official_routes` exporta la nueva superficie candidata
-separada después de replay y validación. No altera el exportador histórico.
-Ver [mapa oficial](../../docs/mapa-oficial.md).
+Convierte los datos del dashboard en archivos JSON que la interfaz carga por
+periodo. Valida su forma y privacidad antes de escribirlos. Este módulo no
+publica el sitio ni concede aprobaciones.
 
-Exportadores que dividen los payloads v1 (`contracts/web/`) en archivos por
-periodo, para que `web/` (Vite + TypeScript) los cargue con `fetch` en vez
-de recibirlos embebidos en el HTML.
+## Flujo y límites
 
-## Responsabilidad
+1. Los generadores de [`src/dashboard/`](../dashboard/README.md) preparan
+   Vuelos, datos financieros y Mercado. Noticias tiene su exportador propio.
+2. Cada salida se valida con [`contracts/web/`](../../contracts/web/README.md)
+   y `privacy.yaml`. Los insumos requeridos se declaran en
+   [`config/web_inputs.yaml`](../../config/web_inputs.yaml).
+3. Los JSON se escriben con claves ordenadas, separadores compactos y sin
+   `NaN`. Las mismas entradas producen los mismos bytes.
+4. [`web/`](../../web/README.md) consume esos archivos;
+   [`src/publish/`](../publish/README.md) controla la publicación.
 
-- No genera datos nuevos: llama a `src.dashboard.flights.build_flight_payload()`
-  y `src.dashboard.executive_summary.build_executive_payload()`, y a
-  `src.dashboard.flights_html.integration_flight_payload()` para quedarse con
-  exactamente lo que `web/` consume.
-- Antes de escribir cada archivo: lo valida contra su esquema en
-  `contracts/web/*.schema.json` y contra `contracts/web/privacy.yaml`
-  (`src/web_export/privacy.py`).
-- Antes de exportar una vista, exige sus insumos Gold declarados como
-  requeridos en `config/web_inputs.yaml` (`src/web_export/inputs.py`); si
-  falta uno, falla con un mensaje que nombra el archivo exacto y cómo
-  restaurarlo desde el repo privado. Nunca omite una sección en silencio.
-- Escribe JSON determinista (`sort_keys=True`, separadores compactos, sin
-  `NaN`): dos ejecuciones sobre el mismo warehouse producen bytes idénticos.
-- `analysis.py` es distinto de los otros dos: no llama a un generador de
-  `src/dashboard/`, sino que descubre qué periodos el ledger local tiene
-  actualmente aprobados o publicados (`discover_approved_manifest`), carga el
-  registro correspondiente en `analysis_runs/drafts/` y llama a
-  `src.analysis_agent.lifecycle.consumer_payload(record)` — el mismo paso
-  de entrega fail-closed que usa `src/publish/gate.py`, en modo solo
-  lectura. También llama a `flow.verified_inputs(record)` (mismo llamado
-  fail-closed) para construir, por afirmación, el `citations` que exporta,
-  que solo emite lo que la página pública ya muestra (URL de la fuente,
-  texto del tooltip, subcadena a envolver); nunca un
-  objeto de evidencia/cálculo ni linaje. Nunca escribe en el ledger ni
-  aprueba/revoca nada. Si el registro o el ledger no están (clon público
-  sin `analysis_runs/`), el manifiesto descubierto queda vacío o, con
-  `--allow-missing-analysis` (solo para desarrollo), salta ese periodo en
-  vez de fallar todo el export.
+Si falta un Gold requerido, el exportador falla y nombra el archivo.
+Un clon público no incluye los cuatro Gold privados requeridos por Vuelos
+ni el expediente de `analysis_runs/`. **`--allow-missing-analysis` solo
+permite omitir análisis ausentes en desarrollo; no reemplaza esos Gold.**
+Para revisar el sitio público sin esos insumos, sirve `site/` o usa sus
+datos ya exportados, como explica [la guía web](../../web/README.md).
 
-**No publica nada.** No toca las aprobaciones del Analysis Agent. `web/` es
-la única implementación de cada vista; `src/publish/gate.py` es
-quien compila `web/` y ensambla `site/` a partir de lo que este paquete
-exporta.
+## Archivos de salida
 
-## Entradas / salidas
+El destino habitual es `web/public/data/v1/`, local e ignorado por Git.
+Vite lo sirve como `data/v1/` y lo copia al compilar.
 
-- **Entradas:** `data/warehouse.duckdb` (local) vía los generadores de
-  `src/dashboard/`; `contracts/web/*.schema.json`, `contracts/web/privacy.yaml`,
-  `config/web_inputs.yaml`; para `analysis.py`, además `analysis_runs/`
-  (local, no versionado).
-- **Salidas:** `<out>/flights/quarters.json`,
-  `<out>/flights/domestic/<period_id>.json`,
-  `<out>/flights/international/<period_id>.json`, `<out>/executive.json`,
-  `<out>/analysis/<period_id>.json`; opt-in financial files only when a
-  proposal and matching public approval receipt are explicitly supplied.
-  `<out>` es local (no versionado; ver `.gitignore` para `web/public/data/`).
+| Archivo | Contenido |
+|---|---|
+| `flights/quarters.json` | Periodos, metadatos, series agregadas y geometría. |
+| `flights/domestic/<period_id>.json`, `flights/international/<period_id>.json` y redes por entidad | Detalle de rutas por periodo. |
+| `executive.json` | Registros financieros y vistas de todas las entidades. |
+| Archivos de Mercado y Noticias | Participación, demanda aeroportuaria y archivo de noticias. |
+| `analysis/<period_id>.json` o `analysis/<entity_key>/<period_id>.json` | Lecturas con aprobación vigente y citas públicas. |
+| Archivos de métricas financieras y recibo | Solo se exportan si se proporcionan la propuesta y el recibo de aprobación coincidente. |
 
-## Punto de entrada
+`official_routes.export_official_routes` es una exportación separada del mapa
+oficial, tras reproducir sus fuentes y validar el candidato. No altera el
+exportador histórico ni activa su resultado. Véase [mapa oficial](../../docs/mapa-oficial.md).
 
+## Análisis y citas
+
+`analysis.py` lee el expediente local de `analysis_runs/`. Descubre las
+identidades aprobadas con `discover_approved_manifest` y obtiene el contenido
+público mediante `src.analysis_agent.lifecycle.consumer_payload(record)`.
+Después verifica los insumos con `flow.verified_inputs(record)`.
+
+Cada cita contiene solo URL, texto visible y fragmento de la afirmación al que
+se adjunta. No exporta originales, extractos de evidencia, nodos de cálculo
+ni linaje privado. Los dominios permitidos dependen del contrato exacto de la
+lectura. El exportador no escribe en el registro de aprobaciones.
+
+## Comandos
+
+Desde la raíz, con las entradas locales necesarias:
+
+```bash
+uv run python -m src.web_export --out web/public/data/v1
 ```
-uv run python -m src.web_export --out web/public/data/v1 [--allow-missing-analysis]
-# Reproducir las identidades exactas de una publicación, con expediente local:
+
+Para desarrollo sin todos los análisis locales:
+
+```bash
+uv run python -m src.web_export --out web/public/data/v1 --allow-missing-analysis
+```
+
+Para reproducir las identidades exactas de una publicación:
+
+```bash
 uv run python -m src.web_export --out web/public/data/v1 --analysis-manifest site/publication_manifest.json
-# Only after owner review: add --business-metrics-proposal <proposal.json>
-# and --business-metrics-receipt <receipt.json> together, and set
-# CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256 outside the repository to the
-# canonical SHA-256 of that owner receipt. The export fails closed without it.
 ```
 
-`--analysis-manifest` acepta el manifiesto completo de publicación o un archivo
-JSON con una lista de identidades `period_id`, `version` y, para las tesis nuevas,
-`entity_key`. En Python: `export_analysis(out_dir, manifest=identidades)`.
-Aeroméxico conserva `analysis/<period_id>.json` cuando su identidad omite
-`entity_key`; las tesis nuevas usan `analysis/<entity_key>/<period_id>.json`.
-El selector evita la búsqueda ambigua y mantiene cada versión exacta, pero
-requiere aprobación humana vigente y código compatible en `consumer_payload`.
-Los campos de recibo presentes deben coincidir con lo autorizado. Una selección
-explícita incompleta falla incluso con `--allow-missing-analysis`; nunca elige
-otra versión ni revoca una aprobación. Sin selector, se conserva el descubrimiento
-por defecto y su rechazo de versiones múltiples para la misma entidad y periodo.
-Para regenerar solamente las tesis, el módulo `src.web_export.analysis` admite
-los mismos argumentos `--out` y `--analysis-manifest`.
+`--analysis-manifest` admite el manifiesto completo o una lista con
+`period_id`, `version` y, para las lecturas por entidad, `entity_key`.
+En Python: `export_analysis(out_dir, manifest=identidades)`.
+El módulo `src.web_export.analysis` acepta también `--out` y
+`--analysis-manifest` para regenerar solo las lecturas.
 
-Imprime cada archivo escrito con su tamaño y falla (código de salida 1) con
-un mensaje legible si falta un insumo requerido (Gold o, para `analysis.py`,
-el expediente/ledger local — salvo `--allow-missing-analysis`).
+La selección conserva cada versión exacta y exige aprobación vigente y código
+compatible. Una selección explícita incompleta falla incluso con
+`--allow-missing-analysis`; no se sustituye por otra versión.
+Sin selección explícita, el descubrimiento rechaza varias versiones aprobadas
+de la misma entidad y periodo.
 
-## Comando de prueba focalizada
+El comando imprime rutas y tamaños; devuelve código 1 ante una entrada ausente
+o inválida. Las opciones adicionales están en
+[`__main__.py`](__main__.py), incluidos `--only market` y
+`--only official-routes`; no equivalen a una publicación completa.
 
-```
+## Métricas financieras con autorización separada
+
+Después de la revisión del dueño, proporciona juntas las opciones
+`--business-metrics-proposal <proposal.json>` y
+`--business-metrics-receipt <receipt.json>`. El entorno debe contener
+`CHAT_BUSINESS_METRICS_APPROVAL_RECEIPT_SHA256` con el hash canónico autorizado.
+
+El recibo exige `owner_id: "salvamalfa"`, `approved_at` válido y
+`decision_reference` no vacía. Su hash usa JSON canónico: claves ordenadas,
+separadores compactos y UTF-8. Cambiar sangría no cambia su identidad.
+No guardes el pin en Git ni lo derives automáticamente de un recibo incluido
+en el repositorio. Sin la autorización coincidente, la exportación se rechaza.
+
+## Verificación
+
+```bash
 uv run pytest -q tests/test_web_export.py
 ```
 
-Incluye una prueba de equivalencia (`local_data`): recombinar los archivos
-divididos reproduce, campo a campo, el payload que hoy se embebe en el HTML
-integrado.
-
-El recibo debe declarar `owner_id: "salvamalfa"`, una fecha `approved_at`
-válida y una `decision_reference` no vacía. El hash externo se calcula sobre
-el objeto JSON canónico (claves ordenadas, separadores compactos y UTF-8), por
-lo que cambiar sangría o saltos de línea no cambia la identidad del recibo.
-No guardes el pin en Git ni lo derives automáticamente de un recibo del
-repositorio.
+Los casos `local_data` necesitan entradas locales y comprueban que recombinar
+los archivos reproduce el contenido público del generador. Las pruebas públicas
+usan datos sintéticos; no demuestran una reconstrucción desde fuentes privadas.
