@@ -9,6 +9,38 @@ OTHER_BENEFIT = (
 )
 
 
+def _requirement_header(text):
+    if re.search(OTHER_BENEFIT, text):
+        return False
+    conditional = re.match(r"^\s*(?:si\b|if\b|siempre que\b|provided(?: that)?\b)", text)
+    minimum = re.search(r"\b(?:al menos|minim[oa]|at least|minimum|de antelacion)\b", text) and re.search(
+        r"\b(?:compra|vuelo|salida|purchase|flight|departure)\b", text
+    )
+    return bool(conditional or minimum)
+
+
+def _refund_subject(text, last=False):
+    topics = [(m.start(), True) for m in re.finditer(TOPIC, text)]
+    topics += [(m.start(), False) for m in re.finditer(OTHER_BENEFIT, text)]
+    return bool(topics) and sorted(topics)[-1 if last else 0][1]
+
+
+def _claim_clauses(text):
+    """Bind an adjacent conditional comma-clause to its refund subject only."""
+    for sentence in re.split(r"[.;]|\b(?:pero|but|salvo|excepto|except)\b", text):
+        chunks = sentence.split(",")
+        constrained = set()
+        for index, chunk in enumerate(chunks):
+            if not _requirement_header(chunk):
+                continue
+            if index > 0 and _refund_subject(chunks[index - 1], last=True):
+                constrained.add(index - 1)
+            if index + 1 < len(chunks) and _refund_subject(chunks[index + 1]):
+                constrained.add(index + 1)
+        for index, chunk in enumerate(chunks):
+            yield chunk, index in constrained
+
+
 def _window(claim):
     purchase = bool(
         re.search(
@@ -43,7 +75,7 @@ def refund_facts(text):
     denied, specifically_denied, affirmative = False, False, False
     windows, cancellation_exceptions, original_payment = set(), set(), False
     unsupported = False
-    for clause in re.split(r"[.;,]|\b(?:pero|but|salvo|excepto|except)\b", text):
+    for clause, conditional_requirement in _claim_clauses(text):
         topic = re.search(TOPIC, clause)
         if topic is None:
             continue
@@ -86,14 +118,18 @@ def refund_facts(text):
             continue
         # A separate minimum advance-purchase/departure requirement cannot be
         # replaced by the supported 24-hour refund/cancellation deadline.
-        prerequisites = bool(
-            re.search(
-                r"\b(?:al menos|minim[oa](?: de)?|at least|minimum(?: of)?)\s+"
-                r"(?:\d+|siete|seven)\s*(?:dias?|horas?|h|days?|hours?)\b"
-                r"|\b(?:vuelo|salida|flight|departure)[^.;]{0,35}\bcon\s+\d+\s+dias? de antelacion\b"
-                r"|\b(?:siempre que|sujeto a|subject to|if|con costo adicional)\b"
-                r"|\bsi (?:el|la|se|los|las)\b",
-                claim,
+        prerequisites = (
+            conditional_requirement
+            or _requirement_header(prefix)
+            or bool(
+                re.search(
+                    r"\b(?:al menos|minim[oa](?: de)?|at least|minimum(?: of)?)\s+"
+                    r"(?:\d+|siete|seven)\s*(?:dias?|horas?|h|days?|hours?)\b"
+                    r"|\b(?:vuelo|salida|flight|departure)[^.;]{0,35}\bcon\s+\d+\s+dias? de antelacion\b"
+                    r"|\b(?:siempre que|sujeto a|subject to|if|provided|con costo adicional)\b"
+                    r"|\bsi (?:el|la|se|los|las)\b",
+                    claim,
+                )
             )
         )
         window = _window(claim)

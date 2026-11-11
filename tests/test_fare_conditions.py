@@ -352,6 +352,45 @@ def test_full_item_claim_honors_postfix_restrictions_and_separate_affirmations(t
         ("Not refundable; check-in 24 hours before first flight", (False, None, None)),
         ("No es reembolsable; check-in 24 horas antes del primer vuelo", (False, None, None)),
         ("No se permite el reembolso hasta 24 horas antes del primer vuelo", (False, None, None)),
+        (
+            "Si el vuelo sale al menos 7 días después, cancelación dentro de primeras 24 horas tras compra",
+            (None, None, None),
+        ),
+        (
+            "Cancelación dentro de primeras 24 horas tras compra, si el vuelo sale al menos 7 días después",
+            (None, None, None),
+        ),
+        ("If departure is at least 7 days later, refund within 24 hours after purchase", (None, None, None)),
+        ("Refund within 24 hours after purchase, if departure is at least 7 days later", (None, None, None)),
+        (
+            "Siempre que el vuelo salga 7 días después, cancelación dentro de primeras 24 horas tras compra",
+            (None, None, None),
+        ),
+        (
+            "Provided departure is at least 7 days later, cancellation within first 24 hours after purchase",
+            (None, None, None),
+        ),
+        ("Refund within 24 hours after purchase provided departure is 7 days later", (None, None, None)),
+        (
+            "Compra con mínimo 7 días antes del vuelo, cancelación dentro de primeras 24 horas tras compra",
+            (None, None, None),
+        ),
+        (
+            "Check-in 7 días antes, cancelación dentro de primeras 24 horas tras compra",
+            (None, "purchase_24h", None),
+        ),
+        (
+            "Reembolso hasta 24 horas antes del primer vuelo, check-in al menos 7 días antes",
+            (True, "before_first_departure_24h", None),
+        ),
+        (
+            "Provided departure is at least 7 days later refund within 24 hours after purchase",
+            (None, None, None),
+        ),
+        (
+            "Si el vuelo sale al menos 7 días después cancelación dentro de primeras 24 horas tras compra",
+            (None, None, None),
+        ),
     ],
 )
 def test_refund_claim_owns_its_eligibility_window_and_payment_form(text, expected):

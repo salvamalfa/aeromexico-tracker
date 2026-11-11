@@ -116,6 +116,8 @@ plazos. Una negación específica impide anunciar reembolso o su ventana; una
 excepción positiva de cancelación tras compra no vuelve reembolsable toda la
 tarifa. Un mínimo adicional explícito que el contrato no puede representar
 deja la excepción desconocida, en lugar de ocultar ese requisito material.
+Las condiciones anteriores o posteriores ligadas por coma mantienen ese
+alcance, sin tomar requisitos de una afirmación distinta de check-in.
 
 La identidad opaca versionada de cada grupo conserva la comparación privada
 original aunque dos etiquetas públicas coincidan. Valores materiales no
