@@ -95,6 +95,18 @@ Mercado y demanda aeroportuaria. Una edición nueva no amplía un contrato hist�
 `--locked --no-group dev --extra analytics`, también para la vista previa con
 su propio checkout. Instalar dependencias no ejecuta ingestas o modelos.
 
+Si el replay del productor AFAC falla, agota su tiempo o no devuelve el resultado
+esperado, su wrapper conserva stdout, stderr y los diagnósticos anidados antes
+de retirar el checkout temporal. Quedan bajo
+`tmp/approval-replay-diagnostics/afac-replay-*/`, privados e ignorados por Git.
+El manifiesto de cada intento identifica el productor, el resultado y los
+tamaños y SHA-256 de los archivos conservados. Revisa esa evidencia antes de
+decidir una corrección o un nuevo intento; el error exterior puede ocultar el
+rechazo original del productor padre. La retención no cambia el rechazo, los
+controles ni las aprobaciones. Los enlaces simbólicos y junctions se rechazan;
+si tampoco se puede conservar el diagnóstico, la ejecución sigue fallando y
+lo indica. Estos archivos no forman parte del sitio público.
+
 ### Cambios de presentación y datos preservados
 
 - `--ui-only` exige que todo `site/` coincida por bytes con un commit fijado

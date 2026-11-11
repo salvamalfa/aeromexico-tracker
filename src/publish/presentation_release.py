@@ -12,6 +12,7 @@ import hashlib
 import json
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -40,8 +41,9 @@ def presentation_receipt(
     repo: Path, out_dir: Path, trusted_commit: str, current_manifest: dict[str, Any]
 ) -> dict | None:
     """Bind a rebuilt dashboard to its served baseline and AFAC data producer."""
-    from . import afac_history_scope
     from scripts.check_pages_publication import verifier_for
+
+    from . import afac_history_scope
 
     if verifier_for(out_dir, repo) == "src.publish.fare_scope":
         # The fare proof pins and replays the complete preceding SOURCE/issuer/
@@ -228,6 +230,79 @@ print(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(",",":")))
 """
 
 
+def _retain_afac_replay_diagnostics(repo, checkout, commit, returncode, stdout, stderr) -> str:
+    """Keep failed subprocess evidence outside its disposable producer checkout."""
+    repo, checkout = Path(repo).resolve(), Path(checkout).resolve()
+    source = checkout / "tmp/approval-replay-diagnostics"
+    destination = repo / "tmp/approval-replay-diagnostics"
+
+    def linked(path):
+        return path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction())
+
+    def checked_parents(path, root):
+        if not path.is_relative_to(root):
+            raise ValueError("Replay diagnostic path leaves its workspace")
+        while path != root:
+            if linked(path):
+                raise ValueError("Replay diagnostic path traverses a symlink or junction")
+            path = path.parent
+
+    def raw(value):
+        return value if isinstance(value, bytes) else (value or "").encode("utf-8")
+
+    # Validate and read the complete source inventory before creating any output.
+    # In particular, never follow a nested diagnostic link outside the producer.
+    payloads = {"producer.stdout.txt": raw(stdout), "producer.stderr.txt": raw(stderr)}
+    checked_parents(source, checkout)
+    if source.exists():
+        if not source.is_dir():
+            raise ValueError("Replay diagnostic source is not a directory")
+        for path in sorted(source.rglob("*")):
+            checked_parents(path, checkout)
+            if path.is_dir():
+                continue
+            if not stat.S_ISREG(path.lstat().st_mode):
+                raise ValueError("Replay diagnostic input is not a regular file")
+            payloads["nested/" + path.relative_to(source).as_posix()] = path.read_bytes()
+    checked_parents(destination, repo)
+    destination.mkdir(parents=True, exist_ok=True)
+    folder = Path(tempfile.mkdtemp(prefix="afac-replay-", dir=destination))
+    entries = []
+    for name, content in sorted(payloads.items()):
+        target = folder / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        entries.append({"path": name, "bytes": len(content), "sha256": _sha(content)})
+    report = folder / "manifest.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema_version": "afac_replay_diagnostics_v1",
+                "producer_commit": commit,
+                "returncode": returncode,
+                "failure_kind": (
+                    "timeout" if returncode == "timeout" else
+                    "invalid_result" if returncode == 0 else "nonzero_exit"
+                ),
+                "files": entries,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ) + "\n",
+        encoding="utf-8",
+    )
+    return report.relative_to(repo).as_posix()
+
+
+def _afac_replay_diagnostic_note(repo, checkout, commit, returncode, stdout, stderr) -> str:
+    try:
+        path = _retain_afac_replay_diagnostics(repo, checkout, commit, returncode, stdout, stderr)
+    except (OSError, ValueError) as error:
+        # Retention can fail, but can never turn the producer's refusal into success.
+        return f"private diagnostic retention failed: {error}"
+    return f"private diagnostics={path}"
+
+
 def replay_afac_sources(repo: Path, profile: dict[str, Any], anchor: dict[str, Any]) -> dict[str, Any]:
     """Run the exact published source producer against current private inputs."""
     from . import afac_history_scope, afac_history_update
@@ -267,23 +342,38 @@ def replay_afac_sources(repo: Path, profile: dict[str, Any], anchor: dict[str, A
                 raise ValueError(f"Private AFAC source directory contains a symlink: {name}")
             shutil.copytree(source, checkout / name, dirs_exist_ok=True, copy_function=shutil.copy2)
 
-        result = subprocess.run(
-            [sys.executable, "-B", "-c", _AFAC_REPLAY_PROGRAM, request_ref["path"]],
-            cwd=checkout,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            timeout=3600,
-            env={**__import__("os").environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"},
-        )
+        try:
+            result = subprocess.run(
+                [sys.executable, "-B", "-c", _AFAC_REPLAY_PROGRAM, request_ref["path"]],
+                cwd=checkout,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=3600,
+                env={**__import__("os").environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"},
+            )
+        except subprocess.TimeoutExpired as error:
+            error.add_note(
+                _afac_replay_diagnostic_note(
+                    repo, checkout, commit, "timeout", error.stdout, error.stderr
+                )
+            )
+            raise
         if result.returncode:
-            raise ValueError("Pinned AFAC producer replay failed: " + result.stderr[-2400:])
+            note = _afac_replay_diagnostic_note(
+                repo, checkout, commit, result.returncode, result.stdout, result.stderr
+            )
+            raise ValueError(f"Pinned AFAC producer replay failed ({note}): " + result.stderr[-2400:])
         lines = [line for line in result.stdout.splitlines() if line.strip()]
         try:
             replay = json.loads(lines[-1])
         except (IndexError, json.JSONDecodeError) as error:
+            note = _afac_replay_diagnostic_note(
+                repo, checkout, commit, result.returncode, result.stdout, result.stderr
+            )
             raise ValueError(
-                "Pinned AFAC producer replay returned no machine-readable result: " + result.stdout[-1200:]
+                f"Pinned AFAC producer replay returned no machine-readable result ({note}): "
+                + result.stdout[-1200:]
             ) from error
     finally:
         if checkout.exists():
