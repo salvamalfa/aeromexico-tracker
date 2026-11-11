@@ -113,34 +113,76 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
 
 
 def _stage2_market_publication(site, root):
-    """Follow an exact Fare parent without replacing the separate strong gate replay."""
+    """Follow exact Fare parents without replacing the separate strong gate replay."""
+    import io
+    import re
+    import tarfile
+    import tempfile
+    from contextlib import ExitStack
+
     from scripts.check_pages_publication import verifier_for
-    from src.publish import editorial, fare_scope
+    from src.publish import editorial, fare_scope, manifest
     from tests._site_publication_parity import _active_module
 
     profile = verifier_for(site, root)
     if profile != "src.publish.fare_scope":
         return profile, None
-    proof, current = fare_scope.read_proof(site, root)
-    baseline, _ = editorial.baseline(root, proof)
-    assert current["analysis_manifest"] == baseline["analysis_manifest"]
-    retained = {row["path"]: (row["sha256"], row["bytes"]) for row in baseline["files"]}
-    assert fare_scope.protected(fare_scope.public_files(site)) == fare_scope.protected(retained)
-    # Select from the committed parent's own proofs, not the outer Fare name.
-    profile = _active_module(site, root, baseline, proof["baseline_commit"])
-    source_spec = None
-    if profile == "src.publish.source_data_scope":
-        from src.publish import source_data_scope
+    edition, seen = None, set()
+    with ExitStack() as stack:
+        while profile == "src.publish.fare_scope":
+            if edition is None:
+                proof, current = fare_scope.read_proof(site, root)
+            else:
+                # This whole edition was just matched to its pinned Git manifest.
+                # Historical policy/contract bytes belong to its own producer.
+                raw = (site / fare_scope.PROOF).read_bytes()
+                proof = json.loads(raw)
+                assert set(proof) == fare_scope.FIELDS and proof["schema_version"] == fare_scope.SCHEMA
+                assert all(re.fullmatch("[a-f0-9]{64}", proof[key])
+                           for key in fare_scope.FIELDS - {"schema_version", "baseline_commit"})
+                assert re.fullmatch("[a-f0-9]{40}", proof["baseline_commit"])
+                producer = current["code_commit"]
+                assert proof["baseline_commit"] != producer
+                editorial._git(root, "merge-base", "--is-ancestor", producer, edition)
+                editorial._git(root, "merge-base", "--is-ancestor", proof["baseline_commit"], producer)
+                pin = next(row for row in current["files"] if row["path"] == fare_scope.PROOF)
+                assert (pin["sha256"], pin["bytes"]) == (fare_scope.sha(raw), len(raw))
+                for field, path in (
+                    ("policy_sha256", fare_scope.POLICY),
+                    ("public_contract_sha256", "contracts/web/fare-averages.schema.json"),
+                ):
+                    assert proof[field] == fare_scope.sha(editorial._git(root, "show", f"{producer}:{path}"))
+                assert proof["aggregate_sha256"] == fare_scope.sha((site / fare_scope.DATA).read_bytes())
+            baseline, raw = editorial.baseline(root, proof)
+            assert current["analysis_manifest"] == baseline["analysis_manifest"]
+            retained = {row["path"]: (row["sha256"], row["bytes"]) for row in baseline["files"]}
+            assert fare_scope.protected(fare_scope.public_files(site)) == fare_scope.protected(retained)
+            edition = proof["baseline_commit"]
+            assert edition not in seen, "Cyclic Fare baseline"
+            seen.add(edition)
+            folder = stack.enter_context(tempfile.TemporaryDirectory(prefix="stage2-fare-parent-"))
+            archive = editorial._git(root, "archive", edition, "site")
+            with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
+                stream.extractall(folder, filter="data")
+            site = Path(folder) / "site"
+            assert (site / manifest.MANIFEST_NAME).read_bytes() == raw
+            assert {row["path"]: (row["sha256"], row["bytes"])
+                    for row in manifest.file_entries(site)} == retained
+            current = baseline
+            profile = _active_module(site, root, current, edition)
+        source_spec = None
+        if profile == "src.publish.source_data_scope":
+            from src.publish import source_data_scope
 
-        producer = baseline["code_commit"]
-        editorial._git(root, "merge-base", "--is-ancestor", producer, proof["baseline_commit"])
-        raw = editorial._git(root, "show", f"{producer}:{source_data_scope.ANCHOR}")
-        source_spec = json.loads(raw)
-        receipt = json.loads((site / source_data_scope.PROOF).read_bytes())
-        assert receipt["anchor_sha256"] == fare_scope.sha(raw)
-        assert receipt["remote_witness"]["baseline_commit"] == source_spec["baseline_commit"]
-        assert receipt["remote_witness"]["manifest_sha256"] == source_spec["baseline_manifest_sha256"]
-    return profile, source_spec
+            producer = current["code_commit"]
+            editorial._git(root, "merge-base", "--is-ancestor", producer, edition)
+            raw = editorial._git(root, "show", f"{producer}:{source_data_scope.ANCHOR}")
+            source_spec = json.loads(raw)
+            receipt = json.loads((site / source_data_scope.PROOF).read_bytes())
+            assert receipt["anchor_sha256"] == fare_scope.sha(raw)
+            assert receipt["remote_witness"]["baseline_commit"] == source_spec["baseline_commit"]
+            assert receipt["remote_witness"]["manifest_sha256"] == source_spec["baseline_manifest_sha256"]
+        return profile, source_spec
 
 
 def test_stage2_fare_market_parent_rejects_rewritten_market_and_proof(tmp_path):
@@ -191,6 +233,65 @@ def test_stage2_fare_market_parent_rejects_rewritten_market_and_proof(tmp_path):
     manifest_path.write_text(json.dumps(changed), encoding="utf-8")
     with pytest.raises(AssertionError):
         _stage2_market_publication(site, root)
+
+
+def test_stage2_market_follows_two_committed_fare_layers(tmp_path, monkeypatch):
+    import io
+    import shutil
+    import subprocess
+    import tarfile
+
+    from src.conversational_analytics.data.snapshot import Snapshot
+    from src.conversational_analytics.evaluation import STAGE2_PILOT_FIXTURE_PATH, audit_snapshot
+    from src.publish import editorial, fare_scope
+    from tests._news_runtime_fixtures import _pin_approved_content
+
+    _pin_approved_content(monkeypatch)
+    root = Path(__file__).resolve().parents[1]
+    repo = tmp_path / "git-view"
+    subprocess.run(["git", "clone", "--shared", "--no-checkout", str(root), str(repo)],
+                   check=True, capture_output=True)
+    editorial._git(repo, "read-tree", "HEAD")
+    editorial._git(repo, "-c", "user.name=Stage2 fixture", "-c", "user.email=fixture@example.invalid",
+                   "commit", "--allow-empty", "-qm", "metadata-only nested Fare fixture")
+    # The real selector executes its composition check in this isolated checkout.
+    archive = editorial._git(repo, "archive", "HEAD", "src", "config", "contracts")
+    with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
+        stream.extractall(repo, filter="data")
+    site = repo / "site"
+    shutil.copytree(root / "site", site)
+    # Wrap the genuinely committed first Fare edition, preserving all its data.
+    parent = editorial._git(root, "log", "-1", "--format=%H", "--", "site").decode().strip()
+    parent_raw = editorial._git(root, "show", f"{parent}:site/publication_manifest.json")
+    current = json.loads((site / "publication_manifest.json").read_bytes())
+    proof = json.loads((site / fare_scope.PROOF).read_bytes())
+    proof.update(baseline_commit=parent, baseline_manifest_sha256=fare_scope.sha(parent_raw))
+    raw = json.dumps(proof).encode()
+    (site / fare_scope.PROOF).write_bytes(raw)
+    pin = next(row for row in current["files"] if row["path"] == fare_scope.PROOF)
+    pin.update(sha256=fare_scope.sha(raw), bytes=len(raw))
+    current["code_commit"] = editorial._git(repo, "rev-parse", "HEAD").decode().strip()
+    (site / "publication_manifest.json").write_text(json.dumps(current), encoding="utf-8")
+    editorial._git(repo, "add", "site")
+    editorial._git(repo, "-c", "user.name=Stage2 fixture", "-c", "user.email=fixture@example.invalid",
+                   "commit", "-qm", "nested Fare site metadata fixture")
+    assert (site / "publication_manifest.json").read_bytes() == editorial._git(
+        repo, "show", "HEAD:site/publication_manifest.json"
+    )
+    profile, spec = _stage2_market_publication(site, repo)
+    assert profile == "src.publish.source_data_scope" and spec["product"] == "official_routes"
+    assert current["analysis_manifest"] == json.loads(parent_raw)["analysis_manifest"]
+    fixture_raw = STAGE2_PILOT_FIXTURE_PATH.read_bytes()
+    fixture = json.loads(fixture_raw)
+    report = audit_snapshot(Snapshot(site), fixture["cases"], expected_versions=fixture["expected_versions"])
+    assert (report["snapshot_cases_checked"], report["snapshot_cases_passed"]) == (13, 11)
+    failures = report["snapshot_cases_failed"]
+    assert [row["id"] for row in failures] == [
+        "fixture-version", "en_relative_share_change", "es_am_market_share",
+    ]
+    assert len(failures[1]["failures"]) == 2 and len(failures[2]["failures"]) == 1
+    assert report["quality_denominator"] == 0
+    assert STAGE2_PILOT_FIXTURE_PATH.read_bytes() == fixture_raw
 
 
 def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewriting_gold(monkeypatch):
