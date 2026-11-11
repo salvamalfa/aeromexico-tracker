@@ -38,10 +38,15 @@ def _sha(raw: bytes) -> str:
 
 def presentation_receipt(
     repo: Path, out_dir: Path, trusted_commit: str, current_manifest: dict[str, Any]
-) -> dict:
+) -> dict | None:
     """Bind a rebuilt dashboard to its served baseline and AFAC data producer."""
     from . import afac_history_scope
+    from scripts.check_pages_publication import verifier_for
 
+    if verifier_for(out_dir, repo) == "src.publish.fare_scope":
+        # The fare proof pins and replays the complete preceding SOURCE/issuer/
+        # AFAC publication. Its manifest commit is not an AFAC source producer.
+        return None
     anchor = afac_history_scope.anchor(repo)
     previous = read_presentation_receipt(out_dir)
     producer_commit = current_manifest["code_commit"]
@@ -68,9 +73,11 @@ def _encode_presentation_receipt(receipt: dict[str, Any]) -> str:
     return PRESENTATION_MARKER + base64.urlsafe_b64encode(raw).decode().rstrip("=")
 
 
-def embed_presentation_receipt(index_html: bytes, receipt: dict[str, Any]) -> bytes:
+def embed_presentation_receipt(index_html: bytes, receipt: dict[str, Any] | None) -> bytes:
     if PRESENTATION_MARKER.encode() in index_html:
         raise PublicationRefused("frontend index already contains a presentation release marker")
+    if receipt is None:
+        return index_html
     close_head = re.search(rb"</head\s*>", index_html, re.IGNORECASE)
     if not close_head:
         raise PublicationRefused("frontend dashboard index has no closing head element")

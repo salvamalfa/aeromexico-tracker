@@ -190,7 +190,7 @@ def test_second_release_retains_original_afac_producer(tmp_path, monkeypatch) ->
     }
     site = tmp_path / "site"
     site.mkdir()
-    (site / "publication_manifest.json").write_text('{"code_commit":"e"}', encoding="utf-8")
+    (site / "publication_manifest.json").write_text('{"code_commit":"e","files":[]}', encoding="utf-8")
     (site / "index.html").write_bytes(release.embed_presentation_receipt(b"<head></head>", previous))
     monkeypatch.setattr(
         afac_history_scope,

@@ -24,21 +24,22 @@ def publish_from_gate(records, private_input, out):
 
 
 def publish_fares_only(records: list[Path], private_input: Path, out: Path):
-    from scripts.check_pages_publication import verify_site as verify_selected
-
     from . import gate
-    from .presentation_release import _replay_release, embed_presentation_receipt, presentation_receipt
+    from .issuer_scope import verify_historical_baseline
+    from .presentation_release import _replay_release, embed_presentation_receipt
 
     repo, ledger, out = gate.PATHS.root, gate.flow.ROOT, Path(out).resolve()
     manifests.refuse_if_build_inputs_dirty(root=repo)
     trusted = gate._trusted_site_commit(repo)
     gate.require_trusted_site_baseline(out, root=repo, trusted_commit=trusted)
-    problems = verify_selected(out, repo)
-    if problems:
-        raise PublicationRefused(f"Existing strong release is invalid: {problems[:3]}")
     baseline = manifests.load_manifest(out)
-    marker = presentation_receipt(repo, out, trusted, baseline)
     baseline_hash = fare_scope.sha((out / manifests.MANIFEST_NAME).read_bytes())
+    verify_historical_baseline(
+        repo,
+        {"baseline_commit": trusted, "baseline_manifest_sha256": baseline_hash},
+        out,
+        require_site_match=True,
+    )
     policy = json.loads((repo / fare_scope.POLICY).read_bytes())
     if (
         policy.get("schema_version") != "fare_quotes_policy_v1"
@@ -76,7 +77,7 @@ def publish_fares_only(records: list[Path], private_input: Path, out: Path):
         staged = Path(temporary) / "dist"
         shutil.copytree(out, staged)
         (staged / "index.html").write_bytes(
-            embed_presentation_receipt((dist / "index.html").read_bytes(), marker)
+            embed_presentation_receipt((dist / "index.html").read_bytes(), None)
         )
         for asset in (dist / "assets").rglob("*"):
             if asset.is_file():

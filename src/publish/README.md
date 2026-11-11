@@ -767,7 +767,9 @@ de fuentes y revocaciones antes y después del build. Conserva los datos heredad
 y las identidades de aprobación byte por byte. El consentimiento del dueño para
 las tarifas se mantiene separado de las aprobaciones financieras.
 
-`src.publish.fare_scope` verifica la publicación base con su verificador fuerte,
+`src.publish.fare_scope` verifica la publicación base con su selector y verificador
+fuertes del `code_commit` original, ejecutados en un worktree. Exige el manifiesto
+bruto y todos los hashes/bytes exactos de Git, rechaza archivos extra y symlinks,
 comprueba la adición exacta, el contrato y las medias/conteos. No acepta una
 modificación de datos heredados aunque tenga un manifiesto nuevo coherente.
 La fuente detallada sigue privada; la fórmula y el grano están en
@@ -777,5 +779,8 @@ El recibo de tarifas participa en la precedencia por el commit de su publicació
 base; un perfil posterior con base más reciente conserva la responsabilidad de
 verificar la composición. La presencia del recibo no fija el verificador para
 siempre. La reconstrucción de presentación puede conservar el producto de tarifas:
-mantiene sus datos y recibos, reproduce las autoridades dos veces y conserva el
-marcador del productor AFAC, que el verificador de tarifas también comprueba.
+mantiene sus datos y recibos y reproduce las autoridades dos veces. El compuesto
+de tarifas hereda la autoridad del perfil base real, que puede ser SOURCE aunque
+retenga pruebas AFAC anteriores. No etiqueta el commit del frontend como productor
+AFAC ni necesita ese marcador: su recibo ya vincula la publicación fuerte original.
+El camino de presentación sobre AFAC directo conserva su marcador y sus guardias.

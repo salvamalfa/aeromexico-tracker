@@ -79,17 +79,13 @@ def read_proof(site: Path, repo: Path):
     return proof, manifest
 
 
-def verify_fare_site(site: Path, repo: Path = PATHS.root, *, depth: int = 0) -> list[str]:
+def verify_fare_site(site: Path, repo: Path = PATHS.root) -> list[str]:
     """Revalidate the preceding strong release, then require every inherited byte unchanged."""
-    from scripts.check_pages_publication import verifier_for
-    from scripts.check_pages_publication import verify_site as verify_selected
-
+    from .issuer_scope import verify_historical_baseline
     from .verify import _verify_site
 
     try:
         site, repo = Path(site), Path(repo)
-        if depth > 20:
-            raise ValueError("Excessive fare release ancestry")
         proof, manifest = read_proof(site, repo)
         archive = subprocess.check_output(["git", "archive", proof["baseline_commit"], "site"], cwd=repo)
         with tempfile.TemporaryDirectory(prefix="fare-trusted-site-") as temporary:
@@ -99,13 +95,7 @@ def verify_fare_site(site: Path, repo: Path = PATHS.root, *, depth: int = 0) -> 
             prior = manifests.load_manifest(baseline)
             if sha((baseline / manifests.MANIFEST_NAME).read_bytes()) != proof["baseline_manifest_sha256"]:
                 raise ValueError("Fare baseline manifest differs from committed source")
-            problems = (
-                verify_fare_site(baseline, repo, depth=depth + 1)
-                if verifier_for(baseline, repo) == "src.publish.fare_scope"
-                else verify_selected(baseline, repo)
-            )
-            if problems:
-                raise ValueError(f"Underlying strong publication failed: {problems[:3]}")
+            verify_historical_baseline(repo, proof, baseline, require_site_match=True)
             if manifest["analysis_manifest"] != prior["analysis_manifest"]:
                 raise ValueError("Fare release changed financial analysis approvals")
             expected_contracts = {**prior["contracts"], CONTRACT: proof["public_contract_sha256"]}

@@ -101,9 +101,22 @@ def anchor(repo=PATHS.root):
     return spec
 
 
-def verify_historical_baseline(repo, spec, site, *, environment=None):
-    """Use its released verifier: a runtime fingerprint failure is never ignored."""
+def verify_historical_baseline(repo, spec, site, *, environment=None, require_site_match=False):
+    """Run the original selector/verifier, never ignore a runtime rejection.
+
+    Overlays/control use require_site_match=True to authenticate their input
+    tree too. Legacy issuer callers can pass their changed candidate as site;
+    the parent's exact Git snapshot is still the only historical verifier input.
+    """
     old, raw = transport.baseline(repo, spec)
+    if require_site_match:
+        actual = manifests.file_entries(Path(site))
+        if (
+            (Path(site) / manifests.MANIFEST_NAME).read_bytes() != raw
+            or actual != sorted(old["files"], key=lambda item: item["path"])
+            or any(path.is_symlink() for path in Path(site).rglob("*"))
+        ):
+            raise ValueError("Historical input site differs from its exact committed manifest")
     for item in old["files"]:
         expected = transport._git(repo, "show", f"{spec['baseline_commit']}:site/{item['path']}")
         if sha(expected) != item["sha256"] or len(expected) != item["bytes"]:
@@ -134,16 +147,29 @@ def verify_historical_baseline(repo, spec, site, *, environment=None):
                     target.write_bytes(
                         transport._git(repo, "show", f"{spec['baseline_commit']}:site/{item['path']}")
                     )
-            from scripts.check_pages_publication import verifier_for
+            selector = checkout / "scripts/check_pages_publication.py"
+            if selector.is_file():
+                # Both selection and verification belong to the producer.
+                # A current selector can apply a new composition rule to an
+                # old release whose reviewed runtime intentionally differs.
+                module = "released scripts/check_pages_publication.py"
+                command = [sys.executable, "-B", str(selector), str(original)]
+            else:
+                from scripts.check_pages_publication import verifier_for
 
-            module = verifier_for(original, checkout)
+                module = verifier_for(original, checkout)
+                if module != "src.publish.verify":
+                    raise ValueError("Historical strong publication selector is missing")
+                command = [sys.executable, "-B", "-m", module, str(original)]
             try:
+                child_environment = dict(os.environ if environment is None else environment)
+                child_environment["PYTHONDONTWRITEBYTECODE"] = "1"
                 outcome = subprocess.run(
-                    [sys.executable, "-B", "-m", module, str(original)],
+                    command,
                     cwd=checkout,
                     capture_output=True,
                     text=True,
-                    env=environment,
+                    env=child_environment,
                     # The released SourceData verifier recursively checks all
                     # earlier issuer editions; existing parity CI allows 600s.
                     timeout=600,

@@ -21,7 +21,22 @@ def git(repo, *args):
 
 
 @pytest.fixture
-def fare_release(tmp_path):
+def fare_release(tmp_path, monkeypatch):
+    # Small additive-scope fixtures predate real Git producer commits. Keep
+    # their boundary focused; test_fare_pinned_baseline runs the complete real
+    # SOURCE selector/verifier/worktree with no verifier replacement.
+    from src.publish import issuer_scope
+
+    def verify_fixture(repo, _spec, site, **_kwargs):
+        from scripts import check_pages_publication as routing
+
+        assert _kwargs.get("require_site_match") is True
+        problems = routing.verify_site(site, repo)
+        if problems:
+            raise ValueError(problems)
+        return manifest.load_manifest(site)
+
+    monkeypatch.setattr(issuer_scope, "verify_historical_baseline", verify_fixture)
     repo = tmp_path / "repo"
     repo.mkdir()
     git(repo, "init", "-q")
@@ -198,19 +213,11 @@ def test_fare_presentation_marker_is_verified_not_treated_as_plain_ui(fare_relea
     assert "inherited producer changed" in str(fare_scope.verify_fare_site(candidate, repo))
 
 
-def test_fare_gate_embeds_inherited_producer_for_following_presentation(fare_release, tmp_path, monkeypatch):
+def test_fare_gate_does_not_invent_an_afac_producer(fare_release, tmp_path, monkeypatch):
     from src import publish as package
     from src.publish import fare_release as publisher
 
     repo, candidate = fare_release
-    marker = dict(
-        schema_version=presentation.PRESENTATION_RECEIPT_SCHEMA,
-        baseline_commit="a" * 40,
-        baseline_manifest_sha256="b" * 64,
-        source_producer_commit="c" * 40,
-        source_producer_code_version="d" * 64,
-        frontend_commit="e" * 40,
-    )
     source = tmp_path / "private.json"
     write_json(source, private(observation()))
     web_data = tmp_path / "web/public/data/v1"
@@ -231,7 +238,7 @@ def test_fare_gate_embeds_inherited_producer_for_following_presentation(fare_rel
         return dist
 
     def verify_candidate(site, _repo):
-        assert presentation.read_presentation_receipt(site) == marker
+        assert presentation.read_presentation_receipt(site) is None
         checks["candidate"] += 1
         return []
 
@@ -253,7 +260,7 @@ def test_fare_gate_embeds_inherited_producer_for_following_presentation(fare_rel
     monkeypatch.setattr(package, "gate", fake_gate, raising=False)
     monkeypatch.setattr(manifest, "refuse_if_build_inputs_dirty", lambda **_: None)
     monkeypatch.setattr(presentation, "_replay_release", replay)
-    monkeypatch.setattr(presentation, "presentation_receipt", lambda *_: marker)
+    monkeypatch.setattr(presentation, "presentation_receipt", lambda *_: pytest.fail("fare producer is not AFAC"))
     monkeypatch.setattr(fare_scope, "verify_fare_site", verify_candidate)
     publisher.publish_fares_only([], source, repo / "site")
     assert checks == {"replays": 2, "baseline": 2, "candidate": 1}
