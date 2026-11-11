@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import csv
-import json
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+from src.fare_quotes.conditions import VERSION as CONDITIONS_VERSION
+from src.fare_quotes.conditions import (
+    condition_facts,
+    public_fare,
+    render_conditions,
+    source_notes,
+    unclassified_comparison_notes,
+)
 from src.fare_quotes.normalize import digest
 
 VERSION = "fare_averages_v1"
@@ -27,10 +34,7 @@ GROUP_FIELDS = (
 
 
 def _notes(row):
-    try:
-        return json.loads(row.get("notes") or "{}")
-    except (TypeError, ValueError):
-        return {}
+    return source_notes(row)
 
 
 def comparable_group(row):
@@ -71,6 +75,32 @@ def metric(values):
     return dict(mean=float(sum(observed) / len(observed)) if observed else None, n=len(observed))
 
 
+def fact_partitions(observations, private_conditions):
+    """Retain the raw comparison grain; split conflicting explicit facts.
+
+    A fact missing in any otherwise comparable observation stays unknown for
+    that group. It is never inherited from another observation. A disagreement
+    between known values (including real operators) instead creates separate
+    groups, with unknown values kept apart from either conflicting value.
+    """
+    rows = [(row, condition_facts(row, private_conditions)) for row in observations]
+    keys = rows[0][1].keys()
+    conflicts = [key for key in keys if len({digest(f[key]) for _, f in rows if f[key] is not None}) > 1]
+    partitions = defaultdict(list)
+    for row, facts in rows:
+        identity = (
+            digest(unclassified_comparison_notes(row)),
+            tuple(digest(facts[key]) for key in conflicts),
+        )
+        partitions[identity].append((row, facts))
+    for identity, members in sorted(partitions.items()):
+        common = {
+            key: members[0][1][key] if len({digest(f[key]) for _, f in members}) == 1 else None
+            for key in keys
+        }
+        yield [row for row, _ in members], common, digest(identity)
+
+
 def build_averages(private: dict) -> dict:
     if private.get("schema_version") != "local_fare_quotes_v1" or private.get("private") is not True:
         raise ValueError("Expected the private normalized quote dataset")
@@ -99,8 +129,16 @@ def build_averages(private: dict) -> dict:
             continue
         grouped[key].append(row)
     groups = []
-    for key, observations in sorted(grouped.items(), key=lambda pair: repr(pair[0])):
+    partitions = [
+        (key, observations, facts, identity)
+        for key, rows in sorted(grouped.items(), key=lambda pair: repr(pair[0]))
+        for observations, facts, identity in fact_partitions(rows, key[GROUP_FIELDS.index("conditions")])
+    ]
+    for key, observations, facts, identity in partitions:
         group = dict(zip(GROUP_FIELDS, key))
+        group["fare"] = public_fare(group["fare"])
+        group["condition_facts"] = facts
+        group["conditions"] = render_conditions(facts)
         for name in ("origin", "destination"):
             keys = airport_cities[group[name]]
             group[name + "_map_id"] = next(iter(keys)) if len(keys) == 1 else None
@@ -116,7 +154,13 @@ def build_averages(private: dict) -> dict:
         )
         if group["provider"] == "VOLARIS" and group["metrics"]["points"] != {"mean": None, "n": 0}:
             raise ValueError("Volaris cannot have points, even zero")
-        group["group_id"] = digest(group)
+        group["group_id"] = digest(
+            dict(
+                version=CONDITIONS_VERSION,
+                private_comparability=digest(dict(key=key, material_note_partition=identity)),
+                public_group=group,
+            )
+        )
         groups.append(group)
     payload = dict(
         schema_version=VERSION,

@@ -35,6 +35,7 @@
           "destination_map_id",
           "fare",
           "conditions",
+          "condition_facts",
           "horizon_months",
           "stay_days",
           "trip_type",
@@ -70,17 +71,24 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "pattern": "^CITY_[A-Z]{2}_[A-Z0-9_]+$"
           },
           "destination_map_id": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "pattern": "^CITY_[A-Z]{2}_[A-Z0-9_]+$"
           },
           "fare": {
-            "type": "string",
-            "minLength": 1
+            "enum": [
+              "Main",
+              "Premier",
+              "Zero",
+              "Plus",
+              "Tarifa no clasificada"
+            ]
           },
           "conditions": {
             "type": "string",
@@ -113,11 +121,13 @@
           },
           "query_date_start": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
           },
           "query_date_end": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
           },
           "points_applicability": {
             "enum": [
@@ -222,6 +232,255 @@
                     "minimum": 0
                   }
                 }
+              }
+            }
+          },
+          "condition_facts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema_version",
+              "family",
+              "cabin",
+              "passengers",
+              "adults",
+              "direct_outbound",
+              "direct_return",
+              "personal_item",
+              "carry_on",
+              "checked_baggage",
+              "refundable",
+              "refund_original_payment",
+              "optional_extras_added",
+              "membership_included",
+              "personal_item_max_cm",
+              "carry_on_max_cm",
+              "combined_personal_and_carry_on_kg",
+              "checked_baggage_kg",
+              "checked_baggage_linear_cm",
+              "operator_outbound",
+              "operator_return",
+              "benefits_scope",
+              "refund_deadline",
+              "changes",
+              "same_day_advance",
+              "checkin_channel",
+              "checkin_advance_hours",
+              "boarding"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": "fare_condition_facts_v1"
+              },
+              "family": {
+                "enum": [
+                  "Main",
+                  "Premier",
+                  "Zero",
+                  "Plus",
+                  null
+                ]
+              },
+              "cabin": {
+                "enum": [
+                  "Economy",
+                  "Business",
+                  "Premium Economy",
+                  "First",
+                  "Main",
+                  "Premier",
+                  null
+                ]
+              },
+              "passengers": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 9
+              },
+              "adults": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 9
+              },
+              "direct_outbound": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "direct_return": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "personal_item": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "carry_on": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "checked_baggage": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "refundable": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "refund_original_payment": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "optional_extras_added": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "membership_included": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "personal_item_max_cm": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 99
+                }
+              },
+              "carry_on_max_cm": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 99
+                }
+              },
+              "combined_personal_and_carry_on_kg": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 50
+              },
+              "checked_baggage_kg": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 50
+              },
+              "checked_baggage_linear_cm": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 300
+              },
+              "operator_outbound": {
+                "enum": [
+                  "Aeromexico",
+                  "Aeromexico Connect",
+                  "Viva",
+                  "Volaris Mexico",
+                  "Volaris Costa Rica",
+                  "Volaris El Salvador",
+                  null
+                ]
+              },
+              "operator_return": {
+                "enum": [
+                  "Aeromexico",
+                  "Aeromexico Connect",
+                  "Viva",
+                  "Volaris Mexico",
+                  "Volaris Costa Rica",
+                  "Volaris El Salvador",
+                  null
+                ]
+              },
+              "benefits_scope": {
+                "enum": [
+                  "observed_fare_terms",
+                  "both_directions_verified",
+                  "not_verified_for_both"
+                ]
+              },
+              "refund_deadline": {
+                "enum": [
+                  "purchase_24h",
+                  "before_first_departure_24h",
+                  null
+                ]
+              },
+              "changes": {
+                "enum": [
+                  "not_included",
+                  "service_fee_waived_fare_difference_due",
+                  null
+                ]
+              },
+              "same_day_advance": {
+                "enum": [
+                  "free_not_included",
+                  "subject_to_availability",
+                  null
+                ]
+              },
+              "checkin_channel": {
+                "enum": [
+                  "app",
+                  "online",
+                  null
+                ]
+              },
+              "checkin_advance_hours": {
+                "enum": [
+                  24,
+                  168,
+                  null
+                ]
+              },
+              "boarding": {
+                "enum": [
+                  "last",
+                  null
+                ]
               }
             }
           }

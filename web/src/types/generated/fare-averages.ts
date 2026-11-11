@@ -13,7 +13,7 @@ export interface QuarterlyMeansOfVerifiedFareObservations {
     destination: string;
     origin_map_id: string | null;
     destination_map_id: string | null;
-    fare: string;
+    fare: "Main" | "Premier" | "Zero" | "Plus" | "Tarifa no clasificada";
     conditions: string;
     horizon_months: number;
     stay_days: number | null;
@@ -41,6 +41,58 @@ export interface QuarterlyMeansOfVerifiedFareObservations {
         mean: number | null;
         n: number;
       };
+    };
+    condition_facts: {
+      schema_version: "fare_condition_facts_v1";
+      family: "Main" | "Premier" | "Zero" | "Plus" | null;
+      cabin: "Economy" | "Business" | "Premium Economy" | "First" | "Main" | "Premier" | null;
+      passengers: number | null;
+      adults: number | null;
+      direct_outbound: boolean | null;
+      direct_return: boolean | null;
+      personal_item: boolean | null;
+      carry_on: boolean | null;
+      checked_baggage: boolean | null;
+      refundable: boolean | null;
+      refund_original_payment: boolean | null;
+      optional_extras_added: boolean | null;
+      membership_included: boolean | null;
+      /**
+       * @minItems 3
+       * @maxItems 3
+       */
+      personal_item_max_cm: [number, number, number] | null;
+      /**
+       * @minItems 3
+       * @maxItems 3
+       */
+      carry_on_max_cm: [number, number, number] | null;
+      combined_personal_and_carry_on_kg: number | null;
+      checked_baggage_kg: number | null;
+      checked_baggage_linear_cm: number | null;
+      operator_outbound:
+        | "Aeromexico"
+        | "Aeromexico Connect"
+        | "Viva"
+        | "Volaris Mexico"
+        | "Volaris Costa Rica"
+        | "Volaris El Salvador"
+        | null;
+      operator_return:
+        | "Aeromexico"
+        | "Aeromexico Connect"
+        | "Viva"
+        | "Volaris Mexico"
+        | "Volaris Costa Rica"
+        | "Volaris El Salvador"
+        | null;
+      benefits_scope: "observed_fare_terms" | "both_directions_verified" | "not_verified_for_both";
+      refund_deadline: "purchase_24h" | "before_first_departure_24h" | null;
+      changes: "not_included" | "service_fee_waived_fare_difference_due" | null;
+      same_day_advance: "free_not_included" | "subject_to_availability" | null;
+      checkin_channel: "app" | "online" | null;
+      checkin_advance_hours: 24 | 168 | null;
+      boarding: "last" | null;
     };
   }[];
   excluded_unverified_observations: number;

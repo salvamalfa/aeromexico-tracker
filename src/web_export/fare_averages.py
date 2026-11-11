@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator
 
 from src.config import PATHS
 from src.fare_quotes.aggregate import build_averages
+from src.fare_quotes.conditions import render_conditions
 from src.web_export.privacy import check_file_size, check_privacy
 from src.web_export.writer import write_json
 
@@ -26,6 +27,10 @@ def validate_averages(payload):
     if payload["periods"] != sorted({g["period_id"] for g in payload["groups"]}):
         raise ValueError("Fare period catalog disagrees with observations")
     for group in payload["groups"]:
+        if group["conditions"] != render_conditions(group["condition_facts"]):
+            raise ValueError("Public fare conditions differ from their closed facts projection")
+        if group["fare"] != (group["condition_facts"]["family"] or "Tarifa no clasificada"):
+            raise ValueError("Public fare family differs from its closed facts projection")
         for summary in group["metrics"].values():
             if (summary["n"] == 0) != (summary["mean"] is None):
                 raise ValueError("Missing mean/count mismatch")
