@@ -139,6 +139,81 @@ def observed_text(value):
     return text
 
 
+def _direct_claim(text):
+    if re.search(r"\bno (?:se )?(?:confirm\w*|mostr\w*|observ\w*|hay)\b|\bsin confirmacion\b", text):
+        return None
+    negative = r"\b(?:con (?:una|un|[1-9]) escalas?|no (?:es |son )?direct[oa]s?)\b"
+    denied = bool(re.search(negative, text))
+    affirmative = bool(re.search(r"\b(?:sin escalas|direct[oa]s?)\b", re.sub(negative, "", text)))
+    return None if denied == affirmative else not denied
+
+
+def direction_facts(text, has_return):
+    """A leg-specific claim cannot supply evidence for the other leg."""
+    values = {"direct_outbound": set(), "direct_return": set()}
+    for clause in re.split(r"[.;,]|\bpero\b", text):
+        both = re.search(
+            r"\b(?:ida y vuelta|ambos (?:vuelos|tramos))\s+(?:son )?"
+            r"(?:sin escalas|direct[oa]s?|no direct[oa]s?|con (?:una|un|[1-9]) escalas?)\b",
+            clause,
+        )
+        if both:
+            claim = _direct_claim(clause)
+            if claim is not None:
+                values["direct_outbound"].add(claim)
+                if has_return:
+                    values["direct_return"].add(claim)
+            continue
+        mentions = list(re.finditer(r"\b(ida|salida|regreso|vuelta)\b", clause))
+        for index, mention in enumerate(mentions):
+            end = mentions[index + 1].start() if index + 1 < len(mentions) else len(clause)
+            # Include a preceding denial/uncertainty, but never the other leg's claim.
+            start = 0 if index == 0 else mention.start()
+            uncertainty = re.search(
+                r"\bno se (?:confirmo|confirma|mostro|muestra|observo)\s+(?:el |la )?$",
+                clause[: mention.start()],
+            )
+            if uncertainty:
+                start = uncertainty.start()
+            claim = _direct_claim(clause[start:end])
+            key = "direct_outbound" if mention[1] in {"ida", "salida"} else "direct_return"
+            if claim is not None and (has_return or key == "direct_outbound"):
+                values[key].add(claim)
+        if not mentions and not has_return:
+            claim = _direct_claim(clause)
+            if claim is not None:
+                values["direct_outbound"].add(claim)
+    return {key: next(iter(found)) if len(found) == 1 else None for key, found in values.items()}
+
+
+def baggage_facts(text):
+    """Keep a coordinated negation inside its list, stopping at contrast/new clauses."""
+    values = {key: set() for key in ("personal_item", "carry_on", "checked_baggage")}
+    items = (
+        r"(?P<personal_item>(?:articulo|equipaje) personal)"
+        r"|(?P<carry_on>equipaje de mano)|(?P<checked_baggage>(?:(?:maleta|equipaje) )?documentad[oa])"
+    )
+    for clause in re.split(r"[.;]|\bpero\b|\bsin embargo\b", text):
+        previous, previous_value = None, None
+        for mention in re.finditer(items, clause):
+            prefix = clause[: mention.start()]
+            between = clause[previous.end() : mention.start()] if previous else prefix
+            negative = re.search(r"\b(?:sin|no incluye[n]?)(?: (?:un|una|ningun|ninguna|el|la))?\s*$", prefix)
+            coordinated = previous is not None and re.fullmatch(r"\s*(?:ni|/|o|y|,)\s*", between)
+            positive_reset = re.search(r"\b(?:con|incluye[n]?)\s*$", between)
+            if negative or (previous_value is False and coordinated):
+                value = False
+            elif positive_reset:
+                value = True
+            elif previous_value is False or re.search(r"\b(?:no|sin)\b", prefix):
+                value = None
+            else:
+                value = True
+            values[mention.lastgroup].add(value)
+            previous, previous_value = mention, value
+    return {key: next(iter(found)) if len(found) == 1 else None for key, found in values.items()}
+
+
 def condition_facts(row, private_conditions):
     """Extract only explicit observations, never standard benefits by provider."""
     text, notes = observed_text(private_conditions), source_notes(row)
@@ -169,17 +244,12 @@ def condition_facts(row, private_conditions):
         facts.update(adults=1, passengers=1)
         if family in {"Main", "Premier"}:
             facts["cabin"] = family
-    direct = re.search(
-        r"\b(directos|vuelos directos|itinerario directo|sin escalas|ida y vuelta directa)\b", text
-    )
-    if direct and not re.search(
-        r"\bno (?:hay )?(?:vuelos )?(?:directos|sin escalas)\b|\bsin (?:vuelos )?directos\b"
-        r"|\bno (?:se confirmo |se confirma )?ida y vuelta directa\b",
-        text,
-    ):
-        for key in ("direct_outbound", "direct_return"):
-            if facts[key] is None:
-                facts[key] = True
+    has_return = bool(row.get("return_date"))
+    for key, claim in direction_facts(text, has_return).items():
+        if claim is not None:
+            facts[key] = claim if facts[key] is None or facts[key] == claim else None
+    if not has_return:
+        facts.update(direct_return=None, operator_return=None)
     if notes.get("no_optional_extras_added") is True or re.search(
         r"(?:sin (?:seguros ni )?extras opcionales|no se anadieron extras opcionales|sin extras ni login)",
         text,
@@ -188,20 +258,7 @@ def condition_facts(row, private_conditions):
     if facts["membership_included"] is None and "sin membresia" in text:
         facts["membership_included"] = False
 
-    facts["personal_item"] = True if re.search(r"\b(articulo|equipaje) personal\b", text) else None
-    if re.search(r"(?:sin|no incluye) (?:articulo|equipaje) personal", text):
-        facts["personal_item"] = False
-    no_carry = bool(re.search(r"(?:sin|no incluye) equipaje de mano", text))
-    no_checked = bool(
-        re.search(
-            r"(?:sin|no incluye) (?:(?:equipaje|maleta) (?:de mano\s*(?:/|o |ni |y )\s*)?)?documentad[oa]",
-            text,
-        )
-    )
-    facts["carry_on"] = False if no_carry else True if "equipaje de mano" in text else None
-    facts["checked_baggage"] = (
-        False if no_checked else True if re.search(r"(?:maleta|equipaje) documentad[oa]", text) else None
-    )
+    facts.update(baggage_facts(text))
     if facts["personal_item"] is True:
         facts["personal_item_max_cm"] = _dimensions(text, r"(?:articulo|equipaje) personal")
     if facts["carry_on"] is True:

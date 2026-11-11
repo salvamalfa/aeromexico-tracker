@@ -130,9 +130,59 @@ def test_negated_baggage_or_direct_claims_are_not_positive_benefits():
 def test_explicit_round_trip_singular_direct_claim_covers_both_directions_only():
     facts = condition_facts(observation(), "1 adulto; ida y vuelta directa; tarifa Zero")
     assert facts["direct_outbound"] is True and facts["direct_return"] is True
-    for unconfirmed in ("salida directa", "ida y vuelta no directa", "No se confirmó ida y vuelta directa"):
+    outbound = condition_facts(observation(), "salida directa")
+    assert outbound["direct_outbound"] is True and outbound["direct_return"] is None
+    for unconfirmed in (
+        "itinerario directo",
+        "directos",
+        "sin escalas",
+        "No se confirmó ida y vuelta directa",
+    ):
         unknown = condition_facts(observation(), unconfirmed)
         assert unknown["direct_outbound"] is None and unknown["direct_return"] is None
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Un adulto; ida sin escalas; regreso con una escala", (True, False)),
+        ("Ida con una escala / regreso sin escalas", (False, True)),
+        ("Ida y vuelta: ida sin escalas y regreso con una escala", (True, False)),
+        ("Ida directa; no se confirmó el regreso directo", (True, None)),
+        ("Ambos vuelos directos", (True, True)),
+    ],
+)
+def test_direct_evidence_is_scoped_to_each_leg(text, expected):
+    facts = condition_facts(observation(), text)
+    assert (facts["direct_outbound"], facts["direct_return"]) == expected
+
+
+def test_one_way_never_creates_return_facts_and_conflicting_sources_remain_unknown():
+    row = observation(return_date=None, notes=json.dumps(dict(direct_return=True, operator_return="Viva")))
+    facts = condition_facts(row, "Un adulto; itinerario directo")
+    assert facts["direct_outbound"] is True
+    assert facts["direct_return"] is None and facts["operator_return"] is None
+    row = observation(notes=json.dumps(dict(direct_outbound=True)))
+    conflict = condition_facts(row, "ida con una escala; regreso directo")
+    assert conflict["direct_outbound"] is None and conflict["direct_return"] is True
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Sin equipaje de mano ni equipaje documentado", (None, False, False)),
+        ("No incluye artículo personal ni equipaje de mano ni equipaje documentado", (False, False, False)),
+        ("Sin equipaje de mano/documentado", (None, False, False)),
+        ("Sin equipaje de mano; incluye maleta documentada", (None, False, True)),
+        ("Sin equipaje de mano pero incluye maleta documentada", (None, False, True)),
+        ("Sin equipaje de mano, con maleta documentada", (None, False, True)),
+        ("Sin equipaje de mano; incluye equipaje de mano", (None, None, None)),
+        ("No se confirmó artículo personal ni equipaje de mano", (None, None, None)),
+    ],
+)
+def test_coordinated_baggage_negation_stops_at_a_new_positive_claim(text, expected):
+    facts = condition_facts(observation(), text)
+    assert (facts["personal_item"], facts["carry_on"], facts["checked_baggage"]) == expected
 
 
 def test_mixed_real_operators_require_explicit_common_benefits_evidence():
