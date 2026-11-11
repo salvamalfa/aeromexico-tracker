@@ -125,6 +125,14 @@ def observed_text(value):
     for original, equivalent in (
         ("one personal item", "articulo personal"),
         ("no carry-on or checked baggage", "sin equipaje de mano/documentado"),
+        ("carry-on baggage", "equipaje de mano"),
+        ("checked baggage", "equipaje documentado"),
+        ("personal item", "articulo personal"),
+        ("not included", "no incluido"),
+        ("not permitted", "no permitido"),
+        ("excluded", "excluido"),
+        ("at additional cost", "con costo adicional"),
+        ("included", "incluido"),
         ("online check-in", "check-in en linea"),
         ("24 hours before flight", "24 horas antes"),
         ("last to board", "ultimo en abordar"),
@@ -186,6 +194,24 @@ def direction_facts(text, has_return):
     return {key: next(iter(found)) if len(found) == 1 else None for key, found in values.items()}
 
 
+def _baggage_postfix(tail):
+    """Only a predicate attached to this item/list qualifies its inclusion."""
+    prefix = r"^\s*[,(:-]?\s*(?:(?:esta[n]?|es|son)\s+)?"
+    denied = re.match(prefix + r"(?:no (?:incluid|permitid)[oa]s?|excluid[oa]s?)\b", tail)
+    if denied:
+        return False, bool(re.search(r"[oa]s\b", denied[0]))
+    ambiguous = re.match(
+        prefix + r"(?:(?:incluid[oa]s?|permitid[oa]s?|disponible[s]?)\s+)?"
+        r"(?:con (?:un )?(?:costo|cargo|pago) adicional|no confirmad[oa]s?"
+        r"|sin confirmar|pendiente de confirmacion)\b",
+        tail,
+    )
+    if ambiguous:
+        return None, True
+    included = re.match(prefix + r"incluid[oa]s?\b", tail)
+    return (True, bool(re.search(r"[oa]s\b", included[0]))) if included else None
+
+
 def baggage_facts(text):
     """Keep a coordinated negation inside its list, stopping at contrast/new clauses."""
     values = {key: set() for key in ("personal_item", "carry_on", "checked_baggage")}
@@ -195,7 +221,8 @@ def baggage_facts(text):
     )
     for clause in re.split(r"[.;]|\bpero\b|\bsin embargo\b", text):
         previous, previous_value, previous_uncertain = None, None, False
-        for mention in re.finditer(items, clause):
+        mentions, pending = list(re.finditer(items, clause)), []
+        for index, mention in enumerate(mentions):
             prefix = clause[: mention.start()]
             between = clause[previous.end() : mention.start()] if previous else prefix
             negative = re.search(r"\b(?:sin|no incluye[n]?)(?: (?:un|una|ningun|ninguna|el|la))?\s*$", prefix)
@@ -218,8 +245,34 @@ def baggage_facts(text):
                 value = None
             else:
                 value = True
-            values[mention.lastgroup].add(value)
+            end = mentions[index + 1].start() if index + 1 < len(mentions) else len(clause)
+            postfix = _baggage_postfix(clause[mention.end() : end])
+            pending.append(
+                dict(
+                    key=mention.lastgroup,
+                    value=value,
+                    coordinated=bool(coordinated),
+                    positive=bool(positive_reset or (coordinated and pending[-1]["positive"])),
+                    negative=bool(negative or (previous_value is False and coordinated)),
+                    uncertain=uncertain,
+                )
+            )
+            if postfix:
+                qualified, shared = postfix
+                start = len(pending) - 1
+                while shared and start > 0 and pending[start]["coordinated"]:
+                    start -= 1
+                for claim in pending[start:]:
+                    conflict = (qualified is False and claim["positive"]) or (
+                        qualified is True and (claim["negative"] or claim["uncertain"])
+                    )
+                    claim["value"] = (
+                        None if conflict else False if qualified is None and claim["negative"] else qualified
+                    )
+                value = pending[-1]["value"]
             previous, previous_value, previous_uncertain = mention, value, value is None
+        for claim in pending:
+            values[claim["key"]].add(claim["value"])
     return {key: next(iter(found)) if len(found) == 1 else None for key, found in values.items()}
 
 

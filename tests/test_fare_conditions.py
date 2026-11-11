@@ -251,6 +251,35 @@ def test_unrelated_negations_are_not_baggage_uncertainty(prefix):
     assert facts["carry_on"] is None and facts["checked_baggage"] is None
 
 
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Un adulto; equipaje de mano no incluido; equipaje documentado no incluido", (None, False, False)),
+        ("Artículo personal no incluido; maleta documentada no incluida", (False, None, False)),
+        ("Equipaje de mano no permitido; equipaje documentado excluido", (None, False, False)),
+        ("Maleta documentada excluida", (None, None, False)),
+        ("Equipaje de mano con costo adicional", (None, None, None)),
+        ("Equipaje de mano incluido con costo adicional", (None, None, None)),
+        ("Equipaje de mano no confirmado", (None, None, None)),
+        ("Equipaje de mano incluido; equipaje documentado no incluido", (None, True, False)),
+        ("Artículo personal incluido; equipaje de mano no incluido", (True, False, None)),
+        ("Equipaje de mano no incluido pero equipaje documentado incluido", (None, False, True)),
+        ("Artículo personal y equipaje de mano no incluidos", (False, False, None)),
+        ("Artículo personal y equipaje de mano con costo adicional", (None, None, None)),
+        ("Incluye artículo personal y equipaje de mano no incluidos", (None, None, None)),
+        ("Sin artículo personal ni equipaje de mano incluido", (False, None, None)),
+        ("Carry-on baggage not included / checked baggage not included", (None, False, False)),
+        ("Carry-on baggage included; checked baggage not included", (None, True, False)),
+        ("Carry-on baggage at additional cost; checked baggage excluded", (None, None, False)),
+        ("Artículo personal incluido, seguro no incluido", (True, None, None)),
+        ("Equipaje de mano y documentado no incluidos", (None, False, False)),
+    ],
+)
+def test_full_item_claim_honors_postfix_restrictions_and_separate_affirmations(text, expected):
+    facts = condition_facts(observation(), text)
+    assert (facts["personal_item"], facts["carry_on"], facts["checked_baggage"]) == expected
+
+
 def test_mixed_real_operators_require_explicit_common_benefits_evidence():
     row = plus()
     notes = json.loads(row["notes"])
