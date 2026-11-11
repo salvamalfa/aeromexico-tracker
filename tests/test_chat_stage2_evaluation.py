@@ -112,6 +112,87 @@ def test_stage2_snapshot_audit_is_reproducible_and_does_not_grade_model_quality(
     assert STAGE2_PILOT_FIXTURE_PATH.read_bytes() == fixture_bytes
 
 
+def _stage2_market_publication(site, root):
+    """Follow an exact Fare parent without replacing the separate strong gate replay."""
+    from scripts.check_pages_publication import verifier_for
+    from src.publish import editorial, fare_scope
+    from tests._site_publication_parity import _active_module
+
+    profile = verifier_for(site, root)
+    if profile != "src.publish.fare_scope":
+        return profile, None
+    proof, current = fare_scope.read_proof(site, root)
+    baseline, _ = editorial.baseline(root, proof)
+    assert current["analysis_manifest"] == baseline["analysis_manifest"]
+    retained = {row["path"]: (row["sha256"], row["bytes"]) for row in baseline["files"]}
+    assert fare_scope.protected(fare_scope.public_files(site)) == fare_scope.protected(retained)
+    # Select from the committed parent's own proofs, not the outer Fare name.
+    profile = _active_module(site, root, baseline, proof["baseline_commit"])
+    source_spec = None
+    if profile == "src.publish.source_data_scope":
+        from src.publish import source_data_scope
+
+        producer = baseline["code_commit"]
+        editorial._git(root, "merge-base", "--is-ancestor", producer, proof["baseline_commit"])
+        raw = editorial._git(root, "show", f"{producer}:{source_data_scope.ANCHOR}")
+        source_spec = json.loads(raw)
+        receipt = json.loads((site / source_data_scope.PROOF).read_bytes())
+        assert receipt["anchor_sha256"] == fare_scope.sha(raw)
+        assert receipt["remote_witness"]["baseline_commit"] == source_spec["baseline_commit"]
+        assert receipt["remote_witness"]["manifest_sha256"] == source_spec["baseline_manifest_sha256"]
+    return profile, source_spec
+
+
+def test_stage2_fare_market_parent_rejects_rewritten_market_and_proof(tmp_path):
+    import shutil
+
+    from scripts.check_pages_publication import verifier_for
+    from src.publish import editorial, fare_scope
+
+    root = Path(__file__).resolve().parents[1]
+    original = root / "site"
+    if verifier_for(original, root) != "src.publish.fare_scope":
+        pytest.skip("Current publication is not a Fare overlay")
+    site = tmp_path / "site"
+    shutil.copytree(original, site)
+    assert _stage2_market_publication(site, root)[0] == "src.publish.source_data_scope"
+    market = site / "data/v1/market.json"
+    raw = market.read_bytes()
+    market.write_bytes(raw + b"\n")
+    with pytest.raises(AssertionError):
+        _stage2_market_publication(site, root)
+    market.write_bytes(raw)
+    proof = site / fare_scope.PROOF
+    proof_raw = proof.read_bytes()
+    proof.write_bytes(proof_raw + b"\n")
+    with pytest.raises(ValueError, match="proof differs"):
+        _stage2_market_publication(site, root)
+    manifest_path = site / "publication_manifest.json"
+    manifest_raw = manifest_path.read_bytes()
+    for field, value, error in (
+        ("baseline_manifest_sha256", "0" * 64, "Baseline manifest differs"),
+        ("baseline_commit", editorial._git(root, "rev-parse", "HEAD").decode().strip(),
+         "outside publication history"),
+    ):
+        forged = {**json.loads(proof_raw), field: value}
+        raw = json.dumps(forged).encode()
+        proof.write_bytes(raw)
+        changed = json.loads(manifest_raw)
+        pin = next(row for row in changed["files"] if row["path"] == fare_scope.PROOF)
+        pin.update(sha256=fare_scope.sha(raw), bytes=len(raw))
+        manifest_path.write_text(json.dumps(changed), encoding="utf-8")
+        with pytest.raises(ValueError, match=error):
+            _stage2_market_publication(site, root)
+    manifest_path.write_bytes(manifest_raw)
+    proof.write_bytes(proof_raw)
+    changed = json.loads(manifest_raw)
+    assert len(changed["analysis_manifest"]) == 8
+    changed["analysis_manifest"].pop()
+    manifest_path.write_text(json.dumps(changed), encoding="utf-8")
+    with pytest.raises(AssertionError):
+        _stage2_market_publication(site, root)
+
+
 def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewriting_gold(monkeypatch):
     import hashlib
 
@@ -124,15 +205,13 @@ def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewritin
     payload = json.loads(fixture_bytes)
     root = Path(__file__).resolve().parents[1]
     market_raw = (root / "site/data/v1/market.json").read_bytes()
-    from scripts.check_pages_publication import verifier_for
-
-    profile = verifier_for(root / "site", root)
+    profile, source_spec = _stage2_market_publication(root / "site", root)
     native = profile == "src.publish.afac_history_scope"
     if profile == "src.publish.source_data_scope":
         from src.publish import source_data_scope
 
         # The official map overlays the site without changing the AFAC market data.
-        spec = source_data_scope.anchor(root)
+        spec = source_spec if source_spec is not None else source_data_scope.anchor(root)
         assert spec["product"] == "official_routes"
         assert [row["path"] for row in spec["data_files"]] == ["data/v1/official-routes.json"]
         baseline, _ = source_data_scope.transport.baseline(root, spec)
@@ -185,6 +264,7 @@ def test_stage2_current_snapshot_reports_both_exact_afac_drifts_without_rewritin
     assert set(report["model_quality_cases_pending"]) == {"N20", "es_ratio_average"}
     assert report["quality_denominator"] == 0
     assert STAGE2_PILOT_FIXTURE_PATH.read_bytes() == fixture_bytes
+    assert (root / "site/data/v1/market.json").read_bytes() == market_raw
 
 
 def test_clarification_accepts_imperatives_without_invented_numeric_answers() -> None:
