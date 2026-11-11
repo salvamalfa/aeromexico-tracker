@@ -1,0 +1,12 @@
+.local-fares { margin-top: 24px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.local-fares h2 { margin: 0; font-size: 18px; color: var(--brand-blue-dark); }
+.local-fares > p { color: var(--muted); font-size: 13px; }
+.fare-table-scroll { overflow-x: auto; }
+.local-fares table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.local-fares th, .local-fares td { padding: 11px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.local-fares th { color: var(--brand-blue-dark); white-space: nowrap; }
+.local-fares td:nth-child(3) { min-width: 140px; }
+.local-fares details { min-width: 170px; }
+.local-fares summary { cursor: pointer; color: var(--brand-blue); }
+.local-fares details p { line-height: 1.5; margin: 8px 0; }
+.local-fares a { color: var(--brand-blue); }

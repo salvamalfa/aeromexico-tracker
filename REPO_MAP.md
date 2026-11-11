@@ -448,6 +448,11 @@ resume en `docs/archivo/README.md` y no se retoma.
 
 ### e) Cerrar un esfuerzo y retirar su documentación
 
+La ingesta privada de precios y puntos para la vista local de Mercado se describe
+en [`src/fare_quotes/README.md`](src/fare_quotes/README.md). Las instantáneas de
+libros y los detalles quedan privados. El agregado trimestral contratado se añade
+con el gate `--fare-quotes-only`, preservando las aprobaciones y datos servidos.
+
 Sigue el [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea),
 también en una entrega local. Inventaría todos los archivos, incluidas las salidas generadas;
 clasifica conservar, actualizar, consolidar, archivar, retirar, candidato a eliminar o pendiente,

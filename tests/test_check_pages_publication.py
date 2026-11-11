@@ -14,7 +14,8 @@ from scripts.check_pages_publication import VERIFIERS, verifier_for
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "scripts/check_pages_publication.py"
-LEGACY_VERIFIERS = tuple(item for item in VERIFIERS if item[0] != "afac-history-publication.json")
+LEGACY_VERIFIERS = tuple(item for item in VERIFIERS if item[0] not in
+                         {"afac-history-publication.json", "fare-quotes-publication.json"})
 
 
 def manifest(site, receipts):

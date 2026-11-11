@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 VERIFIERS = (
+    ("fare-quotes-publication.json", "src.publish.fare_scope"),
     ("quarterly-story-publication.json", "src.publish.quarterly_story_scope"),
     ("aerocivil-movements-publication.json", "src.publish.movements_scope"),
     ("source-data-publication.json", "src.publish.source_data_scope"),
@@ -69,6 +70,18 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
     selected = [(receipt, module) for receipt, module in VERIFIERS if receipt in names]
     if not selected:
         return "src.publish.verify"
+    # Fare proof replays its entire committed baseline with that baseline's strong
+    # verifier, then permits only fare aggregates and frontend assets to differ.
+    if any(receipt == "fare-quotes-publication.json" for receipt, _ in selected):
+        proof = site / "fare-quotes-publication.json"
+        pin = next(item for item in files if item["path"] == proof.name)
+        raw = proof.read_bytes()
+        if (proof.is_symlink() or pin.get("sha256") != hashlib.sha256(raw).hexdigest()
+                or pin.get("bytes") != len(raw)):
+            raise ValueError("Fare selection proof differs from its manifest pin")
+        if json.loads(raw).get("schema_version") != "fare_quotes_publication_v1":
+            raise ValueError("Unknown fare selection proof schema")
+        return "src.publish.fare_scope"
     # Retained proofs describe prior publications. Choose the unique latest
     # witnessed Git baseline, then let its strong verifier validate all claims.
     # Ties, missing history and unrelated branches are decisions, never fallback.
@@ -134,6 +147,7 @@ def verify_site(site, repo):
 
     module = verifier_for(site, repo)
     name = {
+        "src.publish.fare_scope": "verify_fare_site",
         "src.publish.quarterly_story_scope": "verify_story",
         "src.publish.source_data_scope": "verify_source_data",
         "src.publish.issuer_scope": "verify_issuer",

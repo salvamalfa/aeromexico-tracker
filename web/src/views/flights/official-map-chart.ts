@@ -4,6 +4,7 @@ import type { MapScope, OfficialPoint, OfficialRoute } from "../../types/officia
 import { state as flights } from "./state";
 import { esc, integer } from "./dom";
 import { mapPeriodLabel } from "./map-periods";
+import { fareHoverLines } from "./fare-averages";
 import { hasGeometry, officialRouteTitle, officialState, previousComparisonMonths, routeHasGeometry, visibleOfficialRoutes } from "./official-routes";
 
 const arcs = new Map<string, { lat: number[]; lon: number[] }>();
@@ -87,7 +88,7 @@ export function officialMapTraces(routes: OfficialRoute[], selectedRoute: string
     const comparison = route.comparison.yoy_pct === null ? route.comparison.reason ?? "Sin comparación disponible"
       : `${route.comparison.yoy_pct >= 0 ? "+" : ""}${route.comparison.yoy_pct.toFixed(1)} % frente a ${previousComparisonMonths(route).map(mapPeriodLabel).join(", ")}`;
     const label = `${esc(officialRouteTitle(route))}<br>${integer.format(route.departures)} vuelos · ambos sentidos<br>${esc(route.monthly.map(m => mapPeriodLabel(m.period_id)).join(", "))}<br>${esc(comparison)}`;
-    line.text.push(...arc.lat.map(() => label), "");
+    line.text.push(...arc.lat.map(() => label + fareHoverLines(route)), "");
     buckets.set(bucket, line);
     if (route.route_key === selectedRoute || (selectedNode && [route.origin.id, route.destination.id].includes(selectedNode))) focus.push(route);
   }
@@ -143,7 +144,8 @@ async function draw(request: number, onNode: (id: string) => void, onRoute: (id:
   }, { displayModeBar: false, responsive: true, scrollZoom: false });
   if (request !== chartRequest) return;
   element.dataset.mapStatus = officialState.loading ? "loading" : "ready";
-  element.dataset.mapPeriod = officialState.period;
+  element.dataset.mapPeriod = officialState.network?.period_id ?? officialState.period;
+  element.dataset.mapQueryPeriod = officialState.period;
   element.dataset.mapScope = officialState.scope;
   element.dataset.mapRegion = officialState.region ?? "";
   element.dataset.mapView = officialState.view;

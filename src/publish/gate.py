@@ -1,7 +1,4 @@
-"""Build a verified site and atomically publish it with a lifecycle receipt.
-
-Each profile preserves its approval, source, and revocation boundary.
-"""
+"""Build a site atomically with a receipt, preserving each profile's source and approval boundary."""
 
 from __future__ import annotations
 
@@ -488,6 +485,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--record", type=Path, action="append", default=[], dest="records")
     parser.add_argument("--out", type=Path, default=PATHS.root / "site")
     publish_modes = parser.add_mutually_exclusive_group()
+    publish_modes.add_argument("--fare-quotes-only", action="store_true", help="Add verified fare averages")
+    parser.add_argument("--fare-input", type=Path, help="Private normalized fare dataset for --fare-quotes-only")
     publish_modes.add_argument(
         "--quarterly-story-request", type=Path, help="publish the reviewed Q3 original-source replacement"
     )
@@ -538,9 +537,14 @@ def main(argv: list[str] | None = None) -> int:
         help="add only the separately approved business-metrics pair to the trusted published data baseline",
     )
     args = parser.parse_args(argv)
+    if bool(args.fare_input) != bool(args.fare_quotes_only):
+        parser.error("--fare-input and --fare-quotes-only are required together")
 
     try:
-        if args.quarterly_story_request:
+        if args.fare_quotes_only:
+            from .fare_release import publish_from_gate
+            result = publish_from_gate(args.records, args.fare_input, args.out)
+        elif args.quarterly_story_request:
             from .quarterly_story_update import publish_from_gate
 
             result = publish_from_gate(args.quarterly_story_request, args.out)

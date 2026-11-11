@@ -47,6 +47,16 @@ export function periodCount(): number {
   return store.periodIds.length;
 }
 
+// Local fare observations can cover a quarter that has no financial report yet.
+// This does not create financial records, views or approval identities.
+export function addObservationPeriods(periodIds: string[], requested?: string | null): void {
+  const selected = requested && periodIds.includes(requested) ? requested : currentPeriodId();
+  const additions = periodIds.filter(id => /^\d{4}Q[1-4]$/.test(id));
+  store.periodIds = [...new Set([...store.periodIds, ...additions])].sort();
+  store.index = Math.max(0, store.periodIds.indexOf(selected ?? ""));
+  if (selected) for (const listener of listeners) listener(selected);
+}
+
 export function subscribe(listener: PeriodListener): void {
   listeners.push(listener);
 }

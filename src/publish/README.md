@@ -761,3 +761,18 @@ Esta implementación está preparada para revisión. Antes de activarla faltan e
 cierre físico de Gold AFAC derivado, el replay privado completo en Linux, la
 inspección del candidato final y su autoridad de datos. PR, CI y comprobación del
 sitio realmente servido conservan sus controles normales.
+
+## Promedios de precios y puntos
+
+`--fare-quotes-only --fare-input <Gold privado>` añade exclusivamente
+`data/v1/fare-averages.json` y `fare-quotes-publication.json`, además de la interfaz.
+Requiere todos los expedientes aprobados existentes y vuelve a ejecutar su cadena
+de fuentes y revocaciones antes y después del build. Conserva los datos heredados
+y las identidades de aprobación byte por byte. El consentimiento del dueño para
+las tarifas se mantiene separado de las aprobaciones financieras.
+
+`src.publish.fare_scope` verifica la publicación base con su verificador fuerte,
+comprueba la adición exacta, el contrato y las medias/conteos. No acepta una
+modificación de datos heredados aunque tenga un manifiesto nuevo coherente.
+La fuente detallada sigue privada; la fórmula y el grano están en
+[`src/fare_quotes/README.md`](../fare_quotes/README.md).

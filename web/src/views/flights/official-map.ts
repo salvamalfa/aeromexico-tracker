@@ -1,5 +1,6 @@
 import type { MapCarrier, MapRegion, MapScope, OfficialRoute } from "../../types/official-routes";
 import { currentPeriodId } from "../../state/period";
+import { fareTooltipColumns, hasFarePeriod } from "./fare-averages";
 import { esc, integer } from "./dom";
 import { mapPeriodLabel } from "./map-periods";
 import { state as flights } from "./state";
@@ -35,7 +36,7 @@ export function officialRouteDetails(route: OfficialRoute): string {
     <div><dt>Comparación interanual</dt><dd>${esc(comparisonLabel(route))}</dd></div>
     ${route.operators.map(o => `<div><dt>${esc(o.label)}</dt><dd>${integer.format(o.departures)} vuelos</dd></div>`).join("")}
     ${!routeHasGeometry(route) ? '<div><dt>Ubicación</dt><dd>No disponible; incluida en el total y la lista.</dd></div>' : ""}
-    </dl></div>`;
+    </dl>${fareTooltipColumns(route)}</div>`;
 }
 
 function focusNode(id: string): void {
@@ -106,13 +107,17 @@ function sourceDetails(): void {
     : "Vuelos regulares reportados por AFAC, todas las aerolíneas, pasajeros y carga. Agregados ciudad–ciudad; no se atribuyen a una aerolínea ni a un aeropuerto.";
   const region = officialState.scope === "international" ? " Internacional excluye Estados Unidos. Centroamérica incluye el Caribe." : "";
   const missingGeometry = officialState.routes.filter(route => !routeHasGeometry(route));
-  panel.append(document.createTextNode(`. ${scope}${region} ${mapPeriodLabel(officialState.period)}: ${monthsLabel(network?.observed_months ?? [])}. `
+  panel.append(document.createTextNode(`. ${scope}${region} ${mapPeriodLabel(network?.period_id ?? officialState.period)}: ${monthsLabel(network?.observed_months ?? [])}. `
     + `Se suman ambos sentidos y sólo los meses disponibles. Un faltante no es cero. La lista incluye ${officialState.routes.filter(route => route.departures === 0).length} rutas con cero explícito; sólo se dibujan vuelos positivos. ${missingGeometry.length} rutas sin ubicación (${integer.format(missingGeometry.reduce((sum, route) => sum + route.departures, 0))} vuelos) permanecen en la lista y el total. Comparaciones sólo con meses equivalentes del año anterior. ${officialState.document?.metadata.geography_attribution ?? ""}`));
   bindSourceInfo(button, panel);
 }
 
 function renderSummary(): void {
   const network = officialState.network, total = officialState.routes.reduce((sum, route) => sum + route.departures, 0);
+  const basis = el("official-map-period-basis");
+  if (basis) basis.textContent = network && network.period_id !== officialState.period
+    ? `Tráfico de referencia: ${mapPeriodLabel(network.period_id)} · Consultas de precios: ${mapPeriodLabel(officialState.period)}.`
+    : `Tráfico: ${mapPeriodLabel(officialState.period)} · Precios: trimestre de consulta seleccionado.`;
   const available = !!network && network.availability !== "unavailable";
   const partial = available && network.availability === "partial";
   const value = el("official-map-total"); if (value) value.textContent = available && officialState.routes.length ? integer.format(total) : "N/D";
@@ -151,6 +156,13 @@ export async function renderOfficialMap(period = currentPeriodId() ?? ""): Promi
     const doc = await loadOfficialRoutes(flights.dataRoot);
     if (current !== request || signature !== `${officialState.period}|${officialState.scope}|${officialState.carriers.join(",")}|${officialState.region}`) return;
     officialState.network = selectOfficialNetwork(doc, period, officialState.scope, officialState.carriers);
+    if (!officialState.network && hasFarePeriod(period)) {
+      const previous = [...doc.periods].filter(id => id < period).sort().reverse();
+      for (const id of previous) {
+        const candidate = selectOfficialNetwork(doc, id, officialState.scope, officialState.carriers);
+        if (candidate?.routes.length) { officialState.network = candidate; break; }
+      }
+    }
     officialState.routes = geographicRoutes(officialState.network, officialState.region);
   } catch (error) {
     if (current !== request) return;
