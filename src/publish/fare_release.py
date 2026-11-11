@@ -27,7 +27,7 @@ def publish_fares_only(records: list[Path], private_input: Path, out: Path):
     from scripts.check_pages_publication import verify_site as verify_selected
 
     from . import gate
-    from .presentation_release import _replay_release
+    from .presentation_release import _replay_release, embed_presentation_receipt, presentation_receipt
 
     repo, ledger, out = gate.PATHS.root, gate.flow.ROOT, Path(out).resolve()
     manifests.refuse_if_build_inputs_dirty(root=repo)
@@ -37,6 +37,7 @@ def publish_fares_only(records: list[Path], private_input: Path, out: Path):
     if problems:
         raise PublicationRefused(f"Existing strong release is invalid: {problems[:3]}")
     baseline = manifests.load_manifest(out)
+    marker = presentation_receipt(repo, out, trusted, baseline)
     baseline_hash = fare_scope.sha((out / manifests.MANIFEST_NAME).read_bytes())
     policy = json.loads((repo / fare_scope.POLICY).read_bytes())
     if (
@@ -74,7 +75,9 @@ def publish_fares_only(records: list[Path], private_input: Path, out: Path):
     with tempfile.TemporaryDirectory(prefix="fare-release-") as temporary:
         staged = Path(temporary) / "dist"
         shutil.copytree(out, staged)
-        shutil.copyfile(dist / "index.html", staged / "index.html")
+        (staged / "index.html").write_bytes(
+            embed_presentation_receipt((dist / "index.html").read_bytes(), marker)
+        )
         for asset in (dist / "assets").rglob("*"):
             if asset.is_file():
                 target = staged / asset.relative_to(dist)

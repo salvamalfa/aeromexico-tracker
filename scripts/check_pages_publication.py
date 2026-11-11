@@ -70,23 +70,15 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
     selected = [(receipt, module) for receipt, module in VERIFIERS if receipt in names]
     if not selected:
         return "src.publish.verify"
-    # Fare proof replays its entire committed baseline with that baseline's strong
-    # verifier, then permits only fare aggregates and frontend assets to differ.
-    if any(receipt == "fare-quotes-publication.json" for receipt, _ in selected):
-        proof = site / "fare-quotes-publication.json"
-        pin = next(item for item in files if item["path"] == proof.name)
-        raw = proof.read_bytes()
-        if (proof.is_symlink() or pin.get("sha256") != hashlib.sha256(raw).hexdigest()
-                or pin.get("bytes") != len(raw)):
-            raise ValueError("Fare selection proof differs from its manifest pin")
-        if json.loads(raw).get("schema_version") != "fare_quotes_publication_v1":
-            raise ValueError("Unknown fare selection proof schema")
-        return "src.publish.fare_scope"
+    has_fares = any(receipt == "fare-quotes-publication.json" for receipt, _ in selected)
     # Retained proofs describe prior publications. Choose the unique latest
     # witnessed Git baseline, then let its strong verifier validate all claims.
     # Ties, missing history and unrelated branches are decisions, never fallback.
     repo = Path.cwd() if repo is None else Path(repo)
-    if any(receipt == "afac-history-publication.json" for receipt, _ in selected):
+    # A fare release binds the complete served composition, rather than an
+    # unserved AFAC parent. Its successors compete by baseline ancestry too;
+    # the winning strong verifier still checks every retained upstream proof.
+    if not has_fares and any(receipt == "afac-history-publication.json" for receipt, _ in selected):
         # This one new profile composes an explicitly unserved parent. Its
         # exact proof remains upstream evidence, not a competing final root.
         # Every older profile keeps the original strict precedence rules.
@@ -115,7 +107,13 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
             or pin["bytes"] != len(raw)
         ):
             raise ValueError("Publication selection proof differs from manifest pins")
-        commit = json.loads(raw).get("remote_witness", {}).get("baseline_commit")
+        value = json.loads(raw)
+        if receipt == "fare-quotes-publication.json":
+            if value.get("schema_version") != "fare_quotes_publication_v1":
+                raise ValueError("Unknown fare selection proof schema")
+            commit = value.get("baseline_commit")
+        else:
+            commit = value.get("remote_witness", {}).get("baseline_commit")
         if not isinstance(commit, str) or not re.fullmatch("[a-f0-9]{40}", commit):
             raise ValueError("Publication selection requires exact witnessed Git baselines")
         if subprocess.run(

@@ -317,15 +317,24 @@ def _preserved_map(files: dict[str, tuple[str, int]]) -> dict[str, tuple[str, in
 
 
 def verify_presentation_only_site(site: Path, repo: Path) -> None:
-    """Use both the generic verifier and the unique strong AFAC verifier."""
+    """Keep structural and strong AFAC checks, including a validated fare composition."""
     from scripts.check_pages_publication import verifier_for, verify_site
 
     from .verify import verify_site as verify_generic
 
+    selected = verifier_for(site, repo)
+    if selected == "src.publish.fare_scope":
+        # Fare verification includes structural/privacy checks and replays its
+        # original strong baseline. Its inherited AFAC proof remains mandatory.
+        if not (site / "afac-history-publication.json").is_file():
+            raise ValueError("presentation fare composition requires its pinned AFAC proof")
+        problems = verify_site(site, repo)
+        if problems:
+            raise ValueError(f"presentation candidate failed strong fare/AFAC verification: {problems[:5]}")
+        return
     problems = verify_generic(site)
     if problems:
         raise ValueError(f"presentation candidate failed normal site verification: {problems[:5]}")
-    selected = verifier_for(site, repo)
     if selected != "src.publish.afac_history_scope":
         raise ValueError(f"presentation release requires the pinned AFAC verifier, got {selected!r}")
     problems = verify_site(site, repo)

@@ -3,12 +3,15 @@
 import json
 import shutil
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from src.fare_quotes.aggregate import build_averages
 from src.publish import fare_scope, manifest
+from src.publish import presentation_release as presentation
 from src.web_export.writer import write_json
 from tests.test_fare_averages import observation, private
 
@@ -99,3 +102,158 @@ def test_self_consistent_new_manifest_cannot_hide_unauthorized_changes(fare_rele
         write_json(candidate / fare_scope.DATA, value)
     remint(candidate)
     assert fare_scope.verify_fare_site(candidate, repo)
+
+
+def test_new_fare_release_delegates_to_intervening_data_profile(fare_release, monkeypatch):
+    from scripts import check_pages_publication as routing
+
+    repo, candidate = fare_release
+    shutil.copytree(candidate, repo / "site", dirs_exist_ok=True)
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "published fare fixture")
+    fare_commit = git(repo, "rev-parse", "HEAD")
+    git(repo, "commit", "--allow-empty", "-qm", "subsequent data producer")
+    source_code = git(repo, "rev-parse", "HEAD")
+    # Model a subsequently approved source edition. Its strong producer is
+    # stubbed below; the fare wrapper must delegate to it and preserve its bytes.
+    path = repo / "site/data/v1/executive.json"
+    path.write_bytes(path.read_bytes() + b" ")
+    write_json(repo / "site/issuer-publication.json", {"remote_witness": {"baseline_commit": fare_commit}})
+    current = manifest.load_manifest(repo / "site")
+    manifest.write_manifest(
+        repo / "site",
+        manifest.build_manifest(
+            repo / "site",
+            current["analysis_manifest"],
+            contracts=current["contracts"],
+            code_commit=source_code,
+        ),
+    )
+    git(repo, "add", "site")
+    git(repo, "commit", "-qm", "published subsequent data fixture")
+    data_commit = git(repo, "rev-parse", "HEAD")
+    git(repo, "commit", "--allow-empty", "-qm", "next fare producer")
+    shutil.copytree(repo / "site", candidate, dirs_exist_ok=True)
+    proof = json.loads((candidate / fare_scope.PROOF).read_bytes())
+    proof.update(
+        baseline_commit=data_commit,
+        baseline_manifest_sha256=fare_scope.sha((repo / "site/publication_manifest.json").read_bytes()),
+    )
+    write_json(candidate / fare_scope.PROOF, proof)
+    manifest.write_manifest(
+        candidate,
+        manifest.build_manifest(
+            candidate,
+            current["analysis_manifest"],
+            contracts=current["contracts"],
+            code_commit=git(repo, "rev-parse", "HEAD"),
+        ),
+    )
+    assert routing.verifier_for(repo / "site", repo) == "src.publish.issuer_scope"
+    checked = []
+
+    def verify_intervening_source(site, root):
+        checked.append(routing.verifier_for(site, root))
+        return []  # The separate source producer's approval boundary.
+
+    monkeypatch.setattr(routing, "verify_site", verify_intervening_source)
+    assert fare_scope.verify_fare_site(candidate, repo) == []
+    assert checked == ["src.publish.issuer_scope"]
+    path = candidate / "data/v1/executive.json"
+    path.write_bytes(path.read_bytes() + b" ")
+    remint(candidate)
+    assert fare_scope.verify_fare_site(candidate, repo)
+
+
+def test_fare_presentation_marker_is_verified_not_treated_as_plain_ui(fare_release, monkeypatch):
+    from src.publish import afac_history_scope
+
+    repo, candidate = fare_release
+    current = manifest.load_manifest(candidate)
+    marker = dict(
+        schema_version=presentation.PRESENTATION_RECEIPT_SCHEMA,
+        baseline_commit="a" * 40,
+        baseline_manifest_sha256="b" * 64,
+        source_producer_commit="c" * 40,
+        source_producer_code_version="d" * 64,
+        frontend_commit=current["code_commit"],
+    )
+    index = candidate / "index.html"
+    index.write_bytes(
+        presentation.embed_presentation_receipt(b"<html><head></head><body>fare view</body></html>", marker)
+    )
+    remint(candidate)
+    checked = []
+    monkeypatch.setattr(afac_history_scope, "anchor", lambda *_: {"scope": {"pinned": True}})
+    monkeypatch.setattr(
+        presentation, "verify_presentation_producer_pin", lambda *args: checked.append(args[-1])
+    )
+    assert fare_scope.verify_fare_site(candidate, repo) == []
+    assert checked == [marker]
+
+    def changed_source(*_):
+        raise ValueError("inherited producer changed")
+
+    monkeypatch.setattr(presentation, "verify_presentation_producer_pin", changed_source)
+    assert "inherited producer changed" in str(fare_scope.verify_fare_site(candidate, repo))
+
+
+def test_fare_gate_embeds_inherited_producer_for_following_presentation(fare_release, tmp_path, monkeypatch):
+    from src import publish as package
+    from src.publish import fare_release as publisher
+
+    repo, candidate = fare_release
+    marker = dict(
+        schema_version=presentation.PRESENTATION_RECEIPT_SCHEMA,
+        baseline_commit="a" * 40,
+        baseline_manifest_sha256="b" * 64,
+        source_producer_commit="c" * 40,
+        source_producer_code_version="d" * 64,
+        frontend_commit="e" * 40,
+    )
+    source = tmp_path / "private.json"
+    write_json(source, private(observation()))
+    web_data = tmp_path / "web/public/data/v1"
+    checks = {"replays": 0, "baseline": 0, "candidate": 0}
+
+    def check_baseline(*_, **__):
+        checks["baseline"] += 1
+
+    def replay(*_):
+        checks["replays"] += 1
+        return {"afac": {"authorized": []}}
+
+    def build(_):
+        dist = tmp_path / "dist"
+        shutil.copytree(web_data, dist / "data/v1")
+        (dist / "assets").mkdir()
+        (dist / "index.html").write_bytes(b"<html><head></head><body>new fares</body></html>")
+        return dist
+
+    def verify_candidate(site, _repo):
+        assert presentation.read_presentation_receipt(site) == marker
+        checks["candidate"] += 1
+        return []
+
+    def assemble(staged, *_args, contracts, validate_candidate):
+        validate_candidate(staged)
+        return {"contracts": contracts}
+
+    fake_gate = SimpleNamespace(
+        PATHS=SimpleNamespace(root=repo),
+        flow=SimpleNamespace(ROOT=tmp_path / "ledger", writer=lambda *_: nullcontext()),
+        _trusted_site_commit=lambda *_: "a" * 40,
+        require_trusted_site_baseline=check_baseline,
+        WEB_DATA_V1=web_data,
+        WEB_DIR=tmp_path / "web",
+        build_web=build,
+        assemble_site=assemble,
+        write_receipt=lambda *_args, **_kwargs: {},
+    )
+    monkeypatch.setattr(package, "gate", fake_gate, raising=False)
+    monkeypatch.setattr(manifest, "refuse_if_build_inputs_dirty", lambda **_: None)
+    monkeypatch.setattr(presentation, "_replay_release", replay)
+    monkeypatch.setattr(presentation, "presentation_receipt", lambda *_: marker)
+    monkeypatch.setattr(fare_scope, "verify_fare_site", verify_candidate)
+    publisher.publish_fares_only([], source, repo / "site")
+    assert checks == {"replays": 2, "baseline": 2, "candidate": 1}

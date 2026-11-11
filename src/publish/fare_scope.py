@@ -81,6 +81,7 @@ def read_proof(site: Path, repo: Path):
 
 def verify_fare_site(site: Path, repo: Path = PATHS.root, *, depth: int = 0) -> list[str]:
     """Revalidate the preceding strong release, then require every inherited byte unchanged."""
+    from scripts.check_pages_publication import verifier_for
     from scripts.check_pages_publication import verify_site as verify_selected
 
     from .verify import _verify_site
@@ -100,7 +101,7 @@ def verify_fare_site(site: Path, repo: Path = PATHS.root, *, depth: int = 0) -> 
                 raise ValueError("Fare baseline manifest differs from committed source")
             problems = (
                 verify_fare_site(baseline, repo, depth=depth + 1)
-                if (baseline / PROOF).exists()
+                if verifier_for(baseline, repo) == "src.publish.fare_scope"
                 else verify_selected(baseline, repo)
             )
             if problems:
@@ -113,6 +114,13 @@ def verify_fare_site(site: Path, repo: Path = PATHS.root, *, depth: int = 0) -> 
             if protected(public_files(site)) != protected(public_files(baseline)):
                 raise ValueError("Fare release changed, removed or added protected public data")
             validate_averages(json.loads((site / DATA).read_bytes()))
+            from . import afac_history_scope, presentation_release
+
+            marker = presentation_release.read_presentation_receipt(site)
+            if marker is not None:
+                presentation_release.verify_presentation_producer_pin(
+                    repo, afac_history_scope.anchor(repo), manifest, marker
+                )
             # Every inherited payload has already passed its original strong verifier.
             inherited = frozenset(
                 name for name in public_files(baseline) if name.startswith("data/v1/") and name != DATA

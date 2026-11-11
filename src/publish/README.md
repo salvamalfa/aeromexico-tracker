@@ -768,3 +768,10 @@ comprueba la adición exacta, el contrato y las medias/conteos. No acepta una
 modificación de datos heredados aunque tenga un manifiesto nuevo coherente.
 La fuente detallada sigue privada; la fórmula y el grano están en
 [`src/fare_quotes/README.md`](../fare_quotes/README.md).
+
+El recibo de tarifas participa en la precedencia por el commit de su publicación
+base; un perfil posterior con base más reciente conserva la responsabilidad de
+verificar la composición. La presencia del recibo no fija el verificador para
+siempre. La reconstrucción de presentación puede conservar el producto de tarifas:
+mantiene sus datos y recibos, reproduce las autoridades dos veces y conserva el
+marcador del productor AFAC, que el verificador de tarifas también comprueba.
