@@ -64,9 +64,15 @@ DOTERS_COLUMNS = (*AMR_COLUMNS[:7], "legacy_regular_mxn", "points")
 
 
 def provider_key(value: str) -> str:
-    return {"Aeromexico": "AMR", "Aeroméxico": "AMR", "Viva": "DOTERS", "Volaris": "VOLARIS"}.get(
-        value, value
-    )
+    aliases = {
+        "amr": "AMR",
+        "aeromexico": "AMR",
+        "aeroméxico": "AMR",
+        "doters": "DOTERS",
+        "viva": "DOTERS",
+        "volaris": "VOLARIS",
+    }
+    return aliases.get(value.strip().casefold(), value) if isinstance(value, str) else value
 
 
 def digest(value: object) -> str:

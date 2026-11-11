@@ -2,6 +2,7 @@
 import { addObservationPeriods, currentPeriodId } from "../../state/period";
 import type { OfficialPoint, OfficialRoute } from "../../types/official-routes";
 import { esc } from "./dom";
+import { fetchPublicationManifest } from "../../lib/publication-manifest";
 
 export interface Mean { mean: number | null; n: number }
 export interface FareAverage {
@@ -21,7 +22,20 @@ const periodLabel = (id: string) => `${id.slice(-1)}T${id.slice(2, 4)}`;
 const display = (value: Mean, points = false) => value.mean === null ? "N/D" : points ? number.format(value.mean) : money.format(value.mean);
 
 export async function loadFareAverages(dataRoot: string): Promise<void> {
+  document = null;
   try {
+    // Older immutable releases do not advertise this optional product. Avoid
+    // requesting a missing asset: browsers report a 404 even when fetch is caught.
+    if (import.meta.env.VITE_LOCAL_FARES !== "true") {
+      const base = new URL(`${dataRoot.replace(/\/$/, "")}/`, window.document.baseURI);
+      const manifestUrl = new URL("../../publication_manifest.json", base);
+      const manifest = await fetchPublicationManifest(manifestUrl) as { files?: { path: string }[] };
+      const productUrl = new URL("fare-averages.json", base);
+      const manifestBase = new URL(".", manifestUrl).href;
+      if (!productUrl.href.startsWith(manifestBase)) return;
+      const productPath = productUrl.href.slice(manifestBase.length);
+      if (!Array.isArray(manifest.files) || !manifest.files.some(file => file.path === productPath)) return;
+    }
     const response = await fetch(`${dataRoot}/fare-averages.json`);
     if (!response.ok) return; // An older immutable release can have no quote product yet.
     const value = await response.json() as FareAverages;

@@ -41,7 +41,7 @@ export async function mount(dataRoot = "data/v1"): Promise<void> {
   mountTabs();
   await mountExecutive(dataRoot);
   const { loadFareAverages } = await import("./views/flights/fare-averages");
-  await loadFareAverages(dataRoot);
+  void loadFareAverages(dataRoot);
   if (import.meta.env.VITE_LOCAL_FARES === "true") {
     const { mountLocalFares } = await import("./views/fares/local-fares");
     await mountLocalFares();

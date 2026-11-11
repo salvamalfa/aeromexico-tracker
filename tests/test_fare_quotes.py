@@ -49,6 +49,22 @@ def test_partial_redemption_never_invents_a_final_payment():
     assert row["redemption_taxes_mxn"] == 1399
 
 
+@pytest.mark.parametrize("provider", ["viva", "VIVA", " doters "])
+def test_capture_workflow_provider_aliases_replay_without_changing_bronze(provider):
+    source = snapshot(quote(provider=provider))
+    rows, errors = decode_snapshot(source)
+    assert not errors
+    assert rows[0]["provider"] == "DOTERS"
+    assert source["values"][1][-1] == provider
+
+
+def test_provider_aliases_do_not_hide_a_different_or_unknown_airline():
+    for provider in ("volaris", "unknown"):
+        rows, errors = decode_snapshot(snapshot(quote(provider=provider)))
+        assert not rows
+        assert errors[0]["reason"] == "Row provider contradicts snapshot"
+
+
 def test_legacy_amr_keeps_components_but_does_not_assert_cash_final():
     source = dict(
         provider="AMR",

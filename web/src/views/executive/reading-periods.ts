@@ -1,6 +1,7 @@
 // The global quarter controls reading dates; the approved catalog controls availability.
 import { currentPeriodId } from "../../state/period";
 import { isEntityKey } from "../shell/carriers";
+import { fetchPublicationManifest } from "../../lib/publication-manifest";
 
 let periods = new Map<string, string[]>();
 let paths = new Map<string, string>();
@@ -9,9 +10,7 @@ export async function loadReadingPeriods(dataRoot: string): Promise<void> {
   periods = new Map();
   paths = new Map();
   const url = new URL("../../publication_manifest.json", new URL(`${dataRoot.replace(/\/$/, "")}/`, document.baseURI));
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("No se pudo verificar el catálogo de lecturas publicadas.");
-  const manifest: unknown = await response.json();
+  const manifest = await fetchPublicationManifest(url);
   if (!manifest || typeof manifest !== "object" || !("analysis_manifest" in manifest) || !Array.isArray(manifest.analysis_manifest)) {
     throw new Error("Catálogo de lecturas inválido.");
   }
