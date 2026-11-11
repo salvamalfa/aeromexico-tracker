@@ -196,7 +196,14 @@ def direction_facts(text, has_return):
 
 def _baggage_postfix(tail):
     """Only a predicate attached to this item/list qualifies its inclusion."""
-    prefix = r"^\s*[,(:-]?\s*(?:(?:esta[n]?|es|son)\s+)?"
+    measurement = (
+        r"(?:(?:de|hasta|maximo)\s+){0,2}"
+        r"(?:\d{1,2}\s*[x×]\s*\d{1,2}\s*[x×]\s*\d{1,2}\s*cm|\d{1,2}\s*kg)"
+    )
+    prefix = (
+        r"^\s*[,(:-]?\s*(?:" + measurement + r"\s*[),:]?\s*[(]?\s*)?"
+        r"(?:(?:esta[n]?|es|son)\s+)?"
+    )
     denied = re.match(prefix + r"(?:no (?:incluid|permitid)[oa]s?|excluid[oa]s?)\b", tail)
     if denied:
         return False, bool(re.search(r"[oa]s\b", denied[0]))

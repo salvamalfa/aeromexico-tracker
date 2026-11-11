@@ -273,6 +273,9 @@ def test_unrelated_negations_are_not_baggage_uncertainty(prefix):
         ("Carry-on baggage at additional cost; checked baggage excluded", (None, None, False)),
         ("Artículo personal incluido, seguro no incluido", (True, None, None)),
         ("Equipaje de mano y documentado no incluidos", (None, False, False)),
+        ("Equipaje de mano 55 x 40 x 25 cm no incluido", (None, False, None)),
+        ("Maleta documentada de 25 kg no incluida", (None, None, False)),
+        ("Artículo personal (45x35x20 cm) no incluido; equipaje de mano incluido", (False, True, None)),
     ],
 )
 def test_full_item_claim_honors_postfix_restrictions_and_separate_affirmations(text, expected):
