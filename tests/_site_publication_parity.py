@@ -18,7 +18,11 @@ from src.publish.issuer_projection import require_scope
 
 def verify_current_publication(site, repo, financial_checker, *, base_commit=None):
     module = verifier_for(site, repo)
-    if module == "src.publish.afac_history_scope":
+    if module == "src.publish.fare_scope":
+        from src.publish.fare_scope import verify_fare_site
+
+        problems = verify_fare_site(site, repo)
+    elif module == "src.publish.afac_history_scope":
         from src.publish.afac_history_scope import verify_afac_history
 
         problems = verify_afac_history(site, repo)
@@ -55,17 +59,52 @@ def verify_current_publication(site, repo, financial_checker, *, base_commit=Non
 @contextmanager
 def official_map_baseline(site, repo, financial_checker, *, base_commit=None):
     """Select the historical site for financial/editorial parity of a map-only overlay."""
+    if verifier_for(site, repo) == "src.publish.fare_scope":
+        from tests._fare_publication_parity import fare_baseline
+
+        with fare_baseline(site, repo) as (previous, commit):
+            with _map_comparison(
+                previous, repo, financial_checker, base_commit=base_commit, verified_commit=commit
+            ) as comparison:
+                yield comparison
+        return
+    with _map_comparison(site, repo, financial_checker, base_commit=base_commit) as comparison:
+        yield comparison
+
+
+@contextmanager
+def _map_comparison(site, repo, financial_checker, *, base_commit=None, verified_commit=None):
     if (
         not (site / "data/v1/official-routes.json").is_file()
         or verifier_for(site, repo) != "src.publish.source_data_scope"
     ):
         yield site
         return
-    spec = source_data_scope.anchor(repo)
+    if verified_commit is None:
+        spec = source_data_scope.anchor(repo)
+    else:
+        # Fare's strong verifier already authenticated this whole SOURCE
+        # edition with its own producer. Read its immutable anchor, never a
+        # pending/current SOURCE anchor or runtime fingerprint.
+        current = json.loads((site / "publication_manifest.json").read_bytes())
+        assert (site / "publication_manifest.json").read_bytes() == _git(
+            repo, "show", f"{verified_commit}:site/publication_manifest.json"
+        )
+        producer = current["code_commit"]
+        _git(repo, "merge-base", "--is-ancestor", producer, verified_commit)
+        anchor_raw = _git(repo, "show", f"{producer}:{source_data_scope.ANCHOR}")
+        proof = json.loads((site / source_data_scope.PROOF).read_bytes())
+        assert proof["schema_version"] == "source_data_publication_v1"
+        assert proof["anchor_sha256"] == sha(anchor_raw)
+        spec = json.loads(anchor_raw)
+        assert proof["remote_witness"]["baseline_commit"] == spec["baseline_commit"]
+        assert proof["remote_witness"]["manifest_sha256"] == spec["baseline_manifest_sha256"]
     if spec["product"] != "official_routes":
         yield site
         return
-    if base_commit:
+    if verified_commit is not None:
+        pass  # Authenticated by the complete Fare -> original SOURCE replay.
+    elif base_commit:
         verify_current_publication(site, repo, financial_checker, base_commit=base_commit)
     else:
         from src.analysis_agent.entity_adapter import code_version

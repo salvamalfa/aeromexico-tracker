@@ -21,7 +21,7 @@ def commit(repo, message):
     return git(repo, "rev-parse", "HEAD")
 
 
-def create_source_release(repo):
+def create_source_release(repo, *, official=False):
     repo.mkdir()
     root = manifest.PATHS.root
     for name in ("src", "scripts", "contracts"):
@@ -29,6 +29,11 @@ def create_source_release(repo):
     shutil.copyfile(root / "uv.lock", repo / "uv.lock")
     shutil.copyfile(root / ".gitignore", repo / ".gitignore")
     shutil.copytree(Path(__file__).parent / "fixtures/site/valid", repo / "site")
+    if official:
+        for name in ("config/carrier_crosswalk.csv", "data/reference/official_route_cities.csv"):
+            target = repo / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(root / name, target)
     policy = repo / fare_scope.POLICY
     policy.parent.mkdir(parents=True)
     shutil.copyfile(root / fare_scope.POLICY, policy)
@@ -45,23 +50,46 @@ def create_source_release(repo):
     parent = commit(repo, "generic public fixture")
     previous = manifest.load_manifest(site)
     previous_raw = (site / manifest.MANIFEST_NAME).read_bytes()
-    target = "data/v1/flights/quarters.json"
-    outputs = public_outputs({target: (site / target).read_bytes()}, series())
+    if official:
+        from src.publish import official_routes_projection as projection
+
+        payload = json.loads((Path(__file__).parent / "fixtures/official-routes.example.json").read_bytes())
+        raw = projection.encoded(payload)
+        profile = dict(
+            schema_version="official_route_profile_v1", period="2026M09",
+            selection={"path": "tmp/fixture/selection.json", "sha256": "b" * 64},
+            code_sha256=projection.fingerprints(repo), dataset_version=payload["dataset_version"],
+            output_sha256=fare_scope.sha(raw), activation="none", publication="not_authorized",
+            retained_approvals=dict(baseline_commit=parent, parent_inputs=dict(
+                root="tmp/fixture/parent", inventory={"path": "tmp/fixture/inventory.json", "sha256": "f" * 64},
+                request={"path": "tmp/fixture/request.json", "sha256": "a" * 64})),
+        )
+        outputs = {projection.PUBLIC_PATH: raw}
+        selected_projection = dict(profile=profile, dataset_version=payload["dataset_version"], payload_sha256=fare_scope.sha(raw))
+        selected_binding = dict(product="official_routes", period="2026M09",
+                                receipt_id=fare_scope.sha(projection.encoded(profile))[:32],
+                                candidate_as_of=payload["metadata"]["source_as_of"],
+                                output_sha256={"official_routes": fare_scope.sha(raw)})
+    else:
+        target = "data/v1/flights/quarters.json"
+        outputs = public_outputs({target: (site / target).read_bytes()}, series())
+        selected_projection = series()
+        selected_binding = {
+            "product": "am_traffic_ir", "period": "2026M09", "receipt_id": "1" * 32,
+            "candidate_as_of": "2026-10-28T00:00:00Z", "output_sha256": {"fixture": "2" * 64},
+        }
     fingerprint = subprocess.check_output([
         sys.executable, "-B", "-c",
         "from src.analysis_agent.entity_adapter import code_version; print(code_version())",
     ], cwd=repo, text=True).strip()
-    contract_name = "flights.schema.json"
+    contract_name = "official-routes.schema.json" if official else "flights.schema.json"
     spec = {
-        "schema_version": "source_data_release_v1", "product": "am_traffic_ir",
+        "schema_version": "source_data_release_v1", "product": selected_binding["product"],
         "period_id": "2026M09", "baseline_commit": parent,
         "baseline_manifest_sha256": fare_scope.sha(previous_raw),
         "producer_code_version": fingerprint,
-        "source_binding": {
-            "product": "am_traffic_ir", "period": "2026M09", "receipt_id": "1" * 32,
-            "candidate_as_of": "2026-10-28T00:00:00Z", "output_sha256": {"fixture": "2" * 64},
-        },
-        "projection": series(), "data_files": source_data_scope.pins(outputs),
+        "source_binding": selected_binding,
+        "projection": selected_projection, "data_files": source_data_scope.pins(outputs),
         "frontend_files": editorial.frontend_entries(site),
         "contract_changes": {contract_name: fare_scope.sha((repo / "contracts/web" / contract_name).read_bytes())},
         "authorization_sha256": "3" * 64,
