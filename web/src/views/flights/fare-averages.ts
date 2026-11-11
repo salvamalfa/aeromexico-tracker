@@ -1,5 +1,5 @@
 // Public, contracted means. Individual quotes, book IDs and flight times never arrive here.
-import { addObservationPeriods, currentPeriodId } from "../../state/period";
+import { addObservationPeriods, currentPeriodId, subscribe } from "../../state/period";
 import type { OfficialPoint, OfficialRoute } from "../../types/official-routes";
 import { esc } from "./dom";
 import { fetchPublicationManifest } from "../../lib/publication-manifest";
@@ -21,8 +21,21 @@ const number = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
 const periodLabel = (id: string) => `${id.slice(-1)}T${id.slice(2, 4)}`;
 const display = (value: Mean, points = false) => value.mean === null ? "N/D" : points ? number.format(value.mean) : money.format(value.mean);
 
+function updateFarePeriodNote(): void {
+  const note = window.document.getElementById("fare-period-note");
+  if (!note) return;
+  const latest = document?.periods.slice().sort().at(-1);
+  const date = document?.groups.filter(group => group.period_id === latest).map(group => group.query_date_end).sort().at(-1);
+  note.hidden = !latest || !date;
+  note.textContent = latest && date
+    ? `Últimas consultas de tarifas: ${date.split("-").reverse().join("/")} (${periodLabel(latest)}).${currentPeriodId() === latest ? "" : ` Selecciona ${periodLabel(latest)} para verlas.`}`
+    : "";
+}
+subscribe(updateFarePeriodNote);
+
 export async function loadFareAverages(dataRoot: string): Promise<void> {
   document = null;
+  updateFarePeriodNote();
   try {
     // Older immutable releases do not advertise this optional product. Avoid
     // requesting a missing asset: browsers report a 404 even when fetch is caught.
@@ -42,7 +55,8 @@ export async function loadFareAverages(dataRoot: string): Promise<void> {
     if (value.schema_version !== "fare_averages_v1" || !Array.isArray(value.groups) || !Array.isArray(value.periods)) return;
     document = value;
     addObservationPeriods(value.periods, new URLSearchParams(window.location.search).get("period"));
-  } catch { document = null; }
+    updateFarePeriodNote();
+  } catch { document = null; updateFarePeriodNote(); }
 }
 export function setFareAveragesForTest(value: FareAverages | null): void { document = value; }
 export function hasFarePeriod(period: string): boolean { return document?.periods.includes(period) ?? false; }

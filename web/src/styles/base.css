@@ -47,6 +47,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, [role="option"]
 .hero { position: relative; overflow: hidden; padding: 26px 30px 24px; color: #fff; background: var(--brand-blue-dark); border-radius: 20px; box-shadow: 0 14px 38px rgba(0, 48, 135, .2); }
 .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: center; }
 h1 { margin: 0; max-width: 730px; font-size: clamp(25px, 3.4vw, 40px); line-height: 1.05; letter-spacing: -.035em; }
+.fare-period-note { max-width: 52ch; margin: 10px 0 0; color: #d8e5f8; font-size: 12px; line-height: 1.4; }
 .period-control { min-width: 170px; }
 .period-label { display: block; margin-bottom: 6px; color: #d8e5f8; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .period-stepper { display: grid; grid-template-columns: 38px minmax(74px, 1fr) 38px; align-items: stretch; overflow: hidden; min-height: 42px; color: var(--brand-blue-dark); background: #fff; border-radius: 10px; }

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fareGroupsForRoute, fareHoverLines, fareTooltipColumns, loadFareAverages, setFareAveragesForTest, type FareAverage } from "./fare-averages";
 import type { OfficialRoute } from "../../types/official-routes";
+import { addObservationPeriods, currentPeriodId, initPeriods } from "../../state/period";
 
 const route = { origin: { id: "CITY_MX_MEXICO", point_kind: "city" }, destination: { id: "CITY_MX_MONTERREY", point_kind: "city" } } as OfficialRoute;
 const group: FareAverage = { provider: "DOTERS", period_id: "2026Q4", origin: "MEX", destination: "MTY",
@@ -9,7 +10,7 @@ const group: FareAverage = { provider: "DOTERS", period_id: "2026Q4", origin: "M
   query_date_start: "2026-11-10", query_date_end: "2026-11-10", points_applicability: "applicable", group_id: "test",
   metrics: { cash_final_mxn: { mean: 3107, n: 1 }, points: { mean: 14398, n: 1 },
     redemption_cash_mxn: { mean: null, n: 0 }, redemption_taxes_mxn: { mean: null, n: 0 } } };
-afterEach(() => { setFareAveragesForTest(null); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+afterEach(() => { setFareAveragesForTest(null); document.body.replaceChildren(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("optional published fare product", () => {
   it("does not request an absent asset from an older manifest and clears stale quotes", async () => {
@@ -32,6 +33,23 @@ describe("optional published fare product", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1]![0]).toBe("data/v1/fare-averages.json");
     expect(fareGroupsForRoute(route, "2026Q4")).toEqual([group]);
+  });
+  it("announces newer quote dates without changing the selected financial quarter", async () => {
+    vi.stubEnv("VITE_LOCAL_FARES", "false");
+    initPeriods(["2026Q3"], "2026Q3");
+    document.body.innerHTML = '<p id="fare-period-note" hidden></p>';
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ files: [{ path: "data/v1/fare-averages.json" }] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ schema_version: "fare_averages_v1", periods: ["2026Q4"], groups: [{ ...group, query_date_end: "2026-11-11" }] }) });
+    vi.stubGlobal("fetch", fetchMock);
+    await loadFareAverages("data/v1");
+    const note = document.getElementById("fare-period-note")!;
+    expect(currentPeriodId()).toBe("2026Q3");
+    expect(note.hidden).toBe(false);
+    expect(note.textContent).toContain("11/11/2026 (4T26)");
+    expect(note.textContent).toContain("Selecciona 4T26");
+    addObservationPeriods(["2026Q4"], "2026Q4");
+    expect(note.textContent).not.toContain("Selecciona");
   });
 });
 
