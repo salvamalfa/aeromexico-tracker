@@ -34,7 +34,7 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
         if reviewed_at.tzinfo is None:
             raise ValueError("Field review timestamp needs a timezone")
         key = (review["provider"], review["capture_id"], review["source_snapshot_sha256"])
-        if key in field_reviews and field_reviews[key][0] == reviewed_at:
+        if key in field_reviews and field_reviews[key][0] == reviewed_at and field_reviews[key][1] != review:
             raise ValueError("Ambiguous field reviews at the same timestamp")
         if key not in field_reviews or field_reviews[key][0] < reviewed_at:
             field_reviews[key] = (reviewed_at, review)
@@ -54,7 +54,6 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
             )
         )
     capture_ids = {}
-    applied_reviews = set()
     conflicts = set()
     for path in sorted(bronze.rglob("*.json")):
         raw = path.read_bytes()
@@ -70,31 +69,9 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
         )
         rejected.extend(errors)
         for row in rows:
-            review_key = (row["provider"], row["capture_id"], hashlib.sha256(raw).hexdigest())
-            if review_key in field_reviews:
-                applied_reviews.add(review_key)
-                review = field_reviews[review_key][1]
-                for field, value in review["effective_overrides"].items():
-                    if field not in {"points", "redemption_taxes_mxn"}:
-                        raise ValueError("Field review attempts an unauthorized override")
-                    row[field] = amount(value, integer=field == "points")
-                if review.get("observed_supplement"):
-                    evidence = review.get("supplement_evidence", {})
-                    observed_at = datetime.fromisoformat(evidence["observed_at"].replace("Z", "+00:00"))
-                    if (
-                        review.get("verified") is not True
-                        or observed_at.tzinfo is None
-                        or not evidence.get("evidence_url", "").startswith(("https://", "http://"))
-                        or not re.fullmatch(r"[a-f0-9]{64}", evidence.get("dom_sha256", ""))
-                    ):
-                        raise ValueError("Observed supplement lacks verified, timestamped DOM evidence")
-                    for field, value in review["observed_supplement"].items():
-                        if field not in {"redemption_cash_mxn", "redemption_carrier_mxn"}:
-                            raise ValueError("Observed supplement attempts an unauthorized field")
-                        row[field] = amount(value)
-                row["field_review"] = review
-                row["observation_id"] = digest(
-                    {k: v for k, v in row.items() if k not in {"sources", "raw_source_row", "observation_id"}}
+            for source in row["sources"]:
+                source.update(
+                    snapshot_sha256=hashlib.sha256(raw).hexdigest(), snapshot_path=str(path.resolve())
                 )
             identity = row["observation_id"]
             capture_id = row["capture_id"]
@@ -110,9 +87,24 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
                         observations[identity]["sources"].append(source)
             else:
                 observations[identity] = row
-    for key in field_reviews:
-        if key not in applied_reviews:
-            raise ValueError("Field review has no matching snapshot identity and fingerprint")
+    applied_reviews = set()
+    # A snapshot is a read of an observation. Merge identical reads before a
+    # hash-anchored review changes the effective fields of that observation.
+    for row in observations.values():
+        candidates = []
+        for source in row["sources"]:
+            key = (row["provider"], row["capture_id"], source["snapshot_sha256"])
+            if key in field_reviews:
+                applied_reviews.add(key)
+                candidates.append(field_reviews[key])
+        if candidates:
+            latest = max(timestamp for timestamp, _ in candidates)
+            reviews = [review for timestamp, review in candidates if timestamp == latest]
+            if any(review != reviews[0] for review in reviews):
+                raise ValueError("Ambiguous latest reviews for an observation")
+            _apply_field_review(row, reviews[0])
+    if set(field_reviews) != applied_reviews:
+        raise ValueError("Field review has no matching snapshot identity and fingerprint")
     for identity in conflicts:
         rejected.append(
             dict(
@@ -176,6 +168,32 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
     payload["dataset_version"] = digest(dict(rows=display_rows, snapshots=snapshots))
     write_json(gold, payload)
     return payload
+
+
+def _apply_field_review(row, review):
+    for field, value in review["effective_overrides"].items():
+        if field not in {"points", "redemption_taxes_mxn"}:
+            raise ValueError("Field review attempts an unauthorized override")
+        row[field] = amount(value, integer=field == "points")
+    if review.get("observed_supplement"):
+        evidence = review.get("supplement_evidence", {})
+        observed_at = datetime.fromisoformat(evidence["observed_at"].replace("Z", "+00:00"))
+        if (
+            review.get("verified") is not True
+            or observed_at.tzinfo is None
+            or not evidence.get("evidence_url", "").startswith(("https://", "http://"))
+            or not re.fullmatch(r"[a-f0-9]{64}", evidence.get("dom_sha256", ""))
+        ):
+            raise ValueError("Observed supplement lacks verified, timestamped DOM evidence")
+        for field, value in review["observed_supplement"].items():
+            if field not in {"redemption_cash_mxn", "redemption_carrier_mxn"}:
+                raise ValueError("Observed supplement attempts an unauthorized field")
+            row[field] = amount(value)
+    row["field_review"] = review
+    row["source_observation_id"] = row["observation_id"]
+    row["observation_id"] = digest(
+        {k: v for k, v in row.items() if k not in {"sources", "raw_source_row", "observation_id"}}
+    )
 
 
 def main() -> int:

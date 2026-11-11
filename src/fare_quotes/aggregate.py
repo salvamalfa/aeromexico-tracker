@@ -34,6 +34,9 @@ def _notes(row):
 
 
 def comparable_group(row):
+    fare = row.get("fare")
+    if not isinstance(fare, str) or not fare.strip():
+        return None
     query = date.fromisoformat(row["query_date"])
     departure = date.fromisoformat(row["departure_date"])
     returning = date.fromisoformat(row["return_date"]) if row["return_date"] else None
@@ -54,7 +57,7 @@ def comparable_group(row):
         provider=row["provider"],
         origin=row["origin"],
         destination=row["destination"],
-        fare=row.get("fare") or "Sin tarifa documentada",
+        fare=fare.strip(),
         conditions=conditions,
         horizon_months=(departure.year - query.year) * 12 + departure.month - query.month,
         stay_days=(returning - departure).days if returning else None,

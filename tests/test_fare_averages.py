@@ -64,6 +64,18 @@ def test_unknown_conditions_and_unverified_history_do_not_enter_means():
     assert value["excluded_unverified_observations"] == 2
 
 
+def test_unknown_fares_are_excluded_even_with_identical_documented_conditions():
+    unknown = observation(fare=None, cash_final_mxn=300)
+    blank = observation(fare="", cash_final_mxn=500)
+    blank["fare"] = " \t "
+    value = build_averages(private(observation(), unknown, blank))
+    assert len(value["groups"]) == 1
+    assert value["groups"][0]["fare"] == "Main"
+    assert value["groups"][0]["observations"] == 1
+    assert value["groups"][0]["metrics"]["cash_final_mxn"] == {"mean": 100, "n": 1}
+    assert value["excluded_unverified_observations"] == 2
+
+
 def test_public_export_contains_no_private_quote_identifiers_and_is_deterministic(tmp_path):
     a, b = observation(), observation(cash_final_mxn=300)
     a["sources"] = [{"spreadsheet_id": "do-not-publish-this", "row": 99}]

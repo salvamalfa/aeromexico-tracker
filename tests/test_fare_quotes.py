@@ -202,3 +202,55 @@ def test_field_review_excludes_only_unconfirmed_fields_and_keeps_bronze(tmp_path
     (reviews / "initial.json").write_text(json.dumps(review))
     with pytest.raises(ValueError, match="fingerprint"):
         rebuild(bronze, tmp_path / "silver", tmp_path / "gold.json")
+
+
+def test_repeated_sheet_read_keeps_one_effectively_reviewed_observation_and_all_sources(tmp_path):
+    bronze = tmp_path / "fare_quotes"
+    bronze.mkdir()
+    first = snapshot(quote(capture_key="one"))
+    original_bytes = json.dumps(first).encode()
+    (bronze / "z-original.json").write_bytes(original_bytes)
+    repeated = json.loads(original_bytes)
+    repeated["fetched_at"] = "2026-11-11T20:00:00Z"
+    other = quote(capture_key="two")
+    other["destination"] = "CUN"
+    repeated["values"].append(list(other.values()))
+    repeated_bytes = json.dumps(repeated).encode()
+    (bronze / "a-repeated.json").write_bytes(repeated_bytes)
+    reviews = tmp_path / "fare_quote_field_reviews"
+    reviews.mkdir()
+    initial = dict(
+        schema_version="fare_quote_field_review_v1",
+        provider="DOTERS",
+        capture_id="one",
+        source_snapshot_sha256=hashlib.sha256(original_bytes).hexdigest(),
+        reviewed_at="2026-11-10T23:00:00-06:00",
+        effective_overrides=dict(points=None, redemption_taxes_mxn=None),
+    )
+    (reviews / "initial.json").write_text(json.dumps(initial))
+    result = rebuild(bronze, tmp_path / "silver", tmp_path / "gold.json")
+    reviewed = next(row for row in result["rows"] if row["capture_id"] == "one")
+    assert len(result["rows"]) == 2
+    assert result["quarantine_count"] == 0
+    assert reviewed["cash_final_mxn"] == 3107
+    assert reviewed["points"] is None and reviewed["redemption_taxes_mxn"] is None
+    assert {s["snapshot_sha256"] for s in reviewed["sources"]} == {
+        hashlib.sha256(original_bytes).hexdigest(),
+        hashlib.sha256(repeated_bytes).hexdigest(),
+    }
+    assert len(reviewed["sources"]) == 2
+    confirmed = {
+        **initial,
+        "source_snapshot_sha256": hashlib.sha256(repeated_bytes).hexdigest(),
+        "reviewed_at": "2026-11-10T23:05:00-06:00",
+        "effective_overrides": dict(points=14398, redemption_taxes_mxn=1399),
+    }
+    (reviews / "confirmed.json").write_text(json.dumps(confirmed))
+    result = rebuild(bronze, tmp_path / "silver", tmp_path / "gold.json")
+    reviewed = next(row for row in result["rows"] if row["capture_id"] == "one")
+    assert len(result["rows"]) == 2 and result["quarantine_count"] == 0
+    assert reviewed["points"] == 14398 and reviewed["redemption_taxes_mxn"] == 1399
+    assert reviewed["field_review"] == confirmed and len(reviewed["sources"]) == 2
+    assert result["counts"]["DOTERS"]["verified_cash"] == 2
+    assert (bronze / "z-original.json").read_bytes() == original_bytes
+    assert (bronze / "a-repeated.json").read_bytes() == repeated_bytes

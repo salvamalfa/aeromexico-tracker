@@ -66,12 +66,15 @@ Agrupa trimestre de consulta, proveedor, par de aeropuertos, tarifa, condiciones
 horizonte de compra en meses y diferencia entre fechas de ida y regreso.
 Cada importe usa su propio conteo de observaciones no nulas. Los pares dinero y
 puntos tienen otro conteo; no se usan puntos por acumular como precio del canje.
-El histórico ambiguo queda fuera de las medias.
+El histórico ambiguo y las observaciones sin tarifa documentada quedan fuera de
+las medias, aunque compartan otras condiciones.
 
 Los sidecars de `data/bronze/fare_quote_field_reviews/` pueden excluir campos
 no confirmados sin cambiar Bronze ni el precio en dinero confirmado. Exigen
-identidad, hash de la instantánea y fecha de revisión. La revisión posterior se
-añade como otro archivo. La proyección canónica verificada prevalece sobre una
+identidad, hash de la instantánea y fecha de revisión. Primero se reúnen las
+lecturas idénticas de una observación y todas sus procedencias; después se aplica
+la revisión efectiva más reciente respaldada por alguna de esas lecturas. La
+revisión posterior se añade como otro archivo. La proyección canónica prevalece sobre una
 proyección histórica de la misma observación, conservando ambas en Silver.
 
 El tooltip del mapa conserva las métricas de tráfico y añade columnas de dinero
