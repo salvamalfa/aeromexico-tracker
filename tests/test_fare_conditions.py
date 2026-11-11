@@ -127,6 +127,14 @@ def test_negated_baggage_or_direct_claims_are_not_positive_benefits():
     assert facts["direct_outbound"] is None and facts["direct_return"] is None
 
 
+def test_explicit_round_trip_singular_direct_claim_covers_both_directions_only():
+    facts = condition_facts(observation(), "1 adulto; ida y vuelta directa; tarifa Zero")
+    assert facts["direct_outbound"] is True and facts["direct_return"] is True
+    for unconfirmed in ("salida directa", "ida y vuelta no directa", "No se confirmó ida y vuelta directa"):
+        unknown = condition_facts(observation(), unconfirmed)
+        assert unknown["direct_outbound"] is None and unknown["direct_return"] is None
+
+
 def test_mixed_real_operators_require_explicit_common_benefits_evidence():
     row = plus()
     notes = json.loads(row["notes"])

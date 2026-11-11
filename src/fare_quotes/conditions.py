@@ -169,9 +169,13 @@ def condition_facts(row, private_conditions):
         facts.update(adults=1, passengers=1)
         if family in {"Main", "Premier"}:
             facts["cabin"] = family
-    direct = re.search(r"\b(directos|vuelos directos|itinerario directo|sin escalas)\b", text)
+    direct = re.search(
+        r"\b(directos|vuelos directos|itinerario directo|sin escalas|ida y vuelta directa)\b", text
+    )
     if direct and not re.search(
-        r"\bno (?:hay )?(?:vuelos )?(?:directos|sin escalas)\b|\bsin (?:vuelos )?directos\b", text
+        r"\bno (?:hay )?(?:vuelos )?(?:directos|sin escalas)\b|\bsin (?:vuelos )?directos\b"
+        r"|\bno (?:se confirmo |se confirma )?ida y vuelta directa\b",
+        text,
     ):
         for key in ("direct_outbound", "direct_return"):
             if facts[key] is None:
