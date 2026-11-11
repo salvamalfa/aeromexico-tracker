@@ -25,6 +25,7 @@ data/gold/fact_aeromexico_domestic_capacity_estimate.parquet
 data/gold/fact_route_carrier_international_estimate.parquet
 data/gold/fact_aeromexico_international_capacity_estimate.parquet
 data/quality/
+data/gold/local_fare_quotes.json
 data/analytics/
 data/*.duckdb
 data/*.duckdb.wal

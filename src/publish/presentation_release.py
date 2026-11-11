@@ -22,6 +22,7 @@ from src.analysis_agent import lifecycle as flow
 
 from . import manifest as manifests
 from .records import PublicationRefused, load_records
+from .replay_diagnostics import _afac_replay_diagnostic_note
 
 PROFILE_PATH = "config/publish/presentation-release.json"
 PROFILE_SCHEMA = "presentation_release_v1"
@@ -38,10 +39,16 @@ def _sha(raw: bytes) -> str:
 
 def presentation_receipt(
     repo: Path, out_dir: Path, trusted_commit: str, current_manifest: dict[str, Any]
-) -> dict:
+) -> dict | None:
     """Bind a rebuilt dashboard to its served baseline and AFAC data producer."""
+    from scripts.check_pages_publication import verifier_for
+
     from . import afac_history_scope
 
+    if verifier_for(out_dir, repo) == "src.publish.fare_scope":
+        # The fare proof pins and replays the complete preceding SOURCE/issuer/
+        # AFAC publication. Its manifest commit is not an AFAC source producer.
+        return None
     anchor = afac_history_scope.anchor(repo)
     previous = read_presentation_receipt(out_dir)
     producer_commit = current_manifest["code_commit"]
@@ -68,9 +75,11 @@ def _encode_presentation_receipt(receipt: dict[str, Any]) -> str:
     return PRESENTATION_MARKER + base64.urlsafe_b64encode(raw).decode().rstrip("=")
 
 
-def embed_presentation_receipt(index_html: bytes, receipt: dict[str, Any]) -> bytes:
+def embed_presentation_receipt(index_html: bytes, receipt: dict[str, Any] | None) -> bytes:
     if PRESENTATION_MARKER.encode() in index_html:
         raise PublicationRefused("frontend index already contains a presentation release marker")
+    if receipt is None:
+        return index_html
     close_head = re.search(rb"</head\s*>", index_html, re.IGNORECASE)
     if not close_head:
         raise PublicationRefused("frontend dashboard index has no closing head element")
@@ -260,23 +269,38 @@ def replay_afac_sources(repo: Path, profile: dict[str, Any], anchor: dict[str, A
                 raise ValueError(f"Private AFAC source directory contains a symlink: {name}")
             shutil.copytree(source, checkout / name, dirs_exist_ok=True, copy_function=shutil.copy2)
 
-        result = subprocess.run(
-            [sys.executable, "-B", "-c", _AFAC_REPLAY_PROGRAM, request_ref["path"]],
-            cwd=checkout,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            timeout=3600,
-            env={**__import__("os").environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"},
-        )
+        try:
+            result = subprocess.run(
+                [sys.executable, "-B", "-c", _AFAC_REPLAY_PROGRAM, request_ref["path"]],
+                cwd=checkout,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=3600,
+                env={**__import__("os").environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"},
+            )
+        except subprocess.TimeoutExpired as error:
+            error.add_note(
+                _afac_replay_diagnostic_note(
+                    repo, checkout, commit, "timeout", error.stdout, error.stderr
+                )
+            )
+            raise
         if result.returncode:
-            raise ValueError("Pinned AFAC producer replay failed: " + result.stderr[-2400:])
+            note = _afac_replay_diagnostic_note(
+                repo, checkout, commit, result.returncode, result.stdout, result.stderr
+            )
+            raise ValueError(f"Pinned AFAC producer replay failed ({note}): " + result.stderr[-2400:])
         lines = [line for line in result.stdout.splitlines() if line.strip()]
         try:
             replay = json.loads(lines[-1])
         except (IndexError, json.JSONDecodeError) as error:
+            note = _afac_replay_diagnostic_note(
+                repo, checkout, commit, result.returncode, result.stdout, result.stderr
+            )
             raise ValueError(
-                "Pinned AFAC producer replay returned no machine-readable result: " + result.stdout[-1200:]
+                f"Pinned AFAC producer replay returned no machine-readable result ({note}): "
+                + result.stdout[-1200:]
             ) from error
     finally:
         if checkout.exists():
@@ -317,15 +341,24 @@ def _preserved_map(files: dict[str, tuple[str, int]]) -> dict[str, tuple[str, in
 
 
 def verify_presentation_only_site(site: Path, repo: Path) -> None:
-    """Use both the generic verifier and the unique strong AFAC verifier."""
+    """Keep structural and strong AFAC checks, including a validated fare composition."""
     from scripts.check_pages_publication import verifier_for, verify_site
 
     from .verify import verify_site as verify_generic
 
+    selected = verifier_for(site, repo)
+    if selected == "src.publish.fare_scope":
+        # Fare verification includes structural/privacy checks and replays its
+        # original strong baseline. Its inherited AFAC proof remains mandatory.
+        if not (site / "afac-history-publication.json").is_file():
+            raise ValueError("presentation fare composition requires its pinned AFAC proof")
+        problems = verify_site(site, repo)
+        if problems:
+            raise ValueError(f"presentation candidate failed strong fare/AFAC verification: {problems[:5]}")
+        return
     problems = verify_generic(site)
     if problems:
         raise ValueError(f"presentation candidate failed normal site verification: {problems[:5]}")
-    selected = verifier_for(site, repo)
     if selected != "src.publish.afac_history_scope":
         raise ValueError(f"presentation release requires the pinned AFAC verifier, got {selected!r}")
     problems = verify_site(site, repo)

@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import re
 import subprocess
 import tarfile
 import tempfile
@@ -18,7 +19,11 @@ from src.publish.issuer_projection import require_scope
 
 def verify_current_publication(site, repo, financial_checker, *, base_commit=None):
     module = verifier_for(site, repo)
-    if module == "src.publish.afac_history_scope":
+    if module == "src.publish.fare_scope":
+        from src.publish.fare_scope import verify_fare_site
+
+        problems = verify_fare_site(site, repo)
+    elif module == "src.publish.afac_history_scope":
         from src.publish.afac_history_scope import verify_afac_history
 
         problems = verify_afac_history(site, repo)
@@ -55,17 +60,59 @@ def verify_current_publication(site, repo, financial_checker, *, base_commit=Non
 @contextmanager
 def official_map_baseline(site, repo, financial_checker, *, base_commit=None):
     """Select the historical site for financial/editorial parity of a map-only overlay."""
+    with official_map_edition(site, repo, financial_checker, base_commit=base_commit) as (comparison, _):
+        yield comparison
+
+
+@contextmanager
+def official_map_edition(site, repo, financial_checker, *, base_commit=None):
+    """Keep the exact authenticated Git edition alongside a materialized site."""
+    if verifier_for(site, repo) == "src.publish.fare_scope":
+        from tests._fare_publication_parity import fare_baseline
+
+        with fare_baseline(site, repo) as (previous, commit):
+            with _map_comparison(
+                previous, repo, financial_checker, base_commit=base_commit, verified_commit=commit
+            ) as comparison:
+                yield comparison
+        return
+    with _map_comparison(site, repo, financial_checker, base_commit=base_commit) as comparison:
+        yield comparison
+
+
+@contextmanager
+def _map_comparison(site, repo, financial_checker, *, base_commit=None, verified_commit=None):
     if (
         not (site / "data/v1/official-routes.json").is_file()
         or verifier_for(site, repo) != "src.publish.source_data_scope"
     ):
-        yield site
+        yield site, verified_commit
         return
-    spec = source_data_scope.anchor(repo)
+    if verified_commit is None:
+        spec = source_data_scope.anchor(repo)
+    else:
+        # Fare's strong verifier already authenticated this whole SOURCE
+        # edition with its own producer. Read its immutable anchor, never a
+        # pending/current SOURCE anchor or runtime fingerprint.
+        current = json.loads((site / "publication_manifest.json").read_bytes())
+        assert (site / "publication_manifest.json").read_bytes() == _git(
+            repo, "show", f"{verified_commit}:site/publication_manifest.json"
+        )
+        producer = current["code_commit"]
+        _git(repo, "merge-base", "--is-ancestor", producer, verified_commit)
+        anchor_raw = _git(repo, "show", f"{producer}:{source_data_scope.ANCHOR}")
+        proof = json.loads((site / source_data_scope.PROOF).read_bytes())
+        assert proof["schema_version"] == "source_data_publication_v1"
+        assert proof["anchor_sha256"] == sha(anchor_raw)
+        spec = json.loads(anchor_raw)
+        assert proof["remote_witness"]["baseline_commit"] == spec["baseline_commit"]
+        assert proof["remote_witness"]["manifest_sha256"] == spec["baseline_manifest_sha256"]
     if spec["product"] != "official_routes":
-        yield site
+        yield site, verified_commit
         return
-    if base_commit:
+    if verified_commit is not None:
+        pass  # Authenticated by the complete Fare -> original SOURCE replay.
+    elif base_commit:
         verify_current_publication(site, repo, financial_checker, base_commit=base_commit)
     else:
         from src.analysis_agent.entity_adapter import code_version
@@ -109,7 +156,7 @@ def official_map_baseline(site, repo, financial_checker, *, base_commit=None):
             stream.extractall(folder, filter="data")
         previous = Path(folder) / "site"
         assert (previous / "publication_manifest.json").read_bytes() == raw
-        yield previous
+        yield previous, commit
 
 
 def _active_module(site, repo, manifest, commit):
@@ -125,6 +172,34 @@ def _active_module(site, repo, manifest, commit):
             if proof in names:
                 (archive / proof).write_bytes(_git(repo, "show", f"{commit}:site/{proof}"))
         return verifier_for(archive, repo)
+
+
+def assert_flight_data_parity(site, comparison, repo, out_dir, payload, baseline_json):
+    """Choose the original flight-data check from the authenticated comparison."""
+    from src.publish import manifest as manifests
+    from src.web_export.flights import export_flights, recombine_flights
+
+    module = verifier_for(comparison, repo)
+    manifest = manifests.load_manifest(comparison)
+    if module in {"src.publish.quarterly_story_scope", "src.publish.afac_history_scope"}:
+        from tests._quarterly_story_parity import replay_data
+
+        rebuilt = replay_data(comparison, repo)
+        assert len([name for name in rebuilt if name.startswith("data/v1/flights/")]) == 9
+    elif any(e["period_id"] == "2026Q3" and "entity_key" not in e for e in manifest["analysis_manifest"]):
+        prefix = "data/v1/flights/"
+        expected = {r["path"]: r for r in baseline_json("publication_manifest.json")["files"]
+                    if r["path"].startswith(prefix)}
+        actual_manifest = manifests.load_manifest(site)
+        actual = {r["path"]: r for r in actual_manifest["files"] if r["path"].startswith(prefix)}
+        assert actual == expected
+        assert {p.relative_to(site).as_posix() for p in (site / "data/v1/flights").rglob("*") if p.is_file()} == set(expected)
+        for name, row in expected.items():
+            raw = (site / name).read_bytes()
+            assert len(raw) == row["bytes"] and sha(raw) == row["sha256"]
+    else:
+        export_flights(payload, out_dir, skip_input_check=True)
+        assert recombine_flights(out_dir) == recombine_flights(site / "data/v1")
 
 
 def _preserved_nonfinancial_financials(site, repo, manifest, commit, spec, label):
@@ -251,15 +326,31 @@ def preserved_readings(site: Path, repo: Path, financial_spec):
 
 
 @contextmanager
-def _published_approval_config_view(repo: Path, manifest_raw: bytes):
+def _published_approval_config_view(repo: Path, manifest_raw: bytes, *, verified_commit=None):
     """Read the configuration committed with this site, not a later pending pin.
 
     A detached, config-only worktree keeps every production provenance check
     intact and never edits the caller's working configuration. Source and ledger
     replay still use the ordinary pinned verifier and actual private inputs.
     """
-    trusted = None
-    for ref in ("origin/master", "HEAD"):
+    trusted = verified_commit
+    if trusted is not None:
+        if not isinstance(trusted, str) or not re.fullmatch(r"[a-f0-9]{40}", trusted):
+            raise ValueError("Authenticated publication commit must be an exact Git hash")
+        try:
+            _git(repo, "merge-base", "--is-ancestor", trusted, "HEAD")
+        except subprocess.CalledProcessError as error:
+            raise ValueError("Authenticated publication commit is outside current ancestry") from error
+        if _git(repo, "show", f"{trusted}:site/publication_manifest.json") != manifest_raw:
+            raise ValueError("Authenticated publication manifest differs from its exact Git edition")
+        producer = json.loads(manifest_raw).get("code_commit")
+        if not isinstance(producer, str) or not re.fullmatch(r"[a-f0-9]{40}", producer):
+            raise ValueError("Authenticated publication lacks its exact producer commit")
+        try:
+            _git(repo, "merge-base", "--is-ancestor", producer, trusted)
+        except subprocess.CalledProcessError as error:
+            raise ValueError("Authenticated publication producer is outside edition history") from error
+    for ref in (() if trusted is not None else ("origin/master", "HEAD")):
         candidate = subprocess.run(
             ["git", "show", f"{ref}:site/publication_manifest.json"],
             cwd=repo,

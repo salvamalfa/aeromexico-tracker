@@ -14,7 +14,11 @@ from scripts.check_pages_publication import VERIFIERS, verifier_for
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "scripts/check_pages_publication.py"
-LEGACY_VERIFIERS = tuple(item for item in VERIFIERS if item[0] != "afac-history-publication.json")
+LEGACY_VERIFIERS = tuple(
+    item
+    for item in VERIFIERS
+    if item[0] not in {"afac-history-publication.json", "fare-quotes-publication.json"}
+)
 
 
 def manifest(site, receipts):
@@ -113,6 +117,41 @@ def replace_proof(site, receipt, commit):
 def new_commit(repo, message):
     subprocess.run(["git", "commit", "--allow-empty", "-qm", message], cwd=repo, check=True)
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+
+
+def replace_fare_proof(site, commit):
+    raw = json.dumps({"schema_version": "fare_quotes_publication_v1", "baseline_commit": commit}).encode()
+    (site / "fare-quotes-publication.json").write_bytes(raw)
+    document = json.loads((site / "publication_manifest.json").read_bytes())
+    for pin in document["files"]:
+        if pin["path"] == "fare-quotes-publication.json":
+            pin.update(sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
+    (site / "publication_manifest.json").write_text(json.dumps(document))
+
+
+def test_fares_then_issuer_then_fares_follow_actual_baseline_precedence(tmp_path):
+    repo = manifest(tmp_path, ["issuer-publication.json", "fare-quotes-publication.json"])
+    replace_fare_proof(tmp_path, new_commit(repo, "fare baseline"))
+    assert verifier_for(tmp_path, repo) == "src.publish.fare_scope"
+    replace_proof(tmp_path, "issuer-publication.json", new_commit(repo, "subsequent issuer baseline"))
+    assert verifier_for(tmp_path, repo) == "src.publish.issuer_scope"
+    replace_fare_proof(tmp_path, new_commit(repo, "subsequent fare baseline"))
+    assert verifier_for(tmp_path, repo) == "src.publish.fare_scope"
+
+
+@pytest.mark.parametrize("mutation", ["tie", "modified_older_proof", "missing_fare_commit"])
+def test_fare_composition_keeps_all_precedence_and_pin_guards(tmp_path, mutation):
+    repo = manifest(tmp_path, ["issuer-publication.json", "fare-quotes-publication.json"])
+    commit = new_commit(repo, "fare baseline")
+    replace_fare_proof(tmp_path, commit)
+    if mutation == "tie":
+        replace_proof(tmp_path, "issuer-publication.json", commit)
+    elif mutation == "modified_older_proof":
+        (tmp_path / "issuer-publication.json").write_text("{}")
+    else:
+        replace_fare_proof(tmp_path, "f" * 40)
+    with pytest.raises(ValueError):
+        verifier_for(tmp_path, repo)
 
 
 def test_movements_then_issuer_then_movements_follow_witnessed_git_order(tmp_path):

@@ -239,6 +239,11 @@ trabajos cerrados y enlaza sus originales; no define el comportamiento actual.
 
 ### e) Cerrar un esfuerzo y retirar su documentación
 
+La ingesta de precios y puntos de Mercado se describe en
+[`src/fare_quotes/README.md`](src/fare_quotes/README.md). Las instantáneas de libros
+y los detalles quedan privados. El agregado trimestral contratado se añade con
+el gate `--fare-quotes-only`, preservando las aprobaciones y datos servidos.
+
 El [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea)
 exige inventariar cada archivo del cambio, incluidos los nuevos y los generados,
 y registrar su disposición y motivo en el resumen existente del PR.

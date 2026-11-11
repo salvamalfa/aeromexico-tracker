@@ -364,3 +364,19 @@
   .flights-view #map-panel .map-route-switch { width:100%; }
   .flights-view #map-panel .map-route-switch button { flex:1; padding:8px 5px; }
 }
+.flights-view .official-map-period-basis { margin:0 20px 8px; color:var(--muted); font-size:11px; }
+.flights-view .fare-route-averages { margin-top:12px; }
+.flights-view .fare-route-averages h4 { font-size:12px; margin:6px 0; }
+.flights-view .fare-average-scroll { overflow-x:auto; }
+.flights-view .fare-route-averages table { width:100%; min-width:320px; table-layout:fixed; border-collapse:collapse; font-size:10px; }
+.flights-view .fare-route-averages th, .flights-view .fare-route-averages td { padding:6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+.flights-view .fare-route-averages th { white-space:normal; text-transform:none; overflow-wrap:anywhere; }
+.flights-view .fare-route-averages th:first-child { width:38%; }
+.flights-view .fare-route-averages th:nth-child(2) { width:22%; }
+.flights-view .fare-route-averages th:nth-child(3) { width:18%; }
+.flights-view .fare-route-averages th:nth-child(4) { width:22%; }
+.flights-view .fare-route-averages th[scope=row] { font-weight:500; }
+.flights-view .fare-route-averages details { margin-top:6px; }
+.flights-view .fare-route-averages summary { cursor:pointer; color:var(--brand-blue); }
+.flights-view .fare-route-averages small { display:block; margin-top:4px; font-weight:400; }
+.flights-view .fare-route-averages p { font-size:10px; line-height:1.5; }

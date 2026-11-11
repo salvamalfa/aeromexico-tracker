@@ -1,0 +1,23 @@
+{
+  "schema_version": "fare_quotes_policy_v1",
+  "public_aggregates_authorized": true,
+  "authority": "Owner request in this task authorizes the public dashboard update with verified fare averages; it does not approve new financial analysis.",
+  "period_basis": "consultation_quarter_America_Mexico_City",
+  "aggregation": "arithmetic_mean_of_verified_observations_not_all_flights",
+  "group_by": [
+    "period_id",
+    "provider",
+    "origin",
+    "destination",
+    "fare",
+    "conditions",
+    "horizon_months",
+    "stay_days",
+    "trip_type"
+  ],
+  "null_policy": "Exclude missing amounts from each mean; retain separate sample counts. Volaris points are not applicable.",
+  "privacy": "Publish only comparable aggregate groups and closed, evidence-derived condition facts with generated labels. No free fare/conditions/notes prose, spreadsheet IDs, individual flight IDs, travel dates, URLs or schedules.",
+  "redemption": "Keep points, regular cash final, redemption cash final and redemption taxes independent. Never calculate net point value without final redemption cash.",
+  "preservation": "Replay the existing approval/source chain and preserve all inherited data and approval identities byte for byte.",
+  "condition_identity": "Versioned opaque group identity preserves the private normalized fare/conditions and explicit condition facts; projecting public labels never merges incompatible or unknown raw conditions."
+}

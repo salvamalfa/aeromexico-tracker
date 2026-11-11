@@ -40,6 +40,12 @@ function ensureFlightsMounted(dataRoot: string): Promise<void> {
 export async function mount(dataRoot = "data/v1"): Promise<void> {
   mountTabs();
   await mountExecutive(dataRoot);
+  const { loadFareAverages } = await import("./views/flights/fare-averages");
+  void loadFareAverages(dataRoot);
+  if (import.meta.env.VITE_LOCAL_FARES === "true") {
+    const { mountLocalFares } = await import("./views/fares/local-fares");
+    await mountLocalFares();
+  }
   if (import.meta.env.VITE_CHAT_ENABLED === "true") {
     const { mountChat } = await import("./views/chat/bootstrap");
     mountChat();

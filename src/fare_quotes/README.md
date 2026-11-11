@@ -1,0 +1,163 @@
+# Precios y puntos
+
+Este lector usa instantáneas de los libros de Google Sheets después de comprobar
+su escritura. Conserva el archivo fuente completo en Bronze. No consulta sitios,
+no escribe hojas ni programa corridas. Su agregado público pasa por un gate separado.
+
+Los archivos de entrada viven en `data/bronze/fare_quotes/`. Cada JSON incluye
+`provider`, `spreadsheet_id`, `sheet_name`, `range`, `fetched_at`, `format` y
+`values`. Los formatos son `fare_capture_v2`, `amr_legacy_v1` y
+`doters_legacy_v1`. Las cabeceras del formato nuevo son las de la hoja de captura;
+los formatos históricos tienen una asignación explícita de columnas.
+
+```powershell
+python -m src.fare_quotes
+$env:VITE_LOCAL_FARES='true'
+cd web
+npm run dev -- --host 127.0.0.1 --port 4179 --strictPort
+```
+
+Silver conserva observaciones, fuentes de cada fila y una cuarentena de errores.
+Gold es `data/gold/local_fare_quotes.json`, privado e ignorado por Git. Las
+instantáneas repetidas no duplican una observación; reutilizar una identidad de
+captura con valores distintos pone ambas versiones en cuarentena. Bronze nunca
+se modifica. Los datos históricos ambiguos conservan componentes y puntos, pero
+su precio final queda nulo. No se suman impuestos a un importe ambiguo.
+
+`redemption_cash_mxn` es el pago final adicional del canje, cuando está
+confirmado. `redemption_carrier_mxn` e `redemption_taxes_mxn` son componentes
+independientes. No se sustituyen entre sí ni se suman para fingir un total.
+Volaris exige puntos nulos; un cero se rechaza y en pantalla se ve «No aplica».
+
+La vista se añade al final de Mercado únicamente en el modo local. Usa el único
+selector global y filtra por trimestre de consulta en Ciudad de México. Una
+cotización puede pertenecer a un trimestre aún sin resultados financieros: las
+otras vistas conservan su estado sin datos. El servidor sólo entrega el archivo
+privado a conexiones de esta PC. `site/` y el exportador público no cambian.
+
+Una búsqueda con aeropuertos alternos puede tener un aeropuerto diferente en la
+URL y en el vuelo elegido. Esa diferencia exige evidencia separada del resumen
+del vuelo seleccionado. Se conserva en
+`data/bronze/fare_quote_verifications/`, con identidad de captura y hash de la
+evidencia original. El lector nunca cambia la URL ni deduce el aeropuerto.
+
+El alcance de 36 rutas está en
+[`config/fare_capture_scope.json`](../../config/fare_capture_scope.json): doce
+rutas destacadas por volumen en cada ámbito del mapa. Conserva versión, hash,
+periodo y meses del mapa. AFAC nacional e internacional usa ciudades y todas las
+aerolíneas; sus candidatos de aeropuerto y la operación por proveedor deben
+verificarse antes de capturar. BTS EE. UU. identifica aeropuertos, pero su
+histórico tampoco acredita disponibilidad actual.
+
+Validación: pruebas focalizadas de importación, puntos nulos, fechas, deduplicación,
+conflictos y componentes; TypeScript y suite web. Para Node 25, la suite web debe
+usar `NODE_OPTIONS=--no-experimental-webstorage` para que jsdom aporte su propio
+almacenamiento. La validación general del repositorio requiere los extras del
+entorno (`uv sync --locked --extra analytics --group chat-runtime`). Los precios reales y la
+disponibilidad siguen siendo responsabilidad de cada coordinador de captura.
+
+
+## Agregado público y tooltip
+
+`python -m src.fare_quotes --public-out web/public/data/v1` reconstruye Silver,
+Gold privado y `fare-averages.json`, sin publicar. El exportador sólo permite
+medias y conteos: no entrega libros, filas individuales, vuelos ni horarios.
+Agrupa trimestre de consulta, proveedor, par de aeropuertos, tarifa, condiciones,
+horizonte de compra en meses y diferencia entre fechas de ida y regreso.
+Cada importe usa su propio conteo de observaciones no nulas. Los pares dinero y
+puntos tienen otro conteo; no se usan puntos por acumular como precio del canje.
+El histórico ambiguo y las observaciones sin tarifa documentada quedan fuera de
+las medias, aunque compartan otras condiciones.
+
+Los sidecars de `data/bronze/fare_quote_field_reviews/` pueden excluir campos
+no confirmados sin cambiar Bronze ni el precio en dinero confirmado. Exigen
+identidad, hash de la instantánea y fecha de revisión. Primero se reúnen las
+lecturas idénticas de una observación y todas sus procedencias; después se aplica
+la revisión efectiva más reciente respaldada por alguna de esas lecturas. La
+revisión posterior se añade como otro archivo. La proyección canónica prevalece sobre una
+proyección histórica de la misma observación, conservando ambas en Silver.
+La identidad de una revisión debe ser una cadena no vacía y vincularse a una
+sola observación; se comprueban todos los vínculos antes de modificar campos.
+
+Una revisión puede enmascarar `cash_final_mxn` con nulo mientras se audita el
+carrito final sin descuentos condicionados. Los puntos se conservan por
+separado. Para reemplazar el dinero se exige `observed_correction` con la clave
+`cash_final_mxn`, `verified:true` y `correction_evidence` con `verified:true`,
+`observed_at` con zona, `evidence_url` HTTPS y `dom_sha256`. Se vincula al hash
+de un snapshot y al `capture_id`; no admite ajustes generalizados ni reemplazos
+numéricos por `effective_overrides`. Las decisiones se aplican en orden por
+campo: una revisión posterior de puntos no restaura un dinero aún en disputa.
+La fecha de la evidencia, convertida a Ciudad de México, debe coincidir con la
+fecha de consulta original. Un carrito observado otro día exige una captura
+nueva; no cambia el precio ni el trimestre de una observación anterior.
+La misma regla temporal se aplica a suplementos observados del pago del canje.
+El estado `captured` del capturador se normaliza a `ok`; el valor original queda
+en Bronze. Otros estados desconocidos se rechazan y Volaris sigue sin puntos.
+
+El tooltip del mapa conserva las métricas de tráfico y añade columnas de dinero
+y puntos, con base, tarifa, condiciones y horizonte. México, Santa Lucía y Toluca
+usan su crosswalk explícito y mantienen MEX, NLU y TLC separados. Si una consulta
+corresponde a un trimestre sin tráfico publicado, el mapa puede usar la última
+red previa como referencia, rotulada con su periodo real. El selector global
+sigue siendo único; un trimestre de tarifas no crea datos financieros.
+
+La salida pública no copia el texto libre de tarifa, cabina ni condiciones.
+[`conditions.py`](conditions.py) proyecta sólo hechos observados y tipados y
+genera sus etiquetas desde un catálogo cerrado. Los operadores reales de ida y
+vuelta se conservan por separado; no se deducen del vendedor. Equipaje y límites
+mantienen su unidad y alcance; el plazo tras compra no equivale al plazo previo
+a la salida. Un beneficio no observado, incluido el check-in internacional,
+permanece nulo. En operadores mixtos, los beneficios comunes exigen evidencia
+explícita de ambas opciones seleccionadas.
+
+[`refunds.py`](refunds.py) vincula elegibilidad, plazo y medio de devolución a la
+misma afirmación de reembolso. El check-in y otros beneficios no aportan esos
+plazos. Una negación específica impide anunciar reembolso o su ventana; una
+excepción positiva de cancelación tras compra no vuelve reembolsable toda la
+tarifa. Un mínimo adicional explícito que el contrato no puede representar
+deja la excepción desconocida, en lugar de ocultar ese requisito material.
+Las condiciones anteriores o posteriores ligadas por coma mantienen ese
+alcance, sin tomar requisitos de una afirmación distinta de check-in.
+
+La identidad opaca versionada de cada grupo conserva la comparación privada
+original aunque dos etiquetas públicas coincidan. Valores materiales no
+clasificados también conservan su aislamiento privado. Hechos conocidos en
+conflicto separan grupos; un hecho ausente en algún miembro comparable no se
+hereda de otro miembro. Bronze, Silver, Gold y la prosa original siguen privados
+e íntegros. El contrato y el exportador rechazan texto libre reintroducido en los
+hechos o etiquetas; vuelos individuales, horarios, fechas de viaje, claves y
+URLs no forman parte de esta proyección.
+
+El modo `python -m src.publish --fare-quotes-only --fare-input <Gold privado>
+--record <cada expediente aprobado> --out site` conserva el sitio servido,
+reproduce sus autoridades y fuentes antes y después del build y sólo añade el
+agregado contratado y sus pruebas de publicación. El verificador público vuelve
+a verificar la publicación base completa con el selector y verificador de su
+`code_commit` original, sobre el manifiesto y árbol Git exactos. Así un cambio de
+runtime posterior no se confunde con una nueva autorización. Rechaza cambios a sus datos,
+aprobaciones o contratos. Sólo se permiten el nuevo producto de tarifas y los
+archivos de interfaz. No crea ni modifica aprobaciones financieras.
+El replay privado de fuentes y las ocho aprobaciones sigue siendo obligatorio
+antes y después del build. No se inventa un productor AFAC cuando el perfil
+fuerte realmente servido es SOURCE; el recibo de tarifas conserva esa procedencia.
+
+Los consumidores de paridad validan primero el compuesto de tarifas completo y
+recuperan su baseline Git exacto. Si contiene el mapa oficial, siguen el ancla
+SOURCE de su productor histórico hasta la edición financiera anterior; no
+aplican el runtime actual al SOURCE heredado. Las comparaciones editoriales,
+financieras y de snapshot mantienen después sus replays originales de fuentes
+y aprobaciones, y rechazan cambios en datos o autoridad antes de usar el padre.
+El commit autenticado de esa edición llega hasta el checkout de configuración,
+con igualdad del manifiesto bruto y ascendencia de edición y productor; no se
+deduce de los refs actuales. Snapshot elige el replay y las comprobaciones de
+Vuelos por el perfil de comparación, conservando las ramas originales.
+
+La preparación de esta entrega tiene pruebas focalizadas de datos y gate, suite
+web y revisión visual del tooltip. La suite general local está limitada por
+pruebas que necesitan enlaces simbólicos, sin privilegio disponible en Windows.
+El cierre requiere CI Linux del commit final, datos finales de los coordinadores
+y revisión independiente antes de integrar o desplegar.
+
+<!-- document-lifecycle:v1
+{"files":[{"path":".gitignore","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"config/fare_capture_scope.json","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"config/publish/fare-quotes-policy.json","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"contracts/web/fare-averages.schema.json","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"REPO_MAP.md","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"scripts/check_pages_publication.py","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/fare_quotes/__init__.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/fare_quotes/__main__.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/fare_quotes/aggregate.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/fare_quotes/conditions.py","disposition":"keep","reason":"Proyecta condiciones publicas desde hechos cerrados y conserva identidad privada, operadores reales y restricciones observadas sin itinerarios."},{"path":"src/fare_quotes/normalize.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/fare_quotes/README.md","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/fare_quotes/refunds.py","disposition":"keep","reason":"Vincula elegibilidad, excepcion y ventana al claim observado de reembolso; conserva negacion y deja requisitos no representados como desconocidos."},{"path":"src/publish/fare_release.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/publish/fare_scope.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/publish/gate.py","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/publish/issuer_scope.py","disposition":"update","reason":"Verifica SOURCE con selector y productor reales de su code_commit original y conserva autoridad e inventario exactos."},{"path":"src/publish/issuer_update.py","disposition":"update","reason":"Preserva el marcador autenticado en el gate del emisor y verifica correcciones individuales de dinero sin alterar Bronze."},{"path":"src/publish/manifest.py","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/publish/presentation_release.py","disposition":"update","reason":"Conserva los controles y el rechazo del replay histórico; retiene evidencia privada completa antes del cleanup, además de compatibilidad de perfiles."},{"path":"src/publish/README.md","disposition":"update","reason":"Documenta el gate y la retención privada de errores con sus límites; no convierte un diagnóstico en aprobación."},{"path":"src/publish/replay_diagnostics.py","disposition":"keep","reason":"Conserva diagnosticos privados antes del cleanup en modulo separado, manteniendo rechazos y el presupuesto de lineas."},{"path":"src/publish/verify.py","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"src/web_export/fare_averages.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"tests/_fare_pinned_source_fixture.py","disposition":"keep","reason":"Verifica SOURCE con selector y productor reales de su code_commit original y conserva autoridad e inventario exactos."},{"path":"tests/_fare_publication_parity.py","disposition":"keep","reason":"Validate the full Fare release before comparing its exact historical SOURCE and financial baseline; retain original source and approval replay."},{"path":"tests/_site_publication_parity.py","disposition":"update","reason":"Validate the full Fare release before comparing its exact historical SOURCE and financial baseline; retain original source and approval replay."},{"path":"tests/test_afac_replay_diagnostics.py","disposition":"keep","reason":"Prueba que el rechazo, resultado inválido y timeout conservan la evidencia tras limpiar el worktree real; rechaza enlaces fuera del workspace."},{"path":"tests/test_check_pages_publication.py","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"tests/test_fare_averages.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"tests/test_fare_conditions.py","disposition":"keep","reason":"Proyecta condiciones publicas desde hechos cerrados y conserva identidad privada, operadores reales y restricciones observadas sin itinerarios."},{"path":"tests/test_fare_pinned_baseline.py","disposition":"keep","reason":"Verifica SOURCE con selector y productor reales de su code_commit original y conserva autoridad e inventario exactos."},{"path":"tests/test_fare_publication_parity.py","disposition":"keep","reason":"Validate the full Fare release before comparing its exact historical SOURCE and financial baseline; retain original source and approval replay."},{"path":"tests/test_fare_quote_cash_reviews.py","disposition":"keep","reason":"Preserva el marcador autenticado en el gate del emisor y verifica correcciones individuales de dinero sin alterar Bronze."},{"path":"tests/test_fare_quotes.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"tests/test_publish_fare_scope.py","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"tests/test_publish_issuer_frontend.py","disposition":"keep","reason":"Preserva el marcador autenticado en el gate del emisor y verifica correcciones individuales de dinero sin alterar Bronze."},{"path":"tests/test_publish_presentation_only.py","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"tests/test_site_parity.py","disposition":"update","reason":"Validate the full Fare release before comparing its exact historical SOURCE and financial baseline; retain original source and approval replay."},{"path":"web/index.html","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/lib/publication-manifest.ts","disposition":"keep","reason":"Comparte lecturas concurrentes del catalogo y evita pedir productos ausentes sin bloquear otras vistas."},{"path":"web/src/main.ts","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/state/period.ts","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/styles/base.css","disposition":"update","reason":"Aviso discreto de consultas recientes junto al único selector, conservando diseño y datos financieros."},{"path":"web/src/types/generated/fare-averages.ts","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/types/vite-env.d.ts","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/executive/reading-periods.ts","disposition":"update","reason":"Comparte lecturas concurrentes del catalogo y evita pedir productos ausentes sin bloquear otras vistas."},{"path":"web/src/views/fares/local-fares.css","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/fares/local-fares.test.ts","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/fares/local-fares.ts","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/flights/fare-averages.test.ts","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/flights/fare-averages.ts","disposition":"keep","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/flights/flights.css","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/flights/official-map-chart.ts","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/src/views/flights/official-map.ts","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."},{"path":"web/vite.config.ts","disposition":"update","reason":"Fuente, contrato o verificacion de tarifas; detalles privados conservados y agregados publicos sujetos al gate."}]}
+-->

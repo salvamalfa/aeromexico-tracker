@@ -1,0 +1,515 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Quarterly means of verified fare observations",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "fare_averages_v1"
+    },
+    "period_basis": {
+      "const": "consultation_quarter_America_Mexico_City"
+    },
+    "aggregation": {
+      "const": "arithmetic_mean_of_verified_observations_not_all_flights"
+    },
+    "periods": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^\\d{4}Q[1-4]$"
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "period_id",
+          "provider",
+          "origin",
+          "destination",
+          "origin_map_id",
+          "destination_map_id",
+          "fare",
+          "conditions",
+          "condition_facts",
+          "horizon_months",
+          "stay_days",
+          "trip_type",
+          "observations",
+          "paired_cash_points",
+          "query_date_start",
+          "query_date_end",
+          "points_applicability",
+          "group_id",
+          "metrics"
+        ],
+        "properties": {
+          "period_id": {
+            "type": "string",
+            "pattern": "^\\d{4}Q[1-4]$"
+          },
+          "provider": {
+            "enum": [
+              "AMR",
+              "DOTERS",
+              "VOLARIS"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "destination": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "origin_map_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^CITY_[A-Z]{2}_[A-Z0-9_]+$"
+          },
+          "destination_map_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^CITY_[A-Z]{2}_[A-Z0-9_]+$"
+          },
+          "fare": {
+            "enum": [
+              "Main",
+              "Premier",
+              "Zero",
+              "Plus",
+              "Tarifa no clasificada"
+            ]
+          },
+          "conditions": {
+            "type": "string",
+            "minLength": 1
+          },
+          "horizon_months": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "stay_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "trip_type": {
+            "enum": [
+              "round_trip",
+              "one_way"
+            ]
+          },
+          "observations": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "paired_cash_points": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "query_date_start": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "query_date_end": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "points_applicability": {
+            "enum": [
+              "applicable",
+              "not_applicable"
+            ]
+          },
+          "group_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "cash_final_mxn",
+              "points",
+              "redemption_cash_mxn",
+              "redemption_taxes_mxn"
+            ],
+            "properties": {
+              "cash_final_mxn": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mean",
+                  "n"
+                ],
+                "properties": {
+                  "mean": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "points": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mean",
+                  "n"
+                ],
+                "properties": {
+                  "mean": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "redemption_cash_mxn": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mean",
+                  "n"
+                ],
+                "properties": {
+                  "mean": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "redemption_taxes_mxn": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mean",
+                  "n"
+                ],
+                "properties": {
+                  "mean": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "condition_facts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema_version",
+              "family",
+              "cabin",
+              "passengers",
+              "adults",
+              "direct_outbound",
+              "direct_return",
+              "personal_item",
+              "carry_on",
+              "checked_baggage",
+              "refundable",
+              "refund_original_payment",
+              "optional_extras_added",
+              "membership_included",
+              "personal_item_max_cm",
+              "carry_on_max_cm",
+              "combined_personal_and_carry_on_kg",
+              "checked_baggage_kg",
+              "checked_baggage_linear_cm",
+              "operator_outbound",
+              "operator_return",
+              "benefits_scope",
+              "refund_deadline",
+              "changes",
+              "same_day_advance",
+              "checkin_channel",
+              "checkin_advance_hours",
+              "boarding"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": "fare_condition_facts_v1"
+              },
+              "family": {
+                "enum": [
+                  "Main",
+                  "Premier",
+                  "Zero",
+                  "Plus",
+                  null
+                ]
+              },
+              "cabin": {
+                "enum": [
+                  "Economy",
+                  "Business",
+                  "Premium Economy",
+                  "First",
+                  "Main",
+                  "Premier",
+                  null
+                ]
+              },
+              "passengers": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 9
+              },
+              "adults": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 9
+              },
+              "direct_outbound": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "direct_return": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "personal_item": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "carry_on": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "checked_baggage": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "refundable": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "refund_original_payment": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "optional_extras_added": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "membership_included": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "personal_item_max_cm": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 99
+                }
+              },
+              "carry_on_max_cm": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 99
+                }
+              },
+              "combined_personal_and_carry_on_kg": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 50
+              },
+              "checked_baggage_kg": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 50
+              },
+              "checked_baggage_linear_cm": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1,
+                "maximum": 300
+              },
+              "operator_outbound": {
+                "enum": [
+                  "Aeromexico",
+                  "Aeromexico Connect",
+                  "Viva",
+                  "Volaris Mexico",
+                  "Volaris Costa Rica",
+                  "Volaris El Salvador",
+                  null
+                ]
+              },
+              "operator_return": {
+                "enum": [
+                  "Aeromexico",
+                  "Aeromexico Connect",
+                  "Viva",
+                  "Volaris Mexico",
+                  "Volaris Costa Rica",
+                  "Volaris El Salvador",
+                  null
+                ]
+              },
+              "benefits_scope": {
+                "enum": [
+                  "observed_fare_terms",
+                  "both_directions_verified",
+                  "not_verified_for_both"
+                ]
+              },
+              "refund_deadline": {
+                "enum": [
+                  "purchase_24h",
+                  "before_first_departure_24h",
+                  null
+                ]
+              },
+              "changes": {
+                "enum": [
+                  "not_included",
+                  "service_fee_waived_fare_difference_due",
+                  null
+                ]
+              },
+              "same_day_advance": {
+                "enum": [
+                  "free_not_included",
+                  "subject_to_availability",
+                  null
+                ]
+              },
+              "checkin_channel": {
+                "enum": [
+                  "app",
+                  "online",
+                  null
+                ]
+              },
+              "checkin_advance_hours": {
+                "enum": [
+                  24,
+                  168,
+                  null
+                ]
+              },
+              "boarding": {
+                "enum": [
+                  "last",
+                  null
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "excluded_unverified_observations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dataset_version": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "period_basis",
+    "aggregation",
+    "periods",
+    "groups",
+    "excluded_unverified_observations",
+    "notes",
+    "dataset_version"
+  ]
+}

@@ -1,0 +1,957 @@
+{
+  "schema_version": "fare_scope_v1",
+  "source_path": "site/data/v1/official-routes.json",
+  "source_sha256": "348ca46441b1a5bcf83c9ba84bd93c060d51e6a83e1a521709b6db7a237b642d",
+  "dataset_version": "35d5200dd779e4ea286d2cd8baccf252fdbf4530d3863888b8d1583159a7cf90",
+  "source_as_of": "2026-11-05T14:11:01.213133+00:00",
+  "selection": "Top 12 departures per scope; US default three carrier groups; international all regions. Each provider requires current operation and airport verification.",
+  "routes": [
+    {
+      "scope": "national",
+      "rank": 1,
+      "map_route_key": "CITY_MX_MEXICO--CITY_MX_MONTERREY",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MEXICO",
+      "destination_label": "MONTERREY",
+      "origin_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "destination_airport_candidates": [
+        "MTY"
+      ],
+      "map_departures": 4896,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 2,
+      "map_route_key": "CITY_MX_CANCUN--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "CANCUN",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "CUN"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 4173,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 3,
+      "map_route_key": "CITY_MX_GUADALAJARA--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "GUADALAJARA",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 3964,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 4,
+      "map_route_key": "CITY_MX_MEXICO--CITY_MX_TIJUANA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MEXICO",
+      "destination_label": "TIJUANA",
+      "origin_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "destination_airport_candidates": [
+        "TIJ"
+      ],
+      "map_departures": 2755,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 5,
+      "map_route_key": "CITY_MX_CANCUN--CITY_MX_MONTERREY",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "CANCUN",
+      "destination_label": "MONTERREY",
+      "origin_airport_candidates": [
+        "CUN"
+      ],
+      "destination_airport_candidates": [
+        "MTY"
+      ],
+      "map_departures": 2654,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 6,
+      "map_route_key": "CITY_MX_GUADALAJARA--CITY_MX_TIJUANA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "GUADALAJARA",
+      "destination_label": "TIJUANA",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "TIJ"
+      ],
+      "map_departures": 2485,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 7,
+      "map_route_key": "CITY_MX_MERIDA--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MERIDA",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "MID"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 2347,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 8,
+      "map_route_key": "CITY_MX_GUADALAJARA--CITY_MX_MONTERREY",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "GUADALAJARA",
+      "destination_label": "MONTERREY",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "MTY"
+      ],
+      "map_departures": 1872,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 9,
+      "map_route_key": "CITY_MX_MEXICO--CITY_MX_PUERTO_VALLARTA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MEXICO",
+      "destination_label": "PUERTO VALLARTA",
+      "origin_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "destination_airport_candidates": [
+        "PVR"
+      ],
+      "map_departures": 1522,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 10,
+      "map_route_key": "CITY_MX_GUADALAJARA--CITY_MX_SANTA_LUCIA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "GUADALAJARA",
+      "destination_label": "SANTA LUCÍA",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "NLU"
+      ],
+      "map_departures": 1504,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 11,
+      "map_route_key": "CITY_MX_CANCUN--CITY_MX_SANTA_LUCIA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "CANCUN",
+      "destination_label": "SANTA LUCÍA",
+      "origin_airport_candidates": [
+        "CUN"
+      ],
+      "destination_airport_candidates": [
+        "NLU"
+      ],
+      "map_departures": 1398,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "national",
+      "rank": 12,
+      "map_route_key": "CITY_MX_MEXICO--CITY_MX_SAN_JOSE_DEL_CABO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MEXICO",
+      "destination_label": "SAN JOSÉ DEL CABO",
+      "origin_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "destination_airport_candidates": [
+        "SJD"
+      ],
+      "map_departures": 1346,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 1,
+      "map_route_key": "AIRPORT_GDL--AIRPORT_LAX",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Guadalajara International Airport",
+      "destination_label": "Los Angeles International Airport",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "LAX"
+      ],
+      "map_departures": 430,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 2,
+      "map_route_key": "AIRPORT_GDL--AIRPORT_ORD",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Guadalajara International Airport",
+      "destination_label": "Chicago O'Hare International Airport",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "ORD"
+      ],
+      "map_departures": 212,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 3,
+      "map_route_key": "AIRPORT_GDL--AIRPORT_OAK",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Guadalajara International Airport",
+      "destination_label": "Oakland San Francisco Bay Airport",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "OAK"
+      ],
+      "map_departures": 193,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 4,
+      "map_route_key": "AIRPORT_GDL--AIRPORT_LAS",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Guadalajara International Airport",
+      "destination_label": "Harry Reid International Airport",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "LAS"
+      ],
+      "map_departures": 188,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 5,
+      "map_route_key": "AIRPORT_LAX--AIRPORT_MEX",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Los Angeles International Airport",
+      "destination_label": "Mexico City Benito Juárez International Airport",
+      "origin_airport_candidates": [
+        "LAX"
+      ],
+      "destination_airport_candidates": [
+        "MEX"
+      ],
+      "map_departures": 186,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 6,
+      "map_route_key": "AIRPORT_MEX--AIRPORT_ORD",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Mexico City Benito Juárez International Airport",
+      "destination_label": "Chicago O'Hare International Airport",
+      "origin_airport_candidates": [
+        "MEX"
+      ],
+      "destination_airport_candidates": [
+        "ORD"
+      ],
+      "map_departures": 186,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 7,
+      "map_route_key": "AIRPORT_GDL--AIRPORT_SMF",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Guadalajara International Airport",
+      "destination_label": "Sacramento International Airport",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "SMF"
+      ],
+      "map_departures": 142,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 8,
+      "map_route_key": "AIRPORT_FAT--AIRPORT_GDL",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Fresno Yosemite International Airport",
+      "destination_label": "Guadalajara International Airport",
+      "origin_airport_candidates": [
+        "FAT"
+      ],
+      "destination_airport_candidates": [
+        "GDL"
+      ],
+      "map_departures": 124,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 9,
+      "map_route_key": "AIRPORT_IAH--AIRPORT_MEX",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "George Bush Intercontinental Airport",
+      "destination_label": "Mexico City Benito Juárez International Airport",
+      "origin_airport_candidates": [
+        "IAH"
+      ],
+      "destination_airport_candidates": [
+        "MEX"
+      ],
+      "map_departures": 124,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 10,
+      "map_route_key": "AIRPORT_LAS--AIRPORT_MEX",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Harry Reid International Airport",
+      "destination_label": "Mexico City Benito Juárez International Airport",
+      "origin_airport_candidates": [
+        "LAS"
+      ],
+      "destination_airport_candidates": [
+        "MEX"
+      ],
+      "map_departures": 124,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 11,
+      "map_route_key": "AIRPORT_MEX--AIRPORT_SAT",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Mexico City Benito Juárez International Airport",
+      "destination_label": "San Antonio International Airport",
+      "origin_airport_candidates": [
+        "MEX"
+      ],
+      "destination_airport_candidates": [
+        "SAT"
+      ],
+      "map_departures": 124,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "us",
+      "rank": 12,
+      "map_route_key": "AIRPORT_GDL--AIRPORT_ONT",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07"
+      ],
+      "origin_label": "Guadalajara International Airport",
+      "destination_label": "Ontario International Airport",
+      "origin_airport_candidates": [
+        "GDL"
+      ],
+      "destination_airport_candidates": [
+        "ONT"
+      ],
+      "map_departures": 123,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": true,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 1,
+      "map_route_key": "CITY_CO_BOGOTA--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "BOGOTA",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "BOG"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 1249,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 2,
+      "map_route_key": "CITY_MX_MEXICO--CITY_PA_PANAMA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MEXICO",
+      "destination_label": "PANAMA",
+      "origin_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "destination_airport_candidates": [
+        "PTY",
+        "BLB"
+      ],
+      "map_departures": 1213,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 3,
+      "map_route_key": "CITY_CA_TORONTO--CITY_MX_CANCUN",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "TORONTO",
+      "destination_label": "CANCUN",
+      "origin_airport_candidates": [
+        "YYZ",
+        "YTZ"
+      ],
+      "destination_airport_candidates": [
+        "CUN"
+      ],
+      "map_departures": 1173,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 4,
+      "map_route_key": "CITY_ES_MADRID--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MADRID",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "MAD"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 1161,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 5,
+      "map_route_key": "CITY_MX_CANCUN--CITY_PA_PANAMA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "CANCUN",
+      "destination_label": "PANAMA",
+      "origin_airport_candidates": [
+        "CUN"
+      ],
+      "destination_airport_candidates": [
+        "PTY",
+        "BLB"
+      ],
+      "map_departures": 1048,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 6,
+      "map_route_key": "CITY_GT_GUATEMALA--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "GUATEMALA",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "GUA"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 733,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 7,
+      "map_route_key": "CITY_CR_SAN_JOSE_COSTA_RICA--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "SAN JOSE, COSTA RICA",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "SJO"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 720,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 8,
+      "map_route_key": "CITY_CO_BOGOTA--CITY_MX_CANCUN",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "BOGOTA",
+      "destination_label": "CANCUN",
+      "origin_airport_candidates": [
+        "BOG"
+      ],
+      "destination_airport_candidates": [
+        "CUN"
+      ],
+      "map_departures": 672,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 9,
+      "map_route_key": "CITY_CA_TORONTO--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "TORONTO",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "YYZ",
+        "YTZ"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 654,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 10,
+      "map_route_key": "CITY_CA_MONTREAL--CITY_MX_CANCUN",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MONTREAL",
+      "destination_label": "CANCUN",
+      "origin_airport_candidates": [
+        "YUL"
+      ],
+      "destination_airport_candidates": [
+        "CUN"
+      ],
+      "map_departures": 640,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 11,
+      "map_route_key": "CITY_FR_PARIS--CITY_MX_MEXICO",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "PARIS",
+      "destination_label": "MEXICO",
+      "origin_airport_candidates": [
+        "CDG",
+        "ORY"
+      ],
+      "destination_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "map_departures": 577,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    },
+    {
+      "scope": "international",
+      "rank": 12,
+      "map_route_key": "CITY_MX_MEXICO--CITY_PE_LIMA",
+      "map_period": "2026Q3",
+      "map_observed_months": [
+        "2026M07",
+        "2026M08",
+        "2026M09"
+      ],
+      "origin_label": "MEXICO",
+      "destination_label": "LIMA",
+      "origin_airport_candidates": [
+        "MEX",
+        "NLU",
+        "TLC"
+      ],
+      "destination_airport_candidates": [
+        "LIM"
+      ],
+      "map_departures": 552,
+      "provider_operation_verified": false,
+      "airport_mapping_verified": false,
+      "provider_status": {
+        "DOTERS": "pending_verification",
+        "VOLARIS": "pending_verification"
+      }
+    }
+  ]
+}

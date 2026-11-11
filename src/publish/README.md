@@ -95,6 +95,18 @@ Mercado y demanda aeroportuaria. Una edición nueva no amplía un contrato hist�
 `--locked --no-group dev --extra analytics`, también para la vista previa con
 su propio checkout. Instalar dependencias no ejecuta ingestas o modelos.
 
+Si el replay del productor AFAC falla, agota su tiempo o no devuelve el resultado
+esperado, su wrapper conserva stdout, stderr y los diagnósticos anidados antes
+de retirar el checkout temporal. Quedan bajo
+`tmp/approval-replay-diagnostics/afac-replay-*/`, privados e ignorados por Git.
+El manifiesto de cada intento identifica el productor, el resultado y los
+tamaños y SHA-256 de los archivos conservados. Revisa esa evidencia antes de
+decidir una corrección o un nuevo intento; el error exterior puede ocultar el
+rechazo original del productor padre. La retención no cambia el rechazo, los
+controles ni las aprobaciones. Los enlaces simbólicos y junctions se rechazan;
+si tampoco se puede conservar el diagnóstico, la ejecución sigue fallando y
+lo indica. Estos archivos no forman parte del sitio público.
+
 ### Cambios de presentación y datos preservados
 
 - `--ui-only` exige que todo `site/` coincida por bytes con un commit fijado
@@ -200,6 +212,10 @@ sus cohortes y el registro nuevo con el productor actual, antes y después del
 build. Solo cambian la tesis nueva, el bloque ejecutivo de esa entidad y el recibo
 `issuer-publication.json`. Industria, las otras entidades, frontend y todos los
 demás datasets se conservan. No hay una barrera que espere otras aerolíneas.
+Si el baseline lleva el marcador HTML de una publicación de tarifas o de
+presentación, primero lo autentica su verificador histórico. La comparación
+del frontend aplica ese mismo marcador al build nuevo y exige igualdad exacta
+de todo el cierre de archivos; el emisor conserva el HTML y los recibos servidos.
 
 ```bash
 python -m src.publish.issuer_update --inspect-data <paquete-tecnico.json>
@@ -753,3 +769,30 @@ Esta implementación está preparada para revisión. Antes de activarla faltan e
 cierre físico de Gold AFAC derivado, el replay privado completo en Linux, la
 inspección del candidato final y su autoridad de datos. PR, CI y comprobación del
 sitio realmente servido conservan sus controles normales.
+
+## Promedios de precios y puntos
+
+`--fare-quotes-only --fare-input <Gold privado>` añade exclusivamente
+`data/v1/fare-averages.json` y `fare-quotes-publication.json`, además de la interfaz.
+Requiere todos los expedientes aprobados existentes y vuelve a ejecutar su cadena
+de fuentes y revocaciones antes y después del build. Conserva los datos heredados
+y las identidades de aprobación byte por byte. El consentimiento del dueño para
+las tarifas se mantiene separado de las aprobaciones financieras.
+
+`src.publish.fare_scope` verifica la publicación base con su selector y verificador
+fuertes del `code_commit` original, ejecutados en un worktree. Exige el manifiesto
+bruto y todos los hashes/bytes exactos de Git, rechaza archivos extra y symlinks,
+comprueba la adición exacta, el contrato y las medias/conteos. No acepta una
+modificación de datos heredados aunque tenga un manifiesto nuevo coherente.
+La fuente detallada sigue privada; la fórmula y el grano están en
+[`src/fare_quotes/README.md`](../fare_quotes/README.md).
+
+El recibo de tarifas participa en la precedencia por el commit de su publicación
+base; un perfil posterior con base más reciente conserva la responsabilidad de
+verificar la composición. La presencia del recibo no fija el verificador para
+siempre. La reconstrucción de presentación puede conservar el producto de tarifas:
+mantiene sus datos y recibos y reproduce las autoridades dos veces. El compuesto
+de tarifas hereda la autoridad del perfil base real, que puede ser SOURCE aunque
+retenga pruebas AFAC anteriores. No etiqueta el commit del frontend como productor
+AFAC ni necesita ese marcador: su recibo ya vincula la publicación fuerte original.
+El camino de presentación sobre AFAC directo conserva su marcador y sus guardias.

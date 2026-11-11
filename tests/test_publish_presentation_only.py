@@ -190,7 +190,7 @@ def test_second_release_retains_original_afac_producer(tmp_path, monkeypatch) ->
     }
     site = tmp_path / "site"
     site.mkdir()
-    (site / "publication_manifest.json").write_text('{"code_commit":"e"}', encoding="utf-8")
+    (site / "publication_manifest.json").write_text('{"code_commit":"e","files":[]}', encoding="utf-8")
     (site / "index.html").write_bytes(release.embed_presentation_receipt(b"<head></head>", previous))
     monkeypatch.setattr(
         afac_history_scope,
@@ -265,6 +265,60 @@ def test_presentation_release_keeps_every_nonfrontend_file(tmp_path, monkeypatch
     assert "assets/app-new.js" in after
     assert result["receipt"] == {"written": True}
     assert state["replays"] == 2 and state["assembled"]
+
+
+def test_presentation_after_fares_preserves_quotes_receipts_and_replays_twice(tmp_path, monkeypatch):
+    site = tmp_path / "site"
+    site.mkdir()
+    _site(site)
+    (site / "fare-quotes-publication.json").write_bytes(b'{"fare":"verified-proof"}')
+    (site / "data/v1/fare-averages.json").write_bytes(b'{"verified-means":[3107]}')
+    before = manifests.load_manifest(site)
+    before["files"] = manifests.file_entries(site)
+    manifests.write_manifest(site, before)
+    expected = {
+        name: (site / name).read_bytes()
+        for name in (
+            "fare-quotes-publication.json",
+            "data/v1/fare-averages.json",
+            "afac-history-publication.json",
+        )
+    }
+    site, _, _, state = _run_publish(tmp_path, monkeypatch)
+    assert {name: (site / name).read_bytes() for name in expected} == expected
+    assert state["replays"] == 2 and state["assembled"]
+
+
+def test_presentation_accepts_verified_fare_composition_and_propagates_strong_failure(tmp_path, monkeypatch):
+    site = tmp_path / "site"
+    site.mkdir()
+    _site(site)
+    monkeypatch.setattr("scripts.check_pages_publication.verifier_for", lambda *_: "src.publish.fare_scope")
+    calls = []
+    monkeypatch.setattr(
+        "scripts.check_pages_publication.verify_site", lambda *_: calls.append("strong") or []
+    )
+    # The fare strong verifier already performs structural/privacy checks plus
+    # the pinned upstream verifier; a fresh generic authority pass is incompatible.
+    monkeypatch.setattr("src.publish.verify.verify_site", lambda *_: ["historical authority requires replay"])
+    release.verify_presentation_only_site(site, tmp_path)
+    assert calls == ["strong"]
+    monkeypatch.setattr(
+        "scripts.check_pages_publication.verify_site", lambda *_: ["source authority changed"]
+    )
+    with pytest.raises(ValueError, match="source authority changed"):
+        release.verify_presentation_only_site(site, tmp_path)
+
+
+def test_presentation_fare_composition_cannot_omit_its_afac_proof(tmp_path, monkeypatch):
+    site = tmp_path / "site"
+    site.mkdir()
+    _site(site)
+    (site / "afac-history-publication.json").unlink()
+    monkeypatch.setattr("scripts.check_pages_publication.verifier_for", lambda *_: "src.publish.fare_scope")
+    monkeypatch.setattr("scripts.check_pages_publication.verify_site", lambda *_: [])
+    with pytest.raises(ValueError, match="requires its pinned AFAC proof"):
+        release.verify_presentation_only_site(site, tmp_path)
 
 
 @pytest.mark.parametrize("change", ["data_tamper", "data_omission", "extra_receipt"])

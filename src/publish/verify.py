@@ -112,6 +112,7 @@ def _data_schema_for(
     demand_schema: dict[str, Any] | None = None,
     *,
     official_routes_schema: dict[str, Any] | None = None,
+    fare_averages_schema: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Which contracts/web sub-schema this data/v1 file must satisfy, or
     None if it is not a data file this gate validates (e.g. it is part of
@@ -132,6 +133,8 @@ def _data_schema_for(
         return market_schema
     if parts[2:] == ["official-routes.json"]:
         return official_routes_schema
+    if parts[2:] == ["fare-averages.json"]:
+        return fare_averages_schema or json.loads((CONTRACTS_DIR / "fare-averages.schema.json").read_bytes())
     if parts[2:3] == ["flights"] and parts[3:] == ["quarters.json"]:
         return quarters_schema
     if parts[2:3] == ["flights"] and parts[3:4] in (["domestic"], ["international"]) and len(parts) == 5:
@@ -230,6 +233,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
     analysis_schema, market_schema = ANALYSIS_SCHEMA, MARKET_SCHEMA
     demand_schema = None
     official_routes_schema = None
+    fare_averages_schema = None
     editorial_schema = None
     industry_story_schema = None
     try:
@@ -242,6 +246,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         has_business_metrics = "data/v1/business_metrics.json" in listed_paths
         business_contracts = {"business_metrics.schema.json", "business_metrics_approval.schema.json"}
         optional_payload_contracts = {
+            "fare-averages.schema.json": "data/v1/fare-averages.json",
             "official-routes.schema.json": "data/v1/official-routes.json",
             manifest_mod.EDITORIAL_ANALYSIS_CONTRACT: manifest_mod.EDITORIAL_ANALYSIS_PATH,
             manifest_mod.INDUSTRY_STORY_CONTRACT: manifest_mod.INDUSTRY_STORY_PATH,
@@ -278,6 +283,8 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
                     demand_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "official-routes.schema.json":
                     official_routes_schema = json.loads(resolved.read_text(encoding="utf-8"))
+                elif name == "fare-averages.schema.json":
+                    fare_averages_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == "analysis.schema.json":
                     analysis_schema = json.loads(resolved.read_text(encoding="utf-8"))
                 elif name == manifest_mod.EDITORIAL_ANALYSIS_CONTRACT:
@@ -319,6 +326,7 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
         schema = _data_schema_for(
             rel, quarters_schema, network_schema, analysis_schema, market_schema, demand_schema,
             official_routes_schema=official_routes_schema,
+            fare_averages_schema=fare_averages_schema,
         )
         if editorial_schema is not None and (
             rel == manifest_mod.EDITORIAL_ANALYSIS_PATH
@@ -347,6 +355,12 @@ def _verify_site(site_dir: Path, *, preserved_approval_files: frozenset[str] = f
             continue
         if isinstance(payload, dict):
             data_payloads[rel] = payload
+        if rel == "data/v1/fare-averages.json":
+            from src.web_export.fare_averages import validate_averages
+            try:
+                validate_averages(payload)
+            except (ValueError, KeyError, TypeError, ValidationError) as error:
+                problems.append(f"{rel}: invalid fare averages: {error}")
         if rel == "data/v1/official-routes.json":
             from src.dashboard.official_routes_contract import validate as validate_official_routes
 

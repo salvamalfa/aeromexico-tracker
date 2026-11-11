@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 VERIFIERS = (
+    ("fare-quotes-publication.json", "src.publish.fare_scope"),
     ("quarterly-story-publication.json", "src.publish.quarterly_story_scope"),
     ("aerocivil-movements-publication.json", "src.publish.movements_scope"),
     ("source-data-publication.json", "src.publish.source_data_scope"),
@@ -69,11 +70,15 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
     selected = [(receipt, module) for receipt, module in VERIFIERS if receipt in names]
     if not selected:
         return "src.publish.verify"
+    has_fares = any(receipt == "fare-quotes-publication.json" for receipt, _ in selected)
     # Retained proofs describe prior publications. Choose the unique latest
     # witnessed Git baseline, then let its strong verifier validate all claims.
     # Ties, missing history and unrelated branches are decisions, never fallback.
     repo = Path.cwd() if repo is None else Path(repo)
-    if any(receipt == "afac-history-publication.json" for receipt, _ in selected):
+    # A fare release binds the complete served composition, rather than an
+    # unserved AFAC parent. Its successors compete by baseline ancestry too;
+    # the winning strong verifier still checks every retained upstream proof.
+    if not has_fares and any(receipt == "afac-history-publication.json" for receipt, _ in selected):
         # This one new profile composes an explicitly unserved parent. Its
         # exact proof remains upstream evidence, not a competing final root.
         # Every older profile keeps the original strict precedence rules.
@@ -102,7 +107,13 @@ def verifier_for(site: Path, repo: Path | None = None) -> str:
             or pin["bytes"] != len(raw)
         ):
             raise ValueError("Publication selection proof differs from manifest pins")
-        commit = json.loads(raw).get("remote_witness", {}).get("baseline_commit")
+        value = json.loads(raw)
+        if receipt == "fare-quotes-publication.json":
+            if value.get("schema_version") != "fare_quotes_publication_v1":
+                raise ValueError("Unknown fare selection proof schema")
+            commit = value.get("baseline_commit")
+        else:
+            commit = value.get("remote_witness", {}).get("baseline_commit")
         if not isinstance(commit, str) or not re.fullmatch("[a-f0-9]{40}", commit):
             raise ValueError("Publication selection requires exact witnessed Git baselines")
         if subprocess.run(
@@ -134,6 +145,7 @@ def verify_site(site, repo):
 
     module = verifier_for(site, repo)
     name = {
+        "src.publish.fare_scope": "verify_fare_site",
         "src.publish.quarterly_story_scope": "verify_story",
         "src.publish.source_data_scope": "verify_source_data",
         "src.publish.issuer_scope": "verify_issuer",

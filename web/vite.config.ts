@@ -11,6 +11,18 @@ export default defineConfig(({ command }) => ({
     name: "local-editorial-review",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        if (req.url === "/__local-fares.json" && process.env.VITE_LOCAL_FARES === "true") {
+          if (!["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress ?? "")) {
+            res.statusCode = 403; res.end(); return;
+          }
+          try {
+            const path = fileURLToPath(new URL("../data/gold/local_fare_quotes.json", import.meta.url));
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.setHeader("Cache-Control", "no-store");
+            res.end(await readFile(path));
+          } catch { res.statusCode = 404; res.end(); }
+          return;
+        }
         const match = req.url?.match(/^\/__editorial-review\/(\d{4}Q[1-4])\.json$/);
         if (!match) return next();
         try {
