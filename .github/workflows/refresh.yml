@@ -14,17 +14,57 @@ permissions:
   issues: write
 
 jobs:
+  ci:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_full: true
+
   validate:
+    needs: [ci]
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        id: checkout
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.13"
           enable-cache: true
 
       - name: Install locked dependencies
+        id: dependencies
         run: uv sync --all-extras --all-groups --locked
+
+      - name: Check the exact CI snapshot before Stage 8
+        id: snapshot_before
+        continue-on-error: true
+        shell: bash
+        env:
+          REFRESH_SHA: ${{ github.sha }}
+        run: |
+          current_sha="$(git rev-parse HEAD)"
+          test "$current_sha" = "$REFRESH_SHA"
+          git -c core.fileMode=true diff --no-ext-diff --no-textconv --exit-code "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md
+          # Include ignored files too: CI only validated the versioned snapshot.
+          unexpected_files="$(git ls-files --others -- data/gold docs/diccionario-datos.md)"
+          test -z "$unexpected_files"
+          # Refuse staging outside the authorized paths, too.
+          git diff --no-ext-diff --no-textconv --cached --exit-code "$REFRESH_SHA"
+          # Compare physical bytes, bypassing text normalization and index flags.
+          git ls-tree -rz "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md |
+            while IFS=$'\t' read -r -d '' header path; do
+              read -r mode kind expected_blob <<< "$header"
+              test "$kind" = blob
+              test -f "$path"
+              test ! -L "$path"
+              actual_blob="$(git hash-object --no-filters -- "$path")"
+              test "$actual_blob" = "$expected_blob"
+            done
 
       - name: Detect stale manual-source data
         id: manual_source
@@ -50,11 +90,6 @@ jobs:
               });
             }
 
-      - name: Run full test suite
-        id: tests
-        continue-on-error: true
-        run: uv run pytest
-
       # Stage 8's data-only checks (`src.dashboard.validate_stage8`) are not run by
       # anything else, so this workflow runs them explicitly, fail-closed,
       # against the Gold this run is about to commit: it needs only the
@@ -63,11 +98,40 @@ jobs:
       # files), never the gitignored `data/warehouse.duckdb`.
       - name: Validate Stage 8 dashboard data
         id: validate_stage8
+        if: steps.snapshot_before.outcome == 'success'
         continue-on-error: true
         run: uv run python -m src.dashboard.validate_stage8
 
+      - name: Recheck the validated snapshot before commit
+        id: snapshot_after
+        if: ${{ always() && !cancelled() && steps.snapshot_before.outcome == 'success' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          REFRESH_SHA: ${{ github.sha }}
+        run: |
+          current_sha="$(git rev-parse HEAD)"
+          test "$current_sha" = "$REFRESH_SHA"
+          git -c core.fileMode=true diff --no-ext-diff --no-textconv --exit-code "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md
+          # Include ignored files too: CI only validated the versioned snapshot.
+          unexpected_files="$(git ls-files --others -- data/gold docs/diccionario-datos.md)"
+          test -z "$unexpected_files"
+          # Refuse staging outside the authorized paths, too.
+          git diff --no-ext-diff --no-textconv --cached --exit-code "$REFRESH_SHA"
+          # Compare physical bytes, bypassing text normalization and index flags.
+          git ls-tree -rz "$REFRESH_SHA" -- data/gold docs/diccionario-datos.md |
+            while IFS=$'\t' read -r -d '' header path; do
+              read -r mode kind expected_blob <<< "$header"
+              test "$kind" = blob
+              test -f "$path"
+              test ! -L "$path"
+              actual_blob="$(git hash-object --no-filters -- "$path")"
+              test "$actual_blob" = "$expected_blob"
+            done
+
       - name: Open validation-failed issue
-        if: steps.tests.outcome == 'failure' || steps.validate_stage8.outcome == 'failure'
+        id: failure_issue
+        if: ${{ always() && !cancelled() && (needs.ci.result != 'success' || steps.snapshot_before.outcome != 'success' || steps.manual_source.outcome != 'success' || steps.validate_stage8.outcome != 'success' || steps.snapshot_after.outcome != 'success') }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -80,11 +144,13 @@ jobs:
             });
 
       - name: Stop before commit when validation failed
-        if: steps.tests.outcome == 'failure' || steps.validate_stage8.outcome == 'failure'
+        id: stop_on_failure
+        if: ${{ always() && !cancelled() && (needs.ci.result != 'success' || steps.snapshot_before.outcome != 'success' || steps.manual_source.outcome != 'success' || steps.validate_stage8.outcome != 'success' || steps.snapshot_after.outcome != 'success') }}
         run: exit 1
 
       - name: Commit validated gold updates
-        if: steps.tests.outcome == 'success' && steps.validate_stage8.outcome == 'success'
+        id: commit
+        if: ${{ success() && needs.ci.result == 'success' && steps.snapshot_before.outcome == 'success' && steps.manual_source.outcome == 'success' && steps.validate_stage8.outcome == 'success' && steps.snapshot_after.outcome == 'success' }}
         shell: bash
         run: |
           git config user.name "github-actions[bot]"

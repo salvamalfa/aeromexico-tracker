@@ -1,33 +1,61 @@
-# `src/ingest`
+# Captura de fuentes de Airlines Tracker
 
-Descarga fuentes públicas (y, cuando aplica, pagadas bajo cuota) tal como las
-entrega el proveedor, con hash y metadata, sin transformarlas.
+Esta capa guarda los documentos tal como los entrega cada fuente. Conserva
+sus bytes originales, procedencia y huella SHA-256 para poder comprobar después
+de dónde salió una cifra.
 
 ## Responsabilidad
 
-- Ejecutar las ingestas registradas: SEC EDGAR, BMV XBRL, AFAC, BTS T-100,
-  AeroDataBox, macro (Banxico/EIA), mercado, noticias/NLP, pares, aeropuertos,
-  regulatorio (`aerodatabox/`, `afac/`, `airports/`, `bmv/`, `bts/`, `macro/`,
-  `market/`, `news/`, `nlp/`, `peers/`, `regulatory/`, `sec/`).
-- Registrar cada descarga en el manifiesto de bronze con su hash SHA-256 y
-  detectar restatements (contenido que cambió bajo la misma URL).
+Los conectores cubren reportes de aerolíneas y reguladores, tráfico, aeropuertos,
+variables económicas y mercado. El [registro del pipeline](../pipeline/registry.py)
+declara cuáles ejecuta el comando general; el
+[catálogo de fuentes](../../docs/catalogo-fuentes-calendario.md) explica su cobertura.
+
+| Familia | Código de entrada |
+|---|---|
+| Reportes SEC, BMV y Aeroméxico | [sec/](sec/), [bmv/](bmv/), [aeromexico_ir.py](aeromexico_ir.py) |
+| Tráfico AFAC y BTS T-100 | [afac/](afac/), [bts/](bts/) |
+| Banxico, combustible EIA y precios | [macro/](macro/), [market/](market/) |
+| Aeropuertos y otras aerolíneas | [airports/](airports/), [peers/](peers/) |
+| Noticias, diccionario financiero y regulación | [news/](news/), [nlp/](nlp/), [regulatory/](regulatory/) |
+
+La captura puede ser automática o asistida. AFAC conserva actualización manual.
+El conector [aerodatabox/](aerodatabox/) permanece para el histórico y tareas
+específicas; no forma parte de la lista de ingestas del comando general ni
+implica nuevas capturas recurrentes.
 
 ## Entradas / salidas
 
-- **Entradas:** red (fuentes públicas o con API key en el entorno) o
-  respuestas ya guardadas para reanudación.
-- **Salidas:** `data/bronze/` (local, no versionado salvo `_manifest.jsonl` y
-  `_restatements.jsonl`, que sí se versionan).
+- **Entradas:** documentos descargados o capturados y, cuando corresponda,
+  credenciales privadas del proveedor.
+- **Salidas:** originales locales en `data/bronze/`, más sus registros en
+  `_manifest.jsonl` y `_restatements.jsonl`.
+- **Trazabilidad:** el manifiesto conserva URL, fecha, método de captura, tamaño
+  y SHA-256. Si cambia el contenido de una fuente para el mismo documento
+  lógico, se conserva otra versión y se registra el cambio.
+
+Los originales no se incluyen por defecto en el repositorio público. Sus
+manifiestos sí se versionan. El almacenamiento compartido está en
+[src/common](../common/README.md); la extracción de tablas corresponde a
+[src/parse](../parse/README.md).
 
 ## Puntos de entrada
 
-- `python -m src.ingest` (`__main__.py` → `run()`) ejecuta las ingestas
-  registradas en `src/pipeline/`.
-- Los módulos por proveedor (p. ej. `sec/discover.py`,
-  `aerodatabox/international.py`) también se invocan individualmente para
-  depuración; ver sus propios `if __name__ == "__main__"`.
-- Comandos con red, cuota o costo requieren `--dry-run` antes de ejecutarse en
-  serio (ver `AGENTS.md`).
+Desde la raíz:
+
+```bash
+just ingest
+```
+
+Equivale a `uv run python -m src.ingest`. Usa red y los requisitos de cada
+fuente; revisa sus límites y la configuración antes de ejecutarlo. Los comandos
+con cuotas o costo requieren la comprobación en seco descrita en
+[AGENTS.md](../../AGENTS.md#entorno-y-comandos); no todos los conectores comparten
+las mismas opciones de consola.
+
+Para trabajar con los originales ya capturados, usa `just parse` o
+`just rebuild`, ambos sin red. El [mapa del pipeline](../pipeline/README.md)
+explica la diferencia.
 
 ## Comando de prueba focalizada
 

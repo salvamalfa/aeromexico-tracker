@@ -1,472 +1,260 @@
-# Mapa del repositorio
+# Mapa del repositorio de Airlines Tracker
 
-Cobertura de Vuelos por trimestre, fuentes y límites:
-[`docs/etapas/cobertura-vuelos-20261015.md`](docs/etapas/cobertura-vuelos-20261015.md).
+Esta guía conecta las capacidades del proyecto con su código, sus datos y sus
+instrucciones de ejecución. La [portada](README.md) presenta el producto; aquí
+puedes elegir un recorrido técnico sin leer el repositorio de principio a fin.
 
-El [mapa oficial candidato](docs/mapa-oficial.md) tiene contrato, generador,
-geografía y gate propios; prepararlo no activa ni sustituye el histórico.
+## Por dónde empezar
 
-Qué vive dónde, comandos clave y recetas paso a paso para los cambios más
-comunes. Ver también `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md` y `ROADMAP.md`.
-
-Para diseñar los siguientes lotes de datos, ver el
-[catálogo de fuentes/métricas y calendario](docs/catalogo-fuentes-calendario.md)
-y el [cierre de las capturas AeroDataBox con histórico conservado](docs/etapas/cierre-aerodatabox-20261014.md).
-El catálogo incluye la guía de skills y del coordinador
-(`src/source_updates/`, `python -m src.source_updates --help`). Hay planificación,
-captura aislada, pasos offline y controles explícitos. Los ejemplos siguen
-siendo vistas previas; el estado privado conserva la activación real del único calendario.
-El [contrato de ejecución y recuperación](docs/calendario-ejecucion.md) añade
-estado privado, despacho nativo y handoffs por producto y versión mediante
-`scripts/source_update_handoffs.py`. Los datos financieros validados pueden
-actualizar sus gráficas mientras una tesis recorre su auditoría independiente.
-La [skill de análisis](.agents/skills/aeromexico-tracker-analysis/SKILL.md) y
-la [skill de dashboard](.agents/skills/airline-update-dashboard/SKILL.md)
-describen los comandos, los recibos y la recuperación. Una fuente sin cambio
-real o sin consumidor visible conserva su comprobación sin generar otra publicación.
-
-Las [fuentes AMR](automation/amr/README.md) reúnen las skills de búsquedas,
-validadores y contrato del libro de puntos. La carpeta conserva una copia
-de referencia auditada; no instala skills ni modifica las corridas. El libro
-vivo sigue en Google Sheets y sus identificadores y observaciones quedan
-fuera del repositorio público. El dashboard anterior se retira de la carpeta
-unificada hacia un archivo recuperable externo. No se integra su código, datos,
-dependencias ni historia privada. El único dashboard del proyecto es Pages (`web/`).
+| Quieres revisar… | Empieza aquí | Qué encontrarás |
+|---|---|---|
+| Ingeniería de datos | [Flujo de datos](src/pipeline/README.md) | Registro de pasos, dependencias, controles y recibos de ejecución. |
+| Pronósticos y aprendizaje automático | [Analítica](src/analytics/README.md) | Problemas, métodos, referencias de comparación y evaluación temporal. |
+| Interfaz conversacional | [Guía del chat](docs/chat/README.md) | Preguntas de ejemplo, contexto y procedencia de las respuestas. |
+| Implementación de IA | [Arquitectura del chat](docs/arquitectura/airline-tracker-agents-api.md) | Modelo, herramientas, sesiones y datos publicados. |
+| Interfaz del dashboard | [Guía de `web/`](web/README.md) | Vistas, datos que consume, desarrollo y compilación. |
+| Ejecutar o colaborar | [Desarrollo local y en nube](docs/cloud-development.md) | Preparación del entorno y límites de un clon público. |
 
 ## Qué vive dónde
 
-| Área | Módulos | Rol |
+| Área | Código o ruta | Responsabilidad |
 |---|---|---|
-| Ingesta | `src/ingest/` | Descarga fuentes públicas (SEC, BMV, AFAC, T-100, AeroDataBox…) a `data/bronze/` (local, con hash). |
-| Parseo | `src/parse/` | Normaliza bronze a `data/silver/` (local), fiel a cada fuente. |
-| Transformación | `src/transform/` | Construye `data/gold/` (43 Parquet versionados, extractos públicos) desde silver. |
-| Analítica | `src/analytics/` | Estudios y modelos precomputados sobre gold (forecast, estimación ruta×aerolínea, etc.). |
-| Dashboard | `src/dashboard/` | Payloads que `src/web_export`/`src/publish` consumen: lectura ejecutiva (`executive_summary.py`), Vuelos (`flights.py`, `flights_html.py::integration_flight_payload` — la lista blanca de columnas, `domestic_routes.py`, `international_routes.py`), más `data.py`/`check_manual_freshness.py`/`validate_stage8.py` (consultas al warehouse y controles de calidad de datos, sin UI). `web/` es la única vista publicada. |
-| Analysis Agent | `src/analysis_agent/` | Evidencia, cálculo, revisión y **publicación controlada** del análisis narrativo por trimestre (etapas 12–17). |
-| Contratos web | `contracts/web/` | Esquemas JSON (draft 2020-12) del payload **v1** tal cual lo consume `web/` (Vuelos, ejecutivo y análisis) + `privacy.yaml` (frontera pública/privada). Fuente de verdad; no aspiracional. |
-| Exportadores web | `src/web_export/` | Divide esos mismos payloads en JSON por periodo bajo `web/public/data/v1/` (local, no versionado), validados contra `contracts/web/` y `config/web_inputs.yaml` antes de escribir. `flights/quarters.json` incluye además `available_periods`: el manifiesto de qué archivos por periodo existen, para que `web/` sepa qué pedir con `fetch()` sin listar el directorio. `analysis.py` exporta, para cada periodo que el ledger local (`analysis_runs/`) tiene actualmente aprobado o publicado (`discover_approved_manifest`), exactamente lo que `analysis_agent.lifecycle.consumer_payload(record)` autoriza — lectura del flujo de aprobación existente, nunca escritura; falla si falta el expediente local salvo `--allow-missing-analysis` (dev). |
-| Gate de publicación (`site/`) | `src/publish/` | Publicación firmada con aprobación, fuentes, compilación y verificación. `issuer_update` separa datos y texto por emisor: conserva el baseline y reproduce la fuente exacta; datos requieren su autorización y revisión, tesis requieren el lifecycle. Pages elige el verificador del alcance publicado. Recibos en `analysis_runs/publications/` (local). Ver `src/publish/README.md`. |
-| Front-end en archivos reales | `web/` | La página completa (Vite + TypeScript), **única** implementación publicada de las tres vistas (Lectura ejecutiva, Economía unitaria, Vuelos): HTML/CSS/TS reales (ES modules, `web/src/views/{flights,executive,economy,shell}/*.ts`, ≤ 400 líneas cada uno; tipos generados en `web/src/types/generated/` desde `contracts/web/*.schema.json` vía `npm run gen:types`) que consume `web/public/data/v1/` con `fetch()`. Plotly se importa parcial (`plotly.js/lib/core` + `bar`/`scatter`/`scattergeo`/`choropleth`, ver `web/src/lib/plotly.ts`). Ver `web/README.md`. |
-| Chat | `src/conversational_analytics/`, `scripts/start_chat_runtime.py`, `scripts/chat/`, `Dockerfile.chat`, `railway.toml` | Backend FastAPI del chat, desplegado en Railway: capa semántica sobre el snapshot publicado (`site/data/v1/`), 13 herramientas de solo lectura con R2 (7 base y 2 por cada capacidad de rutas, métricas financieras y evidencia), proveedor OpenAI Agents API y estado en SQLite en el volumen `/data`. El panel vive en `web/src/views/chat/`. Railway solo redespliega cuando cambia un archivo de la imagen; la lista está en la configuración del servicio y versionada en `railway.toml` (ver `docs/chat/railway.md`). Ver `docs/chat/README.md`. |
-| Pruebas | `tests/` | `uv run pytest`; marcadores `local_data` (necesita `data/bronze|silver`/warehouse local) y `browser` (Playwright) se excluyen en CI. |
+| Orquestación | [`src/pipeline/`](src/pipeline/README.md) | Define pasos, dependencias, entradas requeridas y resultados. |
+| Ingesta | [`src/ingest/`](src/ingest/README.md) | Obtiene documentos y series de fuentes públicas; registra sus originales en Bronze. |
+| Lectura y normalización | [`src/parse/`](src/parse/README.md) | Extrae tablas de cada fuente y conserva unidades y procedencia en Silver. |
+| Transformación | [`src/transform/`](src/transform/README.md) | Consolida Gold, diccionarios y vistas analíticas en DuckDB. |
+| Analítica | [`src/analytics/`](src/analytics/README.md) | Calcula pronósticos, agrupaciones, anomalías y estudios sobre los datos preparados. |
+| Análisis narrativo | [`src/analysis_agent/`](src/analysis_agent/README.md) | Vincula evidencia, cálculos, redacción y aprobación de la lectura trimestral. |
+| Preparación del dashboard | [`src/dashboard/`](src/dashboard/README.md) | Construye datos de indicadores y rutas; no contiene la interfaz del sitio. |
+| Exportación | [`src/web_export/`](src/web_export/README.md) | Escribe los JSON por vista y periodo que consume `web/`; valida sus contratos. |
+| Contratos | [`contracts/web/`](contracts/web/README.md) | Define estructuras JSON y la frontera pública/privada de cada exportación. |
+| Interfaz | [`web/`](web/README.md) | Implementa la página con Vite, TypeScript y Plotly. |
+| Chat | [`src/conversational_analytics/`](src/conversational_analytics/README.md) | Consulta una copia verificada de los datos publicados mediante herramientas de solo lectura. |
+| Publicación | [`src/publish/`](src/publish/README.md) | Verifica el análisis aprobado, compila la interfaz y firma el sitio. |
+| Sitio compilado | [`site/`](site/) | Artefacto que GitHub Pages despliega. Se regenera desde sus fuentes. |
+| Pruebas | [`tests/`](tests/) | Comprueba cálculos, contratos, publicación, backend e interfaz. |
 
-**Gold tables:** 43 Parquet en `data/gold/` versionados en git (ver
-`docs/diccionario-datos.md`). Cuatro estimaciones adicionales
-(`fact_route_carrier_*_estimate.parquet`, `fact_aeromexico_*_capacity_estimate.parquet`)
-son locales y regenerables, no versionadas en el público. El
-[mapa de aprovechamiento](docs/gold-exposure.md) verifica su cuenta y distingue
-interfaz, derivados, controles, tesis y skills; incluye el cierre documental.
+### Datos, fuentes y referencias
 
-**Dashboard/Vuelos:** `web/` es la única vista publicada (ver arriba). Sus
-datos vienen de `src/dashboard/executive_summary.py::build_executive_payload()`
-y `src/dashboard/flights.py::build_flight_payload()` +
-`src/dashboard/flights_html.py::integration_flight_payload()` (lista blanca de
-columnas: una columna nueva que no esté ahí se descarta en silencio), exportados
-por `src/web_export/` y ensamblados por `src/publish/gate.py`. Editar el
-generador (los módulos de `src/dashboard/` o `web/src/views/`), nunca un HTML
-generado.
+- `data/bronze/`: documentos originales, URL, fecha y hash SHA-256. Su manifiesto
+  permite seguir el origen de una cifra. Los originales no se versionan aquí.
+- `data/silver/`: tablas fieles a cada fuente, con tipos y unidades. Son locales.
+- `data/gold/`: extractos públicos consolidados en Parquet, versionados para el
+  sitio. Existen además estimaciones históricas privadas, locales y regenerables.
+- `data/warehouse.duckdb`: almacén analítico local; sus vistas se construyen a
+  partir de los datos disponibles.
+- [`docs/diccionario-datos.md`](docs/diccionario-datos.md): tablas y columnas.
+  El [mapa de uso de Gold](docs/gold-exposure.md) distingue datos visibles en
+  pantalla, insumos analíticos y controles; una tabla exportada no implica una
+  gráfica implementada.
+- [Catálogo de fuentes y calendario](docs/catalogo-fuentes-calendario.md):
+  organismos, publicaciones, frecuencias y procedimientos de actualización.
+- [Periodos del dashboard](docs/periodos-dashboard.md): trimestre seleccionado,
+  cortes de cada fuente y cobertura. No todas las fuentes comparten el mismo corte.
+- [Mapa oficial](docs/mapa-oficial.md) y [estimación de pasajeros por ruta y
+  aerolínea](docs/estimacion-pasajeros-ruta-aerolinea.md): métodos, universos y
+  límites de las rutas. Conservan estados de aprobación independientes.
 
-**Gate de publicación (`src/publish`):** dado uno o más registros ya
-aprobados, `gate.py` re-verifica cada uno contra el ledger de aprobación
-(`src/analysis_agent/lifecycle.py`, `analysis_runs/` local) antes de exportar,
-compilar `web/` y ensamblar+firmar `site/` (manifiesto SHA-256, recibo
-`.published.json`). La autorización permanente de `AGENTS.md` permite ejecutar
-el gate para publicar cambios rutinarios solicitados sobre datos ya aprobados.
-Nunca cambies un registro de aprobación sin autorización específica del dueño.
+### Repo de datos privado
 
-**Publicación en GitHub Pages (`site/`):** `site/` es el sitio ya
-ensamblado y firmado que `.github/workflows/pages.yml` despliega tal cual —
-en `master`, sin secretos ni reconstrucción de datos — a
-<https://salvamalfa.github.io/aeromexico-tracker/>. Si el cambio solicitado
-afecta al dashboard público, regenera `site/`, inclúyelo en el PR y sigue el
-deploy de Pages conforme a `AGENTS.md`, sin pedir permiso adicional para una
-publicación rutinaria:
+El respaldo [`aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data)
+contiene originales, Silver, warehouse y expedientes de análisis; requiere acceso
+explícito y Git LFS. Un clon público permite inspeccionar el código y el sitio
+versionado, pero no reconstruye toda la publicación sin esos insumos. La opción
+`--allow-missing-analysis` permite omitir el expediente narrativo en desarrollo;
+no sustituye otros datos requeridos por el exportador.
 
-```
+Los requisitos por vista están en [`config/web_inputs.yaml`](config/web_inputs.yaml).
+La [guía de desarrollo](docs/cloud-development.md) explica qué puede reproducirse
+en cada entorno. Acceder al código no concede acceso ni permiso para publicar
+insumos privados o sujetos a licencia.
+
+### Actualización de fuentes
+
+[`src/source_updates/`](src/source_updates/) coordina planificación, capturas
+aisladas, reconstrucciones y controles. Consulta sus opciones con
+`uv run python -m src.source_updates --help` y el
+[contrato de ejecución y recuperación](docs/calendario-ejecucion.md). Los recibos
+operativos y la activación del calendario se conservan en el estado privado.
+
+El workflow [`refresh.yml`](.github/workflows/refresh.yml) monitorea frescura y
+valida Gold: no descarga todas las fuentes ni reconstruye el pipeline. AFAC
+incluye descarga asistida. La actualización de datos y la aprobación de una
+lectura tienen recorridos distintos; las guías del [análisis](src/analysis_agent/README.md)
+y de [publicación](src/publish/README.md) detallan sus controles.
+
+La carpeta [`automation/amr/`](automation/amr/README.md) conserva las instrucciones
+y validadores de búsquedas con puntos. Sus identificadores y resultados privados
+no forman parte del dashboard público.
+
+## Comandos clave
+
+Ejecuta estos comandos desde la raíz. Los que descargan fuentes necesitan red y
+las credenciales que indique cada fuente. Una reconstrucción requiere sus
+originales locales. Los comandos de publicación requieren un expediente aprobado.
+
+| Comando | Resultado |
+|---|---|
+| `just setup` | Instala dependencias de Python y Chromium para desarrollo. |
+| `just ingest` | Ejecuta las ingestas registradas que usan red. |
+| `just parse` | Reconstruye Silver desde Bronze. |
+| `just transform` | Reconstruye Gold y las vistas analíticas. |
+| `just rebuild` | Reconstruye el pipeline sin nuevas descargas, desde los originales locales. |
+| `just dashboard-validate` | Comprueba los datos preparados para el dashboard. |
+| `just test` | Ejecuta las pruebas; los datos locales disponibles determinan qué casos pueden ejecutarse. |
+| `uv run pytest -m "not local_data and not browser" -q` | Ejecuta el perfil público de Python sin insumos privados ni navegador. |
+| `uv run python -m src.dashboard.build_flights` | Reconstruye los datos de Vuelos; por sí solo no los publica ni aprueba. |
+| `uv run python -m src.web_export --out web/public/data/v1` | Exporta y valida los JSON que consume la interfaz. |
+| `uv run python -m http.server 8000 --directory site` | Permite revisar el sitio versionado en `http://localhost:8000/`, sin reconstruir sus datos. El chat requiere su servicio aparte. |
+
+Para trabajar en la interfaz, entra en `web/`:
+
+| Comando | Resultado |
+|---|---|
+| `npm ci` | Instala las dependencias fijadas en `package-lock.json`. |
+| `npm run dev` | Inicia Vite con recarga al editar; requiere datos exportados. |
+| `npm run check` | Comprueba los tipos de TypeScript. |
+| `npm run test` | Ejecuta pruebas unitarias con Vitest. |
+| `npm run gen:types` | Genera tipos desde los contratos JSON; úsalo después de cambiar un esquema. |
+| `npm run build` | Compila la interfaz en `web/dist/`. |
+| `npm run preview` | Sirve esa compilación para revisión local. |
+
+Vite expone `web/public/data/v1/x.json` como `data/v1/x.json`. El
+[README de la interfaz](web/README.md) reúne configuración, pruebas de navegador
+y soluciones para el entorno local.
+
+## Publicación en GitHub Pages
+
+El recorrido es: exportar los datos, compilar `web/`, ensamblar y verificar
+`site/`, integrar el PR y desplegar. El control de publicación vuelve a comprobar
+el expediente aprobado y registra los hashes de la entrega. Una compilación
+local o una CI correcta no sustituyen la comprobación del sitio servido.
+
+```powershell
 uv run python -m src.publish --record analysis_runs/drafts/<periodo>/<version>.json --out site/
 uv run python -m src.publish.verify site/
 ```
 
-**Vista previa en `/v2/`.** `.github/pages-preview.json` puede fijar el commit
-de una rama sin fusionar cuyo `site/` ya firmado se sirve en
-`…/aeromexico-tracker/<path>/`, junto al sitio de `master`, que sigue en la raíz.
-`pages.yml` verifica ese `site/` con el verificador y los contratos de su propio
-commit, y si falla no despliega nada. Para actualizarla o retirarla, hace falta
-un PR a `master` que cambie el commit fijado o borre el archivo. Ver
-[`docs/archivo/mantenimiento-2026-09/pages-preview-v2-20260930.md`](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/pages-preview-v2-20260930.md).
+El [procedimiento de publicación](src/publish/README.md) explica los modos
+disponibles y la conservación de datos ya publicados. [`AGENTS.md`](AGENTS.md)
+define el flujo de PR, revisión e integración y los límites de autorización.
+Nunca se fabrica una aprobación para poder compilar.
 
-**Repo de datos privado:** insumos regenerables y privados
-(`data/bronze`, `data/silver`, warehouse, `analysis_runs/`) tienen respaldo en
-[`salvamalfa/aeromexico-tracker-data`](https://github.com/salvamalfa/aeromexico-tracker-data)
-(privado, Git LFS). Acceso al código público no implica acceso a esos datos ni
-autorización para publicarlos. Ver "Datos y documentación" en `README.md`.
-
-## Comandos clave
-
-| Comando | Qué hace |
-|---|---|
-| `uv run pytest -m "not local_data and not browser" -q` | Suite pública/CI (sin datos locales ni navegador). Conteo actual: ver salida del comando, no lo copies aquí. |
-| `just test` / `uv run pytest` | Suite completa local (necesita `data/bronze`/`silver`/warehouse). |
-| `just rebuild` | Reconstrucción completa offline desde bronze. |
-| `python -m src.dashboard.build_flights` | Reconstruye el payload de Vuelos y su evidencia candidata tras cambiar fuentes o Vuelos. |
-| `uv run python -m src.web_export --out web/public/data/v1` | Exporta los payloads v1 divididos por periodo bajo `web/public/data/v1/` (local, gitignored, no publica nada; falla con mensaje claro si falta un insumo Gold o el expediente de análisis, salvo `--allow-missing-analysis`). Vite (`npm run dev`/`build`) copia el contenido de `web/public/` a la raíz del sitio servido/`dist/` (convención de Vite: `web/public/data/v1/x.json` queda accesible en `data/v1/x.json`, no en `public/data/v1/x.json`; ver `web/src/views/{flights,executive}/state.ts`). |
-| `cd web && npm ci` | Instala node_modules desde `web/package-lock.json` (versiones fijas; Node 22 + npm 10). |
-| `cd web && npm run dev` | Sirve `web/` con el servidor de desarrollo de Vite (recarga en caliente) en `http://127.0.0.1:5173/`; necesita los datos exportados arriba primero. |
-| `cd web && npm run build` | Compila el sitio a `web/dist/` (determinista: dos builds seguidos producen los mismos hashes de archivo). |
-| `cd web && npm run preview` | Sirve `web/dist/` (el build) para revisión antes de publicar. |
-| `cd web && npm run check` | `tsc --noEmit`: chequeo de tipos estricto sin emitir archivos. |
-| `cd web && npm run test` | `vitest run`: pruebas unitarias de funciones puras (formato, agregación, clasificación de región…) y la prueba de tipos generados al día. |
-| `cd web && npm run gen:types` | Regenera `web/src/types/generated/*.ts` desde `contracts/web/*.schema.json`; ejecútalo tras editar un esquema. |
-| `uv run python -m src.publish --record … --out site/` | Publica `site/` (verifica el registro ya aprobado, exporta v1, compila `web/`, ensambla y firma). Autorizado para cambios rutinarios solicitados según `AGENTS.md`. |
-| `uv run python -m src.publish.verify site/` | Revisa `site/` contra su manifiesto, los esquemas y `privacy.yaml` — sin datos privados; lo mismo que corre `.github/workflows/pages.yml` antes de desplegar. |
+[`pages.yml`](.github/workflows/pages.yml) despliega el sitio firmado en
+<https://salvamalfa.github.io/aeromexico-tracker/>. Una vista previa puede fijarse
+con `.github/pages-preview.json`: su artefacto se verifica con los contratos y
+el verificador de su propio commit. El
+[procedimiento original](https://github.com/salvamalfa/aeromexico-tracker/blob/747808228103f3d30afc582b42480ce4e5d05713/docs/archivo/mantenimiento-2026-09/pages-preview-v2-20260930.md)
+conserva sus detalles. La vista previa no reemplaza la publicación de la raíz.
 
 ### Eficiencia de pruebas y CI
 
-CI conserva los checks obligatorios `test` y `web`. Son agregadores que exigen
-éxito de cada componente seleccionado. Cada agregador vuelve a calcular el
-perfil desde la base del evento y el checkout exacto. Rechaza salidas del
-selector que no coincidan, dependencias ausentes y fallos o cancelaciones.
-Solo permite el estado `skipped` para una omisión prevista por ese mismo perfil.
-Las protecciones, los pins y los permisos no cambian. Tras `static`, las suites
-pueden ejecutarse en paralelo con Pages, Docker y el smoke del chat. Los
-agregadores siguen esperando todos sus controles: se reduce la espera en un
-head válido, a cambio de consumir pruebas si otro componente falla.
-Los componentes son:
+La [configuración de CI](.github/workflows/ci.yml) mantiene los checks `test` y
+`web`. Ambos exigen que terminen correctamente todos los componentes seleccionados.
+El [selector de cambios](scripts/ci_change_plan.py) aplica perfiles conservadores:
 
-- `pages-preflight`: entorno aislado con el mismo lock, extra `analytics`, ausencia
-  del grupo `dev` y comando de verificación que Pages. Una dependencia instalada
-  para pytest no puede ocultar un faltante del perfil de despliegue.
-  Para código nuevo con publicación, autoridad y dependencias conservadas,
-  comprueba sólo entorno/imports del selector fuerte: el informe lo declara
-  `environment_only`, sin aprobar el runtime ni volver a aprobar el sitio antiguo.
-  Exige base exacta en `origin/master`, ascendencia y bytes/inventario conservados;
-  Git incierto conserva la verificación fuerte actual. La suite pública mantiene
-  su perfil histórico existente en el perfil completo. En un PR de interfaz
-  pura, la comprobación previa también ejecuta una verificación fuerte del
-  sitio conservado con su productor publicado: checkout temporal del
-  `code_commit`, mismo lock y configuración vigente, todos los bytes de `site/`
-  conservados, sin aprobar el runtime nuevo. Si una entrada cambia o el
-  verificador falla, el check falla sin fallback. Cuando cambia la publicación, se ejecuta el
-  verificador fuerte actual, sin fallback ante un fallo.
-- `docker-preflight`: build del `Dockerfile.chat` real y smoke de su imagen por
-  ID, sin red ni carpetas del checkout montadas. Carga el snapshot empaquetado
-  y el worker mock; conserva la exclusión de fixtures y credenciales del proveedor.
-- `static`: lifecycle, Ruff, formato, límites de tamaño y las pruebas de los
-  controles del CI. Se ejecuta en todos los perfiles. `chat-runtime` conserva
-  su instalación y smoke aislados para el perfil completo.
-- `change-plan`: selección habilitada solo para `pull_request`. Documentación
-  pura significa únicamente `README.md`, `REPO_MAP.md`, `ROADMAP.md` y
-  `CHANGELOG.md`. Interfaz pura significa `web/index.html` o fuentes
-  `.ts`, `.tsx` y `.css` bajo `web/src/`, fuera de pruebas y tipos generados.
-  Todos deben ser archivos regulares añadidos o modificados. Documentación bajo
-  `docs/` puede ser entrada ejecutable y conserva el perfil completo.
+| Perfil | Alcance |
+|---|---|
+| Documentación raíz | Solo cambios regulares en `README.md`, `REPO_MAP.md`, `ROADMAP.md` y `CHANGELOG.md`; conserva controles estáticos y de publicación. |
+| Interfaz | Añade comprobación de tipos, unitarias, compilación y navegador cuando solo cambia la interfaz admitida. |
+| Completo | Código, datos, contratos, documentación que puede ser insumo ejecutable, cambios mixtos o historia incierta. También es el perfil de las llamadas que lo fuerzan. |
 
-Documentación pura ejecuta `change-plan`, `pages-preflight` y `static`.
-Interfaz pura añade `web-checks` completo: tipos, unitarias, build y navegador.
-Cambios mixtos, pruebas, código Python, contratos, datos, `site/`, dependencias,
-workflows, rutas desconocidas, retiros, renombres o historia incierta ejecutan
-el perfil completo. Pushes a `master` y llamadas desde Pages también conservan
-el perfil completo. La función del selector sin opt-in sigue en sombra.
+El perfil público de Python reparte los módulos en tres particiones disjuntas
+(`core-a`, `core-b`, `publication`). Cada una usa dos procesos con
+`--dist=loadfile` y no reinicia automáticamente un proceso fallido. Las pruebas
+`browser` se ejecutan aparte; `local_data` requiere insumos locales. Los controles
+de Pages, Docker y el chat conservan sus propios entornos y verificaciones.
 
-El verificador histórico de las pruebas materializa también
-`data/reference/official_route_cities.csv` desde el mismo `code_commit` del
-productor publicado. El mapa incluye esa referencia pública en su huella de
-código. Tomarla del checkout candidato cambiaría la evidencia verificada; por
-eso las pruebas exigen el blob del productor y rechazan su ausencia o alteración.
-El fixture de Git aplica los mismos prefijos de archivo que el helper real.
+Pages puede reutilizar la CI de un PR fusionado solo si comprueba la asociación
+del PR, su base, su ejecución correcta y la igualdad del árbol completo del merge.
+Si no puede acreditar esas condiciones, ejecuta la validación completa. En ambos
+casos verifica y despliega el commit integrado.
 
-`public-tests` distribuye **todos** los módulos entre tres jobs: `publication`
-contiene las dos pruebas costosas de paridad financiera/editorial; `core-a` y
-`core-b` reparten los demás por SHA-256 de su ruta. El inventario es disjunto y
-completo, incluidos módulos nuevos. Cada job conserva los marcadores públicos,
-dos procesos, agrupación por archivo y cero reinicios automáticos. El resultado
-agregado exige éxito de las tres particiones; `fail-fast: false` permite recoger
-todos los fallos sin cancelar particiones. Los agregadores mantienen `test` y `web`.
-Chromium instala solo el shell usado por las pruebas sin ventana. Antes de
-instalar paquetes de Ubuntu, una comprobación obligatoria abre el navegador fijado y
-comprueba texto en español. También prueba la ruta de navegador local si existe.
-Si el arranque falla, instala las dependencias de sistema de Playwright y vuelve
-a probar; un nuevo fallo cierra el check. La suite de navegador sigue completa.
-Esto aprovecha las bibliotecas ya presentes en los runners y evita instalar
-fuentes adicionales para otros idiomas cuando no son necesarias. No acredita
-reproducibilidad de capturas visuales ni reemplaza un perfil de fuentes fijado.
-Ver la [opción oficial del shell](https://playwright.dev/python/docs/browsers#chromium-headless-shell).
+Para investigar un fallo o repetir un intento sobre el mismo commit:
 
-Las pruebas de paridad reutilizan su proyección ya comprobada y evitan repetir
-el mismo verificador en fixture y cuerpo. Conservan las aserciones y el replay
-privado; ninguna caché general oculta cambios entre pruebas.
-Los JUnit y recibos de preflight se conservan siete días, con sufijo
-`-<intento>` para distinguir intentos del mismo SHA.
-
-La [auditoría del 6/nov](docs/referencias/ci-efficiency-20261106.json) conserva
-cuatro ejecuciones exitosas anteriores con sus commits y artefactos. En
-`42146347355`, el workflow tardó **39 min 38 s**; Pages ocupó **7 min 3 s**
-y la suite pública **31 min 23 s** después de esa espera. Las dos pruebas de
-paridad acumularon 1.656,4 s de JUnit; esa suma incluye fixtures y no equivale a
-ahorro de reloj. El PR de documentación `42148115816` tardó **35 min 26 s**
-aunque el selector en sombra recomendaba documentación pura. Estas observaciones
-identifican los cuellos de botella; no son una comparación controlada con la
-implementación nueva. La primera ejecución completa del
-[PR 203](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/42165073872),
-head `ca6c04be`, pasó en **14 min 16 s**: 25 min 22 s menos (64,0 % observado)
-frente a master. Conservó 7.100 casos aprobados, once omisiones y 29 subpruebas;
-las pruebas nuevas corresponden a los controles del CI. Chromium ocupó 614 s,
-frente a 20 s en la base: el mirror de Ubuntu tardó 9 min 53 s en descargar
-15,5 MB de fuentes. El ajuste posterior de preparación del navegador se valida
-en otra ejecución del PR; sus tiempos y head final se registran allí.
-No se promete una duración fija: colas, cachés y concurrencia
-pueden cambiar.
-
-Para recuperar un fallo sin cambios de código, comprobar primero el SHA de la
-ejecución y utilizar el [reintento nativo de GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs?tool=cli):
-
-```bash
+```powershell
 gh run view RUN_ID --json headSha,event,status,conclusion
 gh run rerun RUN_ID --failed
-# O repetir un componente y sus dependientes:
 gh run rerun --job JOB_ID
 ```
 
-El reintento conserva el SHA/ref originales; un commit nuevo del PR requiere su
-propia validación según su impacto. No se importan artefactos para poner un check en
-verde. Pages puede reutilizar checks del segundo padre sólo si el árbol completo
-del merge coincide exactamente; esa condición se verifica antes del deploy y
-se detalla abajo. Una edición del cuerpo del PR mantiene su evento `edited`: el
-lifecycle depende de esa metadata y vuelve a validarse.
-Preparar el bloque documental antes del push evita reinicios por presentación.
+Un commit nuevo necesita su propia validación. Editar el cuerpo del PR vuelve a
+comprobar el inventario documental. Las versiones fijadas de las herramientas
+de pruebas están en [`.github/ci-test-tools.txt`](.github/ci-test-tools.txt).
 
-Pages comprueba el sitio publicado en el commit integrado. Si ese commit es un
-merge de dos padres, GitHub asocia el segundo padre con un solo PR ya fusionado
-en `master` sobre el mismo primer padre, su árbol Git coincide
-exactamente con el merge y la última ejecución completa de
-`.github/workflows/ci.yml` para ese SHA del PR pasó `test`, `web` y sus
-componentes, Pages reutiliza esa CI. El check compara árboles completos, no
-rutas ni nombres de archivos; un cambio añadido al merge no califica. Si el
-evento, la asociación, la evidencia o la consulta son dudosos, ejecuta el
-`workflow_call` completo como antes. El verificador del sitio y el deploy siguen
-corriendo sobre el commit integrado. Esto evita la segunda suite pública en un
-merge validado, pero no reduce la suite que bloquea el PR.
-
-Los eventos de PR y `workflow_call` no se filtran por rutas. Pages no reutiliza artefactos ni checks
-de otro árbol. La verificación fuerte de publicación, el perfil seleccionado del PR,
-los checks obligatorios `test` y `web`, y el deploy continúan siendo puertas
-separadas. El job de evidencia usa un token efímero con permisos de sólo lectura
-para Actions, pull requests y contenido.
-Ver la [semántica de filtros de GitHub](https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions).
-
-Las mediciones del preflight distinguen entorno nuevo, caché de descargas y
-capas Docker existentes. Un intento con caché desconocida no se llama frío.
-Docker registra dos procesos separados: `--no-cache` desactiva las capas del
-primer build y el segundo reutiliza el builder después del éxito del primero.
-Eso no vacía las imágenes base ni las cachés externas de descarga. El smoke usa
-la imagen por ID en ambos casos, con contratos retenidos y snapshot reales.
-El coste de preflight se añade a un head válido: detectar un fallo antes no
-demuestra ahorro global. La evidencia de esta entrega se registra por separado
-de las parejas históricas siguientes, en el
-[registro del 31/oct](docs/referencias/ci-preflight-20261031.json).
-
-La toma local de Pages usó primero un entorno virtual nuevo con caché de
-descargas existente y después ese mismo entorno. Instalación: 0,975 / 0,337 s;
-verificación fuerte: 225,659 / 215,492 s; proceso completo: 226,650 / 215,855 s.
-Las entradas y comandos del verificador fueron iguales. El helper recibió un
-ajuste de elegibilidad que no se ejecutó en este caso; hubo unos tres segundos
-de pruebas ligeras durante la primera toma. No es una pareja controlada de CI
-completa ni demuestra ahorro global. Docker local alcanzó el install exacto,
-pero rechazó la CA del proxy: esa toma no cuenta como build aprobado. La CI
-recoge los builds reales y sus tiempos separados en el runner de GitHub.
-
-Las pruebas de conversación comparten una lectura real de `Snapshot` por
-módulo: dos construcciones en vez de ocho. Cada consumidor comprueba que no
-cambió su estado, incluidas las estructuras anidadas. Los nueve casos y sus
-82 aserciones se conservan. App, SQLite, proveedor y worker siguen siendo
-independientes por caso. Las pruebas que alteran archivos, contratos, pins o
-validación construyen su propio lector y no usan esta fixture.
-
-Medición del 29/oct/2026: base `62607e8`, implementación `ce9e152`, Python
-3.13.5, dependencias de `uv.lock`, datos públicos y pins aprobados iguales.
-Las ejecuciones medidas fueron en serie, en checkouts aislados; no se
-restauraron insumos privados. El [registro técnico](docs/referencias/ci-efficiency-20261029.json)
-conserva comandos, hashes, resultados y tiempos por fase y proceso. El
-[detalle comprimido por caso](docs/referencias/ci-efficiency-20261029-cases.json.gz)
-conserva todos los IDs y fases del perfil público; se abre como JSON con gzip.
-
-| Perfil | Pytest antes / después | Proceso antes / después | Resultado |
-|---|---|---|---|
-| Dos módulos de chat | 122,52 / 71,00 s | 124,70 / 72,60 s | Nueve casos aprobados; IDs y resultados iguales. |
-| Público completo | 2112,54 / 2118,20 s | 2116,66 / 2121,25 s | 5.363 casos y 29 subpruebas aprobados; nueve omisiones y 106 exclusiones. IDs y resultados iguales. |
-
-En la toma completa, el proceso subió 4,59 s (0,22 %):
-no se observó ahorro global. Los dos módulos afectados sumaron 93,101
-→ 30,533 s de JUnit inclusivo dentro de ese perfil; ese dato describe
-solo esos módulos.
-
-El proceso focal bajó un 41,8 % observado. Su pico de memoria
-subió de 539,1 a 725,8 MiB por la copia profunda
-de la guarda.
-
-Es un solo par local por perfil; no acredita un ahorro estadístico ni garantiza
-esos tiempos en GitHub Actions. La comparación fija los commits indicados y
-no se mezcla con CI de otros heads o perfiles. El perfil público excluye
-`local_data` y `browser`; no demuestra validación privada ni autoriza publicar.
-Los tiempos de fase de `--durations` están redondeados a centésimas. JUnit
-conserva el total inclusivo por caso y por suite; el proceso incluye el arranque
-de `uv` y pytest.
-
-Para repetir, usa dos checkouts con los mismos datos, dependencias y pins
-externos del [registro de aprobación auditado](https://github.com/salvamalfa/aeromexico-tracker/blob/d456eb8dc05e586d7119161c710db5ff47af0da3/docs/chat/fase-2-decision-dueno.md).
-Ejecuta primero la base y después el cambio, sin competir por CPU:
-
-```bash
-export CI_PROFILE_BASE=62607e869d553b3ebb387404a63b726a8ce17f08
-uv sync --all-extras --all-groups --locked
-uv run --no-sync pytest -q tests/test_chat_mock_conversation.py tests/test_chat_integration.py --durations=0 --durations-min=0 --junitxml=tmp/ci-profile/focal.xml
-uv run --no-sync pytest -m "not local_data and not browser" -q --financial-publication-base "$CI_PROFILE_BASE" --durations=0 --durations-min=0 --junitxml=tmp/ci-profile/public.xml
-```
-
-`CI_PROFILE_BASE` debe ser el SHA completo confiable del baseline de CI. Usa
-esa opción solo cuando el sitio y su autoridad estén conservados: verifica la
-publicación existente con su verificador liberado, sin aprobar el runtime nuevo.
-Registra también el tiempo total del subproceso, CPU y pico de memoria; no
-incluyas instalaciones en un lado y las excluyas del otro.
-
-CI ejecuta el perfil público con dos procesos de pytest-xdist y
-`--dist=loadfile`: cada archivo conserva juntos sus casos y fixtures. Un
-worker que falle no se reinicia. Las dos herramientas están fijadas con
-versiones y hashes en [`.github/ci-test-tools.txt`](.github/ci-test-tools.txt).
-La instalación separada conserva el lock de runtime y exige `uv pip check`;
-`--no-sync` mantiene esa instalación durante pytest.
-
-La [pareja completa en CI40902930996](https://github.com/salvamalfa/aeromexico-tracker/actions/runs/40902930996)
-corrió primero secuencial y después con dos procesos en el mismo job y runner
-`runnervm48cm3`, de cuatro CPU. Usó el mismo árbol del commit `ab940a0`, Python 3.13.18,
-pytest 9.1.1, xdist 3.8.0, dependencias, datos, pins y filtros. Ambos modos
-aprobaron **5.451 casos y 29 subpruebas**, con nueve omisiones y 106 exclusiones.
-Coinciden los 5.460 IDs principales, 16.380 reportes de fase y las 29 identidades y
-resultados de subpruebas. Las exclusiones se verifican en los inventarios de
-cada proceso; xdist puede omitir su cuenta en el texto terminal.
-
-| Perfil público completo | Secuencial | Dos procesos | Cambio observado |
-|---|---:|---:|---:|
-| Tiempo del subproceso pytest | 993,75 s | 536,64 s | −46,0 % |
-| CPU acumulada, incluido el medidor | 996,80 s | 1.054,00 s | +5,7 % |
-| RSS agregado muestreado | 1.489,7 MiB | 2.937,0 MiB | +97,2 % |
-
-Se acepta el intercambio de CPU y memoria por 457,11 s menos de espera en la
-capacidad ya asignada. Es una sola pareja; no garantiza esos tiempos futuros
-ni describe el job entero, los datos privados o el navegador. El RSS es la
-suma simultánea muestreada de los procesos cada 0,2 s: puede duplicar páginas
-compartidas o perder picos breves. El máximo del mayor hijo es otra métrica y
-se conserva por separado. La [distribución oficial](https://pytest-xdist.readthedocs.io/en/stable/distribution.html)
-explica la agrupación utilizada.
-
-El [registro canónico](docs/referencias/ci-efficiency-20261029.json) conserva
-comandos, hashes, entorno, CPU, memoria y límites; el
-[detalle comprimido](docs/referencias/ci-global-efficiency-20261029-cases.json.gz)
-conserva IDs, resultados y fases de todos los casos. La instrumentación fue
-temporal y no queda en el CI recurrente. Sus fuentes se recuperan en el
-[medidor del commit fijo](https://github.com/salvamalfa/aeromexico-tracker/blob/ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5/.github/ci/profile_pytest.py)
-y su [registro por proceso](https://github.com/salvamalfa/aeromexico-tracker/blob/ab940a0ea2cc828c91e77107ff55c74dcfc3f4b5/.github/ci/ci_pytest_inventory.py).
-Para reproducir el protocolo, usa ese checkout, instala las dependencias
-bloqueadas y las herramientas con hashes, conserva los pins externos ya
-aprobados y ejecuta los modos 0 y 2 con el mismo entorno. No mezcles esta pareja
-remota con tiempos de otro head o del cloud local.
-
-Se descartó el ensayo adicional de lector compartido en tres módulos:
-bajó el focal de 206,67 a 131,22 s, pero el completo pasó de 3.209,43 a 3.463,51 s y
-terminó con un fallo del CLI a 90 s y un error del verificador histórico a 120 s.
-El focal subió de 447,1 a 700,5 MiB de máximo del mayor hijo. El cambio fue
-revertido; sus datos y los dos resultados distintos permanecen en la evidencia.
-No se atribuye causalidad de los timeouts a la fixture ni se declara ahorro
-global de ese ensayo.
-
-El smoke de runtime rechaza antes el pin financiero ausente o vacío cuando
-el recibo existe dentro del sitio elegido. Las entradas admisibles siguen
-pasando por el `Snapshot` completo. El modo `--fixture-only` conserva su raíz
-propia y no acredita el sitio publicado. Los límites de 90/120 s y las verificaciones
-históricas se conservan.
+Las mediciones históricas conservan comandos, perfiles, resultados y límites en
+los registros del [29 de octubre](docs/referencias/ci-efficiency-20261029.json),
+[31 de octubre](docs/referencias/ci-preflight-20261031.json) y
+[6 de noviembre](docs/referencias/ci-efficiency-20261106.json). El
+[detalle de las comparaciones y ensayos descartados](https://github.com/salvamalfa/aeromexico-tracker/blob/72861902ee30feeb3d3c15b681ee897f5e1e6ab5/REPO_MAP.md#eficiencia-de-pruebas-y-ci)
+permanece en su versión original. Son observaciones sobre entornos y commits
+concretos; no predicen la duración de futuras ejecuciones.
 
 ## Recetas
 
-### a) Mover o agregar un elemento de UI en Vuelos
+<a id="a-mover-o-agregar-un-elemento-de-ui-en-vuelos"></a>
 
-Nada de esto genera HTML: `src/dashboard/` y `src/web_export/` son
-constructores de payloads JSON; el único maquetado/interacción vive en
-`web/src/views/`.
+### a) Mover o agregar un elemento de interfaz en Vuelos
 
-1. Lee `docs/etapas/vuelos-pasajeros-traspaso-20260913.md` (guía de entrada de Vuelos).
-2. Edita el payload en `src/dashboard/flights.py` (datos) y/o la lista blanca en
-   `src/dashboard/flights_html.py::integration_flight_payload` (qué campos
-   llegan al JSON exportado vía `src/web_export/flights.py`).
-3. Si el campo es nuevo, agrégalo al contrato en `contracts/web/flights.schema.json`.
-4. Edita el maquetado/interacción en `web/src/views/flights/*.ts` (la única
-   implementación de la vista).
-5. Regenera: `python -m src.dashboard.build_flights`, luego
-   `uv run python -m src.web_export --out web/public/data/v1`.
-6. Corre `uv run pytest -q tests/test_flights_prototype.py tests/test_international_routes.py`
-   y, en `web/`, `npm run check && npm run test`.
-7. Si el cambio debe verse en Pages y usa datos ya aprobados, ejecuta
-   `python -m src.publish`, verifica `site/`, incluye el artefacto en el PR y
-   sigue el deploy y la comprobación pública (ver `AGENTS.md`).
+1. Revisa la [guía de entrada de Vuelos](docs/etapas/vuelos-pasajeros-traspaso-20260913.md)
+   y el [mapa oficial](docs/mapa-oficial.md) cuando el cambio afecte esa red.
+2. Modifica la preparación de datos en `src/dashboard/` o `src/web_export/`.
+   Para el contrato histórico de Vuelos, revisa también la lista blanca de
+   `flights_html.py::integration_flight_payload`: descarta campos no incluidos.
+3. Actualiza el esquema correspondiente en `contracts/web/` y regenera sus tipos.
+4. Modifica la interfaz en `web/src/views/`; ahí viven el diseño y la interacción.
+5. Regenera los datos afectados y la exportación. Comprueba tipos, unitarias y
+   los casos de navegador que cubran el recorrido modificado.
+6. Si el cambio debe verse en Pages, sigue la publicación con datos aprobados.
 
 ### b) Agregar una columna a la tabla de rutas
 
-Igual que en (a): `src/dashboard/*_routes.py` y `flights_html.py` construyen
-un payload JSON, no HTML/CSS; el maquetado vive solo en `web/src/views/flights/table.ts`.
+La tabla histórica utiliza `domestic_routes.py`, `international_routes.py` y
+`integration_flight_payload`; el mapa oficial tiene contrato y exportador propios.
+Identifica primero cuál consume la vista que modificarás.
 
-1. Añade la columna en `src/dashboard/domestic_routes.py` y/o
-   `src/dashboard/international_routes.py` (donde se construyen las filas).
-2. Agrégala a la lista blanca en
-   `src/dashboard/flights_html.py::integration_flight_payload` — si se omite
-   este paso, la columna se descarta en silencio sin error.
-3. Añade la columna al contrato público en `contracts/web/flights.schema.json`
-   (si no está ahí, `uv run python -m src.web_export` la rechaza en la
-   validación de esquema) y a `docs/diccionario-datos.md`.
-4. Agrega la columna a la tabla renderizada en `web/src/views/flights/table.ts`
-   (o al módulo de `web/src/views/flights/` que corresponda a esa columna).
-5. Regenera: `python -m src.dashboard.build_flights`, luego
-   `uv run python -m src.web_export --out web/public/data/v1`.
-6. Corre `uv run pytest -q tests/test_international_routes.py tests/test_aicm_international_slots.py`
-   y, en `web/`, `npm run check && npm run test`.
+1. Añade el campo al constructor de datos y a su contrato público.
+2. Si pasa por `integration_flight_payload`, inclúyelo en su lista blanca.
+3. Actualiza el diccionario desde su generador y los tipos con `npm run gen:types`.
+4. Añade su representación en el módulo de `web/src/views/flights/` correspondiente.
+5. Regenera, valida esquemas y comprueba que el valor aparece con unidad,
+   procedencia y tratamiento de faltantes correctos.
 
 ### c) Actualizar datos de Vuelos
 
-Seguir el [catálogo y calendario](docs/catalogo-fuentes-calendario.md) para las
-ediciones oficiales y reconstruir offline los Gold correspondientes.
-La exportación completa conserva los cuatro Gold privados de estimaciones
-históricas como entradas ignoradas; no requiere nuevas capturas. Para cambiar
-solo el mapa, `src.publish --preserve-published-data` conserva todos los bytes
-de `site/data/v1/` y las cuatro tesis, sin reconstruir modelos ni actualizar
-fuentes. Ver [histórico conservado y prueba AFAC/AICM](docs/plan-salida-aerodatabox.md).
+Sigue el [catálogo y calendario](docs/catalogo-fuentes-calendario.md) y los
+controles del método que uses. La exportación histórica completa conserva
+estimaciones privadas como entradas; reconstruirlas no exige nuevas capturas
+por sí mismo. El [histórico conservado](docs/plan-salida-aerodatabox.md) precisa
+sus condiciones. Para un cambio que deba conservar datos publicados, consulta
+`--preserve-published-data` en la [guía de publicación](src/publish/README.md).
+Actualizar el código no activa una fuente ni aprueba una estimación nueva.
 
 ### d) Retomar trabajo pendiente
 
-El trabajo abierto vive en `ROADMAP.md` ("Ahora"/"Siguiente"). Un paquete de
-varios pasos delegado por la sesión coordinadora lo ejecuta el subagente
-`implementador` (`.claude/agents/implementador.md`), en su propia rama,
-commiteando y subiendo tras cada tarea. La historia de proyectos cerrados se
-resume en `docs/archivo/README.md` y no se retoma.
+Consulta [`ROADMAP.md`](ROADMAP.md) para las prioridades y
+[`CHANGELOG.md`](CHANGELOG.md) para los cambios recientes. Lee la guía vigente del
+área antes de acudir a una bitácora. El [archivo](docs/archivo/README.md) resume
+trabajos cerrados y enlaza sus originales; no define el comportamiento actual.
 
 ### e) Cerrar un esfuerzo y retirar su documentación
 
-La ingesta privada de precios y puntos para la vista local de Mercado se describe
-en [`src/fare_quotes/README.md`](src/fare_quotes/README.md). Las instantáneas de
-libros y los detalles quedan privados. El agregado trimestral contratado se añade
-con el gate `--fare-quotes-only`, preservando las aprobaciones y datos servidos.
+La ingesta de precios y puntos de Mercado se describe en
+[`src/fare_quotes/README.md`](src/fare_quotes/README.md). Las instantáneas de libros
+y los detalles quedan privados. El agregado trimestral contratado se añade con
+el gate `--fare-quotes-only`, preservando las aprobaciones y datos servidos.
 
-Sigue el [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea),
-también en una entrega local. Inventaría todos los archivos, incluidas las salidas generadas;
-clasifica conservar, actualizar, consolidar, archivar, retirar, candidato a eliminar o pendiente,
-con motivo y dependencias desde código, pruebas, skills e índices. Pasa lo
-vigente a la guía canónica antes de retirar un plan reemplazado. Conserva
-fuentes, decisiones, aprobaciones y evidencia.
+El [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea)
+exige inventariar cada archivo del cambio, incluidos los nuevos y los generados,
+y registrar su disposición y motivo en el resumen existente del PR.
 
-Para archivar, comprueba primero que el original íntegro existe en un commit
-fijo; enlázalo desde `docs/archivo/README.md` y actualiza referencias entrantes.
-Retíralo del árbol solo si el encargo lo permite. Registra la disposición por
-archivo en el resumen existente con `document-lifecycle:v1` y valida con
-`scripts/check_document_lifecycle.py --base <base> --worktree --summary-file <resumen>`
-antes del commit; después omite `--worktree`. Para el respaldo privado añade
-`--root <checkout-privado>`. El mismo control verifica código y artefactos; los
-lotes homogéneos admiten prefijo acotado y conteo exacto según la guía canónica.
-No crees otro Markdown de estado para acreditar el cierre. Un pendiente exige
-archivo y motivo; la edad o el número de documentos no justifican un retiro.
+```powershell
+python scripts/check_document_lifecycle.py --base <base> --worktree --list
+python scripts/check_document_lifecycle.py --base <base> --worktree --summary-file <resumen>
+```
+
+Después del commit omite `--worktree`. El control verifica rutas y referencias;
+la revisión humana comprueba anclas, enlaces externos, significado y autorización.
+Consolida lo vigente antes de retirar un documento. Conserva fuentes, decisiones,
+aprobaciones y evidencia, y comprueba su recuperación en un commit fijo. No se
+crea otra bitácora para certificar el cierre.

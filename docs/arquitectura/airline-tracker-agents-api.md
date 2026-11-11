@@ -1,103 +1,116 @@
-# Adaptador Agents API de Airline Tracker
+# Cómo funciona el chat de Airlines Tracker
 
-El chat usa el cliente Python oficial `openai==3.13.0` y la Agents API con
-`environment.type="none"`. No instala `openai-agents`, no crea un entorno de
-ejecución y no permite shell, búsqueda web ni herramientas ajenas a las siete
-funciones de consulta definidas en `src/conversational_analytics/tools/`.
+El modelo interpreta la pregunta y elige herramientas de consulta. Python valida
+sus argumentos y calcula sobre los datos publicados. El modelo recibe esos
+resultados para redactar; no obtiene acceso directo al almacén privado.
 
-La integración vive en
-[`src/conversational_analytics/providers/openai.py`](../../src/conversational_analytics/providers/openai.py).
-El resto del servicio usa la misma interfaz que el proveedor simulado. Las
-llamadas a datos se ejecutan en el worker local contra el snapshot publicado y
-validado; OpenAI no recibe el warehouse.
+El [adaptador OpenAI](../../src/conversational_analytics/providers/openai.py)
+usa el cliente oficial `openai==3.13.0` y Agents API con
+`environment.type="none"`. Las funciones se ejecutan en el backend del proyecto.
 
-## Selección y configuración
+## Entradas, modelo, herramientas y respuesta
 
-El proveedor predeterminado sigue siendo `mock`. Para habilitar OpenAI se debe
-configurar explícitamente `CHAT_PROVIDER=openai`, `CHAT_OPENAI_ENABLED=true`,
-un `CHAT_MODEL` con el identificador elegido por el responsable del proyecto,
-`OPENAI_API_KEY` y los precios de entrada/salida por millón de tokens mediante
-`CHAT_INPUT_COST_PER_MILLION` y `CHAT_OUTPUT_COST_PER_MILLION`. No hay un modelo
-predeterminado. `ChatConfig.from_env()` falla al iniciar si faltan los controles
-requeridos; tener una variable de clave presente no valida que la cuenta tenga
-acceso a Agents API.
-
-Instala solo las dependencias del chat:
-
-```sh
-uv sync --extra chat
+```mermaid
+flowchart TD
+    A["Pregunta y contexto del dashboard"] --> B["Servicio: sesión y versiones"]
+    B --> C["Modelo: interpreta y solicita datos"]
+    C --> D["Herramienta: valida argumentos"]
+    D --> E["Datos publicados y verificados"]
+    E --> F["Python: valores, unidades y fuentes"]
+    F --> C
+    C --> G["Respuesta al usuario"]
+    F --> H["SQLite: resultados y eventos"]
+    G --> H
+    H --> I["Interfaz: texto, tablas y gráficas"]
 ```
 
-Con datos públicos de `site/` disponibles, el servicio local arranca con:
+| Parte | Qué recibe y qué hace |
+|---|---|
+| Entrada | Pregunta y contexto de vista, tarjeta, entidad, filtros y periodo. El contexto se valida y puede cambiar entre mensajes. |
+| Modelo | Instrucciones versionadas, catálogo de funciones y resultados autorizados. Solicita consultas y redacta la respuesta. |
+| Herramientas | Argumentos estructurados. Comprueban versiones, unidades, dimensiones y cobertura antes de leer o calcular. |
+| Datos | JSON de `site/data/v1/` comprobados contra el manifiesto y los contratos; extractos de evidencia aprobados cuando esa capacidad está habilitada. |
+| Respuesta | Texto del modelo y resultados persistidos. Las referencias, tablas y gráficas se vinculan a los datos devueltos por las herramientas. |
 
-```sh
-uv run --extra chat python -m src.conversational_analytics --host 127.0.0.1 --port 8765
-```
+### Funciones disponibles
 
-La ejecución del proveedor OpenAI realiza consumo de API. No ejecutar una
-prueba en vivo ni elegir precios/modelo para producción sin la autorización de
-presupuesto específica del proyecto. La suite normal usa fakes tipados y no
-requiere credenciales ni llamadas pagadas.
+El [registro de herramientas](../../src/conversational_analytics/tools/registry.py)
+define siete funciones base: `get_data_catalog`, `get_metric_definition`,
+`query_metrics`, `compare_metrics`, `get_time_series`, `get_source_references`
+y `get_dashboard_context`.
 
-## Sesiones y turnos
+R2 puede añadir `query_routes`, `find_shared_routes`, `query_business_metrics`,
+`get_business_metric_definition`, `search_reports` y `search_news`. Cada capacidad
+requiere configuración explícita y un prompt compatible aprobado.
+`query_official_routes` tiene una activación separada, fijada a la versión del
+mapa oficial. La [referencia del backend](../../src/conversational_analytics/README.md)
+documenta estos controles.
 
-Una conversación local comienza sin sesión del proveedor. Como la API exige
-entrada inicial para `environment.type="none"`, el primer mensaje se envía con
-`sessions.create(..., input=..., stream=True)`; el ID real se guarda en SQLite
-en cuanto aparece. Para mensajes siguientes el adaptador abre
-`sessions.events.stream(session_id)` antes de enviar
-`agent.session.input.message`. Reutiliza una clave de idempotencia por turno
-lógico en los envíos de seguimiento. El cliente se configura con reintentos
-automáticos desactivados; ante un timeout ambiguo el adaptador recupera el
-estado guardado de sesión/turno y no reenvía el mensaje.
-
-El worker conserva el historial visible en SQLite. Registra el ID de sesión;
-los metadatos privados `provider.metadata` relacionan el ID de turno y los
-eventos del proveedor con el turno local, y el dispatcher guarda cada resultado
-de herramienta antes de entregarlo al agente usando `(turn_id, call_id)`. Los
-IDs de proveedor no son autorización ni se publican al navegador. La interfaz
-recibe eventos propios persistidos por el servicio y puede recuperarlos tras
-perder la conexión.
-
-El adaptador requiere `agent.session.turn.completed` para declarar éxito.
-`agent.session.turn.failed` marca error, `agent.session.turn.cancelled` marca
-cancelación, e `agent.session.idle` por sí solo no completa el turno. Si el
-stream se interrumpe, lee estado, turnos e items guardados para recuperar el
-resultado y no duplica la entrada. Los límites locales configurables controlan
-duración, cantidad de herramientas y bytes de cada resultado. Cancelar usa el
-evento `agent.session.input.cancel`; borrar una conversación intenta borrar
-también la sesión del proveedor y encola la eliminación si el servicio no está
-disponible.
+La [búsqueda de evidencia](../../src/conversational_analytics/evidence_index.py)
+consulta extractos y metadatos previamente revisados mediante búsqueda
+determinista. No incorpora documentos nuevos durante la pregunta ni usa una
+base vectorial. El agente no dispone de shell ni navegación web.
 
 ## Semántica y datos confiables
 
-El prompt estable instruye al agente a consultar el catálogo y las definiciones
-antes de proponer un plan. El contexto del dashboard de cada mensaje viaja como
-un sobre JSON separado de las instrucciones confiables, así un periodo o filtro
-nuevo reemplaza el contexto anterior dentro de la misma sesión. El texto de la
-pregunta y los resultados de herramientas/fuentes se tratan como datos, no como
-instrucciones. La herramienta local valida IDs, periodos, dimensiones,
-agregaciones y versión de snapshot antes de leer datos.
+El catálogo distingue métricas, entidades y periodos. El texto de la pregunta,
+el contexto del dashboard y las fuentes se tratan como datos, separados de las
+instrucciones confiables. Un filtro no autoriza otra fuente ni amplía cobertura.
+Los faltantes mantienen su significado y las estimaciones no se convierten en
+observaciones.
 
-Las funciones permitidas son `get_data_catalog`, `get_metric_definition`,
-`query_metrics`, `compare_metrics`, `get_time_series`,
-`get_source_references` y `get_dashboard_context`. Las referencias y cualquier
-estructura de gráfica proceden de resultados deterministas del worker, no de
-enlaces o valores inventados en la respuesta del modelo.
+[`Snapshot`](../../src/conversational_analytics/data/snapshot.py) comprueba
+inventario, tamaño, hashes y contratos de los datos publicados. Cada conversación
+conserva `data_version` y `semantic_version`; un cambio exige otra conversación
+antes de consultar. El proveedor `mock` usa el mismo registro determinista,
+sin generar una respuesta con un modelo.
+
+## Sesiones y turnos
+
+El primer mensaje crea una sesión con `sessions.create(..., input=..., stream=True)`.
+Los siguientes abren `sessions.events.stream(session_id)` antes de enviar
+`agent.session.input.message`. SQLite conserva los identificadores privados,
+el historial y cada resultado de herramienta mediante `(turn_id, call_id)`.
+El navegador recibe eventos del servicio, no identificadores del proveedor.
+
+Sólo `agent.session.turn.completed` confirma éxito;
+`agent.session.turn.failed` y `agent.session.turn.cancelled` conservan sus
+estados terminales, y `agent.session.idle` no completa un turno.
+El adaptador desactiva los reintentos automáticos del SDK y recupera estado ante
+una desconexión, sin reenviar una entrada ambigua. Cancelar utiliza
+`agent.session.input.cancel`; borrar una conversación solicita también eliminar
+la sesión remota. La [referencia HTTP](../../src/conversational_analytics/README.md#contrato-http)
+explica recuperación de eventos, límites y autenticación.
 
 ## Verificación y límites actuales
 
-La versión del SDK queda fijada en el extra opcional `chat` de `pyproject.toml`
-y en `uv.lock`. `tests/test_chat_openai.py` valida eventos tipados del SDK,
-llamadas de herramientas, contexto de seguimiento, terminales fallidos/cancelados,
-recuperación tras desconexión, cancelación y borrado. Estas pruebas no verifican
-permisos reales, disponibilidad del modelo, tarifas ni acceso de la cuenta al
-endpoint Agents API. El dueño eligió `gpt-6.1-sol` y el uso pagado está activo
-en producción en Railway desde el 8 de octubre de 2026, con topes diarios en
-dólares (ver [Railway](../chat/railway.md) y el [estado del chat](../chat/README.md)).
+[`tests/test_chat_openai.py`](../../tests/test_chat_openai.py) verifica eventos,
+herramientas, recuperación, cancelación y borrado con clientes simulados. No
+comprueba acceso real de una cuenta, disponibilidad del modelo ni calidad de
+sus respuestas. La [guía del chat](../chat/README.md#estado-de-entrega) separa la
+verificación operativa documentada de la evaluación de respuestas.
 
-Contrato consultado el 4 de octubre de 2026: [Agents API overview](https://developers.openai.com/api/docs/guides/agents-api/overview),
-[sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions),
-[events](https://developers.openai.com/api/docs/guides/agents-api/sessions/events) y
-[function tools](https://developers.openai.com/api/docs/guides/agents-api/tools/functions).
-También se verificaron los modelos de eventos del wheel público `openai==3.13.0`.
+Las dependencias están fijadas en `pyproject.toml` y `uv.lock`. La configuración
+y el arranque tienen una única referencia en
+[el backend](../../src/conversational_analytics/README.md#proveedores-y-configuración)
+y [operación local](../chat/operations.md). Las pruebas ordinarias no necesitan
+credenciales ni llamadas pagadas.
+
+## Recorridos visuales
+
+Los recorridos existentes explican el flujo base en un simulador. Muestran
+siete herramientas y límites ilustrativos; no acreditan la configuración
+actual ni una ejecución de producción. Cada uno tiene alternativa estática:
+
+- Chat: [GIF explicativo](../assets/chat/anatomia-chat-recorrido.gif),
+  [resumen estático](../assets/chat/anatomia-chat-resumen.png) y
+  [HTML para abrir en el navegador](anatomia-chat.html).
+- Herramientas: [GIF explicativo](../assets/chat/anatomia-herramientas-recorrido.gif),
+  [resumen estático](../assets/chat/anatomia-herramientas-resumen.png) y
+  [HTML](anatomia-herramientas.html).
+
+Contrato del proveedor consultado el 4 de octubre de 2026:
+[Agents API](https://developers.openai.com/api/docs/guides/agents-api/overview),
+[sesiones](https://developers.openai.com/api/docs/guides/agents-api/sessions),
+[eventos](https://developers.openai.com/api/docs/guides/agents-api/sessions/events)
+y [funciones](https://developers.openai.com/api/docs/guides/agents-api/tools/functions).
