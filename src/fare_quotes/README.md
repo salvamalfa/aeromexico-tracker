@@ -76,6 +76,8 @@ lecturas idénticas de una observación y todas sus procedencias; después se ap
 la revisión efectiva más reciente respaldada por alguna de esas lecturas. La
 revisión posterior se añade como otro archivo. La proyección canónica prevalece sobre una
 proyección histórica de la misma observación, conservando ambas en Silver.
+La identidad de una revisión debe ser una cadena no vacía y vincularse a una
+sola observación; se comprueban todos los vínculos antes de modificar campos.
 
 Una revisión puede enmascarar `cash_final_mxn` con nulo mientras se audita el
 carrito final sin descuentos condicionados. Los puntos se conservan por
@@ -88,6 +90,7 @@ campo: una revisión posterior de puntos no restaura un dinero aún en disputa.
 La fecha de la evidencia, convertida a Ciudad de México, debe coincidir con la
 fecha de consulta original. Un carrito observado otro día exige una captura
 nueva; no cambia el precio ni el trimestre de una observación anterior.
+La misma regla temporal se aplica a suplementos observados del pago del canje.
 El estado `captured` del capturador se normaliza a `ok`; el valor original queda
 en Bronze. Otros estados desconocidos se rechazan y Volaris sigue sin puntos.
 

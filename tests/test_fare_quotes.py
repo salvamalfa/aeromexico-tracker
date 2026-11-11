@@ -294,3 +294,51 @@ def test_repeated_sheet_read_keeps_one_effectively_reviewed_observation_and_all_
     assert result["counts"]["DOTERS"]["verified_cash"] == 2
     assert (bronze / "z-original.json").read_bytes() == original_bytes
     assert (bronze / "a-repeated.json").read_bytes() == repeated_bytes
+
+
+@pytest.mark.parametrize("capture_id", [None, "", "   "])
+def test_field_review_requires_nonempty_capture_identity_before_any_update(tmp_path, capture_id):
+    bronze = tmp_path / "fare_quotes"
+    bronze.mkdir()
+    source = snapshot(quote())
+    other = quote()
+    other["destination"] = "CUN"
+    source["values"].append(list(other.values()))
+    raw = json.dumps(source).encode()
+    (bronze / "source.json").write_bytes(raw)
+    reviews = tmp_path / "fare_quote_field_reviews"
+    reviews.mkdir()
+    review = dict(
+        schema_version="fare_quote_field_review_v1", provider="DOTERS", capture_id=capture_id,
+        source_snapshot_sha256=hashlib.sha256(raw).hexdigest(),
+        reviewed_at="2026-11-10T23:00:00-06:00", effective_overrides=dict(points=None),
+    )
+    (reviews / "review.json").write_text(json.dumps(review))
+    with pytest.raises(ValueError, match="nonempty capture_id"):
+        rebuild(bronze, tmp_path / "silver", tmp_path / "gold.json")
+    assert not (tmp_path / "silver/observations.json").exists()
+
+
+@pytest.mark.parametrize("same_snapshot", [True, False])
+def test_review_cannot_bind_a_reused_capture_id_to_two_observations(tmp_path, same_snapshot):
+    bronze = tmp_path / "fare_quotes"
+    bronze.mkdir()
+    source = snapshot(quote(capture_key="reused"))
+    other = quote(capture_key="reused")
+    other["destination"] = "CUN"
+    if same_snapshot:
+        source["values"].append(list(other.values()))
+    else:
+        (bronze / "other.json").write_text(json.dumps(snapshot(other)))
+    raw = json.dumps(source).encode()
+    (bronze / "source.json").write_bytes(raw)
+    reviews = tmp_path / "fare_quote_field_reviews"
+    reviews.mkdir()
+    review = dict(
+        schema_version="fare_quote_field_review_v1", provider="DOTERS", capture_id="reused",
+        source_snapshot_sha256=hashlib.sha256(raw).hexdigest(),
+        reviewed_at="2026-11-10T23:00:00-06:00", effective_overrides=dict(points=None),
+    )
+    (reviews / "review.json").write_text(json.dumps(review))
+    with pytest.raises(ValueError, match="unique observation"):
+        rebuild(bronze, tmp_path / "silver", tmp_path / "gold.json")

@@ -31,6 +31,8 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
         review = json.loads(raw)
         if review.get("schema_version") != "fare_quote_field_review_v1":
             raise ValueError("Unknown field review schema")
+        if not isinstance(review.get("capture_id"), str) or not review["capture_id"].strip():
+            raise ValueError("Field review requires a nonempty capture_id")
         reviewed_at = datetime.fromisoformat(review["reviewed_at"].replace("Z", "+00:00"))
         if reviewed_at.tzinfo is None:
             raise ValueError("Field review timestamp needs a timezone")
@@ -89,6 +91,19 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
                         observations[identity]["sources"].append(source)
             else:
                 observations[identity] = row
+    targets = {key: set() for key in field_reviews}
+    for identity, row in observations.items():
+        for source in row["sources"]:
+            key = (row["provider"], row["capture_id"], source["snapshot_sha256"])
+            if key in targets:
+                targets[key].add(identity)
+    # Authenticate every target before changing any observation. An id reused
+    # for conflicting rows cannot authorize a field-level update to either one.
+    for identities in targets.values():
+        if not identities:
+            raise ValueError("Field review has no matching snapshot identity and fingerprint")
+        if len(identities) != 1 or identities & conflicts:
+            raise ValueError("Field review capture_id must name a unique observation")
     applied_reviews = set()
     # A snapshot is a read of an observation. Merge identical reads before a
     # hash-anchored review changes the effective fields of that observation.
@@ -181,6 +196,11 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
     return payload
 
 
+def _require_observation_date(row, observed_at):
+    if observed_at.astimezone(ZoneInfo("America/Mexico_City")).date().isoformat() != row["query_date"]:
+        raise ValueError("Observed final amount crosses the Mexico City query date; capture a new observation")
+
+
 def _apply_field_review(row, review):
     for field, value in review["effective_overrides"].items():
         if field not in {"points", "redemption_taxes_mxn", "cash_final_mxn"}:
@@ -202,8 +222,7 @@ def _apply_field_review(row, review):
             raise ValueError("Observed cash correction lacks verified, timestamped DOM evidence")
         if not isinstance(correction, dict) or set(correction) != {"cash_final_mxn"}:
             raise ValueError("Observed cash correction attempts an unauthorized field")
-        if observed_at.astimezone(ZoneInfo("America/Mexico_City")).date().isoformat() != row["query_date"]:
-            raise ValueError("Cash correction crosses the Mexico City query date; capture a new observation")
+        _require_observation_date(row, observed_at)
         final_cash = amount(correction["cash_final_mxn"])
         if final_cash is None:
             raise ValueError("Observed cash correction requires a final MXN amount")
@@ -218,6 +237,7 @@ def _apply_field_review(row, review):
             or not re.fullmatch(r"[a-f0-9]{64}", evidence.get("dom_sha256", ""))
         ):
             raise ValueError("Observed supplement lacks verified, timestamped DOM evidence")
+        _require_observation_date(row, observed_at)
         for field, value in review["observed_supplement"].items():
             if field not in {"redemption_cash_mxn", "redemption_carrier_mxn"}:
                 raise ValueError("Observed supplement attempts an unauthorized field")

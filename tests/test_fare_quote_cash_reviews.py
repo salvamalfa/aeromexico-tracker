@@ -109,6 +109,32 @@ def test_cash_correction_uses_exact_mexico_date_including_quarter_boundary(audit
             _apply_field_review(row, review)
 
 
+@pytest.mark.parametrize("query_date,observed_at,accepted", [
+    ("2026-11-10", "2026-11-11T05:59:59Z", True),
+    ("2026-11-10", "2026-11-11T06:00:00Z", False),
+    ("2026-12-31", "2027-01-01T05:59:59Z", True),
+    ("2026-12-31", "2027-01-01T06:00:00Z", False),
+])
+def test_redemption_supplement_uses_same_mexico_query_date(query_date, observed_at, accepted):
+    raw = quote()
+    raw.update(query_date=query_date, departure_date="2027-02-01", return_date="2027-02-08",
+               capture_key="FCO1-Main", cash_final_mxn=36995.26, points=242400, redemption_taxes_mxn=2298.29)
+    row = canonical_row(raw, "AMR")
+    review = {
+        "effective_overrides": {}, "verified": True,
+        "observed_supplement": {"redemption_cash_mxn": 2313.29, "redemption_carrier_mxn": 15},
+        "supplement_evidence": {"observed_at": observed_at, "evidence_url": "https://example.test/retained-dom",
+                                "dom_sha256": "a" * 64, "verified": True},
+    }
+    if accepted:
+        _apply_field_review(row, review)
+        assert row["redemption_cash_mxn"] == 2313.29 and row["redemption_carrier_mxn"] == 15
+        assert row["points"] == 242400 and row["redemption_taxes_mxn"] == 2298.29
+    else:
+        with pytest.raises(ValueError, match="capture a new observation"):
+            _apply_field_review(row, review)
+
+
 @pytest.mark.parametrize("change", [
     "unverified_review", "unverified_evidence", "no_evidence", "naive_time",
     "no_dom_hash", "wrong_source", "other_field", "null_amount", "direct_override",
