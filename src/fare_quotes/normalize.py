@@ -195,8 +195,9 @@ def canonical_row(
         if normalized[key] and not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", normalized[key]):
             raise ValueError(f"Invalid local flight time: {key}")
     normalized["status"] = "legacy_unverified" if legacy else text(raw.get("status")) or "error"
-    if normalized["status"] == "partial":
-        normalized["status"] = "partial_redemption"
+    normalized["status"] = {"partial": "partial_redemption", "captured": "ok"}.get(
+        normalized["status"], normalized["status"]
+    )
     if normalized["status"] not in STATUSES:
         raise ValueError("Unknown capture status")
     if legacy:

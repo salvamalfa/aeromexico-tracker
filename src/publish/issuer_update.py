@@ -382,6 +382,15 @@ def publish_issuer(record_paths: list[Path], out_dir: Path, *, package_path: Pat
         target.write_bytes(first[2])
     (web / "executive.json").write_bytes(first[3])
     dist = gate.build_web()
+    # The historical verifier above authenticates the served marker. Reapply
+    # that exact metadata to the fresh build before comparing every frontend
+    # byte; the issuer candidate itself keeps the baseline's index unchanged.
+    from .presentation_release import embed_presentation_receipt, read_presentation_receipt
+
+    marker = read_presentation_receipt(baseline)
+    if marker is not None:
+        index = dist / "index.html"
+        index.write_bytes(embed_presentation_receipt(index.read_bytes(), marker))
     if transport.frontend_entries(dist) != transport.frontend_entries(baseline):
         raise ValueError(
             "Issuer-only update requires unchanged dashboard frontend; review UI changes separately"

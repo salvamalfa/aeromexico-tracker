@@ -9,6 +9,7 @@ import re
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from src.fare_quotes.normalize import amount, decode_snapshot, digest
 
@@ -34,10 +35,11 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
         if reviewed_at.tzinfo is None:
             raise ValueError("Field review timestamp needs a timezone")
         key = (review["provider"], review["capture_id"], review["source_snapshot_sha256"])
-        if key in field_reviews and field_reviews[key][0] == reviewed_at and field_reviews[key][1] != review:
+        prior = field_reviews.setdefault(key, [])
+        if any(timestamp == reviewed_at and value != review for timestamp, value in prior):
             raise ValueError("Ambiguous field reviews at the same timestamp")
-        if key not in field_reviews or field_reviews[key][0] < reviewed_at:
-            field_reviews[key] = (reviewed_at, review)
+        if (reviewed_at, review) not in prior:
+            prior.append((reviewed_at, review))
         snapshots.append(
             dict(path=str(path.resolve()), sha256=hashlib.sha256(raw).hexdigest(), kind="field_review")
         )
@@ -96,13 +98,22 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
             key = (row["provider"], row["capture_id"], source["snapshot_sha256"])
             if key in field_reviews:
                 applied_reviews.add(key)
-                candidates.append(field_reviews[key])
+                candidates.extend(field_reviews[key])
         if candidates:
-            latest = max(timestamp for timestamp, _ in candidates)
-            reviews = [review for timestamp, review in candidates if timestamp == latest]
-            if any(review != reviews[0] for review in reviews):
-                raise ValueError("Ambiguous latest reviews for an observation")
-            _apply_field_review(row, reviews[0])
+            by_time = {}
+            for timestamp, review in candidates:
+                if timestamp in by_time and by_time[timestamp] != review:
+                    raise ValueError("Ambiguous latest reviews for an observation")
+                by_time[timestamp] = review
+            # Later review of another field must not resurrect a disputed cash
+            # price. Replay append-only decisions in time, retaining every event.
+            reviews = [review for _, review in sorted(by_time.items())]
+            for review in reviews:
+                _apply_field_review(row, review)
+            row["field_review_history"] = reviews
+            row["observation_id"] = digest(
+                {k: v for k, v in row.items() if k not in {"sources", "raw_source_row", "observation_id"}}
+            )
     if set(field_reviews) != applied_reviews:
         raise ValueError("Field review has no matching snapshot identity and fingerprint")
     for identity in conflicts:
@@ -152,7 +163,7 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
                 r["status"] in {"ok", "partial_redemption"} and r["cash_final_mxn"] is not None
                 for r in selected
             ),
-            complete=sum(r["status"] == "ok" for r in selected),
+            complete=sum(r["status"] == "ok" and r["cash_final_mxn"] is not None for r in selected),
         )
     payload = dict(
         schema_version="local_fare_quotes_v1",
@@ -172,9 +183,31 @@ def rebuild(bronze: Path, silver: Path, gold: Path) -> dict:
 
 def _apply_field_review(row, review):
     for field, value in review["effective_overrides"].items():
-        if field not in {"points", "redemption_taxes_mxn"}:
+        if field not in {"points", "redemption_taxes_mxn", "cash_final_mxn"}:
             raise ValueError("Field review attempts an unauthorized override")
+        if field == "cash_final_mxn" and value is not None:
+            raise ValueError("A cash correction requires explicit observed_correction evidence")
         row[field] = amount(value, integer=field == "points")
+    if "observed_correction" in review:
+        correction = review["observed_correction"]
+        evidence = review.get("correction_evidence", {})
+        observed_at = datetime.fromisoformat(evidence.get("observed_at", "").replace("Z", "+00:00"))
+        if (
+            review.get("verified") is not True
+            or evidence.get("verified") is not True
+            or observed_at.tzinfo is None
+            or not evidence.get("evidence_url", "").startswith("https://")
+            or not re.fullmatch(r"[a-f0-9]{64}", evidence.get("dom_sha256", ""))
+        ):
+            raise ValueError("Observed cash correction lacks verified, timestamped DOM evidence")
+        if not isinstance(correction, dict) or set(correction) != {"cash_final_mxn"}:
+            raise ValueError("Observed cash correction attempts an unauthorized field")
+        if observed_at.astimezone(ZoneInfo("America/Mexico_City")).date().isoformat() != row["query_date"]:
+            raise ValueError("Cash correction crosses the Mexico City query date; capture a new observation")
+        final_cash = amount(correction["cash_final_mxn"])
+        if final_cash is None:
+            raise ValueError("Observed cash correction requires a final MXN amount")
+        row["cash_final_mxn"] = final_cash
     if review.get("observed_supplement"):
         evidence = review.get("supplement_evidence", {})
         observed_at = datetime.fromisoformat(evidence["observed_at"].replace("Z", "+00:00"))
@@ -190,7 +223,7 @@ def _apply_field_review(row, review):
                 raise ValueError("Observed supplement attempts an unauthorized field")
             row[field] = amount(value)
     row["field_review"] = review
-    row["source_observation_id"] = row["observation_id"]
+    row.setdefault("source_observation_id", row["observation_id"])
     row["observation_id"] = digest(
         {k: v for k, v in row.items() if k not in {"sources", "raw_source_row", "observation_id"}}
     )

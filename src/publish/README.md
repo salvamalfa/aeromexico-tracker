@@ -200,6 +200,10 @@ sus cohortes y el registro nuevo con el productor actual, antes y después del
 build. Solo cambian la tesis nueva, el bloque ejecutivo de esa entidad y el recibo
 `issuer-publication.json`. Industria, las otras entidades, frontend y todos los
 demás datasets se conservan. No hay una barrera que espere otras aerolíneas.
+Si el baseline lleva el marcador HTML de una publicación de tarifas o de
+presentación, primero lo autentica su verificador histórico. La comparación
+del frontend aplica ese mismo marcador al build nuevo y exige igualdad exacta
+de todo el cierre de archivos; el emisor conserva el HTML y los recibos servidos.
 
 ```bash
 python -m src.publish.issuer_update --inspect-data <paquete-tecnico.json>

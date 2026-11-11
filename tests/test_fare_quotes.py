@@ -118,6 +118,30 @@ def test_volaris_null_is_inapplicable_not_zero():
     assert result["points_applicability"] == "not_applicable"
 
 
+def test_volaris_capture_workflow_status_preserves_raw_and_null_points():
+    row = quote()
+    row.update(
+        provider="volaris", status="captured", points=None, points_label="No aplica",
+        redemption_taxes_mxn=None, notes=None,
+    )
+    source = snapshot(row)
+    source.update(provider="VOLARIS", sheet_name="Vuelos")
+    rows, errors = decode_snapshot(source)
+    assert not errors
+    assert rows[0]["status"] == "ok"
+    assert rows[0]["points"] is None
+    assert rows[0]["points_applicability"] == "not_applicable"
+    assert source["values"][1][list(row).index("status")] == "captured"
+
+
+def test_unknown_capture_status_is_rejected():
+    row = quote()
+    row.update(status="made_up_status")
+    rows, errors = decode_snapshot(snapshot(row))
+    assert not rows
+    assert errors[0]["reason"] == "Unknown capture status"
+
+
 def test_timezone_uses_mexico_date_not_snapshot_fetch_time():
     row = quote()
     row.update(captured_at="2026-11-11T02:00:00Z")
