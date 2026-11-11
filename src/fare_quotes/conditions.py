@@ -194,23 +194,32 @@ def baggage_facts(text):
         r"|(?P<carry_on>equipaje de mano)|(?P<checked_baggage>(?:(?:maleta|equipaje) )?documentad[oa])"
     )
     for clause in re.split(r"[.;]|\bpero\b|\bsin embargo\b", text):
-        previous, previous_value = None, None
+        previous, previous_value, previous_uncertain = None, None, False
         for mention in re.finditer(items, clause):
             prefix = clause[: mention.start()]
             between = clause[previous.end() : mention.start()] if previous else prefix
             negative = re.search(r"\b(?:sin|no incluye[n]?)(?: (?:un|una|ningun|ninguna|el|la))?\s*$", prefix)
             coordinated = previous is not None and re.fullmatch(r"\s*(?:ni|/|o|y|,)\s*", between)
             positive_reset = re.search(r"\b(?:con|incluye[n]?)\s*$", between)
+            # Uncertainty must govern this item, not an unrelated refund/login
+            # restriction earlier in the clause. Carry it only across its list.
+            uncertain = bool(
+                re.search(
+                    r"\b(?:no se (?:confirmo|confirma|mostro|muestra|observo)|sin confirmacion de)"
+                    r"\s+(?:(?:el|la|un|una) )?$",
+                    prefix,
+                )
+            ) or (bool(coordinated) and previous_uncertain)
             if negative or (previous_value is False and coordinated):
                 value = False
             elif positive_reset:
                 value = True
-            elif previous_value is False or re.search(r"\b(?:no|sin)\b", prefix):
+            elif previous_value is False or uncertain:
                 value = None
             else:
                 value = True
             values[mention.lastgroup].add(value)
-            previous, previous_value = mention, value
+            previous, previous_value, previous_uncertain = mention, value, value is None
     return {key: next(iter(found)) if len(found) == 1 else None for key, found in values.items()}
 
 

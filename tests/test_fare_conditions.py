@@ -185,6 +185,72 @@ def test_coordinated_baggage_negation_stops_at_a_new_positive_claim(text, expect
     assert (facts["personal_item"], facts["carry_on"], facts["checked_baggage"]) == expected
 
 
+@pytest.mark.parametrize(
+    "route,text",
+    [
+        (
+            "MEX-SJD",
+            "Precio regular público sin cuenta ni descuentos exclusivos; 1 adulto, ida y vuelta directos. "
+            "Zero no reembolsable: artículo personal 45×35×20 cm bajo asiento, "
+            "sin equipaje de mano ni documentado, "
+            "check-in en línea 24 horas antes, último en abordar, sin cambios de vuelo. "
+            "Cancelación sólo dentro de las primeras 24 horas de la compra. "
+            "No se añadieron extras opcionales. "
+            "Total regular del carrito incluye TUA obligatoria.",
+        ),
+        (
+            "IAH-MEX",
+            "1 adulto, redondo, vuelos directos, precio regular público en MXN sin login ni extras. "
+            "Zero no reembolsable: artículo personal 45×35×20 cm; sin equipaje de mano o documentado; "
+            "check-in en línea 24 horas antes; último en abordar; sin cambios de vuelo.",
+        ),
+        (
+            "GDL-ORD",
+            "1 adulto, vuelos directos, precio regular público en MXN sin cuenta ni membresía. "
+            "Zero no reembolsable: artículo personal 45×35×20 cm bajo el asiento; "
+            "sin equipaje de mano ni documentado; "
+            "check-in en línea 24 horas antes; último en abordar; sin cambios de reserva. "
+            "Se eligió Viajar sin equipaje y Continuar sin iniciar sesión. Sin extras ni datos personales.",
+        ),
+        (
+            "GDL-LAX",
+            "Público regular, 1 adulto, ambos vuelos directos. Zero no reembolsable: "
+            "artículo personal 45x35x20 cm; sin equipaje de mano ni documentado, sin cambios de vuelo; "
+            "check-in en línea 24 horas antes, último en abordar. Sin extras y sin iniciar sesión.",
+        ),
+        (
+            "BOG-CUN",
+            "Precio regular público, 1 adulto, ambos vuelos directos; Zero no reembolsable, "
+            "artículo personal 45×35×20 cm, sin equipaje de mano o documentado, "
+            "check-in en línea 24 horas antes, "
+            "último en abordar, sin cambios de vuelo. Sin extras; carrito como invitado después de "
+            "Continuar sin iniciar sesión. No se ingresaron datos personales ni pagos.",
+        ),
+        (
+            "MEX-ORD",
+            "Un adulto; ida y vuelta directa; Precio regular público sin iniciar sesión; "
+            "Zero no reembolsable, 1 artículo personal 45×35×20 cm; sin equipaje de mano ni documentado; "
+            "check-in en línea disponible 24 horas antes; último en abordar; sin cambios de vuelo. "
+            "Sin extras ni datos personales.",
+        ),
+    ],
+)
+def test_unrelated_negation_in_six_observed_cards_does_not_erase_personal_item(route, text):
+    # These exact observed card strings supply the evidence; the Zero label does not.
+    facts = condition_facts(observation(provider="DOTERS", fare="Other documented family"), text)
+    assert facts["personal_item"] is True, route
+    assert facts["personal_item_max_cm"] == [45, 35, 20]
+    assert facts["carry_on"] is False and facts["checked_baggage"] is False
+
+
+@pytest.mark.parametrize("prefix", ["No reembolsable:", "Sin iniciar sesión,", "Sin escalas;"])
+def test_unrelated_negations_are_not_baggage_uncertainty(prefix):
+    facts = condition_facts(observation(fare="Unknown"), prefix + " artículo personal 45 x 35 x 20 cm")
+    assert facts["personal_item"] is True
+    assert facts["personal_item_max_cm"] == [45, 35, 20]
+    assert facts["carry_on"] is None and facts["checked_baggage"] is None
+
+
 def test_mixed_real_operators_require_explicit_common_benefits_evidence():
     row = plus()
     notes = json.loads(row["notes"])
