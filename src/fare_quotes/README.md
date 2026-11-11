@@ -120,6 +120,10 @@ SOURCE de su productor histórico hasta la edición financiera anterior; no
 aplican el runtime actual al SOURCE heredado. Las comparaciones editoriales,
 financieras y de snapshot mantienen después sus replays originales de fuentes
 y aprobaciones, y rechazan cambios en datos o autoridad antes de usar el padre.
+El commit autenticado de esa edición llega hasta el checkout de configuración,
+con igualdad del manifiesto bruto y ascendencia de edición y productor; no se
+deduce de los refs actuales. Snapshot elige el replay y las comprobaciones de
+Vuelos por el perfil de comparación, conservando las ramas originales.
 
 La preparación de esta entrega tiene pruebas focalizadas de datos y gate, suite
 web y revisión visual del tooltip. La suite general local está limitada por

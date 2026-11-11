@@ -94,6 +94,94 @@ def test_snapshot_and_editorial_comparison_use_the_real_fare_chain(official_fare
         context.close()
 
 
+def _snapshot_fixture(official_fare, monkeypatch):
+    from types import SimpleNamespace
+    from tests import test_site_parity as snapshot
+
+    repo, spec = official_fare
+    subprocess.run(["git", "update-ref", "refs/remotes/origin/master", "HEAD"], cwd=repo, check=True)
+    monkeypatch.setattr(snapshot, "SITE_DIR", repo / "site")
+    monkeypatch.setattr(snapshot, "DATA_DIR", repo / "site/data/v1")
+    snapshot._replay_published_cohorts.cache_clear()
+    request = SimpleNamespace(config=SimpleNamespace(getoption=lambda name: name == "--require-local-data"))
+    return snapshot, repo, spec, request
+
+
+def test_snapshot_replay_reaches_original_approval_guard_after_intermediate_config(official_fare, monkeypatch):
+    snapshot, _, _, _ = _snapshot_fixture(official_fare, monkeypatch)
+    # This synthetic public fixture deliberately has no private approval
+    # provenance. Reaching the real refusal proves we opened the historical
+    # config without inventing an approval or stubbing any verifier.
+    with pytest.raises(ValueError, match="Missing committed approval provenance: config/publish/preserved-analysis.json"):
+        snapshot._replay_published_cohorts()
+
+
+def test_complete_snapshot_after_fare_committed_at_head_and_protected_ref(official_fare, monkeypatch, tmp_path):
+    from src.web_export.flights import recombine_flights
+
+    snapshot, repo, _, request = _snapshot_fixture(official_fare, monkeypatch)
+    financial = json.loads((repo / "site/data/v1/executive.json").read_bytes())
+    payload = json.loads((repo / "site/data/v1/analysis/2026Q2.json").read_bytes())
+    entry = manifest.load_manifest(repo / "site")["analysis_manifest"][0]
+    readings = []
+
+    def fixture_source_reading(selected):
+        # Only private source data reading is deterministic here. Fare/SOURCE,
+        # branch selection, Git, exports and the full Snapshot test stay real.
+        assert selected == entry
+        readings.append(selected)
+        return payload
+
+    monkeypatch.setattr(snapshot, "_export_approved_entry", fixture_source_reading)
+    published = snapshot.published_executive.__wrapped__(financial)
+    snapshot.test_site_flights_and_executive_data_match_a_fresh_export(
+        request, tmp_path, recombine_flights(repo / "site/data/v1"), published,
+    )
+    assert readings == [entry]
+    assert (tmp_path / "data/v1/flights/quarters.json").is_file()
+
+
+def test_snapshot_opens_exact_config_of_authenticated_intermediate_edition(official_fare, monkeypatch):
+    from tests._site_publication_parity import _published_approval_config_view
+
+    snapshot, repo, spec, _ = _snapshot_fixture(official_fare, monkeypatch)
+    with snapshot._comparison_edition() as (comparison, commit):
+        raw = (comparison / manifest.MANIFEST_NAME).read_bytes()
+        assert commit == spec["baseline_commit"]
+        for ref in ("HEAD", "origin/master"):
+            current = subprocess.check_output(["git", "show", f"{ref}:site/publication_manifest.json"], cwd=repo)
+            assert current != raw and any(p["path"] == fare_scope.PROOF for p in json.loads(current)["files"])
+        with _published_approval_config_view(repo, raw, verified_commit=commit) as (view, trusted):
+            assert trusted == commit
+            assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=view).decode().strip() == commit
+            expected = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", commit, "--", "config/publish"], cwd=repo).decode().splitlines()
+            assert sorted(p.relative_to(view).as_posix() for p in (view / "config/publish").rglob("*") if p.is_file()) == expected
+            for name in expected:
+                assert (view / name).read_bytes() == subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=repo)
+
+
+@pytest.mark.parametrize("mutation", ["raw", "wrong_edition", "malformed_commit", "nonancestor"])
+def test_historical_config_refuses_nominated_commit_or_manifest_changes(official_fare, monkeypatch, mutation):
+    from tests._site_publication_parity import _published_approval_config_view
+
+    snapshot, repo, _, _ = _snapshot_fixture(official_fare, monkeypatch)
+    with snapshot._comparison_edition() as (comparison, commit):
+        raw = (comparison / manifest.MANIFEST_NAME).read_bytes()
+        if mutation == "raw":
+            raw += b" "
+        elif mutation == "wrong_edition":
+            commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo).decode().strip()
+        elif mutation == "malformed_commit":
+            commit = "HEAD"
+        else:
+            tree = subprocess.check_output(["git", "rev-parse", f"{commit}^{{tree}}"], cwd=repo).decode().strip()
+            commit = subprocess.check_output(["git", "commit-tree", tree, "-m", "unrelated identical manifest"], cwd=repo).decode().strip()
+            assert subprocess.check_output(["git", "show", f"{commit}:site/publication_manifest.json"], cwd=repo) == raw
+        with pytest.raises(ValueError, match="Authenticated publication"):
+            with _published_approval_config_view(repo, raw, verified_commit=commit):
+                pytest.fail("Unverified historical configuration was accepted")
+
+
 @pytest.mark.parametrize("mutation", ["financial_bytes", "approval", "source_authority", "fare_policy", "aggregate"])
 def test_fare_parity_rejects_changed_data_or_authority_before_yield(official_fare, tmp_path, mutation):
     repo, _ = official_fare

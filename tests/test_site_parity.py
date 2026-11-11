@@ -38,12 +38,12 @@ from src.publish import manifest as manifest_mod
 from src.publish.verify import verify_site
 from src.web_export.analysis import MissingAnalysisInput
 from src.web_export.executive import export_executive
-from src.web_export.flights import export_flights, recombine_flights
 from tests._site_publication_parity import (
     _published_approval_config_view,
     _with_citation_labels,
+    assert_flight_data_parity,
     assert_reading_parity,
-    official_map_baseline,
+    official_map_edition,
     verify_current_publication,
 )
 
@@ -66,13 +66,19 @@ def _baseline_json(relative: str) -> dict:
 
 @contextmanager
 def _comparison_site():
+    with _comparison_edition() as (site, _):
+        yield site
+
+
+@contextmanager
+def _comparison_edition():
     from scripts.check_pages_publication import verifier_for
     from src.publish.financial_scope import verify_financial
 
     if verifier_for(SITE_DIR, SITE_DIR.parent) != "src.publish.fare_scope":
-        yield SITE_DIR
+        yield SITE_DIR, None
         return
-    with official_map_baseline(SITE_DIR, SITE_DIR.parent, verify_financial) as historical:
+    with official_map_edition(SITE_DIR, SITE_DIR.parent, verify_financial) as historical:
         yield historical
 
 
@@ -80,12 +86,12 @@ def _comparison_site():
 def _replay_published_cohorts() -> dict:
     from scripts.check_pages_publication import verifier_for
 
-    with _comparison_site() as site:
-        result = _replay_cohorts_at(site, SITE_DIR.parent)
+    with _comparison_edition() as (site, commit):
+        result = _replay_cohorts_at(site, SITE_DIR.parent, verified_commit=commit)
         return {**result, "parity_profile": verifier_for(site, SITE_DIR.parent)}
 
 
-def _replay_cohorts_at(site, repo) -> dict:
+def _replay_cohorts_at(site, repo, *, verified_commit=None) -> dict:
     """Validate every published entry using its committed verifier and full ledger."""
     from src.publish.approval_cohorts import verify_approval_cohorts
 
@@ -104,7 +110,9 @@ def _replay_cohorts_at(site, repo) -> dict:
         if "entity_key" in entry:
             path /= entry["entity_key"]
         paths.append(path / entry["period_id"] / f"{entry['version']}.json")
-    with _published_approval_config_view(repo, (site / "publication_manifest.json").read_bytes()) as (
+    with _published_approval_config_view(
+        repo, (site / "publication_manifest.json").read_bytes(), verified_commit=verified_commit
+    ) as (
         view,
         trusted,
     ):
@@ -370,35 +378,8 @@ def test_site_flights_and_executive_data_match_a_fresh_export(
     _require_site(request)
     out_dir = tmp_path / "data" / "v1"
     export_executive(published_executive, out_dir, skip_input_check=True)
-    manifest = manifest_mod.load_manifest(SITE_DIR)
-    from scripts.check_pages_publication import verifier_for
-
-    if verifier_for(SITE_DIR, SITE_DIR.parent) in {
-        "src.publish.quarterly_story_scope", "src.publish.afac_history_scope", "src.publish.fare_scope",
-    }:
-        from tests._quarterly_story_parity import replay_data
-
-        with _comparison_site() as comparison:
-            rebuilt = replay_data(comparison, SITE_DIR.parent)
-        assert len([name for name in rebuilt if name.startswith("data/v1/flights/")]) == 9
-    elif any(e["period_id"] == "2026Q3" and "entity_key" not in e for e in manifest["analysis_manifest"]):
-        prefix = "data/v1/flights/"
-        expected = {
-            r["path"]: r
-            for r in _baseline_json("publication_manifest.json")["files"]
-            if r["path"].startswith(prefix)
-        }
-        actual = {r["path"]: r for r in manifest["files"] if r["path"].startswith(prefix)}
-        assert actual == expected
-        assert {
-            p.relative_to(SITE_DIR).as_posix() for p in (DATA_DIR / "flights").rglob("*") if p.is_file()
-        } == set(expected)
-        for name, row in expected.items():
-            raw = (SITE_DIR / name).read_bytes()
-            assert len(raw) == row["bytes"] and hashlib.sha256(raw).hexdigest() == row["sha256"]
-    else:
-        export_flights(flight_payload, out_dir, skip_input_check=True)
-        assert recombine_flights(out_dir) == recombine_flights(DATA_DIR)
+    with _comparison_site() as comparison:
+        assert_flight_data_parity(SITE_DIR, comparison, SITE_DIR.parent, out_dir, flight_payload, _baseline_json)
     fresh_executive = json.loads((out_dir / "executive.json").read_text(encoding="utf-8"))
     site_executive = json.loads((DATA_DIR / "executive.json").read_text(encoding="utf-8"))
     assert fresh_executive == site_executive
