@@ -283,6 +283,82 @@ def test_full_item_claim_honors_postfix_restrictions_and_separate_affirmations(t
     assert (facts["personal_item"], facts["carry_on"], facts["checked_baggage"]) == expected
 
 
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Un adulto; check-in en línea 24 horas antes del primer vuelo; sin reembolso", (False, None, None)),
+        ("Check-in en línea 24 horas antes del primer vuelo", (None, None, None)),
+        ("Check-in 24 horas antes del primer vuelo; reembolso", (None, None, None)),
+        ("Reembolso disponible; check-in 24 horas antes del primer vuelo", (True, None, None)),
+        ("Sin cambios ni reembolso; check-in 24 horas antes del primer vuelo", (False, None, None)),
+        ("Reembolso y cancelación no incluidos", (False, None, None)),
+        ("Reembolso no permitido hasta 24 horas antes del primer vuelo", (False, None, None)),
+        ("Check-in online 24 hours before first flight; no refund", (False, None, None)),
+        ("No changes or refunds; online check-in 24 hours before flight", (False, None, None)),
+        ("Refunds not included; check-in 24 hours before first flight", (False, None, None)),
+        ("Reembolso hasta 24 horas antes del primer vuelo", (True, "before_first_departure_24h", None)),
+        (
+            "Check-in 7 días antes; reembolso hasta 24 horas antes del primer vuelo "
+            "a la forma original de pago",
+            (True, "before_first_departure_24h", True),
+        ),
+        (
+            "Refund available until 24 hours before first flight to original payment",
+            (True, "before_first_departure_24h", True),
+        ),
+        ("Refundable up to 24 hours before first flight", (True, "before_first_departure_24h", None)),
+        (
+            "Cancelación hasta 24 horas antes de la salida del primer vuelo "
+            "con reembolso total a la forma original de pago",
+            (True, "before_first_departure_24h", True),
+        ),
+        ("Cancelación dentro de primeras 24 horas tras compra", (None, "purchase_24h", None)),
+        (
+            "No reembolsable salvo cancelación dentro de primeras 24 h tras compra",
+            (False, "purchase_24h", None),
+        ),
+        ("Nonrefundable after first 24 hours following purchase", (False, None, None)),
+        (
+            "Non-refundable except cancellation within first 24 hours following purchase",
+            (False, "purchase_24h", None),
+        ),
+        ("Refund within 24 hours after purchase", (True, "purchase_24h", None)),
+        ("Refundable until 48 hours before first flight", (None, None, None)),
+        (
+            "Reembolso dentro de primeras 24 horas tras compra y hasta 24 horas antes del primer vuelo",
+            (None, None, None),
+        ),
+        (
+            "No reembolsable salvo cancelación dentro de primeras 24 horas tras compra "
+            "si el vuelo sale al menos 7 días después",
+            (False, None, None),
+        ),
+        (
+            "Refundable within 24 hours after purchase if departure is at least 7 days later",
+            (None, None, None),
+        ),
+        (
+            "Reembolso hasta 24 horas antes del primer vuelo si se compró con mínimo 7 días de antelación",
+            (None, None, None),
+        ),
+        ("Reembolso no confirmado hasta 24 horas antes del primer vuelo", (None, None, None)),
+        ("No se confirmó reembolso hasta 24 horas antes del primer vuelo", (None, None, None)),
+        ("Reembolso a la forma original de pago no incluido", (False, None, None)),
+        ("Sin reembolso; cancelación dentro de primeras 24 horas tras compra", (False, None, None)),
+        ("Sin cancelación; check-in en línea 24 horas antes del primer vuelo", (None, None, None)),
+        ("Check-in 24 horas antes del primer vuelo y sin reembolso", (False, None, None)),
+        ("Check-in 24 horas antes del primer vuelo y reembolso disponible", (True, None, None)),
+        ("Reembolso disponible y check-in 24 horas antes del primer vuelo", (True, None, None)),
+        ("Not refundable; check-in 24 hours before first flight", (False, None, None)),
+        ("No es reembolsable; check-in 24 horas antes del primer vuelo", (False, None, None)),
+        ("No se permite el reembolso hasta 24 horas antes del primer vuelo", (False, None, None)),
+    ],
+)
+def test_refund_claim_owns_its_eligibility_window_and_payment_form(text, expected):
+    facts = condition_facts(observation(), text)
+    assert (facts["refundable"], facts["refund_deadline"], facts["refund_original_payment"]) == expected
+
+
 def test_mixed_real_operators_require_explicit_common_benefits_evidence():
     row = plus()
     notes = json.loads(row["notes"])
@@ -345,7 +421,7 @@ def test_observed_english_fare_card_and_spanish_abbreviations_keep_restrictions(
     assert facts["carry_on"] is False and facts["checked_baggage"] is False
     assert facts["checkin_channel"] == "online" and facts["checkin_advance_hours"] == 24
     assert facts["boarding"] == "last" and facts["changes"] == "not_included"
-    assert facts["refundable"] is False and facts["refund_deadline"] == "purchase_24h"
+    assert facts["refundable"] is False and facts["refund_deadline"] is None
     assert facts["optional_extras_added"] is False
     for abbreviated in ("check-in 24h antes; sin cambios ni adelanto gratis", "check-in en linea 24 h antes"):
         assert condition_facts(observation(), abbreviated)["checkin_advance_hours"] == 24

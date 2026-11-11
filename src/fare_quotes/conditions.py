@@ -6,6 +6,8 @@ import json
 import re
 import unicodedata
 
+from src.fare_quotes.refunds import refund_facts
+
 VERSION = "fare_condition_facts_v1"
 FAMILIES = {"main": "Main", "premier": "Premier", "zero": "Zero", "plus": "Plus"}
 CABINS = {
@@ -137,10 +139,6 @@ def observed_text(value):
         ("24 hours before flight", "24 horas antes"),
         ("last to board", "ultimo en abordar"),
         ("no flight changes", "sin cambios de vuelo"),
-        (
-            "nonrefundable after first 24 hours following purchase",
-            "no reembolsable; primeras 24 horas tras compra",
-        ),
         ("no optional extras selected", "no se anadieron extras opcionales"),
     ):
         text = text.replace(original, equivalent)
@@ -338,16 +336,7 @@ def condition_facts(row, private_conditions):
     if facts["checked_baggage"] is True:
         facts["checked_baggage_kg"] = _bounded_number(text, r"documentad[oa][^.;]{0,20}?(\d{1,2})\s*kg", 50)
         facts["checked_baggage_linear_cm"] = _bounded_number(text, r"\b(\d{2,3})\s*cm lineales", 300)
-    purchase = bool(re.search(r"24 horas.{0,30}(compra)|primeras 24 horas", text))
-    before_departure = bool(re.search(r"24 horas antes.{0,70}primer vuelo", text))
-    if purchase != before_departure:
-        facts["refund_deadline"] = "purchase_24h" if purchase else "before_first_departure_24h"
-    if "no reembolsable" in text:
-        facts["refundable"] = False
-    elif "reembolso" in text and before_departure:
-        facts["refundable"] = True
-    if "reembolso" in text and "forma original de pago" in text:
-        facts["refund_original_payment"] = True
+    facts.update(refund_facts(text))
     if any(
         term in text
         for term in ("sin cambios de vuelo", "sin cambios de reserva", "sin cambios ni adelanto gratis")
