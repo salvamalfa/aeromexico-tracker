@@ -107,6 +107,14 @@ controles ni las aprobaciones. Los enlaces simbólicos y junctions se rechazan;
 si tampoco se puede conservar el diagnóstico, la ejecución sigue fallando y
 lo indica. Estos archivos no forman parte del sitio público.
 
+El llamador actual de `verify_historical_baseline` espera hasta 1.800 segundos
+por la cadena completa del verificador publicado original. Sus comprobaciones
+anidadas pueden tener presupuestos propios de 600 segundos; un límite exterior
+igual no deja tiempo para la preparación ni el resto de la cadena. Este margen
+no modifica el código histórico ni sus límites internos, el selector elegido,
+los bytes comprobados o las aprobaciones. Un rechazo o la expiración del nuevo
+límite siguen deteniendo la publicación y conservando su diagnóstico.
+
 ### Cambios de presentación y datos preservados
 
 - `--ui-only` exige que todo `site/` coincida por bytes con un commit fijado

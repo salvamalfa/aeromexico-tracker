@@ -108,7 +108,19 @@ def test_financial_q3_updates_existing_cards_graphs_and_returns_to_q2(web_server
             + "?period=2026Q3&sel_kpis=AEROMEXICO&sel_unit=AEROMEXICO&sel_volume=AEROMEXICO&sel_load=AEROMEXICO"
         )
         page.wait_for_function("document.getElementById('period-display').textContent==='3T26'")
+        # The tab completes asynchronous Plotly resizing before announcing
+        # visibility; that notification dismisses any stale source popover.
+        page.evaluate("""() => {
+            window.__financialSmokeEconomyVisible = false;
+            const onVisible = event => {
+                if (event.detail?.panelId !== 'panel-economy') return;
+                window.__financialSmokeEconomyVisible = true;
+                window.removeEventListener('reader-tab-visible', onVisible);
+            };
+            window.addEventListener('reader-tab-visible', onVisible);
+        }""")
         page.click("#tab-economy")
+        page.wait_for_function("window.__financialSmokeEconomyVisible === true")
         for key, value in [
             ("rask_cents_per_km", "10.7 ¢ USD"),
             ("cask_cents_per_km", "9.4 ¢ USD"),

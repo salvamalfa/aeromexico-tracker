@@ -244,6 +244,29 @@ La ingesta de precios y puntos de Mercado se describe en
 y los detalles quedan privados. El agregado trimestral contratado se añade con
 el gate `--fare-quotes-only`, preservando las aprobaciones y datos servidos.
 
+Cada actualización de ese agregado debe tener un commit de productor propio,
+posterior al baseline publicado y confirmado antes de construir `site/`.
+El productor y el baseline deben ser distintos y el segundo debe ser ancestro
+estricto del primero. No se omite ese control para una actualización de datos.
+El commit de origen de un ZIP privado identifica cuándo se congelaron sus
+fuentes; puede ser anterior al nuevo productor y se conserva con su SHA intacto.
+
+El agregado conserva el historial y sólo incorpora observaciones verificadas de
+los libros privados. Dinero y puntos usan medias del trimestre de consulta, con
+su propio conteo no nulo y precisión completa; al reunir cabinas y horizontes,
+cada grupo se pondera por ese conteo. La selección conserva aeropuertos,
+condiciones y bases compatibles. Los programas permanecen separados: Volaris
+tiene puntos nulos y muestra «No aplica»; el pago adicional final de Viva sigue
+desconocido. Los faltantes y errores no se convierten en precios cero.
+
+El corte seleccionado para esta entrega conserva 772 observaciones y 190 grupos
+trimestrales. Los 63 trabajos originales de AMR quedaron cerrados: 61 completos
+y dos sin disponibilidad confirmada. Incluye además dos cabinas de GDL–TIJ de
+la ampliación del mapa. El dueño detuvo las búsquedas; las capturas posteriores
+se conservan en la PC y quedan fuera de este corte. La cobertura total del mapa
+sigue incompleta. Cada actualización exige revisión, gate normal, CI y
+comprobación del sitio servido antes de declararse publicada.
+
 El [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea)
 exige inventariar cada archivo del cambio, incluidos los nuevos y los generados,
 y registrar su disposición y motivo en el resumen existente del PR.

@@ -178,28 +178,48 @@ def test_structural_scope_is_separate_from_output_hash(projected, mutation):
 
 
 @pytest.mark.parametrize("timeout", [False, True])
-def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch, timeout):
+@pytest.mark.parametrize("released_selector", [False, True])
+def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch, timeout, released_selector):
     spec = {"baseline_commit": "a" * 40}
     old = {"code_commit": "b" * 40, "files": []}
     monkeypatch.setattr(scope.transport, "baseline", lambda *a: (old, b'{"files":[]}'))
     monkeypatch.setattr(scope.transport, "_git", lambda *a: b"")
     actions = []
+    historical_commands = []
+    checkout = {}
 
     def run(command, **kwargs):
         actions.append(command)
         if "worktree" in command and "add" in command:
+            assert command[-1] == old["code_commit"]
             target = Path(command[-2])
+            checkout["path"] = target
             (target / "site").mkdir(parents=True)
             (target / "site/publication_manifest.json").write_bytes(b'{"files":[]}')
-        if "-m" in command and timeout:
-            assert kwargs["timeout"] == 600
-            raise scope.subprocess.TimeoutExpired(
-                command, 600,
-                output=b'{"valid":false,"problems":["exact historical failure"]}',
-                stderr=b"private replay detail",
+            if released_selector:
+                (target / "scripts").mkdir()
+                (target / "scripts/check_pages_publication.py").write_text("# original selector\n")
+        historical = command[1:2] == ["-B"]
+        if historical:
+            target = checkout["path"]
+            historical_commands.append(command)
+            assert kwargs["timeout"] == 1800
+            assert kwargs["cwd"] == target
+            assert kwargs["env"]["PYTHONDONTWRITEBYTECODE"] == "1"
+            assert kwargs["env"]["CHAT_EVIDENCE_APPROVED_INDEX_SHA256"] == "do-not-stream-this"
+            assert command == (
+                [sys.executable, "-B", str(target / "scripts/check_pages_publication.py"), str(target / "site")]
+                if released_selector
+                else [sys.executable, "-B", "-m", "src.publish.verify", str(target / "site")]
             )
+            if timeout:
+                raise scope.subprocess.TimeoutExpired(
+                    command, 1800,
+                    output=b'{"valid":false,"problems":["exact historical failure"]}',
+                    stderr=b"private replay detail",
+                )
         return SimpleNamespace(
-            returncode=1 if "-m" in command else 0,
+            returncode=1 if historical else 0,
             stdout='{"valid":false,"problems":["exact historical failure"]}',
             stderr="private replay detail",
         )
@@ -216,7 +236,10 @@ def test_historical_verifier_failure_is_not_ignored(tmp_path, monkeypatch, timeo
     assert report["stderr"] == "private replay detail"
     assert json.loads(report["stdout"])["problems"] == ["exact historical failure"]
     assert report["approval_pins"]["CHAT_EVIDENCE_APPROVED_INDEX_SHA256"] == "<unset-or-malformed>"
-    assert any("src.publish.verify" in c for c in actions)
+    assert len(historical_commands) == 1
+    assert report["module"] == (
+        "released scripts/check_pages_publication.py" if released_selector else "src.publish.verify"
+    )
     assert actions[-1][1:3] == ["worktree", "remove"]
 
 

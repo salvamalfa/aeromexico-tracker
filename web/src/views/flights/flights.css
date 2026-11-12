@@ -326,15 +326,24 @@
 .flights-view #map-panel #official-map-search { min-height:34px; font-size:11px; }
 .flights-view #map-panel #official-map-search-results { display:grid; max-height:220px; overflow:auto; }
 .flights-view #map-panel #official-map-search-results button { min-height:40px; padding:8px; text-align:left; background:#fff; color:var(--brand-blue); border:0; border-bottom:1px solid var(--line); cursor:pointer; }
-.flights-view #map-panel .official-list-columns { display:flex; justify-content:space-between; padding:10px 0 5px; color:var(--muted); font-size:10px; }
+.flights-view #map-panel .official-list-columns,
+.flights-view #map-panel .official-route-button { display:grid; grid-template-columns:minmax(35px,.5fr) repeat(3,minmax(68px,1fr)); align-items:center; gap:5px; }
+.flights-view #map-panel .official-list-columns { padding:10px 0 5px; color:var(--muted); font-size:10px; }
+.flights-view #map-panel .official-list-columns > :first-child { text-align:left; }
+.flights-view #map-panel .official-list-columns > :not(:first-child) { text-align:center; }
+.flights-view #map-panel .official-fare-basis { margin:0; font-size:10px; color:var(--muted); line-height:1.45; }
+.flights-view #map-panel .official-route-fare { min-width:0; display:grid; gap:5px; padding:7px 2px; border:1px solid var(--line); border-radius:5px; font-size:10px; text-align:center; font-variant-numeric:tabular-nums; }
+.flights-view #map-panel .official-route-fare > span { white-space:nowrap; }
+.flights-view #map-panel .official-route-fare > span:last-child { font-size:9px; color:var(--muted); }
+.flights-view #map-panel .official-fare-excluded { background:#f7f9fc; color:var(--muted); }
 .flights-view #map-panel .official-route-list { list-style:none; margin:0; padding:0; }
-.flights-view #map-panel .official-route-button { display:grid; grid-template-columns:23px minmax(0,1fr) auto; align-items:center; gap:7px; padding:11px 0; width:100%; color:var(--brand-blue-dark); background:#fff; border:0; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; }
+.flights-view #map-panel .official-route-button { padding:11px 0; width:100%; color:var(--brand-blue-dark); background:#fff; border:0; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; }
 .flights-view #map-panel .official-route-button:hover,
 .flights-view #map-panel .official-route-button[aria-expanded="true"] { background:var(--blue-open); }
-.flights-view #map-panel .official-rank { font-size:10px; text-align:center; }
-.flights-view #map-panel .official-route-name { font-size:11px; line-height:1.45; }
+.flights-view #map-panel .official-rank { display:inline-block; min-width:18px; font-size:10px; text-align:center; }
+.flights-view #map-panel .official-route-name { grid-column:1 / -1; font-size:11px; line-height:1.45; margin-bottom:3px; }
 .flights-view #map-panel .official-route-name small { display:block; font-size:9px; font-weight:400; }
-.flights-view #map-panel .official-route-button strong { font-size:12px; font-variant-numeric:tabular-nums; }
+.flights-view #map-panel .official-route-button strong { font-size:12px; font-variant-numeric:tabular-nums; text-align:left; }
 .flights-view #map-panel .official-route-detail { font-size:10px; padding:8px; border-bottom:1px solid var(--line); }
 .flights-view #map-panel .official-route-detail dl { display:grid; gap:7px; margin:0; }
 .flights-view #map-panel .official-route-detail dl > div { display:flex; justify-content:space-between; gap:10px; }
