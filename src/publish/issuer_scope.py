@@ -170,9 +170,10 @@ def verify_historical_baseline(repo, spec, site, *, environment=None, require_si
                     capture_output=True,
                     text=True,
                     env=child_environment,
-                    # The released SourceData verifier recursively checks all
-                    # earlier issuer editions; existing parity CI allows 600s.
-                    timeout=600,
+                    # This caller waits for the complete released verifier
+                    # chain. Its own historical children can each allow 600s;
+                    # the parent also needs time for setup and other checks.
+                    timeout=1800,
                 )
             except subprocess.TimeoutExpired as error:
                 outcome = error
