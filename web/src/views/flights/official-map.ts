@@ -1,6 +1,6 @@
 import type { MapCarrier, MapRegion, MapScope, OfficialRoute } from "../../types/official-routes";
 import { currentPeriodId } from "../../state/period";
-import { fareTooltipColumns, hasFarePeriod } from "./fare-averages";
+import { fareListColumns, fareTooltipColumns, hasFarePeriod } from "./fare-averages";
 import { esc, integer } from "./dom";
 import { mapPeriodLabel } from "./map-periods";
 import { state as flights } from "./state";
@@ -36,7 +36,7 @@ export function officialRouteDetails(route: OfficialRoute): string {
     <div><dt>Comparación interanual</dt><dd>${esc(comparisonLabel(route))}</dd></div>
     ${route.operators.map(o => `<div><dt>${esc(o.label)}</dt><dd>${integer.format(o.departures)} vuelos</dd></div>`).join("")}
     ${!routeHasGeometry(route) ? '<div><dt>Ubicación</dt><dd>No disponible; incluida en el total y la lista.</dd></div>' : ""}
-    </dl>${fareTooltipColumns(route)}</div>`;
+    </dl>${fareTooltipColumns(route, officialState.period, officialState.scope === "us" ? officialState.carriers : undefined)}</div>`;
 }
 
 function focusNode(id: string): void {
@@ -78,9 +78,10 @@ export function renderRouteList(): void {
     const partial = months < expected;
     const opened = officialState.selectedRoute === route.route_key;
     return `<li class="official-route-item"><button type="button" data-official-route="${esc(route.route_key)}" aria-expanded="${opened}" class="official-route-button">
-      <span class="official-rank${partial ? " official-partial" : ""}" title="${esc(monthsLabel(route.monthly.map(m => m.period_id)))}">${index + 1}</span>
-      <span class="official-route-name">${esc(officialRouteTitle(route))}${officialState.view === "change" ? `<small>${esc(comparisonLabel(route))}</small>` : ""}</span>
-      <strong>${integer.format(route.departures)}</strong></button>${opened ? officialRouteDetails(route) : ""}</li>`;
+      <span class="official-route-name"><span class="official-rank${partial ? " official-partial" : ""}" title="${esc(monthsLabel(route.monthly.map(m => m.period_id)))}">${index + 1}</span> ${esc(officialRouteTitle(route))}${officialState.view === "change" ? `<small>${esc(comparisonLabel(route))}</small>` : ""}</span>
+      <strong>${integer.format(route.departures)}</strong>
+      ${fareListColumns(route, officialState.period, officialState.scope === "us" ? officialState.carriers : undefined)}
+      </button>${opened ? officialRouteDetails(route) : ""}</li>`;
   }).join("");
   if (!routes.length) host.innerHTML = `<li class="official-map-empty">${officialState.loading ? "Cargando rutas oficiales…" : officialState.error || "Sin rutas disponibles para esta selección y trimestre."}</li>`;
   host.querySelectorAll<HTMLButtonElement>("[data-official-route]").forEach(button => button.addEventListener("click", () => focusRoute(button.dataset.officialRoute!)));

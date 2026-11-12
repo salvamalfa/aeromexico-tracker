@@ -105,6 +105,17 @@ no representa todo el mercado BTS. La fuente determina el universo y el grano.
 
 Los vuelos dimensionan las rutas. «Más vuelos» muestra doce; «Todas», la red.
 La búsqueda incluye rutas sin coordenadas y fuera del grupo principal.
+Cada ruta conserva su identificación y cuatro columnas visibles: Vuelos,
+Aeroméxico, Viva y Volaris. Las tres cajas de proveedor tienen sólo dos líneas:
+precio regular final en MXN y puntos; Volaris indica «No aplica». Una ausencia
+en el trimestre elegido muestra `$N/D` y `PTS N/D`, sin tomar otro trimestre.
+Las medias reúnen las tarifas y horizontes observados de cada proveedor; no
+representan todos los vuelos ni mezclan programas. Se ponderan las medias
+detalladas sin redondear por el conteo no nulo de cada métrica. Los sentidos,
+cabinas, condiciones y bases permanecen en el detalle; el mapa usa el mismo
+resumen. Sólo EE. UU. aplica su filtro visible de aerolíneas a las cotizaciones:
+las cajas excluidas se identifican como «Fuera de filtro». La selección oculta
+de EE. UU. no filtra Nacional ni Internacional.
 Los totales conservan ceros explícitos y faltantes; el mapa dibuja valores
 positivos con coordenadas. La ayuda identifica meses, sentidos y cobertura.
 `map_scope`, `map_region` y `map_carriers` conservan filtros;

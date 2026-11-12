@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fareGroupsForRoute, fareHoverLines, fareTooltipColumns, loadFareAverages, setFareAveragesForTest, type FareAverage } from "./fare-averages";
+import { fareGroupsForRoute, fareHoverLines, fareListColumns, fareProviderAverages, fareTooltipColumns, loadFareAverages, setFareAveragesForTest, type FareAverage } from "./fare-averages";
 import type { OfficialRoute } from "../../types/official-routes";
 import { addObservationPeriods, currentPeriodId, initPeriods } from "../../state/period";
 
@@ -54,6 +54,29 @@ describe("optional published fare product", () => {
 });
 
 describe("quarterly cost tooltip", () => {
+  it("weights full-precision means by each metric's n, keeps programs apart and filters the actual quarter", () => {
+    const first = { ...group, metrics: { ...group.metrics, cash_final_mxn: { mean: 100 / 3, n: 3 }, points: { mean: 1000, n: 1 } }, paired_cash_points: 0 };
+    const second = { ...group, horizon_months: 3, metrics: { ...group.metrics, cash_final_mxn: { mean: 200, n: 1 }, points: { mean: 3000, n: 3 } }, paired_cash_points: 0 };
+    const amr = { ...group, provider: "AMR" as const, metrics: { ...group.metrics, cash_final_mxn: { mean: 900, n: 1 }, points: { mean: 50000, n: 1 } } };
+    const volaris = { ...group, provider: "VOLARIS" as const, metrics: { ...group.metrics, cash_final_mxn: { mean: 500, n: 2 }, points: { mean: null, n: 0 } } };
+    setFareAveragesForTest({ schema_version: "fare_averages_v1", periods: ["2026Q4"], groups: [first, second, amr, volaris] });
+    const summaries = fareProviderAverages(route, "2026Q4");
+    expect(summaries.find(item => item.provider === "DOTERS")).toEqual({ provider: "DOTERS", cash: { mean: 75, n: 4 }, points: { mean: 2500, n: 4 } });
+    expect(summaries.find(item => item.provider === "AMR")?.points).toEqual({ mean: 50000, n: 1 });
+    expect(summaries.find(item => item.provider === "VOLARIS")?.points).toEqual({ mean: null, n: 0 });
+    expect(fareProviderAverages(route, "2026Q3")).toEqual([]);
+    expect(fareListColumns(route, "2026Q3")).not.toContain("$75");
+    expect(fareProviderAverages(route, "2026Q4", ["VOLARIS"]).map(item => item.provider)).toEqual(["VOLARIS"]);
+    expect(fareTooltipColumns(route, "2026Q4", ["VOLARIS"])).not.toContain("Viva / Doters");
+    const hover = fareHoverLines(route, "2026Q4");
+    expect(hover).toContain("Viva / Doters: $75.00 | 2,500 | n dinero=4, puntos=4");
+    expect(hover).toContain("Volaris: $500.00 | No aplica");
+  });
+  it("matches both directions but preserves the explicit city-airport mapping", () => {
+    setFareAveragesForTest({ schema_version: "fare_averages_v1", periods: ["2026Q4"], groups: [group] });
+    expect(fareProviderAverages({ ...route, origin: route.destination, destination: route.origin }, "2026Q4")).toEqual(fareProviderAverages(route, "2026Q4"));
+    expect(fareProviderAverages({ ...route, origin: { ...route.origin, id: "CITY_MX_SANTA_LUCIA" } }, "2026Q4")).toEqual([]);
+  });
   it("adds separate money and points columns with consultation quarter and denominators", () => {
     setFareAveragesForTest({ schema_version: "fare_averages_v1", periods: ["2026Q4"], groups: [group] });
     const html = fareTooltipColumns(route, "2026Q4");
