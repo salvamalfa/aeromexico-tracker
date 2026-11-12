@@ -244,6 +244,24 @@ La ingesta de precios y puntos de Mercado se describe en
 y los detalles quedan privados. El agregado trimestral contratado se añade con
 el gate `--fare-quotes-only`, preservando las aprobaciones y datos servidos.
 
+Cada actualización de ese agregado debe tener un commit de productor propio,
+posterior al baseline publicado y confirmado antes de construir `site/`.
+El productor y el baseline deben ser distintos y el segundo debe ser ancestro
+estricto del primero. No se omite ese control para una actualización de datos.
+El commit de origen de un ZIP privado identifica cuándo se congelaron sus
+fuentes; puede ser anterior al nuevo productor y se conserva con su SHA intacto.
+
+El corte local incremental añade 26 cotizaciones AMR de 13 trabajos completos.
+Se intentaron 18 de los 63 trabajos activos: otros dos no tuvieron disponibilidad
+confirmada y tres terminaron con errores. Los 45 restantes no se iniciaron tras
+la parada exigida por el circuito del proveedor. El corte conserva el historial
+y no representa la ejecución completa de la cola. Las columnas de dinero y
+puntos usan medias del trimestre de consulta, con su propio conteo no nulo y
+comparando aeropuertos, cabina, horizonte y estancia compatibles. Los errores y
+los importes desconocidos no se convierten en precios cero. El gate, la revisión,
+la CI y la comprobación del sitio servido siguen siendo obligatorios para entregar
+cada actualización pública.
+
 El [cierre documental obligatorio](AGENTS.md#cierre-documental-obligatorio-por-tarea)
 exige inventariar cada archivo del cambio, incluidos los nuevos y los generados,
 y registrar su disposición y motivo en el resumen existente del PR.
