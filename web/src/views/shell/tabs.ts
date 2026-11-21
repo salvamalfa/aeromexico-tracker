@@ -15,9 +15,19 @@ declare global {
 }
 
 export function mountTabs(root: Document | Element = document): { activate: (tab: Element) => void } {
-  const tabs = [...root.querySelectorAll(".reader-tabs [role=tab]")];
+  const allTabs = [...root.querySelectorAll<HTMLElement>(".reader-tabs [role=tab]")];
+  const tabs = allTabs.filter(tab => !tab.hidden);
+  for (const tab of allTabs.filter(tab => tab.hidden)) {
+    tab.setAttribute("aria-selected", "false");
+    tab.tabIndex = -1;
+    const panel = document.getElementById(tab.getAttribute("aria-controls") ?? "");
+    if (panel) panel.hidden = true;
+  }
+  const empty = document.getElementById("dashboard-empty");
+  if (empty) empty.hidden = tabs.length > 0;
 
   function activate(tab: Element): void {
+    if (!tabs.some(item => item === tab)) return;
     for (const t of tabs) {
       const on = t === tab;
       t.setAttribute("aria-selected", String(on));
@@ -31,11 +41,13 @@ export function mountTabs(root: Document | Element = document): { activate: (tab
     if (!panel) return;
     window.requestAnimationFrame(() => {
       const graphs = [...panel.querySelectorAll(".js-plotly-plot")] as HTMLElement[];
-      Promise.all(graphs.map((graph) => Plotly.Plots.resize(graph))).then(() => {
+      Promise.all(graphs.filter(graph => !graph.closest("[data-dashboard-module][hidden]")).map((graph) => Plotly.Plots.resize(graph))).then(() => {
         window.dispatchEvent(new CustomEvent("reader-tab-visible", { detail: { panelId: panel.id } }));
       });
     });
   }
+
+  if (tabs.length && !tabs.some(tab => tab.getAttribute("aria-selected") === "true")) activate(tabs[0]!);
 
   tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => activate(tab));

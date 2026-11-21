@@ -1,5 +1,5 @@
 // Public, contracted means. Individual quotes, book IDs and flight times never arrive here.
-import { addObservationPeriods, currentPeriodId, subscribe } from "../../state/period";
+import { currentPeriodId, hasPeriod, subscribe } from "../../state/period";
 import type { MapCarrier, OfficialPoint, OfficialRoute } from "../../types/official-routes";
 import { esc } from "./dom";
 import { fetchPublicationManifest } from "../../lib/publication-manifest";
@@ -29,7 +29,7 @@ function updateFarePeriodNote(): void {
   const date = document?.groups.filter(group => group.period_id === latest).map(group => group.query_date_end).sort().at(-1);
   note.hidden = !latest || !date;
   note.textContent = latest && date
-    ? `Últimas consultas de tarifas: ${date.split("-").reverse().join("/")} (${periodLabel(latest)}).${currentPeriodId() === latest ? "" : ` Selecciona ${periodLabel(latest)} para verlas.`}`
+    ? `Últimas consultas de tarifas: ${date.split("-").reverse().join("/")} (${periodLabel(latest)}).${currentPeriodId() === latest || !hasPeriod(latest) ? "" : ` Selecciona ${periodLabel(latest)} para verlas.`}`
     : "";
 }
 subscribe(updateFarePeriodNote);
@@ -55,7 +55,6 @@ export async function loadFareAverages(dataRoot: string): Promise<void> {
     const value = await response.json() as FareAverages;
     if (value.schema_version !== "fare_averages_v1" || !Array.isArray(value.groups) || !Array.isArray(value.periods)) return;
     document = value;
-    addObservationPeriods(value.periods, new URLSearchParams(window.location.search).get("period"));
     updateFarePeriodNote();
   } catch { document = null; updateFarePeriodNote(); }
 }

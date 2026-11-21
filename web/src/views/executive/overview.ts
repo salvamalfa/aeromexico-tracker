@@ -1,3 +1,4 @@
+import { moduleEnabled } from "../shell/modules";
 // One reading sheet for the global quarter. Approved issuer documents remain
 // the source of every company paragraph; no Industry approval is synthesized.
 import { currentPeriodId } from "../../state/period";
@@ -30,7 +31,7 @@ function renderComplete(documents: Array<ReadingAnalysis | null>): void {
   host.replaceChildren();
   card.hidden = !documents.some(Boolean);
   for (const [index, analysis] of documents.entries()) {
-    if (!analysis) continue;
+    if (!analysis || !moduleEnabled("reading_" + (index === 0 ? "INDUSTRY" : issuers[index - 1]![0]))) continue;
     const article = document.createElement("article");
     article.dataset.entity = index === 0 ? "INDUSTRY" : issuers[index - 1]![0];
     const heading = document.createElement("h3");
@@ -103,14 +104,14 @@ export async function renderIndustryReading(): Promise<void> {
     list.append(li);
     return li;
   };
-  if (industry) {
+  if (industry && moduleEnabled("reading_INDUSTRY")) {
     title.textContent = industry.thesis.replace(/^Industria:\s*/i, "");
     const item = industry.summary_items.find(item => item.claim_id === "s_revenue") ?? industry.summary_items[0];
     if (item) {
       const li = append("Industria", item.text, [item.lead ?? "", ...(item.emphasis ?? [])]);
       applyCitations(li, citationsByClaim(industry).get(item.claim_id) ?? []);
     }
-  } else if (period === "2026Q3" && companies.every(Boolean)) {
+  } else if (moduleEnabled("reading_INDUSTRY") && period === "2026Q3" && companies.every(Boolean)) {
     // Local editorial synthesis of the three published issuer entries, not
     // a newly approved Industry thesis or a financial aggregate.
     title.textContent = "Mayores ingresos, rentabilidad bajo presión";
@@ -123,10 +124,11 @@ export async function renderIndustryReading(): Promise<void> {
       return citation ? [{ ...citation, value: "frente al mismo trimestre del año anterior.", label: String(index + 1) }] : [];
     });
     applyCitations(li, sources);
-  } else {
+  } else if (moduleEnabled("reading_INDUSTRY")) {
     append("Industria", "Sin lectura publicada para el trimestre seleccionado.");
   }
-  issuers.forEach(([, label], index) => {
+  issuers.forEach(([key, label], index) => {
+    if (!moduleEnabled("reading_" + key)) return;
     const analysis = companies[index];
     if (!analysis) {
       append(label, "Sin lectura publicada para el trimestre seleccionado.");

@@ -10,6 +10,7 @@ const wire = JSON.parse(readFileSync("../tests/fixtures/official-routes.example.
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 beforeEach(() => {
   document.body.innerHTML = readFileSync("index.html", "utf8");
+  document.getElementById("route-map-section")!.hidden = false;
   window.history.replaceState(null, "", "/");
   initPeriods(["2026Q2", "2026Q3"], "2026Q3");
   state.dataRoot = "data/v1";

@@ -30,10 +30,13 @@ def _site(path: Path) -> dict:
     return manifest
 
 
-def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None, candidate_change=None):
+def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None, candidate_change=None, published_only=False):
     site = tmp_path / "site"
     site.mkdir(exist_ok=True)
     baseline = manifests.load_manifest(site) if (site / manifests.MANIFEST_NAME).exists() else _site(site)
+    if published_only:
+        baseline["analysis_manifest"] = [{"period_id": "2026Q2", "version": "v1", "approval_event": "approved"}]
+        manifests.write_manifest(site, baseline)
     web_dir = tmp_path / "web"
     web_data = web_dir / "public/data/v1"
     ledger = tmp_path / "analysis_runs/lifecycle"
@@ -129,8 +132,10 @@ def _run_publish(tmp_path, monkeypatch, *, build_change=None, replay_change=None
         assert trusted_commit == "trusted"
 
     result = release.publish_presentation_only(
-        [tmp_path / "record.json"],
+        [] if published_only else [tmp_path / "record.json"],
+
         site,
+        published_only=published_only,
         repo=tmp_path,
         ledger_root=ledger,
         web_dir=web_dir,
@@ -421,3 +426,14 @@ def test_current_quarterly_manifest_must_match_replayed_afac_parent(tmp_path, mo
         release._replay_release(
             [], tmp_path, "trusted", {"analysis_manifest": [entry | {"approval_event": "f" * 64}]}, tmp_path
         )
+
+
+def test_public_presentation_reuses_approved_snapshot_without_private_replay(tmp_path, monkeypatch):
+    _, baseline, result, state = _run_publish(tmp_path, monkeypatch, published_only=True)
+    assert state["replays"] == 0
+    assert result["manifest"]["analysis_manifest"] == baseline["analysis_manifest"]
+
+
+def test_public_presentation_rejects_changed_data(tmp_path, monkeypatch):
+    with pytest.raises(release.PublicationRefused, match="public data file"):
+        _run_publish(tmp_path, monkeypatch, published_only=True, build_change="data_tamper")

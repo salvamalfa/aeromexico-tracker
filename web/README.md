@@ -188,3 +188,7 @@ No copies `dist/` a `site/` a mano.
 En desarrollo, `?period=2026Q3&review=1` puede leer una propuesta desde
 `tmp/editorial-rerun/2026Q3.json`. El middleware solo existe en Vite
 desarrollo; no exporta borradores, los aprueba ni modifica el sitio publicado.
+
+## Módulos del dashboard
+
+Cada clave en [modules.json](https://github.com/salvamalfa/aeromexico-tracker/blob/dashboard-settings/modules.json) controla la visibilidad de una pestaña, tarjeta, gráfica o bloque. Guarda `true` para mostrarlo o `false` para ocultarlo directamente en la rama `dashboard-settings`. El dashboard lee el archivo al abrirse. Recarga después de editar; la caché de GitHub puede tardar varios minutos. Con un archivo ausente o inválido se usan los valores del HTML: todo visible salvo el mapa. Los grupos de KPI controlan también su selector. Desactivar las cuatro pestañas muestra un aviso de página vacía. El chat se puede ocultar sin detener Railway.

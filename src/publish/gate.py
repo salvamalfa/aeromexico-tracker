@@ -510,6 +510,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="rebuild the frontend while preserving the exact existing public data and analysis manifest",
     )
+    publish_modes.add_argument("--published-presentation-only", action="store_true")
     publish_modes.add_argument(
         "--presentation-only",
         action="store_true",
@@ -578,10 +579,9 @@ def main(argv: list[str] | None = None) -> int:
             from .financial_overlay import publish_business_metrics_only
 
             result = publish_business_metrics_only(args.records, args.out)
-        elif args.presentation_only:
+        elif args.presentation_only or args.published_presentation_only:
             from .presentation_release import publish_from_gate
-
-            result = publish_from_gate(args.records, args.out)
+            result = publish_from_gate(args.records, args.out, published_only=args.published_presentation_only)
         elif args.ui_only:
             result = publish_ui_only(args.records, args.out)
         else:

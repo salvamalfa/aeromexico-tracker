@@ -20,6 +20,7 @@
 // already-selected quarter, exactly like the published page (which
 // mounts both eagerly) — see state/period.ts and
 // tests/test_web_page_parity.py.
+import { loadModuleSettings, moduleEnabled } from "./views/shell/modules";
 import { mountTabs } from "./views/shell/tabs";
 import { mountExecutive } from "./views/executive/bootstrap";
 import { $ } from "./views/flights/dom";
@@ -38,15 +39,14 @@ function ensureFlightsMounted(dataRoot: string): Promise<void> {
 }
 
 export async function mount(dataRoot = "data/v1"): Promise<void> {
+  await loadModuleSettings();
   mountTabs();
   await mountExecutive(dataRoot);
-  const { loadFareAverages } = await import("./views/flights/fare-averages");
-  void loadFareAverages(dataRoot);
   if (import.meta.env.VITE_LOCAL_FARES === "true") {
     const { mountLocalFares } = await import("./views/fares/local-fares");
     await mountLocalFares();
   }
-  if (import.meta.env.VITE_CHAT_ENABLED === "true") {
+  if (import.meta.env.VITE_CHAT_ENABLED === "true" && moduleEnabled("chat")) {
     const { mountChat } = await import("./views/chat/bootstrap");
     mountChat();
   }

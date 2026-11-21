@@ -307,8 +307,8 @@ def test_economy_tab_renders_kpis_and_charts(page_with_console_capture) -> None:
 def test_flights_tab_renders_the_synthetic_fixture(page_with_console_capture) -> None:
     page, console_errors = page_with_console_capture
     page.click("#tab-flights")
-    page.wait_for_selector("#route-flow-map[data-map-status=ready]")
-    page.wait_for_selector("#route-flow-map .scattergeo .js-line")
+    page.wait_for_selector("#mix-chart.js-plotly-plot")
+    assert page.locator("#map-panel").is_hidden()
     assert page.is_visible("#panel-flights")
     assert page.inner_text("#flight-kpi-passengers") != "—"
     assert console_errors == []
@@ -415,10 +415,8 @@ def test_missing_reading_catalog_keeps_indicators_and_lazy_views_available(web_s
         assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
         page.click("#tab-flights")
         assert page.is_visible("#panel-flights")
-        page.wait_for_selector("#route-flow-map[data-map-status=ready]")
-        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapPeriod === '2026Q1'")
-        assert page.locator("#official-map-months").text_content() == "0/3 meses"
-        assert page.locator("#official-map-total").text_content() == "N/D"
+        page.wait_for_selector("#mix-chart.js-plotly-plot")
+        assert page.locator("#map-panel").is_hidden()
         assert errors == []
         assert analysis_requests == []
         browser.close()
@@ -485,10 +483,8 @@ def test_slow_reading_requests_do_not_block_financial_controls_or_lazy_views(web
         assert page.inner_text("#kpi-rask_cents_per_km-value") not in {"", "—", "No disponible"}
         page.click("#tab-flights")
         assert page.is_visible("#panel-flights")
-        page.wait_for_selector("#route-flow-map[data-map-status=ready]")
-        page.wait_for_function("document.getElementById('route-flow-map').dataset.mapPeriod === '2026Q1'")
-        assert page.locator("#official-map-months").text_content() == "0/3 meses"
-        assert page.locator("#official-map-total").text_content() == "N/D"
+        page.wait_for_selector("#mix-chart.js-plotly-plot")
+        assert page.locator("#map-panel").is_hidden()
         page.click("#tab-reading")
         if stalled == "catalog":
             held[0].continue_()

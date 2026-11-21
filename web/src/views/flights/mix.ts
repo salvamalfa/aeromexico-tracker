@@ -1,3 +1,4 @@
+import { moduleEnabled } from "../shell/modules";
 import { seriesMixTooltip, scheduleMixTooltip } from "./mix-tooltip";
 import { renderMixChartSource } from "./chart-sources";
 // The stacked domestic/international passenger bar chart with a total
@@ -29,6 +30,7 @@ interface QuarterPoint {
 }
 
 export function renderMix(record: QuarterRecord): void {
+  if (!moduleEnabled("passengerMixChart")) return;
   // The current AFAC dataset is shared by every airline, including Grupo
   // Aeroméxico. The retained legacy series is only a fallback without market data.
   const entities = selection("mix");

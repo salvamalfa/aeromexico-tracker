@@ -19,6 +19,7 @@ import { renderMix } from "./mix";
 import { mountOfficialMap, redrawOfficialMap } from "./official-map";
 import { mountPicker } from "../shell/carriers";
 import { state as executiveState } from "../executive/state";
+import { loadFareAverages } from "./fare-averages";
 import { selectedFlightQuarter } from "./selected-period";
 
 function syncPeriodIndex(periodId: string): boolean {
@@ -90,6 +91,7 @@ function wireControls(): void {
 
 export async function mountFlights(dataRoot = "data/v1"): Promise<void> {
   await loadQuarters(dataRoot);
+  if (!$("route-map-section")?.hidden) await loadFareAverages(dataRoot);
   wireControls();
   const periodId = currentPeriodId();
   if (periodId) syncPeriodIndex(periodId);

@@ -1,3 +1,4 @@
+import { moduleEnabled } from "../shell/modules";
 // Mercado: complete observed monthly share history, with the selected
 // quarter highlighted and quarterly comparisons over all Mexican
 // carriers, from market.json (src/dashboard/market.py). Industria is the
@@ -34,6 +35,7 @@ function monthLabel(id: string): string {
 }
 
 export function renderMarket(periodId: string | undefined): void {
+  if (!moduleEnabled("flightsTab") || !moduleEnabled("marketShareChart")) return;
   const market = entityState.market;
   const host = $("market-chart");
   if (!host) return;
