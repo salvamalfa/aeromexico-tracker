@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fareGroupsForRoute, fareHoverLines, fareListColumns, fareProviderAverages, fareTooltipColumns, loadFareAverages, setFareAveragesForTest, type FareAverage } from "./fare-averages";
 import type { OfficialRoute } from "../../types/official-routes";
-import { addObservationPeriods, currentPeriodId, initPeriods } from "../../state/period";
+import { currentPeriodId, hasPeriod, initPeriods } from "../../state/period";
 
 const route = { origin: { id: "CITY_MX_MEXICO", point_kind: "city" }, destination: { id: "CITY_MX_MONTERREY", point_kind: "city" } } as OfficialRoute;
 const group: FareAverage = { provider: "DOTERS", period_id: "2026Q4", origin: "MEX", destination: "MTY",
@@ -47,8 +47,7 @@ describe("optional published fare product", () => {
     expect(currentPeriodId()).toBe("2026Q3");
     expect(note.hidden).toBe(false);
     expect(note.textContent).toContain("11/11/2026 (4T26)");
-    expect(note.textContent).toContain("Selecciona 4T26");
-    addObservationPeriods(["2026Q4"], "2026Q4");
+    expect(hasPeriod("2026Q4")).toBe(false);
     expect(note.textContent).not.toContain("Selecciona");
   });
 });

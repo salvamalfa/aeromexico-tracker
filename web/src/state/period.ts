@@ -39,6 +39,10 @@ export function currentPeriodId(): string | undefined {
   return store.periodIds[store.index];
 }
 
+export function hasPeriod(periodId: string): boolean {
+  return store.periodIds.includes(periodId);
+}
+
 export function currentIndex(): number {
   return store.index;
 }
