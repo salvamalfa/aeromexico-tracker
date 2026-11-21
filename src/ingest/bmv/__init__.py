@@ -1,1 +1,0 @@
-"""BMV XBRL ingestion."""
