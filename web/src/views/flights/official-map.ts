@@ -145,6 +145,7 @@ function renderSummary(): void {
 
 let request = 0;
 export async function renderOfficialMap(period = currentPeriodId() ?? ""): Promise<void> {
+  if (el("route-map-section")?.hidden) return;
   const current = ++request;
   const signature = `${period}|${officialState.scope}|${officialState.carriers.join(",")}|${officialState.region}`;
   officialState.period = period; officialState.loading = true; officialState.error = "";
@@ -173,9 +174,12 @@ export async function renderOfficialMap(period = currentPeriodId() ?? ""): Promi
   officialState.loading = false; renderSummary(); await redrawOfficialMap();
 }
 
-export async function redrawOfficialMap(): Promise<void> { await drawOfficialMap(focusNode, focusRoute); }
+export async function redrawOfficialMap(): Promise<void> {
+  if (!el("route-map-section")?.hidden) await drawOfficialMap(focusNode, focusRoute);
+}
 
 export function mountOfficialMap(): void {
+  if (el("route-map-section")?.hidden) return;
   const host = el("official-map-controls"); if (!host) return;
   Object.assign(officialState, parseMapSelection(new URLSearchParams(window.location.search)));
   const select = el("official-map-region") as HTMLSelectElement | null;

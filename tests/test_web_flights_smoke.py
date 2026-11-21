@@ -88,6 +88,8 @@ def web_server(tmp_path_factory, web_dist_dir):
 
 def _open_official_map(page, server):
     page.goto(server)
+    # Exercise the retained map in isolation while it is hidden in Mercado.
+    page.locator("#route-map-section").evaluate("section => section.hidden = false")
     page.get_by_role("button", name="Cerrar chat", exact=True).click()
     page.click("#tab-flights")
     page.wait_for_selector("#route-flow-map[data-map-status=ready]")
