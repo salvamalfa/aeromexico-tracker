@@ -1,7 +1,14 @@
 // Only boolean settings for modules already present in this dashboard are applied.
 const settingsUrl = "https://raw.githubusercontent.com/salvamalfa/aeromexico-tracker/dashboard-settings/modules.json";
 
+let active: Record<string, unknown> = {};
+
+export function moduleEnabled(key: string): boolean {
+  return active[key] !== false;
+}
+
 export function applyModuleSettings(settings: Record<string, unknown>): void {
+  active = settings;
   for (const section of document.querySelectorAll<HTMLElement>("[data-dashboard-module]")) {
     const value = settings[section.dataset.dashboardModule!];
     if (typeof value === "boolean") section.hidden = !value;

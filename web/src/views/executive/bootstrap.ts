@@ -1,3 +1,4 @@
+import { moduleEnabled } from "../shell/modules";
 // Mounts the reading + economy tabs together, since both render off the
 // same executive.json payload — port of the bottom of
 // src/dashboard/assets/executive_summary.js (render(), movePeriod(),
@@ -41,8 +42,9 @@ const ECONOMY_SOURCE: Record<EntityKey, string> = {
 
 function renderKpisAndTable(periodId: string): void {
   const entity = selection("kpis")[0] ?? (state.entities ? "INDUSTRY" : "AEROMEXICO");
-  updateKpis(entity, periodId);
-  renderQuarterTable(entity);
+  if (!moduleEnabled("economyTab")) return;
+  if (moduleEnabled("economyKpis")) updateKpis(entity, periodId);
+  if (moduleEnabled("quarterlyTable")) renderQuarterTable(entity);
   const source = $("economy-source-inline");
   if (source) source.textContent = entity === "AEROMEXICO" && periodId === "2026Q3"
     ? "Fuente: resultados no auditados del emisor · 3T26" : ECONOMY_SOURCE[entity];
@@ -51,6 +53,7 @@ function renderKpisAndTable(periodId: string): void {
 let readingCatalogState: "loading" | "ready" | "unavailable" = "loading";
 
 async function renderReading(): Promise<void> {
+  if (!moduleEnabled("readingTab") || !moduleEnabled("executiveReading")) return;
   if (readingCatalogState !== "ready") {
     const copy = $("narrative-copy");
     if (copy) {
@@ -139,6 +142,7 @@ export async function mountExecutive(dataRoot = "data/v1"): Promise<void> {
   if (periodId) await render(periodId);
   // Financial controls and charts are ready before either reading request.
   // A slow catalog or analysis must not hold up other views or their startup.
+  if (!moduleEnabled("readingTab") || !moduleEnabled("executiveReading")) return;
   void loadReadingPeriods(state.dataRoot).then(async () => {
     readingCatalogState = "ready";
     await renderReading();

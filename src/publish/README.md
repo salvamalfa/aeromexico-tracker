@@ -123,6 +123,10 @@ límite siguen deteniendo la publicación y conservando su diagnóstico.
   hashes y tamaños de todos los datos y los contratos del manifiesto confiable.
   Repite las comprobaciones antes del intercambio, rechaza un remoto que se
   movió y verifica el candidato después de los controles lentos.
+- `--published-presentation-only` actualiza la interfaz usando el sitio exacto de
+  `origin/master` y sus aprobaciones públicas. Verifica el sitio base y el candidato
+  con su verificador fuerte y conserva los datos y sus contratos byte por byte.
+  No acepta expedientes nuevos ni requiere un trabajo en el repositorio privado.
 - `--presentation-only` comprueba además el sitio servido y la cadena exacta
   trimestral/AFAC, con fuentes, aprobaciones, revocaciones y solicitud privada.
   Solo permite cambiar `index.html` y `assets/**`; conserva los otros HTML,

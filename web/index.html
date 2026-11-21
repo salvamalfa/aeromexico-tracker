@@ -12,13 +12,13 @@
 </head>
 <body>
   <main class="page-shell" data-testid="executive-summary-root">
-    <header class="hero">
+    <header class="hero" data-dashboard-module="header">
       <div class="hero-grid">
         <div>
           <h1>Airlines Tracker</h1>
           <p id="fare-period-note" class="fare-period-note" aria-live="polite" hidden></p>
         </div>
-        <div class="period-control">
+        <div class="period-control" data-dashboard-module="quarterSelector">
           <span class="period-label">Trimestre analizado</span>
           <div class="period-stepper" role="group" aria-label="Cambiar trimestre analizado">
             <button type="button" id="period-prev" aria-label="Ir al trimestre anterior" title="Trimestre anterior">▼</button>
@@ -31,20 +31,21 @@
     </header>
 
     <div class="reader-tabs" role="tablist" aria-label="Vistas del dashboard">
-      <button type="button" id="tab-reading" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
-      <button type="button" id="tab-flights" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Mercado</button>
-      <button type="button" id="tab-economy" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
-      <button type="button" id="tab-news" role="tab" aria-selected="false" aria-controls="panel-news" tabindex="-1">Noticias</button>
+      <button type="button" id="tab-reading" data-dashboard-module="readingTab" role="tab" aria-selected="true" aria-controls="panel-reading">Lectura ejecutiva</button>
+      <button type="button" id="tab-flights" data-dashboard-module="flightsTab" role="tab" aria-selected="false" aria-controls="panel-flights" tabindex="-1">Mercado</button>
+      <button type="button" id="tab-economy" data-dashboard-module="economyTab" role="tab" aria-selected="false" aria-controls="panel-economy" tabindex="-1">Economía unitaria</button>
+      <button type="button" id="tab-news" data-dashboard-module="newsTab" role="tab" aria-selected="false" aria-controls="panel-news" tabindex="-1">Noticias</button>
     </div>
 
+    <p id="dashboard-empty" hidden>No hay secciones visibles en este momento.</p>
     <section id="panel-reading" role="tabpanel" aria-labelledby="tab-reading">
-      <section class="narrative-card" aria-labelledby="executive-reading-title">
+      <section class="narrative-card" data-dashboard-module="executiveReading" aria-labelledby="executive-reading-title">
         <h2 id="executive-reading-title">Industria</h2>
-        <div id="narrative-copy">
+        <div id="narrative-copy" data-dashboard-module="readingSummary">
           <p class="analysis-placeholder" id="analysis-empty">Análisis pendiente de aprobación para este trimestre.</p>
         </div>
         <div class="reading-full-card" id="reading-full-card" hidden>
-          <details id="reading-full">
+          <details id="reading-full" data-dashboard-module="fullAnalysis">
             <summary>Análisis completo</summary>
             <div id="reading-full-copy"></div>
           </details>
@@ -53,9 +54,9 @@
     </section>
 
     <section id="panel-economy" role="tabpanel" aria-labelledby="tab-economy" hidden>
-      <div class="card-picker-row"><div id="pick-kpis"></div></div>
-      <section class="kpi-grid reader-economy-kpis" aria-label="Indicadores de economía unitaria">
-        <article class="kpi-card" data-accent="blue" data-kpi="rask_cents_per_km">
+      <div class="card-picker-row" data-dashboard-module="economyKpis"><div id="pick-kpis"></div></div>
+      <section data-dashboard-module="economyKpis" class="kpi-grid reader-economy-kpis" aria-label="Indicadores de economía unitaria">
+        <article class="kpi-card" data-accent="blue" data-kpi="rask_cents_per_km" data-dashboard-module="rask_cents_per_km">
           <span class="kpi-info" title="Ingreso total generado por cada asiento-kilómetro disponible." aria-label="Ingreso total generado por cada asiento-kilómetro disponible.">i</span>
           <p class="kpi-label">RASK</p>
           <p class="kpi-value" id="kpi-rask_cents_per_km-value">—</p>
@@ -65,7 +66,7 @@
             <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-rask_cents_per_km-vsi">—</strong></div>
           </div>
         </article>
-        <article class="kpi-card" data-accent="red" data-kpi="cask_cents_per_km">
+        <article class="kpi-card" data-accent="red" data-kpi="cask_cents_per_km" data-dashboard-module="cask_cents_per_km">
           <span class="kpi-info" title="Costo operativo por cada asiento-kilómetro disponible." aria-label="Costo operativo por cada asiento-kilómetro disponible.">i</span>
           <p class="kpi-label">CASK</p>
           <p class="kpi-value" id="kpi-cask_cents_per_km-value">—</p>
@@ -75,7 +76,7 @@
             <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-cask_cents_per_km-vsi">—</strong></div>
           </div>
         </article>
-        <article class="kpi-card" data-accent="gold" data-kpi="ask_km">
+        <article class="kpi-card" data-accent="gold" data-kpi="ask_km" data-dashboard-module="ask_km">
           <span class="kpi-info" title="Capacidad ofrecida: asientos disponibles multiplicados por kilómetros." aria-label="Capacidad ofrecida: asientos disponibles multiplicados por kilómetros.">i</span>
           <p class="kpi-label">ASK</p>
           <p class="kpi-value" id="kpi-ask_km-value">—</p>
@@ -85,7 +86,7 @@
             <div class="comparison-chip vs-industry" hidden><span>vs. industria</span><strong id="kpi-ask_km-vsi">—</strong></div>
           </div>
         </article>
-        <article class="kpi-card" data-accent="green" data-kpi="unit_margin_cents_per_km">
+        <article class="kpi-card" data-accent="green" data-kpi="unit_margin_cents_per_km" data-dashboard-module="unit_margin_cents_per_km">
           <span class="kpi-info" title="Diferencia entre RASK y CASK por asiento-kilómetro ofrecido." aria-label="Diferencia entre RASK y CASK por asiento-kilómetro ofrecido.">i</span>
           <p class="kpi-label">Margen unitario</p>
           <p class="kpi-value" id="kpi-unit_margin_cents_per_km-value">—</p>
@@ -97,7 +98,7 @@
         </article>
       </section>
 
-      <section aria-labelledby="unit-heading">
+      <section aria-labelledby="unit-heading" data-dashboard-module="unitEconomicsChart">
         <div class="section-heading">
           <div>
             <p class="section-kicker">Economía unitaria</p>
@@ -135,7 +136,7 @@
       </section>
 
       <section class="chart-grid" aria-label="Diagnósticos de volumen y utilización">
-        <article class="chart-card">
+        <article class="chart-card" data-dashboard-module="passengerVolumeChart">
           <div class="chart-heading-row">
             <div>
               <p class="chart-title">Precio vs. Volumen de pasajeros</p>
@@ -145,7 +146,7 @@
           </div>
           <div class="chart chart-sm" id="volume-chart" role="img" aria-label="Pasajeros y RASK por trimestre"></div>
         </article>
-        <article class="chart-card">
+        <article class="chart-card" data-dashboard-module="loadFactorChart">
           <div class="chart-heading-row">
             <div>
               <p class="chart-title">Factor de ocupación vs. RASK</p>
@@ -157,7 +158,7 @@
         </article>
       </section>
 
-      <details class="disclosure">
+      <details class="disclosure" data-dashboard-module="quarterlyTable">
         <summary>Ver datos por trimestre</summary>
         <div class="disclosure-body table-wrap">
           <table>
@@ -182,9 +183,9 @@
     <section id="panel-flights" role="tabpanel" aria-labelledby="tab-flights" hidden>
       <div class="flights-view">
         <div class="flights-shell flights-integrated" data-testid="flights-dashboard-root">
-          <div class="card-picker-row"><div id="pick-flight-kpis"></div></div>
-          <section class="flight-kpi-grid" aria-label="Capacidad y demanda trimestral">
-            <article class="flight-kpi" data-accent="blue">
+          <div class="card-picker-row" data-dashboard-module="marketKpis"><div id="pick-flight-kpis"></div></div>
+          <section data-dashboard-module="marketKpis" class="flight-kpi-grid" aria-label="Capacidad y demanda trimestral">
+            <article class="flight-kpi" data-accent="blue" data-dashboard-module="passengers">
               <span class="info" title="Pasajeros transportados por Grupo Aeroméxico durante el trimestre." aria-label="Pasajeros transportados por Grupo Aeroméxico durante el trimestre.">i</span>
               <p class="kpi-label">Pasajeros</p>
               <p class="kpi-value" id="flight-kpi-passengers">—</p>
@@ -193,7 +194,7 @@
                 <span>vs. año anterior <strong id="flight-kpi-passengers-yoy">—</strong></span>
               </div>
             </article>
-            <article class="flight-kpi" data-accent="gold">
+            <article class="flight-kpi" data-accent="gold" data-dashboard-module="asm_miles">
               <span class="info" title="Asientos disponibles multiplicados por millas voladas." aria-label="Asientos disponibles multiplicados por millas voladas.">i</span>
               <p class="kpi-label">ASM</p>
               <p class="kpi-value" id="flight-kpi-asm_miles">—</p>
@@ -202,7 +203,7 @@
                 <span>vs. año anterior <strong id="flight-kpi-asm_miles-yoy">—</strong></span>
               </div>
             </article>
-            <article class="flight-kpi" data-accent="violet">
+            <article class="flight-kpi" data-accent="violet" data-dashboard-module="rpm_miles">
               <span class="info" title="Pasajeros transportados multiplicados por millas voladas." aria-label="Pasajeros transportados multiplicados por millas voladas.">i</span>
               <p class="kpi-label">RPM</p>
               <p class="kpi-value" id="flight-kpi-rpm_miles">—</p>
@@ -211,7 +212,7 @@
                 <span>vs. año anterior <strong id="flight-kpi-rpm_miles-yoy">—</strong></span>
               </div>
             </article>
-            <article class="flight-kpi" data-accent="amber">
+            <article class="flight-kpi" data-accent="amber" data-dashboard-module="load_factor">
               <span class="info" title="RPM dividido entre ASM; porcentaje de capacidad utilizada." aria-label="RPM dividido entre ASM; porcentaje de capacidad utilizada.">i</span>
               <p class="kpi-label">Ocupación</p>
               <p class="kpi-value" id="flight-kpi-load_factor">—</p>
@@ -267,7 +268,7 @@
             </div>
           </section>
 
-          <section id="market-participation" aria-label="Participación de mercado">
+          <section id="market-participation" data-dashboard-module="marketShareChart" aria-label="Participación de mercado">
       <article class="chart-card market-card" id="market-card">
         <div class="chart-heading-row">
           <div>
@@ -284,7 +285,7 @@
       </article>
           </section>
 
-          <section aria-labelledby="mix-title">
+          <section aria-labelledby="mix-title" data-dashboard-module="passengerMixChart">
             <div class="section-heading">
               <div><p class="section-kicker">Capacidad y demanda</p><h2 id="mix-title">Mezcla nacional e internacional</h2></div>
             </div>

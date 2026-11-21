@@ -163,3 +163,5 @@ h1 { margin: 0; max-width: 730px; font-size: clamp(25px, 3.4vw, 40px); line-heig
 .unified-tooltip p > :last-child { white-space:nowrap; font-variant-numeric:tabular-nums; }
 .unified-tooltip-close { position:absolute; top:2px; right:5px; border:0; background:transparent; color:var(--muted); cursor:pointer; }
 @media(max-width:520px) { .unified-tooltip { font-size:11px; padding:14px 12px; } .unified-tooltip header,.unified-tooltip p { gap:10px; } }
+
+[data-dashboard-module][hidden] { display: none !important; }

@@ -1,3 +1,4 @@
+import { moduleEnabled } from "../shell/modules";
 // The three panel-economy Plotly charts (unit economics, volume vs. RASK,
 // load factor vs. RASK). Direct port of src/dashboard/assets/
 // executive_summary.js's renderUnitEconomics/renderVolumeMonetization/
@@ -32,6 +33,7 @@ export function setUnitEntities(entities: EntityKey[]): void {
 }
 
 export function renderUnitEconomics(): void {
+  if (!moduleEnabled("economyTab") || !moduleEnabled("unitEconomicsChart")) return;
   const rangeValue = ($("unit-range") as HTMLSelectElement).value;
   const metricControl = $("unit-metric-control");
   if (metricControl) metricControl.hidden = unitEntities.length < 2;
@@ -127,6 +129,7 @@ export function setVolumeEntities(entities: EntityKey[]): void {
 }
 
 export function renderVolumeMonetization(): void {
+  if (!moduleEnabled("economyTab") || !moduleEnabled("passengerVolumeChart")) return;
   renderEconomyChartSource("volume", volumeEntities);
   if (volumeEntities.length > 1) {
     renderVolumeComparison(volumeEntities);
@@ -189,6 +192,7 @@ export function setLoadEntities(entities: EntityKey[]): void {
 }
 
 export function renderLoadMonetization(periodId: string): void {
+  if (!moduleEnabled("economyTab") || !moduleEnabled("loadFactorChart")) return;
   renderEconomyChartSource("load", loadEntities);
   if (loadEntities.length > 1) {
     renderLoadComparison(periodId, loadEntities);

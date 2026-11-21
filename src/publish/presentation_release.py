@@ -406,7 +406,7 @@ def _replay_release(record_paths, repo, trusted_commit, current_manifest, ledger
     return {"afac": replay}
 
 
-def publish_from_gate(record_paths, out_dir):
+def publish_from_gate(record_paths, out_dir, *, published_only=False):
     """Adapt the CLI to the strict profile without expanding the shared gate."""
     from . import gate
 
@@ -423,6 +423,7 @@ def publish_from_gate(record_paths, out_dir):
             trusted_site_commit=gate._trusted_site_commit,
             assemble_site=gate.assemble_site,
             write_receipt=gate.write_receipt,
+            published_only=published_only,
         )
     except (ValueError, OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         raise PublicationRefused(f"presentation-only publication rejected: {error}") from error
@@ -441,6 +442,7 @@ def publish_presentation_only(
     trusted_site_commit,
     assemble_site,
     write_receipt,
+    published_only=False,
 ):
     """Rebuild only frontend presentation and atomically preserve all evidence."""
     repo, out_dir = Path(repo).resolve(), Path(out_dir).resolve()
@@ -449,8 +451,9 @@ def publish_presentation_only(
     except RuntimeError as error:
         raise PublicationRefused(f"uncommitted presentation build inputs: {error}") from error
 
-    records = load_records(record_paths)
-    if not records:
+    if published_only and record_paths:
+        raise PublicationRefused("published presentation cannot introduce approval records")
+    if not published_only and not load_records(record_paths):
         raise PublicationRefused("no --record given; refuse to publish an empty approval manifest")
     trusted_commit = trusted_site_commit(repo)
     require_trusted_baseline(out_dir, root=repo, trusted_commit=trusted_commit)
@@ -461,9 +464,16 @@ def publish_presentation_only(
     baseline_files = _public_file_map(out_dir)
     if not any(path.startswith("data/v1/") for path in baseline_files):
         raise PublicationRefused("trusted site has no public data payload to preserve")
+    def approvals():
+        if published_only:
+            if not current_manifest["analysis_manifest"]:
+                raise PublicationRefused("trusted publication has no approved analysis")
+            return {"authorized": current_manifest["analysis_manifest"]}
+        return _replay_release(record_paths, repo, trusted_commit, current_manifest, ledger_root)["afac"]
+
     try:
         with flow.writer(ledger_root):
-            first = _replay_release(record_paths, repo, trusted_commit, current_manifest, ledger_root)
+            first = approvals()
     except ValueError as error:
         message = f"current presentation approval/source chain failed replay: {error}"
         raise PublicationRefused(message) from error
@@ -535,8 +545,7 @@ def publish_presentation_only(
             with flow.writer(ledger_root):
                 require_trusted_baseline(out_dir, root=repo, trusted_commit=trusted_commit)
                 verify_presentation_only_site(out_dir, repo)
-                current = _replay_release(record_paths, repo, trusted_commit, current_manifest, ledger_root)
-                if current != first:
+                if approvals() != first:
                     raise ValueError("approval, source or revocation state changed during the frontend build")
                 manifest = assemble_site(
                     staged_dist,
@@ -550,5 +559,5 @@ def publish_presentation_only(
                 f"presentation release failed its locked pre-swap checks (nothing swapped in): {error}"
             ) from error
 
-    receipt = write_receipt(manifest, first["afac"]["authorized"], out_dir, root=ledger_root)
+    receipt = write_receipt(manifest, first["authorized"], out_dir, root=ledger_root)
     return {"manifest": manifest, "receipt": receipt}
