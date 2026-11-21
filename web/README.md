@@ -188,3 +188,7 @@ No copies `dist/` a `site/` a mano.
 En desarrollo, `?period=2026Q3&review=1` puede leer una propuesta desde
 `tmp/editorial-rerun/2026Q3.json`. El middleware solo existe en Vite
 desarrollo; no exporta borradores, los aprueba ni modifica el sitio publicado.
+
+## Módulos de Mercado
+
+La visibilidad del mapa se configura en [modules.json](https://github.com/salvamalfa/aeromexico-tracker/blob/dashboard-settings/modules.json), en la rama independiente `dashboard-settings`. Guarda `"routeMap": false` para ocultarlo o `true` para mostrarlo. La página consulta el ajuste al abrir Mercado; la caché de GitHub puede tardar varios minutos en reflejar una edición. Si el archivo no está disponible, el mapa queda oculto. Los cambios de esta rama no despliegan código.
